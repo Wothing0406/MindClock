@@ -18,6 +18,10 @@
 
 ## Khi coding
 
+- **Bắt buộc trước mọi thay đổi code/cấu hình/UI/dữ liệu:** đọc `tasks/README.md`; tạo hoặc tiếp tục một thư mục `tasks/TNNN-ten-ngan/` từ `tasks/_template/`. Điền `README.md`, `spec.md`, `plan.md`, `tests.md` trước khi sửa code. Chỉ task docs thuần túy/đọc-only mới không cần thư mục, trừ khi người dùng yêu cầu lưu tiến độ.
+- Mỗi task gắn mục tài liệu nguồn và AC ↔ test. Khi docs mâu thuẫn, sửa docs chuẩn hoặc ghi quyết định rõ trước/cùng code; không tự đổi hành vi cho tiện triển khai.
+- Sau mỗi lát cắt: cập nhật plan, chạy test phù hợp, ghi kết quả thực. Lỗi lặp theo chu trình tái hiện → nguyên nhân → sửa → test lại trong `worklog.md`; không lặp chỉnh mò quá 3 vòng cùng lỗi.
+- Trước khi báo hoàn thành: cập nhật `handoff.md` và `README.md` của task với trạng thái, test, rủi ro và **điểm tiếp tục cụ thể**. Khi quay lại task, đọc handoff, vòng lỗi cuối và test chưa đạt trước khi sửa tiếp. Không gắn `done` nếu acceptance/test bắt buộc chưa đạt.
 - Làm từng lát cắt dọc theo `docs/08-ke-hoach-trien-khai.md`, ưu tiên P0.
 - Giữ hợp đồng API và trạng thái thống nhất. Khi thay đổi, sửa docs + contract tests cùng lần.
 - Thêm test theo rủi ro thực tế, nhất là báo thức OS, quyền truy cập, AI chấm sai và XP trùng. Emulator không thay kiểm thử thiết bị thật.

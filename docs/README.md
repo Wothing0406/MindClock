@@ -2,6 +2,8 @@
 
 **Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 10/11/2026.
 
+**Quy trình khi bắt đầu coding:** đọc [AGENTS.md](../AGENTS.md) và [tasks/README.md](../tasks/README.md); mỗi yêu cầu code có thư mục task riêng với spec, plan, test và điểm tiếp tục.
+
 ## Thứ tự đọc
 
 1. [01 — Tầm nhìn và ý tưởng ban đầu](01-dinh-huong-san-pham.md): bối cảnh DevFest, giả thuyết và phạm vi demo.
