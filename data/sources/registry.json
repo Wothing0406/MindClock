@@ -10,9 +10,10 @@
       "format": "json_with_assets",
       "adapter_candidate": "vnhsge_json",
       "license_status": "unverified_per_item",
-      "import_status": "metadata_only",
-      "allowed_use": "research_of_metadata_only_until_rights_review",
-      "notes": "README does not state reusable rights for all exams, images and explanations; no bulk ingest."
+      "import_status": "local_research_only",
+      "local_inventory": "data/research/research-manifest.json",
+      "allowed_use": "local_structure_and_quality_research_only_until_rights_review",
+      "notes": "406 Vietnamese JSON files/17054 parsed entries locally; no images or Word files. README does not state reusable rights for all exams, images and explanations. No product publication."
     },
     {
       "id": "vmlu",
@@ -21,9 +22,12 @@
       "format": "jsonl",
       "adapter_candidate": "vmlu_jsonl",
       "license_status": "dataset_terms_tbu",
-      "import_status": "metadata_only",
-      "allowed_use": "benchmark_research_subject_to_terms_no_app_publication",
-      "notes": "README Licenses section says TBU; repository MIT file does not establish per-question reuse."
+      "import_status": "local_research_only",
+      "local_inventory": "data/research/research-manifest.json",
+      "download_url": "https://huggingface.co/datasets/tridm/VMLU",
+      "mirror_status": "third_party_unverified",
+      "allowed_use": "local_structure_and_benchmark_research_subject_to_terms_no_app_publication",
+      "notes": "10880 JSONL entries locally; 9833 test rows lack answers. README Licenses section says TBU; repository MIT file does not establish per-question reuse. Mirror provenance must be verified."
     },
     {
       "id": "vimmrc2",

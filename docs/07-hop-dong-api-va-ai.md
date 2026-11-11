@@ -4,6 +4,8 @@
 
 > **API giai đoạn đấu trường/kinh tế/nội dung:** danh sách endpoint và bảng dữ liệu dự kiến ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Chúng chưa là API đã triển khai; task coding phải chốt payload, quyền, idempotency và contract tests trong cùng lần.
 
+> **Hợp đồng bài có trình bày:** `answer_value` + `reasoning_text|handwritten`, ba kết quả và policy chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). PvP heal/hút/choáng ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Endpoint gợi ý giờ dậy chỉ preview theo [docs/32 §5–6](32-ho-so-hoc-tap-va-nhieu-mon.md); không tự tạo alarm. Đây là phần mở rộng chưa triển khai; khi code phải đổi payload/contract tests của `/answers`, `/attempts`, match submission cùng lúc.
+
 **Base path:** `/v1` · **Transport:** HTTPS + JSON UTF-8, riêng ảnh dùng `multipart/form-data` · **Auth:** `Authorization: Bearer <Firebase ID token>` cho mọi endpoint trừ `/health`. Backend xác minh token, lấy `uid` từ token. Mọi thời điểm API trả ISO 8601 UTC; `localDate` theo múi giờ IANA của người dùng.
 
 Đây là **hợp đồng triển khai**, chưa phải API đang chạy. Nếu thay đổi field, sửa tài liệu và contract test cùng lúc; không tự ý đổi từ mobile hoặc backend một phía.
@@ -34,8 +36,8 @@
 | `GET /challenges/next?date=YYYY-MM-DD` | Token | Câu hỏi đã duyệt, `questionRevision`, `validForDate` | Dùng tải trước; **không gửi đáp án/rubric đầy đủ xuống máy** |
 | `POST /sessions` | `alarmId`, `localSessionId`, `localDate`, `questionId`, `questionRevision`, `startedAt` | `sessionId`, `state`, `version` | Tạo/đồng bộ phiên idempotent |
 | `POST /sessions/{id}/events` | `eventType`, `occurredAt`, `version` | Phiên mới | `ring`, `snooze`, `start`, `dismiss`, `complete_ungraded` |
-| `POST /sessions/{id}/attempts` | Multipart `image`, `questionId`, `submissionKind=handwritten`, `clientAttemptId` | `attemptId`, `result`, `feedback`, `nextActions` | Tối đa 5 MB; không lưu ảnh mặc định |
-| `POST /sessions/{id}/answers` | `answerText`, `clientAttemptId` | Cùng kiểu kết quả attempt | Cách thay thế camera |
+| `POST /sessions/{id}/attempts` | Multipart `image`, `answerValue`, `questionId`, `submissionKind=handwritten`, `clientAttemptId` | `attemptId`, `result`, `feedback`, `nextActions` | Đáp án + ảnh cách làm; tối đa 5 MB; không lưu ảnh mặc định |
+| `POST /sessions/{id}/answers` | `answerValue`, `reasoningText`, `clientAttemptId` | Cùng kiểu kết quả attempt | Đáp án + cách làm chữ thay camera; theo docs/39 |
 | `POST /sessions/{id}/feedback` | `attemptId`, `category`, `comment?` | `feedbackId`, `status` | Báo AI chấm sai |
 | `GET /progress/summary` | Token | XP, streak, buổi hoàn thành, chủ đề cần ôn | Server tính từ ledger |
 | `GET /sessions?limit=&cursor=` | Token | Lịch sử phiên tối giản | Không trả ảnh |

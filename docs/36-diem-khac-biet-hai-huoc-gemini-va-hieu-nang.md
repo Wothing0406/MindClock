@@ -1,6 +1,6 @@
 # Điểm khác biệt, giọng vui, Gemini và ngân sách tốc độ
 
-**Trạng thái:** quyết định sản phẩm/kiến trúc để lập task; chưa đo hiệu năng trên sản phẩm thật. Luật Solo ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), bảo mật ở [docs/25](25-bao-mat-va-du-lieu.md), nhân vật ở [docs/22](22-nhan-vat-rpg.md). Mốc tham khảo: 11/11/2026; kiểm tra model/quota trong AI Studio trước khi code hoặc demo.
+**Trạng thái:** quyết định sản phẩm/kiến trúc để lập task; chưa đo hiệu năng trên sản phẩm thật. Luật Solo ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), chấm bài giải ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), kỹ năng/FX ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), bảo mật ở [docs/25](25-bao-mat-va-du-lieu.md). Mốc tham khảo: 11/11/2026; kiểm tra model/quota trong AI Studio trước khi code hoặc demo.
 
 ## 1. Ý tưởng đã có gì và khác ở đâu?
 
@@ -22,7 +22,7 @@ Asset: sprite 2D vẽ gốc có quyền dùng, WebP/PNG trong suốt, bundle loc
 | Thời khóa biểu | Trích xuất **bản nháp** từ ảnh nếu người dùng chủ động gửi; người dùng xác nhận | Nhập/sửa lịch bằng tay |
 | Bài viết tay buổi sáng | Hỗ trợ đọc bước làm khi có consent và kết nối; trả `correct/incorrect/uncertain` theo rubric; không quyết định XP | Đáp án nhập tay/câu offline; Dừng khẩn cấp luôn hoạt động |
 | Gợi ý học | Đề xuất bước Socratic hoặc chia task; người dùng duyệt | Gợi ý mẫu đã biên tập |
-| Solo ranked | **Không gọi lúc trận chạy**, không sinh đề/nội dung mới, không chấm live | Server chấm cấu trúc trên revision khóa |
+| Solo giao hữu/ranked | Không sinh đề lúc phát câu; sau khi hai người nộp, AI chỉ đề xuất đọc/chấm bài giải theo rubric đã khóa, server xác minh; ranked chỉ bật khi đã kiểm định | Nếu AI lỗi/không chắc: void vòng/trận, không đổi RP; giao hữu có thể dùng fixture có nhãn |
 
 Model mặc định đề xuất cho thử nghiệm backend: `gemini-3.5-flash-lite` cho việc thường xuyên, đầu ra ngắn/có schema; `gemini-3.8-flash` chỉ cho ca ảnh/lời giải khó hoặc rà soát bản nháp khi model nhanh trả `uncertain`. Đây là **cấu hình thử**, chưa có benchmark độ chính xác tiếng Việt/chữ viết tay cho MindClock. Cả hai là model ổn định trong [danh sách chính thức](https://ai.google.dev/gemini-api/docs/models); [Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) hỗ trợ structured outputs. Đặt model ID ở cấu hình server, có mock/fixture cho demo, không nhúng key vào app. Dùng [structured output](https://ai.google.dev/gemini-api/docs/structured-output) với schema, nhưng vẫn validate server và human review; JSON hợp lệ không bảo đảm đáp án đúng.
 
@@ -36,12 +36,12 @@ Mốc dưới đây là **mục tiêu cần đo**, không phải hiệu năng đ
 | --- | --- | --- |
 | Vào phòng chờ sau ghép | P95 < 2 giây trên mạng thử | Timestamp server `matched` → hai client render; nếu chậm, kiểm tra DB/connection |
 | Phát câu sau khóa kỹ năng | P95 server xử lý < 300 ms, **không tính truyền mạng** | Trace `skill_locked` → `question_sent`; đo riêng client receive/render |
-| Độ lệch hai máy nhận câu | P95 < 1 giây trong mạng pilot; ngưỡng thực chỉnh sau đo | Server send/ack + clock sync; lệch lớn hủy thưởng nhanh/void nếu lộ không công bằng |
-| Chốt vòng khi đủ hai bài | P95 < 500 ms với chấm cấu trúc | `second_submission_received` → `round_result_committed`; tách publish event |
+| Độ lệch hai máy nhận câu | P95 < 1 giây trong mạng pilot; ngưỡng thực chỉnh sau đo | Server send/ack + clock sync; lệch lớn void nếu lộ không công bằng; không có thưởng nhanh mode viết |
+| Chốt vòng sau khi **cả hai grade rõ** | P95 < 500 ms cho transaction tính HP/status, **không gồm thời gian AI** | `both_grades_final` → `round_result_committed`; đo AI/queue riêng, timeout → void |
 | Màn trận trên máy Android yếu | Giữ tương tác mượt, ưu tiên 60 fps, không block input | Profiling frame time; dùng asset tĩnh nếu animation rớt khung |
 | Truy vấn bảng top 20 | P95 < 1 giây pilot | Index/projection, không scan mọi submission |
 
-Mỗi match có event sequence; push qua WebSocket, snapshot/polling để reconnect. Fanout giới hạn 2 participant/trận; dùng hàng đợi/worker riêng cho công việc Gemini **ngoài** trận, có timeout và backoff 429/503, cache câu đã duyệt theo revision. Đặt rate limit per user/endpoint, giới hạn match concurrent theo khả năng server, đo CPU/DB connections/queue lag; tăng tải bằng test 2 → 20 → 100 trận giả lập, không tuyên bố “chịu mọi số user”. Khi vượt tải: ngừng nhận trận mới và hiện chờ/luyện; trận đang chạy được ưu tiên, không gọi Gemini để chữa cháy. Không cache đáp án cá nhân trong CDN hoặc log.
+Mỗi match có event sequence; push qua WebSocket, snapshot/polling để reconnect. Fanout giới hạn 2 participant/trận; dùng worker/queue **chấm sau nộp** với timeout và backoff 429/503, cùng model/prompt/rubric version cho hai bên. Hết timeout → void, không “chấm tạm đúng”. Cache câu đã duyệt theo revision. Đặt rate limit per user/endpoint, giới hạn match concurrent theo khả năng server, đo CPU/DB connections/queue lag; tăng tải bằng test 2 → 20 → 100 trận giả lập, không tuyên bố “chịu mọi số user”. Khi vượt tải: ngừng nhận trận mới và hiện chờ/luyện; trận đang chạy được ưu tiên theo deadline chấm, không tự chuyển sang model khác giữa trận. Không cache bài giải cá nhân trong CDN hoặc log.
 
 ## 5. Cổng quyết định trước demo/pilot
 

@@ -1,6 +1,6 @@
 # Solo RPG v2 — luật trận, ghép môn và đồng bộ
 
-**Trạng thái:** đặc tả để coding, chưa có trận online chạy thật. Đây là nguồn chuẩn cho đồng bộ và luật trận Solo, thay luật tính điểm ở [docs/33 v1](33-dau-truong-solo-ranked-gdd.md) và luật một câu ở [docs/21](21-dau-truong-xep-hang.md). **Kỹ năng theo nhân vật, coin và RP** ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn mới nhất. Ngân hàng câu theo [docs/34](34-ngan-hang-cau-hoi-da-mon.md), hồ sơ môn theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), SQL nền theo [docs/28](28-backend-sql.md). HP/sát thương là giả thuyết phải playtest; mọi trận lưu `combat_rule_version`.
+**Trạng thái:** đặc tả để coding, chưa có trận online chạy thật. Đây là nguồn chuẩn cho **đồng bộ** Solo, thay luật tính điểm ở [docs/33 v1](33-dau-truong-solo-ranked-gdd.md) và luật một câu ở [docs/21](21-dau-truong-xep-hang.md). Bài làm/chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), kit PvP/map theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), kinh tế/RP theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Ngân hàng câu theo [docs/34](34-ngan-hang-cau-hoi-da-mon.md), hồ sơ môn theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), SQL nền theo [docs/28](28-backend-sql.md). HP/sát thương là giả thuyết phải playtest; mọi trận lưu `combat_rule_version`.
 
 ## 1. Vòng lặp sản phẩm
 
@@ -16,30 +16,30 @@ Rating band thử nghiệm ±100 rồi ±200 sau 15 giây trong cùng scope; sau
 
 ## 3. Luật HP và thẻ kỹ năng
 
-- Hai nhân vật bắt đầu **60 HP**. Ba vòng, một câu cấu trúc đã duyệt/vòng, hạn theo server khoảng 45–75 giây/câu. Sau ba vòng ai còn nhiều HP hơn thắng; bằng HP hoặc cùng về 0 trong một vòng là hòa. Có thể kết thúc sớm khi một bên về 0 sau một vòng. Không có tiebreak vô hạn.
-- Mỗi vòng có 5 giây chọn một trong ba thẻ của nhân vật đã khóa **trước khi hiện đề**; không chọn mặc định `quick_pen`. Kỹ năng khóa trên server và chỉ tiết lộ hai bên sau reveal. Câu đúng mới kích hoạt kỹ năng. Sai/hết giờ không gây sát thương, không kích hoạt buff. Hai đòn tính **đồng thời**, người nộp sớm không hủy lượt người kia.
-- Một lần nộp/người/vòng. Chỉ reveal đáp án/giải thích khi cả hai nộp hoặc hết hạn. Câu lỗi/mơ hồ → void trận có hạng, không đổi rating; AI không chấm trực tiếp ranked.
+- Hai nhân vật bắt đầu **60 HP**. Ba vòng, một câu đã duyệt **kèm yêu cầu trình bày ngắn**/vòng, hạn server thử nghiệm 90–120 giây/câu. Sau ba vòng ai còn nhiều HP hơn thắng; bằng HP hoặc cùng về 0 trong một vòng là hòa. Có thể kết thúc sớm khi một bên về 0 sau một vòng. Không có tiebreak vô hạn.
+- Trước ready chọn 2/4 thẻ chung + một thẻ riêng; mỗi vòng chọn một thẻ trong loadout **trước khi hiện đề**, không chọn mặc định. Kỹ năng khóa trên server và chỉ tiết lộ hai bên sau reveal. `correct` rõ mới kích hoạt; `incorrect`/hết giờ không kích hoạt. Hai hành động tính **đồng thời**, người nộp sớm không hủy lượt người kia. Hồi/hút/choáng theo docs/40.
+- Một lần nộp/người/vòng gồm đáp án và lý do/bước làm. Chỉ reveal sau khi cả hai bài được chấm hoặc hết hạn; nếu cần chấm ảnh sau deadline, trạng thái `grading_pending` có timeout. Câu lỗi/`uncertain` → void trận có hạng, không đổi rating. AI có thể đề xuất chấm **sau nộp** qua backend, chỉ khi cổng docs/39 đạt; nếu chưa, ranked tắt và chỉ giao hữu.
 
-Hai thẻ chung là `quick_pen` (20 sát thương) và `notebook_guard` (8 sát thương, chặn 12). Thẻ thứ ba tùy nhân vật: Cú Mực tích lực, Cáo Nắng lách trang, Rồng Giấy gấp khiên; công thức, giới hạn buff và cổng cân bằng ở [docs/37 §3](37-kinh-te-rank-va-nhan-vat-2d.md#3-hp-tấn-công-và-kỹ-năng-theo-nhân-vật). Server tính từ hai submission và kit đã khóa; client không gửi HP/sát thương có thẩm quyền.
+Thẻ chung/riêng, hồi/hút/choáng và thứ tự tính ở [docs/40 §2–3](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Server tính từ hai submission và kit đã khóa; client không gửi HP/sát thương có thẩm quyền.
 
 **Ví dụ kiểm tra:** A đúng Bút Chớp, B đúng Che Vở, không thưởng tốc độ → A mất 8 HP, B mất `20−12=8` HP; cả hai còn 52. Nếu B sai → Che Vở không bật; A còn 60, B còn 40.
 
-### Thưởng nhanh có giới hạn
+### Tốc độ trong bản yêu cầu viết
 
-Nếu **cả hai đúng**, một người được +5 sát thương khi nộp sớm hơn ít nhất 2 giây theo thời điểm server nhận. Chênh dưới 2 giây không thưởng. Chỉ áp dụng khi **cả hai** xác nhận đã nhận đề trong cửa sổ đồng bộ, không reconnect trong vòng, độ lệch nhận đề và độ trễ mạng đạt ngưỡng thử nghiệm. Nếu mạng không đạt, vòng vẫn tính kiến thức/kỹ năng nhưng **không ai** có thưởng nhanh. Không dùng thời gian phá hòa sau trận. Ngưỡng 2 giây/+5 chỉ là cấu hình thử; phải đo hai máy/mạng khác nhau trước khi bật ranked. Nếu không chứng minh được công bằng, ranked tắt speed bonus.
+**Tắt speed bonus** khi người học phải viết/chụp bài: tốc độ viết, camera và tải ảnh khác nhau. `received_at` chỉ dùng kiểm deadline và đồng bộ, không cộng sát thương/đổi RP/phá hòa. Nếu sau này có mode câu đóng không yêu cầu viết, phải có rule version và thử mạng riêng; không áp mặc định cho v3.
 
-## 4. Đồng bộ hai người, không gọi Gemini trong trận
+## 4. Đồng bộ hai người và chấm sau nộp
 
-Máy trạng thái: `queued → matched → ready → skill_select → round_prepare → round_active → round_settle → (skill_select | match_settle) → settled`, nhánh `cancelled/voided/needs_review`. Mỗi event có `event_id, match_id, round_no, sequence, server_time, rule_version`. Client bỏ event lặp, tải snapshot nếu thiếu sequence. Server khóa bộ câu tại `matched` nhưng không gửi stem/đáp án sớm.
+Máy trạng thái: `queued → matched → ready → skill_select → round_prepare → round_active → grading_pending → round_settle → (skill_select | match_settle) → settled`, nhánh `cancelled/voided/needs_review`. Mỗi event có `event_id, match_id, round_no, sequence, server_time, rule_version`. Client bỏ event lặp, tải snapshot nếu thiếu sequence. Server khóa bộ câu/rubric tại `matched` nhưng không gửi stem/đáp án sớm hoặc rubric/đáp án trước reveal.
 
 1. Hai người ready; chọn kỹ năng. Hết 5 giây, server khóa lựa chọn hoặc kỹ năng mặc định.
 2. Server gửi `round_prepare` chỉ có số vòng/thời lượng; nhận ready-to-receive của hai client. Server phát cùng payload đề qua WebSocket, kèm `starts_at` tương lai gần và `deadline_at`. Client gửi `question_received`; chỉ hiển thị câu từ `starts_at`.
 3. Nếu một máy không xác nhận trong cửa sổ hoặc nhận sau `starts_at`, **hủy câu đã lộ**, chọn revision khác và chuẩn bị lại; không dùng lại câu cũ. Không phục hồi được thì void trận không rating. Không thể bảo đảm hai màn hình sáng cùng một mili giây; chỉ dùng mốc server và đo sai lệch thực tế.
-4. Nộp bài với `Idempotency-Key`; server xác thực participant, revision, thời hạn. Cùng key/payload trả kết quả cũ; answer khác/key khác sau khi khóa trả 409. Backend chấm deterministic theo answer spec khóa, không nhận cờ `correct` từ client.
-5. Hai bài nộp hoặc hết giờ → một transaction/worker có lock match chốt grade, buff, damage, HP, event reveal. Animation chạy **sau** state đã chốt. Reconnect lấy snapshot + events từ cursor, không phát lại damage.
+4. Nộp đáp án + bài giải với `Idempotency-Key`; server xác thực participant, revision, thời hạn. Cùng key/payload trả kết quả cũ; payload khác sau khi khóa trả 409. Backend kiểm đáp án; bộ chấm bài giải theo docs/39, không nhận cờ `correct` từ client.
+5. Hai bài nộp hoặc hết giờ → trạng thái `grading_pending` nếu cần AI; cùng rubric/model/prompt version đã khóa cho hai bên. `correct/incorrect` rõ → một transaction/worker có lock match chốt grade, buff, damage, heal, status, HP, event reveal. `uncertain`/timeout bộ chấm → void theo docs/39. Animation chạy **sau** state đã chốt. Reconnect lấy snapshot + events từ cursor, không phát lại damage.
 6. Match settle khóa result, XP/coin ledger và (nếu ranked hợp lệ) hai RP/MMR ledger trong cùng transaction. Retry/worker song song không tạo kết quả thứ hai. Không log token, đáp án cá nhân hoặc ảnh.
 
-WebSocket dùng để đẩy trận; `GET snapshot/events` là đường phục hồi và có thể dùng polling cho demo nếu hai máy chứng minh cùng deadline. Không gọi Gemini hoặc tạo đề lúc `round_prepare`; bộ câu đã duyệt được chọn/khóa trước trận. Mất kết nối trước khi đề hiện đủ → void vòng/trận; mất sau đó cho reconnect/nộp trước deadline nhưng tắt thưởng nhanh vòng đó. Mất mạng không tự động là gian lận. Giao hữu v1 rời trận thì hủy không phạt; quy tắc forfeit ranked cần khiếu nại và playtest riêng.
+WebSocket dùng để đẩy trận; `GET snapshot/events` là đường phục hồi và có thể dùng polling cho demo nếu hai máy chứng minh cùng deadline. Không gọi Gemini hoặc tạo đề lúc `round_prepare`; bộ câu đã duyệt được chọn/khóa trước trận. Gemini chỉ có thể tham gia **sau nộp** để đọc/lập nhận định bài giải. Mất kết nối trước khi đề hiện đủ → void vòng/trận; mất sau đó cho reconnect/nộp trước deadline. Mất mạng không tự động là gian lận. Giao hữu v1 rời trận thì hủy không phạt; quy tắc forfeit ranked cần khiếu nại và playtest riêng.
 
 ## 5. XP, RP/MMR và quyền riêng tư
 
@@ -49,15 +49,15 @@ Không thể chống giải hộ bằng camera hay đo tốc độ tuyệt đố
 
 ## 6. Avatar, UI và hiệu ứng vui
 
-Ba nhân vật Cú Mực, Cáo Nắng, Rồng Giấy có hai thẻ chung và một kỹ năng riêng được cân bằng theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); một nhân vật chọn miễn phí, nhân vật khác mở bằng Đồng Mực. Humor đến từ phản ứng nhỏ theo tính cách, không từ chế giễu người thua: `Cú Mực mở vở.`, `Rồng Giấy gấp khiên.`, `Hai bên đều giữ được nhịp.` Không dùng emoji hệ thống, meme có bản quyền, GIF mạng, 3D hoặc tiếng kêu chen vào đề. Asset là sprite 2D gốc WebP/PNG, bản tĩnh luôn có. Không có nhân vật bị thương/ốm. Có tắt âm và giảm chuyển động.
+Roster gồm Cú Mực, Cáo Nắng, Rồng Giấy và Hiệp Sĩ Bìa Vở theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); một nhân vật chọn miễn phí, nhân vật khác mở bằng Đồng Mực sau playtest. Humor đến từ đồ dùng/tình huống, không chế giễu người thua. Không dùng emoji hệ thống, meme có bản quyền, GIF mạng, 3D hoặc tiếng kêu chen vào đề. Asset là sprite 2D gốc WebP/PNG, bản tĩnh luôn có. Không có nhân vật bị thương/ốm. Có tắt âm và giảm chuyển động.
 
-Màn vòng: `Cú Mực 52/60 HP | Vòng 2/3 | Cáo Nắng 40/60 HP`; ba thẻ kỹ năng trước câu; sau đó đề chiếm phần lớn màn hình, nút `Nộp bài` rõ. Sau reveal chỉ một hiệu ứng 300–500 ms, số HP và tên kỹ năng vẫn hiện bằng chữ khi animation tắt. Không chờ animation để mở vòng tiếp theo. Khung rank chỉ cosmetic, không đổi hitbox/sức mạnh.
+Màn vòng: `Cú Mực 52/60 HP | Vòng 2/3 | Cáo Nắng 40/60 HP`; ba thẻ trong loadout trước câu; sau đó đề + vùng `Viết cách làm` chiếm phần lớn màn hình, nút `Nộp bài` rõ. Khi đang chấm hiện trạng thái; sau reveal chỉ một hiệu ứng 300–500 ms, số HP và tên kỹ năng vẫn hiện bằng chữ khi animation tắt. Không chờ animation để mở vòng tiếp theo. Khung rank chỉ cosmetic, không đổi hitbox/sức mạnh.
 
 ## 7. Hợp đồng API/SQL để lập task
 
-Endpoint dự kiến: `GET /v1/competition/subjects`, `POST/DELETE /v1/matches/queue`, `POST /v1/matches/{id}/ready`, `POST /v1/matches/{id}/rounds/{n}/skill`, `POST /v1/matches/{id}/rounds/{n}/received`, `POST /v1/matches/{id}/rounds/{n}/submission`, `GET /v1/matches/{id}`, `GET /v1/matches/{id}/events?cursor=`, `GET /v1/matches/{id}/result`; WebSocket `/v1/matches/{id}/stream`. Chốt payload/schema bằng contract tests khi coding. Backend xác minh Firebase ID token và quyền participant trước mọi read/write/upgrade WebSocket; không lộ answer spec hoặc skill đối thủ trước reveal.
+Endpoint dự kiến: `GET /v1/competition/subjects`, `POST/DELETE /v1/matches/queue`, `POST /v1/matches/{id}/loadout`, `POST /v1/matches/{id}/ready`, `POST /v1/matches/{id}/rounds/{n}/skill`, `POST /v1/matches/{id}/rounds/{n}/received`, `POST /v1/matches/{id}/rounds/{n}/submission`, `GET /v1/matches/{id}`, `GET /v1/matches/{id}/events?cursor=`, `GET /v1/matches/{id}/result`; WebSocket `/v1/matches/{id}/stream`. Chốt payload/schema bằng contract tests khi coding. Backend xác minh Firebase ID token và quyền participant trước mọi read/write/upgrade WebSocket; không lộ answer spec/rubric hoặc skill đối thủ trước reveal.
 
-SQL bổ sung `matches` với scope nội dung + `combat_rule_version`; `match_players(match_id,user_id,slot,hp,ready_at,seen_round_at)`; `match_rounds(match_id,round_no,question_id,question_revision,start_at,deadline_at,state)`; `round_skills(match_id,round_no,user_id,skill_id,locked_at)`; `round_submissions(match_id,round_no,user_id,answer_ref,grade_status,received_at,attempt_key)`; `round_results(match_id,round_no,hp_a_before,hp_b_before,damage_to_a,damage_to_b,hp_a_after,hp_b_after,speed_bonus_user_id,settled_at)`; `match_results(match_id,outcome,winner_id_nullable,hp_a,hp_b,settled_at)`; `match_events(match_id,sequence,payload_public,created_at)`. Unique `(match_id,round_no,user_id)` cho skill/submission, `(match_id,round_no)` cho result, `(match_id,sequence)` cho event. `answerSpec` chỉ ở server. Submission cá nhân có thời hạn giữ phục vụ khiếu nại, không ghi log.
+SQL bổ sung `matches` với scope nội dung + `combat_rule_version`/`grading_policy_version`; `match_players(match_id,user_id,slot,hp,character_id,loadout_ids,ready_at,seen_round_at)`; `match_rounds(match_id,round_no,question_id,question_revision,rubric_revision,start_at,deadline_at,state)`; `round_skills(match_id,round_no,user_id,skill_id,locked_at)`; `round_submissions(match_id,round_no,user_id,answer_ref,grading_decision_id,grade_status,received_at,attempt_key)`; `round_results(match_id,round_no,hp_a_before,hp_b_before,damage_to_a,damage_to_b,heal_a,heal_b,statuses_applied,hp_a_after,hp_b_after,settled_at)`; `match_results(match_id,outcome,winner_id_nullable,hp_a,hp_b,settled_at)`; `match_events(match_id,sequence,payload_public,created_at)`. Unique `(match_id,round_no,user_id)` cho skill/submission, `(match_id,round_no)` cho result, `(match_id,sequence)` cho event. `answerSpec`/rubric chỉ ở server. Bài giải cá nhân có thời hạn giữ phục vụ khiếu nại, không ghi log hoặc gửi đối thủ.
 
 ## 8. Lộ trình demo
 
@@ -68,21 +68,21 @@ SQL bổ sung `matches` với scope nội dung + `combat_rule_version`; `match_p
 
 ## 9. Câu hỏi playtest
 
-Năm học sinh hiểu ba kỹ năng trong 30 giây không? Nếu không, chỉ giữ Tấn công/Phòng thủ cho bản đầu. Người thua có xem giải thích và muốn làm câu tương tự không? Mạng nào nhận đề chậm hơn, tỷ lệ void/thưởng nhanh theo mạng ra sao? Hàng chờ theo môn/lớp/bộ nội dung có đủ người không? Nếu không, ưu tiên mã mời và luyện, không ghép sai chương trình. Theo dõi câu lặp theo `variant_family_id`; không mở ranked khi ngân hàng quá mỏng.
+Năm học sinh hiểu ba thẻ trong loadout trong 30 giây không? Nếu không, chỉ giữ Tấn công/Phòng thủ cho bản đầu. Người thua có xem giải thích và muốn làm câu tương tự không? Mạng nào nhận đề chậm hơn, tỷ lệ void theo mạng và tỷ lệ `uncertain` theo dạng bài ra sao? Hàng chờ theo môn/lớp/bộ nội dung có đủ người không? Nếu không, ưu tiên mã mời và luyện, không ghép sai chương trình. Theo dõi câu lặp theo `variant_family_id`; không mở ranked khi ngân hàng quá mỏng.
 
 ## 10. Cổng mở ranked và acceptance
 
-Ranked cần bộ câu đủ rộng/được duyệt; scope nội dung rõ; hai máy thật nhận cùng câu/deadline; không lộ đáp án; reconnect/void có test; HP, XP, coin và hai RP/MMR ledger idempotent trong test cạnh tranh; cân bằng kit nhân vật theo docs/37; consent/độ tuổi/bảng công khai/khiếu nại hoạt động. Thưởng nhanh ranked là cổng **riêng** dựa trên số đo mạng; có thể để tắt dù giao hữu đã bật.
+Ranked cần bộ câu đủ rộng/được duyệt và **rubric trình bày đã đánh giá với người chấm độc lập** theo docs/39; scope nội dung rõ; hai máy thật nhận cùng câu/deadline; không lộ đáp án; reconnect/void có test; HP, XP, coin và hai RP/MMR ledger idempotent trong test cạnh tranh; cân bằng kit nhân vật theo docs/40; consent/độ tuổi/bảng công khai/khiếu nại hoạt động. Speed bonus **tắt** ở mode viết/chụp.
 
 | ID | Tình huống | Kết quả bắt buộc |
 | --- | --- | --- |
 | S01 | Chung Toán 9, khác môn ưu tiên khác | Ghép nếu cùng `curriculum/content/pool`; không đòi trùng toàn tổ hợp |
 | S02 | Cùng tên môn/lớp nhưng khác `content_version` | Không ghép ranked; nêu lý do/luyện thay thế |
-| S03 | Một máy nhận đề sau `starts_at` | Hủy câu đã lộ, phát revision mới hoặc void; không thưởng nhanh |
+| S03 | Một máy nhận đề sau `starts_at` | Hủy câu đã lộ, phát revision mới hoặc void; không chấm thua vì mạng |
 | S04 | A Bút Chớp đúng, B Che Vở đúng | Mỗi người mất 8 HP; hai máy cùng snapshot |
 | S05 | A đúng, B sai và chọn Che Vở | A mất 0, B mất 20; sai không bật kỹ năng |
-| S06 | Hai người đúng, chênh <2 giây hoặc mạng không đạt | Không ai có thưởng nhanh |
-| S07 | Hai người đúng, chênh ≥2 giây, mạng đạt | Người sớm hơn +5, cả hai đòn vẫn chốt |
+| S06 | Hai người đúng, tốc độ nộp khác nhau | Không ai có thưởng nhanh trong mode viết/chụp |
+| S07 | Một bài có đáp án đúng nhưng thiếu lý do hoặc AI chưa chắc | Không kích hoạt kỹ năng/đổi RP cho đến khi chấm rõ; ranked void nếu `uncertain` |
 | S08 | Retry bài nộp/worker settle song song | Một submission/result/XP và coin ledger; tối đa hai RP/MMR ledger |
 | S09 | Câu lỗi/uncertain, mất kết nối trước nhận đề | Void, không rating, phản hồi rõ |
 | S10 | Người ngoài trận gọi API/stream | 403, không lộ đề/đáp án/tài khoản |

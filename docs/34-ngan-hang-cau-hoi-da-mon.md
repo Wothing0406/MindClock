@@ -1,6 +1,6 @@
 # Ngân hàng câu hỏi đa môn cho luyện tập và thi đấu
 
-**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu Solo mới theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), **nguồn dữ liệu ngoài và ba dạng đề từ 2025** theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). “Ngân hàng ngôn ngữ” ở đây gồm **văn bản tiếng Việt của câu, thuật ngữ môn, đáp án tương đương, gợi ý/giải thích và thông báo UI**, không chỉ một danh sách câu trắc nghiệm.
+**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu Solo theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), **bài có trình bày/rubric** theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), **nguồn ngoài** theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). “Ngân hàng ngôn ngữ” gồm văn bản câu, thuật ngữ, đáp án tương đương, gợi ý/giải thích và thông báo UI.
 
 ## 1. Cấu trúc một câu chuẩn
 
@@ -32,7 +32,7 @@
 }
 ```
 
-Ví dụ chỉ là mẫu schema, **chưa được người dạy duyệt để đưa vào sản phẩm**. Bản `published` cần `editorId`, `reviewerId`, `approvedAt`, `rubricRevision`, `contentHash`; sửa stem/đáp án tạo revision mới. Đề/ảnh/tư liệu nguồn chỉ dùng khi có quyền và dẫn nguồn trong metadata.
+Ví dụ chỉ là mẫu schema, **chưa được người dạy duyệt để đưa vào sản phẩm**. Để vào báo thức/giao hữu/ranked cần thêm `reasoningPromptVi` và `reasoningRubric` theo docs/39; đáp án A/B/C/D một mình không đủ. Bản `published` cần `editorId`, `reviewerId`, `approvedAt`, `rubricRevision`, `contentHash`; sửa stem/đáp án/rubric tạo revision mới. Đề/ảnh/tư liệu nguồn chỉ dùng khi có quyền và dẫn nguồn trong metadata.
 
 ## 2. Loại câu theo môn và chế độ
 
@@ -51,7 +51,7 @@ Không cần mở mọi môn ngay. Mỗi môn có trạng thái `not_available`,
 ## 3. Phân loại và cân bằng
 
 - `subject → gradeBand → topic → learningOutcome → difficultyBand (1..4) → answerType` là taxonomy bắt buộc. `tags` tự do chỉ bổ trợ, không thay taxonomy.
-- Một bộ 3 câu ranked dùng 1 câu nhận biết, 1 câu thông hiểu, 1 câu vận dụng ngắn; hai người nhận **cùng bộ theo cùng thứ tự** và cùng `curriculum_id/content_version/question_pool_version` theo docs/35. Nếu môn không có ba câu tương đương đã duyệt, không mở ranked.
+- Một bộ 3 câu ranked dùng 1 câu nhận biết, 1 câu thông hiểu, 1 câu vận dụng ngắn **chỉ khi cả ba có rubric trình bày đã kiểm định**; hai người nhận **cùng bộ theo cùng thứ tự** và cùng `curriculum_id/content_version/question_pool_version` theo docs/35. Nếu môn không có ba câu tương đương đã duyệt, không mở ranked. Độ khó báo thức mới bắt đầu band 1 theo docs/39, không suy từ rank.
 - Dùng câu đã qua thử với người học để ước lượng thời gian và tỷ lệ đúng. `difficultyBand` là nhận định ban đầu của người dạy, cần hiệu chuẩn; không đưa câu quá khó vào trận chỉ để tạo thắng thua.
 - Giảm học vẹt bằng biến thể có cùng mục tiêu học nhưng số liệu/ngữ cảnh khác, tránh lặp `questionId` và `variantFamilyId` trong khoảng gần. Biến thể do AI đề xuất phải được duyệt trước publish.
 - Với câu nhiều lựa chọn, phương án nhiễu phải phản ánh lỗi hiểu thường gặp, không chơi chữ vô lý. Tránh tiết lộ đáp án qua độ dài hoặc ngữ pháp.
@@ -90,7 +90,7 @@ Người duyệt không là người duy nhất soạn câu nếu có thể. AI 
 
 Mở rộng `questions` của [docs/28](28-backend-sql.md) với `locale`, `learning_outcome`, `answer_type`, `mode_eligibility`, `variant_family_id`, `content_hash`, `estimated_seconds`, `source_license`, `approved_at`; bảng `question_choices(question_id,revision,choice_id,text,position)`, `question_revisions(question_id,revision,stem,answer_spec_json,rubric_json,status,editor_id,reviewer_id,created_at)`, `question_exposure(user_id,question_id,variant_family_id,last_seen_at,mode)` để giảm lặp. Unique `(question_id,revision)`; bản đã xuất bản bất biến. Không trả `answerSpec` hoặc `explanation` xuống client trước reveal trong ranked.
 
-API quản trị nội bộ: nhập staging từ nguồn có quyền hoặc tạo nháp → submit review → approve → publish/retire; quyền editor/reviewer tách biệt, audit. API học sinh chỉ trả stem/choices và metadata cần hiển thị. Backend chấm câu cấu trúc bằng `answerSpec` version đã khóa trong match; không tin đáp án client tự gửi là đúng. Có test snapshot từng revision và contract response không lộ đáp án. Raw corpus VNHSGE/VMLU/ViMMRC chưa được nạp vào app; registry chỉ là metadata.
+API quản trị nội bộ: nhập staging từ nguồn có quyền hoặc tạo nháp → soạn yêu cầu trình bày/rubric → submit review → approve → publish/retire; quyền editor/reviewer tách biệt, audit. API học sinh chỉ trả stem/choices, yêu cầu trình bày và metadata cần hiển thị. Backend chấm đáp án cấu trúc bằng `answerSpec` và bài giải bằng policy docs/39 đã khóa trong match; không tin cờ đúng từ client. Có test snapshot từng revision và contract response không lộ đáp án/rubric. Raw VNHSGE/VMLU đã tải **chỉ để nghiên cứu local**, chưa nạp vào app; ViMMRC chỉ metadata.
 
 ## 7. Mức nội dung tối thiểu trước demo/pilot
 

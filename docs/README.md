@@ -42,7 +42,9 @@
 34. [35 — Solo RPG v2](35-solo-rpg-dong-bo-va-ky-nang.md): **nguồn chuẩn luật trận hiện hành** — HP, kỹ năng, ghép cùng nội dung, đồng bộ, API/SQL và test.
 35. [36 — Khác biệt, humor, Gemini, tốc độ](36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md): đối chiếu ý tưởng, giọng vui/asset, chọn model thử nghiệm và ngân sách hiệu năng.
 36. [37 — Đồng Mực, bậc hạng và nhân vật 2D](37-kinh-te-rank-va-nhan-vat-2d.md): **nguồn chuẩn kinh tế game**, ba kit kỹ năng, RP Đồng 1–Tinh Anh 5, ví/ledger và sprite asset.
-37. [38 — Nguồn dữ liệu và nhập câu](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md): đánh giá VNHSGE/VMLU/ViMMRC, quyền sử dụng, ba dạng câu từ 2025, staging/duyệt/publish. [Registry](../data/sources/registry.json) hiện chỉ metadata.
+37. [38 — Nguồn dữ liệu và nhập câu](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md): VNHSGE/mirror VMLU đã tải nghiên cứu local, ViMMRC chưa tải, quyền sử dụng và pipeline duyệt. [Registry](../data/sources/registry.json) và [manifest](../data/research/research-manifest.json) chỉ chứa metadata.
+38. [39 — Bài làm có trình bày và chấm công bằng](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md): yêu cầu giải thích ngắn mọi môn, ba kết quả, rubric/AI/validator, cổng ranked và độ khó ngày đầu.
+39. [40 — PvP, nhân vật và bản đồ](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md): hồi/hút/choáng, bốn nhân vật người/động vật, map/FX 2D, công thức HP và nội dung vui chuẩn mực.
 
 ## Quyết định đã chốt để coding
 
@@ -50,7 +52,7 @@
 | --- | --- |
 | Bản đầu | Flutter cho Android, FastAPI backend, SQLite local cho demo/PostgreSQL đích; Firebase Authentication có thể giữ; Gemini chỉ được gọi từ backend. Xem docs/28; mô hình Firestore trong docs cũ đã được thay thế |
 | Báo thức | Lập lịch tại thiết bị, có câu hỏi dự phòng offline; không phụ thuộc API lúc chuông reo |
-| Câu hỏi | Ngân hàng câu đã duyệt cho MVP; AI hỗ trợ đọc/chấm bài và gợi ý |
+| Câu hỏi | Ngân hàng câu đã duyệt cho MVP; mọi câu có chấm cần đáp án + cách làm ngắn/rubric; AI hỗ trợ đọc/chấm/gợi ý, xem docs/39 |
 | Ảnh | Gửi qua backend, xử lý tạm thời, không lưu ảnh mặc định |
 | Chấm | `correct`, `incorrect`, `uncertain`; AI không kết luận gian lận |
 | Điểm | XP ghi ở server theo sự kiện; không trừ điểm vì sai bài, hoãn hoặc tắt khẩn cấp |
@@ -60,8 +62,8 @@
 | Nhân vật | Sprite 2D, chọn một nhân vật miễn phí, nhân vật còn lại mở bằng Đồng Mực; kỹ năng riêng phải cân bằng trước ranked, không phạt hình ảnh khi nghỉ/sai; xem docs/22 và 37 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
-| Solo RPG | Giao hữu trước; 60 HP/3 vòng, hai thẻ chung + một thẻ theo nhân vật, cùng bộ nội dung; Gemini ngoài trận; xem docs/35, 37. Model/quota và mục tiêu tốc độ ở docs/36 |
-| Dữ liệu câu ngoài | VNHSGE/VMLU/ViMMRC chỉ có metadata registry; chưa có quyền/nội dung đã nạp. Câu demo do đội biên soạn/duyệt; xem docs/38 |
+| Solo RPG | Giao hữu trước; 60 HP/3 vòng, chọn 2/4 thẻ chung + thẻ nhân vật, hồi/hút/choáng; Gemini chỉ đề xuất chấm **sau nộp**, không sinh đề trực tiếp; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 40 |
+| Dữ liệu câu ngoài | VNHSGE và mirror VMLU đã tải **chỉ ở khu nghiên cứu local gitignored**, không có câu nào vào app; ViMMRC chỉ metadata. Câu demo do đội biên soạn/duyệt; xem docs/38 và [manifest](../data/research/research-manifest.json) |
 
 ## Các điểm còn mở phải quyết định trước khi triển khai rộng
 

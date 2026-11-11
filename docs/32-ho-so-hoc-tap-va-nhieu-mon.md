@@ -17,7 +17,7 @@ Môn dùng cho Solo 1v1 chỉ được mở theo chất lượng [ngân hàng c�
 1. Lấy danh sách môn **được bật và có câu đã duyệt**, đúng lớp/cấp và phương thức chấm được hỗ trợ offline hoặc có fallback an toàn.
 2. Ưu tiên môn có trong lịch hôm nay (hoặc buổi sáng tiếp theo theo giờ địa phương); nếu nhiều môn, dùng môn chưa xuất hiện trong các lần gần đây và thuộc mức ưu tiên của người dùng.
 3. Nếu hôm nay không có môn, chọn chủ đề đến hạn ôn từ các môn ưu tiên; nếu không có thì câu dự phòng dễ hoặc `Chỉ báo thức` theo cài đặt. Không tự chuyển sang môn người dùng đã loại.
-4. Chọn câu đúng chủ đề, độ khó cá nhân, thời lượng mục tiêu 60–90 giây; tránh lặp `questionId`/biến thể gần đây. **Rank/ELO không quyết định độ khó**.
+4. Chọn câu đúng chủ đề, độ khó cá nhân theo [quy tắc ba phiên đầu và tăng dần](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md#5-độ-khó-ngày-đầu-và-tăng-dần), thời lượng mục tiêu 60–90 giây; tránh lặp `questionId`/biến thể gần đây. **Rank/ELO không quyết định độ khó**.
 5. Tải trước `questionId`, revision, đề, answer spec tối thiểu và câu dự phòng vào cache bảo vệ trên máy. Đến giờ reo không chờ AI sinh đề hay mạng.
 
 **Công thức lựa chọn v1 để đội có thể code/test:** lọc điều kiện bắt buộc → xếp theo `môn có tiết hôm nay` (+4), `môn ưu tiên cao` (+3), `chủ đề đến hạn` (+2), `chưa hỏi 7 ngày` (+2), `vừa hỏi 2 ngày` (−5); hòa thì xoay vòng cố định theo UID+ngày, không random lại mỗi lần mở app. Điểm chỉ là heuristic chọn câu, không hiển thị là điểm năng lực. Đội có thể điều chỉnh qua pilot và ghi `selectionRuleVersion`.
@@ -41,13 +41,21 @@ Mỗi `question` có `subject_code`, `grade_band`, `topic_id`, `learning_outcome
 - Một lần thay thời khóa biểu sẽ tính lại thông báo cục bộ, hủy thông báo cũ theo ID; không spam nhiều nhắc cho cùng một việc. Mặc định tối đa 2 nhắc học/ngày ngoài báo thức, người dùng đổi/tắt được.
 - AI không tự đoán học lực, tự thêm việc vào lịch, tự thay ngày thi hoặc gửi thông báo khi người dùng chưa xác nhận dữ liệu đầu vào.
 
-## 5. Dữ liệu/API dự kiến cho backend SQL
+## 5. Gợi ý giờ dậy khi đặt báo thức
 
-Thêm vào [schema SQL](28-backend-sql.md): `study_profiles(user_id,grade_band,selection_mode,updated_at)`, `profile_subjects(user_id,subject_code,priority,alarm_enabled,answer_mode)`, `exam_goals(id,user_id,label,target_date nullable,status)`, `exam_goal_subjects(goal_id,subject_code,priority)`, `study_tasks(id,user_id,subject_code,title,due_at,status,source,confirmed_at)`, `notification_preferences(user_id,max_daily_study_reminders,quiet_hours_start,quiet_hours_end,lockscreen_detail)`. Không lưu ảnh thời khóa biểu mặc định sau khi người dùng xác nhận bản trích xuất.
+Người dùng chọn ngày có tiết học, giờ bắt đầu, thời gian đi đường, thời gian chuẩn bị và khoảng đệm muốn có. App **tính trên máy** `giờ dậy muộn nhất = giờ bắt đầu − đi đường − chuẩn bị − khoảng đệm` theo múi giờ đã xác nhận, rồi hiển thị 2–3 lựa chọn quanh mốc đó nếu không trùng lịch khác. Ví dụ tiết đầu 07:00, đi đường 25 phút, chuẩn bị 30 phút, đệm 10 phút → mốc muộn nhất **05:55**; UI: `Đề xuất 05:55 · kịp tiết 07:00 theo thời gian bạn nhập` và `Sửa thời gian`. Không làm tròn khiến giờ dậy trễ hơn mốc. Không gán đây là khuyến nghị y khoa hay bảo đảm đến lớp đúng giờ.
 
-API đề xuất: `GET/PUT /v1/study-profile`, `GET/PUT /v1/exam-goals`, `GET/PUT /v1/timetable`, `POST /v1/timetable/parse-preview` (ảnh → bản nháp, không lưu), `GET/POST/PATCH /v1/study-tasks`, `GET/PUT /v1/notification-preferences`, `GET /v1/challenges/next`. Backend xác minh người sở hữu, không cho client quyết định XP/độ đúng. Các endpoint là **đề xuất**, phải chốt contract test khi mở task coding.
+AI có thể đọc lịch đã xác nhận để **giải thích** vì sao đề xuất một giờ, nhận ra ngày có tiết sớm/di chuyển khác và gợi ý phân bổ việc buổi tối. AI chỉ trả `suggestions[]` với `input_refs`, `reason_vi`, `confidence_note`; backend/client kiểm lại phép trừ và xung đột, không cho AI ghi alarm, task hoặc notification. Người dùng bấm `Dùng giờ này` rồi app kiểm quyền/lập lịch OS và báo trạng thái thực. Nếu thiếu giờ học/đi đường, hỏi nhập hoặc giữ giờ người dùng đặt tay; offline vẫn tính được từ dữ liệu local. Lịch đổi → hiện `Giờ học đã đổi. Xem lại báo thức 05:55`, không tự chỉnh chuông đang bật.
 
-## 6. Kiểm thử cốt lõi
+Không thu vị trí GPS để tính đi đường mặc định; nhập số phút thủ công. Không suy giờ ngủ hoặc chẩn đoán giấc ngủ từ lịch. Nếu giờ đề xuất nằm trước ngày hiện tại, xung đột ngày nghỉ hoặc khoảng chuẩn bị không hợp lệ, yêu cầu người dùng sửa; không âm thầm đặt 00:00. `wake_suggestion_version`/nguồn lịch được lưu để giải thích, không dùng AI để quyết XP/streak.
+
+## 6. Dữ liệu/API dự kiến cho backend SQL
+
+Thêm vào [schema SQL](28-backend-sql.md): `study_profiles(user_id,grade_band,selection_mode,updated_at)`, `profile_subjects(user_id,subject_code,priority,alarm_enabled,answer_mode)`, `exam_goals(id,user_id,label,target_date nullable,status)`, `exam_goal_subjects(goal_id,subject_code,priority)`, `study_tasks(id,user_id,subject_code,title,due_at,status,source,confirmed_at)`, `notification_preferences(user_id,max_daily_study_reminders,quiet_hours_start,quiet_hours_end,lockscreen_detail)`, `wake_preferences(user_id,prep_minutes,commute_minutes,buffer_minutes,time_zone,updated_at)`, `wake_suggestion_audit(user_id,alarm_id,input_revision,calculation_version,suggested_local_time,confirmed_at nullable)`; audit chỉ metadata tối thiểu. Không lưu ảnh thời khóa biểu mặc định sau khi người dùng xác nhận bản trích xuất.
+
+API đề xuất: `GET/PUT /v1/study-profile`, `GET/PUT /v1/exam-goals`, `GET/PUT /v1/timetable`, `POST /v1/timetable/parse-preview` (ảnh → bản nháp, không lưu), `GET/POST/PATCH /v1/study-tasks`, `GET/PUT /v1/notification-preferences`, `GET/PUT /v1/wake-preferences`, `POST /v1/alarms/wake-suggestions` (preview, không ghi alarm), `GET /v1/challenges/next`. Backend xác minh người sở hữu, không cho client quyết định XP/độ đúng. Các endpoint là **đề xuất**, phải chốt contract test khi mở task coding.
+
+## 7. Kiểm thử cốt lõi
 
 - Hai người cùng lớp khác môn ưu tiên nhận câu/nhắc lịch khác nhau; cùng người đổi tổ hợp thì câu kế tiếp đổi theo nhưng không sửa lịch sử.
 - Ngày có nhiều môn: xoay vòng công bằng, không lặp một môn suốt tuần; ngày nghỉ: đúng fallback.
@@ -55,4 +63,5 @@ API đề xuất: `GET/PUT /v1/study-profile`, `GET/PUT /v1/exam-goals`, `GET/PU
 - `incorrect` đếm lần sai theo [docs/31](31-bao-thuc-thu-thach.md); `uncertain` không đếm. Ngữ văn câu mở không kẹt chuông.
 - AI đọc thời khóa biểu sai: không lưu/nhắc trước khi người dùng xác nhận; đổi lịch hủy nhắc cũ.
 - Mất mạng, đổi múi giờ, đổi lớp, xóa hồ sơ, quyền thông báo bị từ chối đều có trạng thái rõ và không chặn Dừng khẩn cấp.
+- Giờ học 07:00, đi đường 25 phút, chuẩn bị 30 phút, đệm 10 phút → đề xuất 05:55; lịch đổi/thiếu dữ liệu/AI trả giờ trễ hơn phép tính đều không tự sửa alarm.
 

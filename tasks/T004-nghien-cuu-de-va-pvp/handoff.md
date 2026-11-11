@@ -1,0 +1,9 @@
+# Bàn giao T004
+
+- **Trạng thái cuối:** `done` cho tài liệu và khu nghiên cứu cục bộ; **chưa có app/backend/PvP/asset/chấm AI chạy thật**.
+- **Đã làm:** tải VNHSGE JSON và mirror VMLU JSONL nghiên cứu local; ghi commit/hash/count; thiết kế yêu cầu viết lý do, chấm ba trạng thái, cổng ranked, tăng khó ngày đầu, gợi ý giờ dậy, PvP hồi/hút/choáng, bốn nhân vật, ba map và FX 2D.
+- **File thay đổi:** docs/07/09/14/21/22/28/31/32/34/35/36/37/38/39/40/README; `data/sources/registry.json`, `data/research/README.md`, `data/research/research-manifest.json`, `.gitignore`, `scripts/research_inventory.py`, hồ sơ T004. Raw chỉ trên máy này, bị Git bỏ qua.
+- **Kiểm tra:** inventory 406 JSON/17.054 mục và 3 JSONL/10.880 mục, 0 parse error, VMLU test 9.833 không đáp án; py_compile/JSON/link local/gitignore/diff check pass. `tests.md` ghi lệnh và giới hạn.
+- **Chưa xong/rủi ro:** chưa có quyền tái sử dụng từng câu/ảnh, chưa có rubric do giáo viên duyệt, chưa có ảnh VNHSGE, mirror VMLU chưa xác minh với nguồn chính thức; không đưa raw vào app/demo/repo. Chưa đo độ chính xác AI, thời gian chấm, cân bằng skill hay thử hai máy. ViMMRC chưa tải vì cần thỏa thuận.
+- **Việc bên khác cần làm:** đội nội dung/pháp lý xác minh quyền từng nhóm câu và tạo rubric/trích dẫn; giáo viên chấm tập độc lập; đội mobile/backend code theo task mới; QA thử Android thật/hai máy và giảm chuyển động. Không bật ranked trước cổng docs/35/39/40.
+- **Điểm tiếp tục chính xác:** khi coding tạo T005 theo `tasks/README.md`; bắt đầu một câu **đội tự viết** có đáp án + lý do chữ, backend `correct/incorrect/uncertain`, offline alarm an toàn. Sau đó giao hữu hai máy hai thẻ chung, rồi mở từng skill. Nếu nghiên cứu nguồn trên máy khác, làm theo `data/research/README.md`, đối chiếu hash manifest trước phân tích. Trước import sản phẩm cần bằng chứng quyền, reviewer và test adapter; không dùng `data/research/raw` làm nguồn runtime.

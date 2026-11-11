@@ -1,0 +1,60 @@
+{
+  "inventory_version": 1,
+  "checked_at": "2026-11-11",
+  "notice": "Metadata only. Raw corpus is local and gitignored. Counts are parsed, not approved questions.",
+  "sources": [
+    {
+      "source_id": "vnhsge",
+      "source_url": "https://github.com/Xdao85/VNHSGE",
+      "commit": "04c845dccd5bf7b619e1e6b3ddae4d53c1264620",
+      "scope": "Vietnamese JSON files only; images and Word files excluded",
+      "file_count": 406,
+      "item_count_parsed": 17054,
+      "by_split": {
+        "eval": 1730,
+        "test": 1697,
+        "train": 13627
+      },
+      "by_subject": {
+        "Biology": 1990,
+        "Chemistry": 1987,
+        "CivicEducation": 1997,
+        "English": 2500,
+        "Geography": 2000,
+        "History": 2000,
+        "Literature": 30,
+        "Mathematics": 2550,
+        "Physics": 2000
+      },
+      "schema_key_signatures": {
+        "Choice|Explanation|ID|Image_Answer|Image_Question|Question": 17024,
+        "Câu hỏi|Gọi ý trả lời|Đáp án": 6,
+        "Câu hỏi|Gợi ý trả lời|Đáp án": 24
+      },
+      "parse_errors": [],
+      "sha256_file_set": "858bb088f96410b0dbded264d6f104ebea3ffd89f3487dad95452b37ec119c04",
+      "publication_status": "research_only_not_app_approved"
+    },
+    {
+      "source_id": "vmlu",
+      "source_url": "https://huggingface.co/datasets/tridm/VMLU",
+      "provenance_note": "Third-party public mirror; not the official VMLU download",
+      "commit": "9ed8d5ca21c680783da62e26f499facf47788568",
+      "file_count": 3,
+      "item_count_parsed": 10880,
+      "by_file": {
+        "test.jsonl": 9833,
+        "train.jsonl": 303,
+        "valid.jsonl": 744
+      },
+      "duplicate_ids": 0,
+      "schema_key_signatures": {
+        "answer|choices|id|question": 1047,
+        "choices|id|question": 9833
+      },
+      "parse_errors": [],
+      "sha256_file_set": "7378b81a84ea083fbc7524b6f4a06b3e03709c4ab49df3f00e8358a9fc131be7",
+      "publication_status": "research_only_not_app_approved"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Dữ liệu nguồn chỉ dùng để nghiên cứu tại máy; không đưa corpus/ảnh bên thứ ba lên repo.
+/data/research/raw/
+/data/research/staging/
+/data/research/private-reports/
+__pycache__/
+*.pyc

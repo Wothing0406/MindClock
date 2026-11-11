@@ -7,7 +7,8 @@
 | Vai logic | Giai đoạn | Đầu vào được phép | Đầu ra | Không được làm |
 | --- | --- | --- | --- | --- |
 | Bộ chọn câu | M1 | Lịch học, lớp, chủ đề, lịch sử đã tổng hợp, bộ câu published | `questionId + revision` | Tạo câu chưa duyệt vào chuông; đọc ảnh/PII |
-| Bộ đọc/chấm bài | M1 | Ảnh vừa gửi, câu, đáp án, rubric | Bước nhìn thấy, kết luận ứng viên, chỗ không chắc | Tự cấp XP, kết luận gian lận, viết Firestore |
+| Bộ đọc/chấm bài | M1 | Chữ/ảnh vừa gửi, câu, đáp án, rubric đã duyệt | Bước nhìn thấy, checkpoint có chứng cứ, kết luận ứng viên/chỗ không chắc theo docs/39 | Tự cấp XP/HP/RP, kết luận gian lận, viết CSDL |
+| Bộ gợi ý giờ dậy | M1 mở rộng | Giờ học/lịch đã xác nhận, phút đi đường/chuẩn bị/đệm | Lý do ngắn cho lựa chọn giờ; phép tính độc lập trên máy theo docs/32 | Tự đặt/sửa báo thức, suy đoán sức khỏe/giờ ngủ |
 | Bộ gợi ý Socratic | M1 | Câu, rubric, bước sai đã xác nhận, số lần thử | Một gợi ý ngắn tiếng Việt | Đưa đáp án trước khi thử, mắng người học |
 | Trợ lý biên soạn câu | M2 | Chương trình/chủ đề được phép, mẫu rubric | Câu nháp để giáo viên duyệt | Tự xuất bản, sao chép nội dung có bản quyền |
 | Bộ tóm tắt điểm mù lớp | M3 | Số liệu đã tổng hợp, đủ ngưỡng nhóm | Chủ đề cần ôn, giải thích có mẫu số | Lộ cá nhân, suy đoán năng lực/tâm lý |
@@ -16,7 +17,7 @@ Vai **chọn câu** nên là logic xác định trên server, không cần gọi
 
 ## 2. Thứ tự điều phối
 
-`question_bank published → chọn câu → cache local → chuông local → người học gửi bài → kiểm tra ảnh → Gemini đọc/chấm → validator server → phản hồi chuẩn hóa → XP ledger`. Nếu Gemini lỗi, bước `validator` không biến kết quả rỗng thành `incorrect`; trả `uncertain`. Gợi ý chỉ dùng phần bài AI đã đọc và rubric, không bịa bước không có trong ảnh.
+`question_bank published → chọn câu → cache local → chuông local → người học gửi đáp án + cách làm → kiểm tra dữ liệu/ảnh → Gemini đọc và đề xuất chấm → validator/policy server → phản hồi chuẩn hóa → XP ledger`. Nếu Gemini lỗi, bước `validator` không biến kết quả rỗng thành `incorrect`; trả `uncertain`. Gợi ý chỉ dùng phần bài AI đã đọc và rubric, không bịa bước không có trong ảnh. PvP dùng cùng rubric/model/prompt khóa cho hai người và chỉ chốt sau khi bài của cả hai đã có kết quả rõ; chưa kiểm định thì ranked tắt.
 
 ## 3. Quy tắc hệ thống cho mọi request AI
 

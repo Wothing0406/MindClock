@@ -1,8 +1,8 @@
 # Sổ thiết kế linh thú và phong cách RPG
 
-**Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md) và [quy chuẩn v2](27-quy-chuan-giao-dien-va-figma.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm. **Quyết định mới:** chỉ thiết kế sprite/FX 2D; bộ kỹ năng riêng và mở nhân vật bằng Đồng Mực theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md).
+**Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md) và [quy chuẩn v2](27-quy-chuan-giao-dien-va-figma.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm. Chỉ thiết kế sprite/FX 2D; roster và kỹ năng hiện hành theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), mở nhân vật bằng Đồng Mực theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md).
 
-Trong [Solo RPG](35-solo-rpg-dong-bo-va-ky-nang.md), mỗi nhân vật có hai thẻ chung và một thẻ riêng; tất cả dùng cùng HP, câu hỏi và luật tốc độ. Kỹ năng riêng cần qua cổng cân bằng trước ranked. Phụ kiện/khung là cosmetic.
+Trong [Solo RPG](35-solo-rpg-dong-bo-va-ky-nang.md), mỗi nhân vật chọn hai trong bốn thẻ chung và một thẻ riêng; tất cả dùng cùng HP/câu hỏi, không có thưởng tốc độ mode viết. Kỹ năng riêng cần qua cổng cân bằng trước ranked. Phụ kiện/khung là cosmetic.
 
 ## 1. Hướng mỹ thuật thống nhất
 
@@ -12,13 +12,14 @@ Trong [Solo RPG](35-solo-rpg-dong-bo-va-ky-nang.md), mỗi nhân vật có hai t
 - **Kích thước:** trang chủ 96–128 dp, màn hồ sơ 160–220 dp, avatar leaderboard 40–48 dp. Ở màn chuông chỉ dùng icon nhỏ hoặc ẩn để giữ ưu tiên giờ và nút tắt.
 - **Bản quyền:** vẽ nhân vật gốc, không dùng meme/nhân vật nổi tiếng hay asset từ game khác. Lưu source, tác giả, licence và quyền sử dụng trong `assets/credits` khi coding.
 
-## 2. Ba nhân vật khởi đầu
+## 2. Bốn nhân vật khởi đầu
 
 | ID | Tên hiển thị | Silhouette và vật liệu | Tính cách/giọng nói | Màu riêng | Dấu hiệu nhận diện ở avatar nhỏ |
 | --- | --- | --- | --- | --- | --- |
 | `cu_muc` | Cú Mực | Cú tròn, hai chỏm lông như ngòi bút, bụng hình mặt đồng hồ | Điềm tĩnh, tò mò; “Thử thêm một bước nhé” | Lam tím nhạt, vàng giấy | Hai chỏm bút + đôi mắt lớn |
 | `cao_nang` | Cáo Nắng | Cáo tai tam giác, đuôi cong như nét mặt trời mọc | Năng động nhưng dịu; “Mình bắt đầu từ phần dễ thôi” | Cam đất, kem | Tai nhọn + đuôi cong |
 | `rong_giay` | Rồng Giấy | Rồng nhỏ thân dạng tờ giấy gấp, sừng như góc giấy | Kiên trì, vui; “Sai một bước thì sửa một bước” | Xanh ngọc nhạt, vàng ấm | Góc giấy trên đầu + đuôi gấp |
+| `hiep_si_bia_vo` | Hiệp Sĩ Bìa Vở | Người mặc áo giáp bìa vở, vai là mép giấy, tay cầm kẹp giấy | Điềm đạm, hơi vụng; “Để mình giữ nhịp” | Lam xám, kem | Mũ bìa vở + kẹp giấy |
 
 Tên cần kiểm thử với học sinh miền Trung để đảm bảo dễ gọi và không gây hiểu sai. Nhân vật không gắn giới tính mặc định. Chọn một nhân vật miễn phí ban đầu, các nhân vật còn lại mở bằng Đồng Mực kiếm từ nhiệm vụ; đổi giữa nhân vật **đã sở hữu** miễn phí. Có tùy chọn **Tắt linh thú** trong Cài đặt; tắt hình vẫn giữ khả năng trả lời và xem kỹ năng bằng chữ.
 
@@ -52,7 +53,7 @@ Tên file dự kiến: `pet_<id>_<state>_<stage>_<theme>.<ext>`. Metadata: `id`,
 
 ## 6. Brief tạo concept art
 
-> Thiết kế ba linh thú **sprite 2D gốc** cho ứng dụng học tập tiếng Việt MindClock: Cú Mực, Cáo Nắng, Rồng Giấy. Chất liệu giấy và nét bút phẳng, bình minh trên trang vở, thân thiện với học sinh 13–18 tuổi. Silhouette rõ ở avatar 48 px, mỗi nhân vật 2–3 mảng màu, ánh mắt ấm áp. Tạo front và 3/4, biểu cảm bình thường, suy nghĩ, vui sau khi hoàn thành; thêm một pose cho kỹ năng riêng theo docs/37. Nền trong suốt, không chữ, không vũ khí, không yếu tố phạt hay bệnh tật, không giống nhân vật có bản quyền.
+> Thiết kế bốn nhân vật **sprite 2D gốc** cho ứng dụng học tập tiếng Việt MindClock: Cú Mực, Cáo Nắng, Rồng Giấy và Hiệp Sĩ Bìa Vở. Chất liệu giấy và nét bút phẳng, bình minh trên trang vở, thân thiện với học sinh 13–18 tuổi. Silhouette rõ ở avatar 48 px, mỗi nhân vật 2–3 mảng màu, ánh mắt ấm áp. Tạo front và 3/4, biểu cảm bình thường, suy nghĩ, vui sau khi hoàn thành; thêm pose hồi, hút, choáng/thẻ riêng theo docs/40. Nền trong suốt, không chữ, không vũ khí sắc, không yếu tố phạt hay bệnh tật, không giống nhân vật có bản quyền.
 
-**Điều kiện duyệt:** 5 người xem nhận ra ba nhân vật ở 48 px; đủ phân biệt khi bỏ màu; câu thoại không tạo áp lực; file có nguồn gốc/quyền sử dụng. Chưa có artwork thật trong repo.
+**Điều kiện duyệt:** 5 người xem nhận ra bốn nhân vật ở 48 px; đủ phân biệt khi bỏ màu; câu thoại không tạo áp lực; file có nguồn gốc/quyền sử dụng. Chưa có artwork thật trong repo.
 

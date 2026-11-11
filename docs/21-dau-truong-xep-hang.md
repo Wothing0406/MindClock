@@ -60,7 +60,7 @@ Máy trạng thái: `queued → matched → active → grading → settled`; nh�
 
 ### Luật kết quả giao hữu đề xuất
 
-1. **Luật cũ lưu tham khảo:** giao hữu một câu và bản ba câu tính điểm đã được thay. Solo hiện hành dùng HP/kỹ năng, thưởng nhanh có điều kiện và cùng bộ nội dung theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md).
+1. **Luật cũ lưu tham khảo:** giao hữu một câu và bản ba câu tính điểm đã được thay. Solo hiện hành dùng HP/kỹ năng, bài giải ngắn và cùng bộ nội dung theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); không có thưởng nhanh trong mode viết/chụp.
 2. Mất kết nối sau `matched` trước khi hiển thị đề: hủy, không phạt. Mất kết nối trong trận: cho gửi lại cùng khóa trước deadline; sau deadline có `forfeit` chỉ nếu có bằng chứng kết nối/hiển thị đủ, nếu không `voided`.
 3. AI `uncertain`, ảnh không đọc được, lỗi rubric hoặc tranh chấp: `needs_review`/`voided`; rating không đổi. Ảnh không được giữ mặc định; muốn khiếu nại ảnh cần xin phép lưu tạm với thời hạn rõ, hoặc chấp nhận hủy trận.
 4. Chấm tự động chỉ cho câu có đáp án chính xác/cấu trúc rõ; Gemini có thể giải thích bước, nhưng backend/rubric quyết định trạng thái hợp lệ. Không dùng tốc độ chụp ảnh làm tiêu chí thắng khi ảnh cần AI đọc và mạng biến động.

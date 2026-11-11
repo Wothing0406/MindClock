@@ -11,7 +11,7 @@
 
 ## 2. Thiết lập trước đêm đầu tiên
 
-1. Chọn giờ/ngày lặp, âm báo, rung, mức khó `Dễ / Vừa`, thời lượng mục tiêu 60–90 giây.
+1. Chọn giờ/ngày lặp, âm báo, rung, mức khó `Dễ / Vừa`, thời lượng mục tiêu 60–90 giây. Có thể xem **gợi ý giờ dậy** từ lịch/đường đi theo [docs/32 §5](32-ho-so-hoc-tap-va-nhieu-mon.md#5-gợi-ý-giờ-dậy-khi-đặt-báo-thức); người dùng xác nhận, app không tự đổi giờ.
 2. Chọn `Báo thức thử thách`; UI nói rõ: `Không có nút Hoãn. Bạn sẽ làm một câu ngắn để hoàn thành. Dừng khẩn cấp luôn có.`
 3. Chọn môn từ [hồ sơ học tập](32-ho-so-hoc-tap-va-nhieu-mon.md), hoặc `Theo lịch học ngày mai`; app hiển thị ví dụ câu.
 4. Kiểm tra quyền báo thức hệ thống, đặt lịch local và tải sẵn ít nhất 1 câu đã duyệt + 1 câu dự phòng phù hợp. Nếu thiếu quyền/câu dự phòng, không hiển thị `Đã sẵn sàng`.
@@ -55,7 +55,7 @@ Không có gợi ý trước khi nộp sai trong chế độ thử thách. Bộ 
 ## 5. Chống làm vẹt và dùng AI giải hộ
 
 - Câu lấy từ ngân hàng được duyệt, có nhiều biến thể cùng kỹ năng; chọn theo môn/chủ đề và tránh lặp câu gần đây. Không sinh câu chưa kiểm chứng lúc chuông reo.
-- Với câu tính toán, yêu cầu **một bước giải thích** hoặc kiểm tra bước trung gian, nhưng chỉ khi bộ chấm đã được đánh giá đủ tin cậy. Câu trắc nghiệm có thể thêm `Vì sao chọn?` bằng một lựa chọn lý do ngắn, không bắt viết dài lúc sáng.
+- Với mọi môn có chấm, yêu cầu **một lý do/bước giải ngắn do người học viết** bằng ô chữ hoặc ảnh nháp; câu trắc nghiệm chỉ khoanh đáp án không đủ để nhận `correct`. Rubric do người dạy duyệt theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Nếu offline/bộ chấm lỗi, cho `Hoàn thành không chấm` hoặc Dừng khẩn cấp; không giả vờ đọc/chấm bài tự do bằng local validator.
 - Android có thể dùng `FLAG_SECURE` trên màn đề để hạn chế chụp màn hình/chiếu màn; phải thử thiết bị và báo rõ giới hạn. Không thể ngăn điện thoại khác chụp đề hoặc người dùng dùng AI ngoài app.
 - Không yêu cầu camera chụp khuôn mặt, không theo dõi app khác, không đọc clipboard hay tự kết luận gian lận. Mục tiêu là tăng khả năng tự làm, không đạt bảo đảm chống gian lận.
 - Ghi phương thức trả lời (`text`, `photo`, `choice`), độ tin cậy và `rubricRevision`; chỉ cấp XP khi kết quả rõ, server kiểm tra idempotency. AI không tự cấp điểm.
@@ -66,7 +66,7 @@ Không có gợi ý trước khi nộp sai trong chế độ thử thách. Bộ 
 | --- | --- |
 | Thiết lập | `Báo thức thử thách` · `Không có Hoãn. Dừng khẩn cấp luôn có.` |
 | Reo | `06:30` · `Một câu Sinh học` · `Mở câu hỏi` · `Dừng khẩn cấp` |
-| Làm bài | `Chọn đáp án` hoặc `Nhập đáp án` · `Gửi bài` · `Dừng khẩn cấp` |
+| Làm bài | `Chọn/nhập đáp án` · `Viết cách làm` (hoặc `Chụp nháp`) · `Gửi bài` · `Dừng khẩn cấp` |
 | Sai 1–2 | `Chưa đúng. Thử lại.` |
 | Sai 3 | `Gợi ý: hãy xét ...` · `Thử lại` |
 | Chưa rõ | `Chưa đọc rõ bài. Chụp lại hoặc nhập đáp án.` |

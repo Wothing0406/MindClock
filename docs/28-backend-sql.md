@@ -2,7 +2,7 @@
 
 **Quyết định kiến trúc ngày 11/11/2026:** FastAPI tiếp tục là API; **PostgreSQL là nguồn dữ liệu có thẩm quyền** cho phiên, câu hỏi, XP và thi đấu. SQLite chỉ dùng cho demo/local một máy; không dùng SQLite làm server nhiều người thi trực tuyến. Firebase Authentication có thể giữ để xác thực ở giai đoạn đầu, backend xác minh ID token rồi ánh xạ `uid` sang `users.auth_subject`; không dùng Firestore cho dữ liệu nghiệp vụ mới. Đây là thay đổi thiết kế, **chưa có backend SQL đang chạy**. Quyết định này thay thế phần CSDL Firestore trong [docs/06](06-kien-truc-va-du-lieu.md); hợp đồng HTTP ở [docs/07](07-hop-dong-api-va-ai.md) vẫn giữ, trừ khi task coding ghi thay đổi cụ thể.
 
-**Mở rộng sản phẩm:** [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md) thêm bảng hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch; [docs/31](31-bao-thuc-thu-thach.md) thêm mode không Hoãn và số lần sai rõ. Cần đưa các bảng/cột này vào migration khi code, không lưu dưới dạng JSON tùy tiện trong `users`.
+**Mở rộng sản phẩm:** [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md) thêm bảng hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và gợi ý giờ dậy; [docs/31](31-bao-thuc-thu-thach.md) thêm mode không Hoãn và số lần sai rõ; [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) thêm grading decisions/reviews; [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md) thêm status/FX trận. Cần đưa các bảng/cột này vào migration khi code, không lưu dưới dạng JSON tùy tiện trong `users`.
 
 ## 1. Vì sao SQL
 
@@ -50,7 +50,7 @@ SQLAlchemy 2.x cho model/query và Alembic cho migration là lựa chọn đề 
 | `users` | `id UUID PK`, `auth_subject`, `alias`, `grade_band`, `locale`, `time_zone`, `consent_version`, timestamps | `auth_subject UNIQUE`; không dùng email làm PK |
 | `alarms` | `id`, `user_id`, `local_time`, `time_zone`, `weekdays_mask`, `enabled`, `snooze_minutes`, `revision` | FK user; `revision >= 1`; chỉ cấu hình, chuông chạy local |
 | `timetable_slots` | `id`, `user_id`, `weekday`, `subject_code`, `topic_id`, `position` | FK user; `weekday 1..7`; unique user/day/position |
-| `questions` | `id`, `subject_code`, `grade_band`, `topic_id`, `difficulty`, `prompt`, `answer_spec_json`, `rubric_json`, `status`, `revision`, `approved_by` | Index `(status, grade_band, subject_code, topic_id, difficulty)`; published phải có rubric/người duyệt |
+| `questions` | `id`, `subject_code`, `grade_band`, `topic_id`, `difficulty`, `prompt`, `answer_spec_json`, `reasoning_prompt_vi`, `rubric_json`, `rubric_revision`, `status`, `revision`, `approved_by` | Index `(status, grade_band, subject_code, topic_id, difficulty)`; published cho chấm phải có rubric trình bày/người duyệt |
 | `alarm_sessions` | `id`, `user_id`, `alarm_id`, `local_session_id`, `question_id`, `question_revision`, `local_date`, `time_zone`, `state`, `version`, timestamps | `UNIQUE(user_id, local_session_id)`; FK; version chống ghi đè |
 | `attempts` | `id`, `session_id`, `client_attempt_id`, `kind`, `grade_status`, `feedback_json`, `rubric_revision`, `model_version`, `created_at` | `UNIQUE(session_id, client_attempt_id)`; **không lưu ảnh** |
 | `xp_ledger` | `id`, `user_id`, `source_type`, `source_id`, `reason`, `delta`, `created_at` | `UNIQUE(user_id, source_type, source_id, reason)`; delta theo rule server |
@@ -72,7 +72,7 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 | `score_ledger` | unique `(board_id,user_id,source_id)`, điểm học tuần do server tính |
 | `leaderboard_entries` | PK `(board_id,user_id)`, score, alias snapshot, updated_at; index `(board_id,score DESC,user_id)` |
 
-`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi RP/MMR. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL trận ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); ví/coin, nhân vật/kit, RP/MMR ledger ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md); staging/provenance/format câu ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Các bảng `rating_ledger`/`match_submissions` một dòng mỗi trận trong bảng trên là mẫu cũ, **không triển khai song song** với schema trận v2. Phần Firestore trong docs/21 là mô hình cũ.
+`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi RP/MMR. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL trận ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); ví/coin/RP ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); bài giải/quyết định chấm ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md); status/HP/FX ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md); staging/provenance ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Các bảng `rating_ledger`/`match_submissions` một dòng mỗi trận trong bảng trên là mẫu cũ, **không triển khai song song** với schema trận v3. Phần Firestore trong docs/21 là mô hình cũ.
 
 ## 6. Transaction bắt buộc
 
