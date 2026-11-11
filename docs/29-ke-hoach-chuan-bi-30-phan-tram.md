@@ -10,7 +10,7 @@
 | Luồng học cốt lõi | Một luồng đầy đủ với câu Toán đã duyệt; thêm hồ sơ chọn nhiều môn và 1 câu cấu trúc Anh/Sinh nếu có người duyệt, phản hồi theo fixture | Đổi môn → câu đổi đúng; từ trang chủ đến kết quả trong ≤2 phút, ghi rõ dữ liệu mẫu |
 | Báo thức demo | Chọn giờ và hiển thị giờ kế tiếp; mô phỏng sự kiện reo để diễn tập; nút `Dừng chuông` hoạt động trong luồng demo | Không gọi đó là báo thức OS nếu chưa test native trên máy thật |
 | Backend SQL tối thiểu | FastAPI local + SQLite: `questions`, `users` demo (nếu cần), `alarm_sessions`, `attempts`; endpoint health, câu tiếp theo, nộp đáp án văn bản | Chạy local, có migration/seed và request mẫu; không cần hosting |
-| Thiết kế và asset | Token UI, một bộ icon nhất quán, avatar SVG placeholder gốc; chưa cần 3D render | Figma/prototype hoặc app có màn thật; asset có licence |
+| Thiết kế và asset | Token UI, một bộ icon nhất quán, avatar SVG placeholder gốc; sprite 2D thật có thể làm sau | Figma/prototype hoặc app có màn thật; asset có licence |
 | Kiểm thử/demo | 3 trường hợp đúng, sai, chưa rõ; lỗi mạng/mock; video dự phòng | Test ghi kết quả và kịch bản demo 3 phút |
 
 **Phần lõi cần chạy thật:** mở app, điều hướng, chọn nhiều môn, hiển thị câu đúng môn, nhập đáp án, phản hồi theo dữ liệu mẫu, API/SQLite local nếu đội đủ người. **Phần phải gắn nhãn mô phỏng:** chuông hệ thống chưa tích hợp, AI chưa gọi thật, bảng xếp hạng/thi đấu chưa nối server. Đây vẫn là sản phẩm dở dang có lát cắt hoạt động, không phải chỉ một bộ slide.
@@ -21,7 +21,7 @@
 2. Chụp ảnh bài viết tay, upload tạm, Gemini chấm `correct/incorrect/uncertain` với bộ ảnh kiểm chứng.
 3. Auth thật, consent, đồng bộ SQLite demo sang PostgreSQL, XP ledger/idempotency hoàn chỉnh.
 4. Giao hữu online hai máy, bảng tuần, nhóm; ELO chỉ sau cân bằng câu và chống nộp trùng.
-5. Nhân vật 3D render thành asset nhẹ, khung rank, iOS AlarmKit, dashboard giáo viên/phụ huynh.
+5. Sprite 2D nhân vật và kỹ năng, ví Đồng Mực, bậc RP, iOS AlarmKit, dashboard giáo viên/phụ huynh.
 
 Lý do để lại: các phần này cần máy thật, kiểm thử quyền/dữ liệu hoặc backend ổn định. Không gom tất cả vào demo một buổi sáng rồi tuyên bố đã hoàn thiện.
 

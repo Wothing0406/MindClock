@@ -2,6 +2,8 @@
 
 > **Bổ sung bắt buộc khi code:** kiểm thử chế độ không Hoãn/gợi ý sau ba lần sai trong [docs/31](31-bao-thuc-thu-thach.md), và chọn câu nhiều môn/tổ hợp/nhắc lịch trong [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). Các ca Hoãn/gợi ý sớm phía dưới chỉ áp dụng chế độ thường hoặc test hồi quy cũ.
 
+> **Khi mở đấu trường/cửa hàng/kho dữ liệu:** thêm acceptance S01–S12 ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), E01–E08 ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md) và contract import/quyền nguồn ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Test ví/RP cần PostgreSQL concurrent, hai máy thật cho đồng bộ, và kiểm tra asset 2D khi giảm chuyển động.
+
 **Mục tiêu:** kiểm chứng sản phẩm hoạt động an toàn, tin cậy và nói đúng khả năng. Kiểm thử theo rủi ro; ưu tiên báo thức, quyền tắt, dữ liệu cá nhân và chấm bài.
 
 ## 1. Các mức kiểm thử

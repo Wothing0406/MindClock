@@ -1,0 +1,40 @@
+{
+  "registry_version": 1,
+  "checked_at": "2026-11-11",
+  "default_import_policy": "metadata_only",
+  "sources": [
+    {
+      "id": "vnhsge",
+      "name": "VNHSGE",
+      "url": "https://github.com/Xdao85/VNHSGE",
+      "format": "json_with_assets",
+      "adapter_candidate": "vnhsge_json",
+      "license_status": "unverified_per_item",
+      "import_status": "metadata_only",
+      "allowed_use": "research_of_metadata_only_until_rights_review",
+      "notes": "README does not state reusable rights for all exams, images and explanations; no bulk ingest."
+    },
+    {
+      "id": "vmlu",
+      "name": "VMLU",
+      "url": "https://github.com/ZaloAI-Jaist/VMLU",
+      "format": "jsonl",
+      "adapter_candidate": "vmlu_jsonl",
+      "license_status": "dataset_terms_tbu",
+      "import_status": "metadata_only",
+      "allowed_use": "benchmark_research_subject_to_terms_no_app_publication",
+      "notes": "README Licenses section says TBU; repository MIT file does not establish per-question reuse."
+    },
+    {
+      "id": "vimmrc2",
+      "name": "ViMMRC 2.0",
+      "url": "https://github.com/sonlam1102/vimmrc2",
+      "format": "gated_dataset",
+      "adapter_candidate": null,
+      "license_status": "research_only_agreement_required",
+      "import_status": "metadata_only",
+      "allowed_use": "none_in_product_without_written_permission",
+      "notes": "Dataset access is gated and requires a signed research agreement."
+    }
+  ]
+}

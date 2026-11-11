@@ -1,6 +1,6 @@
 # Đấu trường trực tuyến và bảng xếp hạng — đặc tả v1
 
-> **Solo 1v1 cập nhật:** [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md) là luật trận hiện hành có HP, kỹ năng và thưởng nhanh có điều kiện. Luật một câu trong tài liệu này và bản đếm câu đúng ở docs/33 là lịch sử, không dùng để coding. [docs/34](34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn câu hỏi; dùng SQL theo docs/28. Phần nhóm/bảng học tập tuần ở đây vẫn là định hướng mở rộng.
+> **Solo 1v1 cập nhật:** [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md) là luật đồng bộ trận HP; [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn kỹ năng theo nhân vật, RP/coin và bậc hạng. Luật một câu, đếm câu đúng và ELO công khai trong tài liệu này/docs/33 là lịch sử, không dùng để coding. [docs/34](34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn câu hỏi; dùng SQL theo docs/28. Phần nhóm/bảng học tập tuần ở đây vẫn là định hướng mở rộng.
 
 > **Cập nhật CSDL:** luật trận/bảng giữ nguyên; các đoạn Firestore/projection/collection dưới đây là thiết kế trước khi chọn SQL. Khi coding dùng bảng, index và transaction trong [docs/28](28-backend-sql.md).
 

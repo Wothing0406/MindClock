@@ -23,7 +23,7 @@ Nói **chức năng và trạng thái**, không hô khẩu hiệu trong màn dù
 
 React là **thư viện giao diện web**, không phải định dạng nhân vật hay icon. App mobile đã chọn Flutter; chỉ dùng React nếu sau này làm dashboard/web riêng. GIF là định dạng ảnh động nhưng thường khó điều khiển trạng thái/tạm dừng và không phải lựa chọn mặc định cho app. Dùng SVG/vector cho icon tĩnh; ảnh WebP/PNG do đội thiết kế cho nhân vật; một chuỗi frame ngắn hoặc animation có thể tạm dừng cho khoảnh khắc hoàn thành. Đo hiệu năng trên máy thật theo [hướng dẫn Flutter](https://docs.flutter.dev/perf/rendering-performance), đặc biệt ở profile mode.
 
-**Không dùng emoji hệ thống trong UI cuối hoặc prototype trình giám khảo:** chúng đổi hình theo OS, không cùng phong cách và có thể bị đọc không đúng bởi trợ năng. Dùng một bộ icon nét có licence và asset nhân vật gốc. Avatar SVG trong [demo](../demo/index.html) hiện là placeholder; chưa phải thiết kế linh thú 3D đã duyệt. Khung rank là vector tĩnh; chỉ một animation ngắn khi lên hạng, có đường tắt khi giảm chuyển động.
+**Không dùng emoji hệ thống trong UI cuối hoặc prototype trình giám khảo:** chúng đổi hình theo OS, không cùng phong cách và có thể bị đọc không đúng bởi trợ năng. Dùng một bộ icon nét có licence và sprite nhân vật gốc. Avatar SVG trong [demo](../demo/index.html) hiện là placeholder; chưa phải sprite 2D đã duyệt. Khung rank là vector tĩnh; chỉ một animation ngắn khi lên bậc, có đường tắt khi giảm chuyển động.
 
 ## 3. Kiểm duyệt trước khi nhận asset
 

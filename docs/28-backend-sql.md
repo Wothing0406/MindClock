@@ -72,14 +72,14 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 | `score_ledger` | unique `(board_id,user_id,source_id)`, điểm học tuần do server tính |
 | `leaderboard_entries` | PK `(board_id,user_id)`, score, alias snapshot, updated_at; index `(board_id,score DESC,user_id)` |
 
-`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi rating. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL bổ sung (`match_rounds`, `round_skills`, `round_submissions`, `round_results`, `match_results`) ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); quản lý revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md). Phần Firestore trong docs/21 là mô hình cũ.
+`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi RP/MMR. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL trận ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); ví/coin, nhân vật/kit, RP/MMR ledger ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md); staging/provenance/format câu ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Các bảng `rating_ledger`/`match_submissions` một dòng mỗi trận trong bảng trên là mẫu cũ, **không triển khai song song** với schema trận v2. Phần Firestore trong docs/21 là mô hình cũ.
 
 ## 6. Transaction bắt buộc
 
 1. **Tạo phiên:** insert `alarm_sessions` với unique `(user_id,local_session_id)`; retry trả phiên cũ. Kiểm tra question revision và ownership.
 2. **Nộp bài:** unique `client_attempt_id`; kiểm tra trạng thái và giới hạn lượt. AI chạy ngoài transaction. Chốt `grade_status`, state phiên và `xp_ledger` trong cùng transaction ngắn; unique ledger chống cấp hai lần.
 3. **Sửa kết quả AI:** thêm bản ghi audit; đảo/điều chỉnh XP bằng ledger mới, không xóa lịch sử cũ. Không cho AI trực tiếp ghi SQL.
-4. **Trận:** lock hàng match và hai player theo thứ tự ổn định, xác nhận hai submission, chốt outcome và hai dòng rating ledger trong một transaction; retry không đổi rating. Tránh lock lâu khi chờ AI/mạng.
+4. **Trận:** lock hàng match và hai player theo thứ tự ổn định, xác nhận hai submission/vòng, chốt outcome và hai dòng RP/MMR ledger cùng XP/coin ledger trong một transaction; retry không đổi điểm. Tránh lock lâu khi chờ mạng. Quy tắc ví/cửa hàng có transaction riêng ở docs/37.
 5. **Xóa tài khoản:** ẩn leaderboard/thu hồi quyền ngay; xóa dữ liệu cá nhân theo batch và chứng thực trạng thái; không báo hoàn tất trước khi xong.
 
 ## 7. API, bảo mật và vận hành

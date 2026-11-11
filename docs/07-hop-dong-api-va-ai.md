@@ -2,6 +2,8 @@
 
 > **Mở rộng cần version hóa khi coding:** hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và chế độ thử thách tại [docs/31](31-bao-thuc-thu-thach.md), [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). `snooze` chỉ còn cho chế độ thường; `incorrect` lần 1–2 của chế độ thử thách không trả hint, `uncertain` không tăng số lần sai. Endpoint mới ở docs/32 là đề xuất, chưa là API chạy.
 
+> **API giai đoạn đấu trường/kinh tế/nội dung:** danh sách endpoint và bảng dữ liệu dự kiến ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Chúng chưa là API đã triển khai; task coding phải chốt payload, quyền, idempotency và contract tests trong cùng lần.
+
 **Base path:** `/v1` · **Transport:** HTTPS + JSON UTF-8, riêng ảnh dùng `multipart/form-data` · **Auth:** `Authorization: Bearer <Firebase ID token>` cho mọi endpoint trừ `/health`. Backend xác minh token, lấy `uid` từ token. Mọi thời điểm API trả ISO 8601 UTC; `localDate` theo múi giờ IANA của người dùng.
 
 Đây là **hợp đồng triển khai**, chưa phải API đang chạy. Nếu thay đổi field, sửa tài liệu và contract test cùng lúc; không tự ý đổi từ mobile hoặc backend một phía.

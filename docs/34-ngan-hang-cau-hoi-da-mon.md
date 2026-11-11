@@ -1,6 +1,6 @@
 # Ngân hàng câu hỏi đa môn cho luyện tập và thi đấu
 
-**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu Solo mới theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md). “Ngân hàng ngôn ngữ” ở đây gồm **văn bản tiếng Việt của câu, thuật ngữ môn, đáp án tương đương, gợi ý/giải thích và thông báo UI**, không chỉ một danh sách câu trắc nghiệm.
+**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu Solo mới theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), **nguồn dữ liệu ngoài và ba dạng đề từ 2025** theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). “Ngân hàng ngôn ngữ” ở đây gồm **văn bản tiếng Việt của câu, thuật ngữ môn, đáp án tương đương, gợi ý/giải thích và thông báo UI**, không chỉ một danh sách câu trắc nghiệm.
 
 ## 1. Cấu trúc một câu chuẩn
 
@@ -46,7 +46,7 @@ Ví dụ chỉ là mẫu schema, **chưa được người dạy duyệt để �
 | Ngữ văn | Nhận diện đặc điểm ngữ liệu có một đáp án rõ | Đọc hiểu/diễn giải mở | Chỉ câu đóng đã người dạy kiểm tra; không chấm bài văn nhị phân |
 | Tin học/Công nghệ/Kinh tế & pháp luật | Dự đoán output, chọn bước/quy tắc đơn giản | Tình huống ngắn có phản hồi | Mã chạy/chuẩn/kiến thức được đối chiếu theo năm áp dụng |
 
-Không cần mở mọi môn ngay. Mỗi môn có trạng thái `not_available`, `practice_only`, `friendly_enabled`, `ranked_enabled` theo **chất lượng bộ câu**, không theo nhu cầu marketing. UI có thể hiện môn chưa sẵn sàng nhưng không cho xếp trận ranked.
+Không cần mở mọi môn ngay. Mỗi môn có trạng thái `not_available`, `practice_only`, `friendly_enabled`, `ranked_enabled` theo **chất lượng bộ câu**, không theo nhu cầu marketing. UI có thể hiện môn chưa sẵn sàng nhưng không cho xếp trận ranked. Cấu trúc mới hỗ trợ `single_choice`, `true_false_4` và `short_answer`; không tự biến câu bốn lựa chọn cũ thành đúng/sai/trả lời ngắn. Mỗi item vẫn cần đáp án/rubric đã duyệt và quyền sử dụng rõ theo docs/38.
 
 ## 3. Phân loại và cân bằng
 
@@ -90,7 +90,7 @@ Người duyệt không là người duy nhất soạn câu nếu có thể. AI 
 
 Mở rộng `questions` của [docs/28](28-backend-sql.md) với `locale`, `learning_outcome`, `answer_type`, `mode_eligibility`, `variant_family_id`, `content_hash`, `estimated_seconds`, `source_license`, `approved_at`; bảng `question_choices(question_id,revision,choice_id,text,position)`, `question_revisions(question_id,revision,stem,answer_spec_json,rubric_json,status,editor_id,reviewer_id,created_at)`, `question_exposure(user_id,question_id,variant_family_id,last_seen_at,mode)` để giảm lặp. Unique `(question_id,revision)`; bản đã xuất bản bất biến. Không trả `answerSpec` hoặc `explanation` xuống client trước reveal trong ranked.
 
-API quản trị nội bộ: tạo nháp → submit review → approve → publish/retire; quyền editor/reviewer tách biệt, audit. API học sinh chỉ trả stem/choices và metadata cần hiển thị. Backend chấm câu cấu trúc bằng `answerSpec` version đã khóa trong match; không tin đáp án client tự gửi là đúng. Có test snapshot từng revision và contract response không lộ đáp án.
+API quản trị nội bộ: nhập staging từ nguồn có quyền hoặc tạo nháp → submit review → approve → publish/retire; quyền editor/reviewer tách biệt, audit. API học sinh chỉ trả stem/choices và metadata cần hiển thị. Backend chấm câu cấu trúc bằng `answerSpec` version đã khóa trong match; không tin đáp án client tự gửi là đúng. Có test snapshot từng revision và contract response không lộ đáp án. Raw corpus VNHSGE/VMLU/ViMMRC chưa được nạp vào app; registry chỉ là metadata.
 
 ## 7. Mức nội dung tối thiểu trước demo/pilot
 

@@ -8,13 +8,14 @@
 
 **Luồng báo thức/học tập mới:** [docs/31](docs/31-bao-thuc-thu-thach.md) quy định chế độ thử thách không Hoãn, chỉ gợi ý từ sai rõ lần 3 và luôn Dừng khẩn cấp; [docs/32](docs/32-ho-so-hoc-tap-va-nhieu-mon.md) quy định cá nhân hóa nhiều môn/mục tiêu thi. Các câu cũ về Hoãn và gợi ý ngay chỉ áp dụng chế độ thường.
 
-**Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn luật trận hiện hành (HP, kỹ năng, đồng bộ, ghép cùng nội dung); [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm, humor và mục tiêu tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn ngân hàng câu. Docs/33 và luật một câu trong docs/21 là phương án cũ, không code cho Solo mới.
+**Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn đồng bộ trận/HP/ghép nội dung; [docs/37](docs/37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn kinh tế, RP, kỹ năng nhân vật và sprite 2D; [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm/humor/tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) và [docs/38](docs/38-nguon-du-lieu-va-duong-nhap-cau-hoi.md) là nguồn chuẩn câu/nguồn dữ liệu. Docs/33 và luật một câu trong docs/21 là phương án cũ.
 
 ## Quy tắc không được phá
 
 - Báo thức và Dừng khẩn cấp chạy trên thiết bị kể cả khi không có mạng/API/đăng nhập; không khóa người dùng trong thử thách. Chế độ thử thách không có Hoãn; nếu còn chế độ thường thì Hoãn của chế độ đó cũng chạy cục bộ.
 - AI không được tự quyết XP, streak, rank hoặc gán nhãn gian lận. Chấm có `correct`, `incorrect`, `uncertain`; sai/không chắc không bị phạt.
 - Câu hỏi MVP đến từ ngân hàng đã duyệt; Gemini hỗ trợ đọc/chấm/gợi ý. Không gửi API key tới client.
+- Không nạp/công bố corpus ngoài khi chưa có quyền từng nguồn/item và người duyệt. `data/sources/registry.json` chỉ là metadata, không có câu hỏi đã tích hợp. Không tự coi repo công khai/MIT của mã là quyền dùng mọi đề/ảnh.
 - Không lưu ảnh bài làm mặc định và không ghi ảnh, token, lời giải cá nhân vào log.
 - Client không ghi điểm/tiến độ có thẩm quyền. Backend xác minh Firebase ID token, kiểm tra quyền, dùng idempotency cho phiên/attempt/XP.
 - Giao diện tiếng Việt `vi-VN`, ngôn ngữ khích lệ, có đường nhập đáp án thay camera.
@@ -33,7 +34,7 @@
 - Giữ hợp đồng API và trạng thái thống nhất. Khi thay đổi, sửa docs + contract tests cùng lần.
 - Thêm test theo rủi ro thực tế, nhất là báo thức OS, quyền truy cập, AI chấm sai và XP trùng. Emulator không thay kiểm thử thiết bị thật.
 - Bảo mật mặc định deny-all; chỉ mở quyền cần thiết, có test rules.
-- Linh thú, ELO, dashboard và iOS đã có **đặc tả** nhưng chưa tự động thuộc MVP; chỉ code khi task/giai đoạn yêu cầu rõ. Giao hữu trước ELO.
+- Linh thú, ví/coin/RP, dashboard và iOS đã có **đặc tả** nhưng chưa tự động thuộc MVP; chỉ code khi task/giai đoạn yêu cầu rõ. Giao hữu trước ranked. Không bán sức mạnh/coin bằng tiền thật hoặc để client tự ghi ví/RP.
 - Kết thúc task bằng bản bàn giao theo `docs/10-to-chuc-coding-agent.md` §4.
 
 ## Trạng thái repo

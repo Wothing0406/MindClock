@@ -2,6 +2,8 @@
 
 > **Cập nhật 11/11/2026:** chế độ tự chọn `Báo thức thử thách` theo [docs/31](31-bao-thuc-thu-thach.md) **không có Hoãn**, chỉ gợi ý sau lần sai rõ thứ ba, luôn có Dừng khẩn cấp. Cá nhân hóa nhiều môn/tổ hợp do người dùng chọn theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). Các quy tắc Hoãn/gợi ý sớm/Toán đơn môn bên dưới là mô tả MVP cũ hoặc chế độ thường; nếu mâu thuẫn, dùng docs/31–32 cho chế độ thử thách mới.
 
+> **Giai đoạn sau MVP:** Solo online/HP theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); tiền trong game, nhân vật sprite 2D có kỹ năng riêng và 30 bậc RP theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); nguồn câu ngoài/ba dạng từ 2025 theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Đây là đặc tả/lộ trình, không phải chức năng đã chạy. Không đưa corpus ngoài vào app khi quyền chưa rõ.
+
 **Phiên bản tài liệu:** 1.0 · **Ngày:** 10/11/2026 · **Trạng thái:** sẵn sàng cho triển khai MVP, các giai đoạn sau cần kiểm chứng thêm.
 
 ## 1. Tóm tắt sản phẩm

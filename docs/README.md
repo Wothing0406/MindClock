@@ -1,6 +1,6 @@
 # MindClock — bộ tài liệu triển khai
 
-**Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 10/11/2026.
+**Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 11/11/2026.
 
 **Quy trình khi bắt đầu coding:** đọc [AGENTS.md](../AGENTS.md) và [tasks/README.md](../tasks/README.md); mỗi yêu cầu code có thư mục task riêng với spec, plan, test và điểm tiếp tục.
 
@@ -31,7 +31,7 @@
 23. [24 — Đăng ký và tài khoản](24-dang-ky-va-quan-ly-tai-khoan.md): khách dùng thử, email/mật khẩu, xác minh, đồng ý thi đấu, xóa tài khoản.
 24. [25 — Bảo mật và dữ liệu](25-bao-mat-va-du-lieu.md): mục đích thu thập, quyền, thời hạn, ảnh AI, rút đồng ý, sự cố.
 25. [26 — Công cụ miễn phí và demo](26-bo-cong-cu-mien-phi-va-kich-ban-demo.md): mỗi vai cần cài gì, phương án 0 đồng và kịch bản giám khảo.
-26. [27 — Quy chuẩn giao diện và Figma](27-quy-chuan-giao-dien-va-figma.md): phong cách tối giản, icon, thao tác, nhân vật 3D nhẹ, khung rank, animation và bàn giao thiết kế.
+26. [27 — Quy chuẩn giao diện và Figma](27-quy-chuan-giao-dien-va-figma.md): phong cách tối giản, icon, thao tác, sprite 2D, khung rank, animation và bàn giao thiết kế.
 27. [28 — Backend SQL](28-backend-sql.md): PostgreSQL đích, SQLite demo, bảng, ràng buộc, transaction và lộ trình thay Firestore.
 28. [29 — Làm trước 30% sản phẩm](29-ke-hoach-chuan-bi-30-phan-tram.md): lát cắt app/API chạy được, phần để lại và prompt giao AI coding.
 29. [30 — Ngôn ngữ và asset](30-ngon-ngu-va-tai-san-giao-dien.md): chữ ngắn, không quảng cáo, không emoji, lựa chọn icon/animation.
@@ -41,6 +41,8 @@
 33. [34 — Ngân hàng câu đa môn](34-ngan-hang-cau-hoi-da-mon.md): taxonomy, dạng câu theo môn, tiếng Việt/đáp án/gợi ý, quy trình duyệt và schema revision.
 34. [35 — Solo RPG v2](35-solo-rpg-dong-bo-va-ky-nang.md): **nguồn chuẩn luật trận hiện hành** — HP, kỹ năng, ghép cùng nội dung, đồng bộ, API/SQL và test.
 35. [36 — Khác biệt, humor, Gemini, tốc độ](36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md): đối chiếu ý tưởng, giọng vui/asset, chọn model thử nghiệm và ngân sách hiệu năng.
+36. [37 — Đồng Mực, bậc hạng và nhân vật 2D](37-kinh-te-rank-va-nhan-vat-2d.md): **nguồn chuẩn kinh tế game**, ba kit kỹ năng, RP Đồng 1–Tinh Anh 5, ví/ledger và sprite asset.
+37. [38 — Nguồn dữ liệu và nhập câu](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md): đánh giá VNHSGE/VMLU/ViMMRC, quyền sử dụng, ba dạng câu từ 2025, staging/duyệt/publish. [Registry](../data/sources/registry.json) hiện chỉ metadata.
 
 ## Quyết định đã chốt để coding
 
@@ -54,11 +56,12 @@
 | Điểm | XP ghi ở server theo sự kiện; không trừ điểm vì sai bài, hoãn hoặc tắt khẩn cấp |
 | Quyền riêng tư | Hồ sơ học tập cá nhân mặc định; giáo viên/phụ huynh là giai đoạn sau và phải cấp quyền rõ |
 | iOS | AlarmKit iOS 26+ qua native Swift; OS vẫn có nút Dừng; bản iOS cũ chỉ được gọi là nhắc ôn nếu dùng notification; xem docs/20 |
-| Đấu trường | Opt-in, giao hữu trước; bảng tuần và ELO là giai đoạn sau khi đạt cổng chất lượng; xem docs/21 |
-| Linh thú | Cosmetic, có thể tắt, không phạt hình ảnh khi nghỉ/sai; xem docs/22 |
+| Đấu trường | Opt-in, giao hữu trước; ranked/RP/bảng là giai đoạn sau khi đạt cổng chất lượng; xem docs/35 và 37 |
+| Nhân vật | Sprite 2D, chọn một nhân vật miễn phí, nhân vật còn lại mở bằng Đồng Mực; kỹ năng riêng phải cân bằng trước ranked, không phạt hình ảnh khi nghỉ/sai; xem docs/22 và 37 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
-| Solo RPG | Giao hữu trước; 60 HP/3 vòng, kỹ năng chung mọi avatar, cùng bộ nội dung; Gemini ngoài trận; xem docs/35. Model/quota và mục tiêu tốc độ ở docs/36 |
+| Solo RPG | Giao hữu trước; 60 HP/3 vòng, hai thẻ chung + một thẻ theo nhân vật, cùng bộ nội dung; Gemini ngoài trận; xem docs/35, 37. Model/quota và mục tiêu tốc độ ở docs/36 |
+| Dữ liệu câu ngoài | VNHSGE/VMLU/ViMMRC chỉ có metadata registry; chưa có quyền/nội dung đã nạp. Câu demo do đội biên soạn/duyệt; xem docs/38 |
 
 ## Các điểm còn mở phải quyết định trước khi triển khai rộng
 

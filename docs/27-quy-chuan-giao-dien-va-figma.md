@@ -1,6 +1,6 @@
 # Quy chuẩn giao diện MindClock v2 — tối giản cho học sinh Việt
 
-**Quyết định mỹ thuật:** giao diện học tập phẳng, sáng rõ; nhân vật có cảm giác 3D mềm nhưng được xuất thành ảnh tĩnh/chuỗi ảnh nhẹ. Sự đối lập này giúp trò chơi có bản sắc mà màn báo thức, đề bài và lời giải vẫn dễ đọc. Tài liệu này cụ thể hóa [hệ UI](13-he-thiet-ke-ui.md), [linh thú](22-nhan-vat-rpg.md) và [hành trình](23-hanh-trinh-san-pham.md). Đây là **spec thiết kế**, chưa có file Figma hay asset 3D hoàn thiện.
+**Quyết định mỹ thuật:** giao diện học tập phẳng, sáng rõ; nhân vật và kỹ năng là sprite 2D gốc với nét giấy/bút. Màn báo thức, đề bài và lời giải vẫn dễ đọc. Tài liệu này cụ thể hóa [hệ UI](13-he-thiet-ke-ui.md), [linh thú](22-nhan-vat-rpg.md), [kinh tế/asset 2D](37-kinh-te-rank-va-nhan-vat-2d.md) và [hành trình](23-hanh-trinh-san-pham.md). Đây là **spec thiết kế**, chưa có file Figma hay sprite hoàn thiện.
 
 Quy tắc câu chữ và asset không emoji ở [docs/30](30-ngon-ngu-va-tai-san-giao-dien.md). Prototype hiện tại dùng SVG placeholder; React chỉ dùng nếu đội chọn làm web/dashboard, không thay thế bộ asset nhân vật.
 
@@ -68,19 +68,19 @@ Tab bar                       Tab bar
 
 Mỗi thao tác phải có trạng thái `đang xử lý`, `thành công`, `không có dữ liệu`, `mất mạng`, `không đủ quyền`. Tên nút và thông báo kết quả dùng cùng động từ: `Lưu báo thức` → `Đã lưu báo thức`; `Gửi bài` → `Đã nhận bài`. Không dùng toast biến mất cho lỗi cần xử lý.
 
-## 5. Nhân vật 3D nhẹ và khung rank
+## 5. Nhân vật sprite 2D và khung rank
 
-**Quyết định kỹ thuật thiết kế:** dựng nhân vật gốc bằng 3D stylized ở công đoạn sáng tạo; trong app dùng ảnh render nền trong suốt (WebP/PNG tùy kiểm thử), có thể thêm chuỗi 6–10 frame cho một hành động ngắn. Không bắt Flutter render mô hình 3D liên tục ở trang chủ/báo thức. Cách này giữ dáng 3D nhưng tải nhanh, ổn định trên Android phổ thông và iPhone. Bản tĩnh luôn có sẵn khi máy yếu, giảm chuyển động hoặc asset chưa tải.
+**Quyết định kỹ thuật thiết kế:** vẽ sprite 2D gốc, xuất WebP/PNG trong suốt; một hành động dùng 4–8 frame ở 8–12 fps khi cần. Giữ một bản tĩnh cho máy yếu, giảm chuyển động hoặc asset lỗi. Preload trong phòng chờ; hiệu ứng kỹ năng chỉ sau reveal và không trì hoãn đề. Xem [manifest asset và cổng cân bằng](37-kinh-te-rank-va-nhan-vat-2d.md#5-sprite-2d-và-bộ-asset-kỹ-năng).
 
 | Thành phần | Thiết kế | Giới hạn |
 | --- | --- | --- |
-| Nhân vật | Chất liệu như đồ chơi bằng giấy/nhựa mờ, ánh sáng một hướng ấm, mắt rõ, không bóng kim loại | 3/4 front là góc chính; silhouette rõ ở 48 px |
+| Nhân vật | Nét giấy/bút phẳng, 2–3 mảng màu, mắt rõ, không bóng kim loại | 3/4 front là góc chính; silhouette rõ ở 48 px |
 | Khung avatar thường | Vòng mảnh màu `outline`, nền giấy | Không gradient/glow |
 | Đồng/Bạc/Vàng | Vòng đôi mảnh, chấm/rãnh 1/2/3 ở cạnh dưới; màu đồng/bạc/vàng dịu | Nhận ra cả khi bỏ màu nhờ số rãnh |
 | Bạch Kim/Kim Cương | Hình vòng có 4/5 cạnh nhẹ, nét rõ; nhãn hạng bên dưới | Không gai nhọn/vương miện lớn; không rung/nhấp nháy |
 | Huy hiệu mùa | Phù hiệu nhỏ bên cạnh tên, mở trang giải thích khi chạm | Không gắn lên mặt nhân vật |
 
-Khung rank là **hạng học tập cosmetic**; điểm đấu trường dùng chip văn bản riêng, không tái dùng khung này. Khi lên hạng, hiển thị một lần sau bài học, người dùng có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Chi tiết 3 nhân vật và asset tại [docs/22](22-nhan-vat-rpg.md).
+Khung học tập từ XP là cosmetic; điểm đấu trường dùng nhãn đầy đủ `Đồng 4 · Toán 9` và 1–5 vạch nhỏ cho bậc theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), không chỉ màu. Khi lên bậc, hiển thị một lần ở màn kết quả trận, có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Chi tiết 3 nhân vật và asset tại [docs/22](22-nhan-vat-rpg.md).
 
 ## 6. Chuyển động không gây lag
 
@@ -90,7 +90,7 @@ Khung rank là **hạng học tập cosmetic**; điểm đấu trường dùng c
 | Hoàn thành bài | Một cử động nhân vật 500–800 ms, chạy một lần | Ảnh tĩnh + chữ |
 | Lên hạng | Vòng khung xuất hiện 300–500 ms, không hạt sáng | Khung tĩnh |
 | Trang chủ idle | Mặc định **tĩnh**; nếu thử nghiệm thích hợp, cử động rất thưa khi màn đang mở | Luôn tĩnh khi pin yếu/giảm chuyển động |
-| Chuông reo | Không animation trang trí hoặc render 3D | UI tĩnh, ưu tiên nút Dừng |
+| Chuông reo | Không animation trang trí | UI tĩnh, ưu tiên nút Dừng |
 
 Nguyên tắc coding: preload asset nhỏ trong bundle; không tải animation từ mạng khi chuông reo. Tạm dừng hoạt họa khi tab không hiện, app background, pin yếu hoặc OS bật giảm chuyển động. Tránh nhiều animation đồng thời, shader/blur/glow, particle và canvas vẽ lại toàn màn. Đo trên máy Android yếu trong đội: mục tiêu thao tác không giật ở 60 Hz, frame build/raster thông thường dưới ~16 ms; nếu không đạt, giảm frame/kích thước hoặc bỏ animation. Kích thước asset mục tiêu ban đầu: avatar ≤50 KB, ảnh nhân vật thường ≤200 KB, chuỗi động tổng ≤500 KB/nhân vật; số này là ngân sách thiết kế cần đo trên file thật, không phải cam kết hiệu năng.
 
