@@ -1,5 +1,7 @@
 # Đấu trường trực tuyến và bảng xếp hạng — đặc tả v1
 
+> **Solo 1v1 cập nhật:** [docs/33](33-dau-truong-solo-ranked-gdd.md) thay luật một câu/ưu tiên người nộp nhanh trong §4–5 bằng trận ba vòng, mỗi vòng một câu, không tính điểm tốc độ ở bản đầu. [docs/34](34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn câu hỏi và bộ ngôn ngữ; dùng SQL theo docs/28. Phần nhóm/bảng học tập tuần trong tài liệu này vẫn là định hướng mở rộng.
+
 > **Cập nhật CSDL:** luật trận/bảng giữ nguyên; các đoạn Firestore/projection/collection dưới đây là thiết kế trước khi chọn SQL. Khi coding dùng bảng, index và transaction trong [docs/28](28-backend-sql.md).
 
 **Trạng thái:** giai đoạn sau MVP. Thi đấu là lựa chọn riêng trong app, không tự mở khi chuông reo. Bản đầu là **giao hữu không tính hạng**. Chỉ bật rating/xếp hạng khi đạt cổng ở [kiểm toán](19-kiem-toan-khoang-trong.md).
@@ -54,11 +56,11 @@ sequenceDiagram
   API-->>B: Kết quả + giải thích
 ```
 
-Máy trạng thái: `queued → matched → active → grading → settled`; nhánh `cancelled` (chưa bắt đầu, đối thủ mất kết nối), `voided` (lỗi đề/chấm), `needs_review` (AI chưa chắc hoặc khiếu nại). Chỉ `settled` được ghi rating. Một lần nộp/người/trận; backend chấp nhận lặp cùng `idempotencyKey` nhưng không chấm hay tính điểm lại. Chốt hạn theo đồng hồ server; cho grace window mạng ngắn có đo, không dựa đồng hồ máy. Hai người phải nhận **cùng câu** ở giai đoạn đầu để dễ kiểm chứng công bằng; che đáp án đến khi cả hai kết thúc.
+Máy trạng thái: `queued → matched → active → grading → settled`; nhánh `cancelled` (chưa bắt đầu, đối thủ mất kết nối), `voided` (lỗi đề/chấm), `needs_review` (AI chưa chắc hoặc khiếu nại). Chỉ `settled` được ghi rating. **Với Solo ba vòng:** một lần nộp/người/**vòng**, backend chấp nhận lặp cùng `idempotencyKey` nhưng không chấm hay tính điểm lại. Chốt hạn theo đồng hồ server, không dựa đồng hồ máy. Hai người nhận cùng bộ ba câu; che đáp án từng câu đến khi cả hai nộp hoặc hết hạn. Đoạn luật giao hữu một câu phía dưới chỉ là phương án cũ, không áp dụng cho Solo ranked v1.
 
 ### Luật kết quả giao hữu đề xuất
 
-1. Câu có đáp án kiểm chứng được, cùng đề, cùng giới hạn thời gian. Đúng thắng sai; cả hai đúng thì thời gian nộp server sớm hơn thắng nếu chênh lớn hơn ngưỡng mạng đã thử nghiệm; trong ngưỡng là hòa. Cả hai sai là hòa và được xem lời giải.
+1. **Giao hữu một câu cũ:** câu có đáp án kiểm chứng được, cùng đề, cùng giới hạn thời gian. **Solo ba vòng mới** tính 1 điểm/câu đúng, không thưởng tốc độ; cùng tổng điểm là hòa theo [docs/33](33-dau-truong-solo-ranked-gdd.md).
 2. Mất kết nối sau `matched` trước khi hiển thị đề: hủy, không phạt. Mất kết nối trong trận: cho gửi lại cùng khóa trước deadline; sau deadline có `forfeit` chỉ nếu có bằng chứng kết nối/hiển thị đủ, nếu không `voided`.
 3. AI `uncertain`, ảnh không đọc được, lỗi rubric hoặc tranh chấp: `needs_review`/`voided`; rating không đổi. Ảnh không được giữ mặc định; muốn khiếu nại ảnh cần xin phép lưu tạm với thời hạn rõ, hoặc chấp nhận hủy trận.
 4. Chấm tự động chỉ cho câu có đáp án chính xác/cấu trúc rõ; Gemini có thể giải thích bước, nhưng backend/rubric quyết định trạng thái hợp lệ. Không dùng tốc độ chụp ảnh làm tiêu chí thắng khi ảnh cần AI đọc và mạng biến động.

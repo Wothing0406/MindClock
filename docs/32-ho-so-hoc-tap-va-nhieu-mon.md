@@ -2,6 +2,8 @@
 
 **Mục tiêu:** một học sinh chọn môn đang học, môn ưu tiên thi, chủ đề cần ôn và thời khóa biểu của mình; chuông/nhắc lịch dùng hồ sơ đó để chọn câu phù hợp. **Không cố định “tổ hợp thi” theo một danh sách cứng**, vì kỳ thi, môn chọn và năm học có thể đổi. App cho người học tự chọn và sửa bất cứ lúc nào. Không suy luận năng lực/tổ hợp từ điểm số hoặc lớp.
 
+Môn dùng cho Solo 1v1 chỉ được mở theo chất lượng [ngân hàng câu](34-ngan-hang-cau-hoi-da-mon.md) và luật [đấu trường](33-dau-truong-solo-ranked-gdd.md); việc chọn môn ưu tiên trong hồ sơ **không tự bật ranked** hay chia sẻ môn đó công khai.
+
 ## 1. Onboarding tối thiểu
 
 1. Chọn cấp/lớp hoặc năm học; có `Để sau` cho người chỉ dùng báo thức.

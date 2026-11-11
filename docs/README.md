@@ -37,6 +37,8 @@
 29. [30 — Ngôn ngữ và asset](30-ngon-ngu-va-tai-san-giao-dien.md): chữ ngắn, không quảng cáo, không emoji, lựa chọn icon/animation.
 30. [31 — Báo thức thử thách](31-bao-thuc-thu-thach.md): chế độ không Hoãn, gợi ý sau nhiều lần sai, Dừng khẩn cấp, giới hạn chống giải hộ.
 31. [32 — Hồ sơ nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md): môn/tổ hợp người dùng chọn, chọn câu theo lịch, dạng chấm theo môn, nhắc lịch/task và dữ liệu SQL.
+32. [33 — Solo 1v1 và bảng hạng](33-dau-truong-solo-ranked-gdd.md): vòng chơi ba câu, ghép trận, điểm/XP/rating, mùa, avatar, UI, lỗi và cổng mở hạng.
+33. [34 — Ngân hàng câu đa môn](34-ngan-hang-cau-hoi-da-mon.md): taxonomy, dạng câu theo môn, tiếng Việt/đáp án/gợi ý, quy trình duyệt và schema revision.
 
 ## Quyết định đã chốt để coding
 

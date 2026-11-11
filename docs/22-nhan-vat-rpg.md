@@ -2,6 +2,8 @@
 
 **Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật là phần thưởng thị giác, không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md) và [quy chuẩn v2](27-quy-chuan-giao-dien-va-figma.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm. **Cập nhật:** nhân vật được tạo hình 3D mềm nhưng xuất ảnh nhẹ cho app; không render 3D liên tục.
 
+Trong [Solo 1v1](33-dau-truong-solo-ranked-gdd.md), avatar chỉ là danh tính hiển thị từ whitelist và khung cosmetic; không cho lợi thế câu hỏi, tốc độ hoặc điểm.
+
 ## 1. Hướng mỹ thuật thống nhất
 
 - **Dáng:** mô hình 3D stylized như đồ chơi bằng giấy/nhựa mờ, ánh sáng ấm một hướng, render ra ảnh 2D nền trong suốt. Silhouette dễ đọc ở 48 px; tối đa 2–3 mảng màu chính/nhân vật. Tránh texture chi tiết, bóng kim loại và pixel art.
