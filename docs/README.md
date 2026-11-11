@@ -32,12 +32,15 @@
 24. [25 — Bảo mật và dữ liệu](25-bao-mat-va-du-lieu.md): mục đích thu thập, quyền, thời hạn, ảnh AI, rút đồng ý, sự cố.
 25. [26 — Công cụ miễn phí và demo](26-bo-cong-cu-mien-phi-va-kich-ban-demo.md): mỗi vai cần cài gì, phương án 0 đồng và kịch bản giám khảo.
 26. [27 — Quy chuẩn giao diện và Figma](27-quy-chuan-giao-dien-va-figma.md): phong cách tối giản, icon, thao tác, nhân vật 3D nhẹ, khung rank, animation và bàn giao thiết kế.
+27. [28 — Backend SQL](28-backend-sql.md): PostgreSQL đích, SQLite demo, bảng, ràng buộc, transaction và lộ trình thay Firestore.
+28. [29 — Làm trước 30% sản phẩm](29-ke-hoach-chuan-bi-30-phan-tram.md): lát cắt app/API chạy được, phần để lại và prompt giao AI coding.
+29. [30 — Ngôn ngữ và asset](30-ngon-ngu-va-tai-san-giao-dien.md): chữ ngắn, không quảng cáo, không emoji, lựa chọn icon/animation.
 
 ## Quyết định đã chốt để coding
 
 | Chủ đề | Quyết định |
 | --- | --- |
-| Bản đầu | Flutter cho Android, FastAPI backend, Firebase Authentication + Cloud Firestore; Gemini chỉ được gọi từ backend |
+| Bản đầu | Flutter cho Android, FastAPI backend, SQLite local cho demo/PostgreSQL đích; Firebase Authentication có thể giữ; Gemini chỉ được gọi từ backend. Xem docs/28; mô hình Firestore trong docs cũ đã được thay thế |
 | Báo thức | Lập lịch tại thiết bị, có câu hỏi dự phòng offline; không phụ thuộc API lúc chuông reo |
 | Câu hỏi | Ngân hàng câu đã duyệt cho MVP; AI hỗ trợ đọc/chấm bài và gợi ý |
 | Ảnh | Gửi qua backend, xử lý tạm thời, không lưu ảnh mặc định |

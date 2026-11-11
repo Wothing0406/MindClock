@@ -1,5 +1,7 @@
 # Môi trường coding, vận hành và phát hành
 
+> **Cập nhật CSDL 11/11/2026:** các bước Firebase Emulator/Firestore dưới đây thuộc kế hoạch cũ. Với backend SQL, dùng SQLite local cho demo và PostgreSQL cho tích hợp/pilot theo [docs/28](28-backend-sql.md); Firebase Authentication có thể tiếp tục dùng. Cập nhật lệnh chạy thật khi tạo code.
+
 Tài liệu này là **kế hoạch triển khai**, chưa có hạ tầng hay mã nguồn tương ứng. Chủ sở hữu vận hành cần xác nhận ngân sách, tài khoản Google/Firebase và chính sách dữ liệu trước khi tạo production.
 
 ## 1. Cấu trúc repo dự kiến

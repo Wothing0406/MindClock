@@ -1,5 +1,7 @@
 # Đấu trường trực tuyến và bảng xếp hạng — đặc tả v1
 
+> **Cập nhật CSDL:** luật trận/bảng giữ nguyên; các đoạn Firestore/projection/collection dưới đây là thiết kế trước khi chọn SQL. Khi coding dùng bảng, index và transaction trong [docs/28](28-backend-sql.md).
+
 **Trạng thái:** giai đoạn sau MVP. Thi đấu là lựa chọn riêng trong app, không tự mở khi chuông reo. Bản đầu là **giao hữu không tính hạng**. Chỉ bật rating/xếp hạng khi đạt cổng ở [kiểm toán](19-kiem-toan-khoang-trong.md).
 
 ## 1. Mục tiêu và ranh giới

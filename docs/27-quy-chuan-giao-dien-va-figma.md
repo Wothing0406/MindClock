@@ -2,6 +2,8 @@
 
 **Quyết định mỹ thuật:** giao diện học tập phẳng, sáng rõ; nhân vật có cảm giác 3D mềm nhưng được xuất thành ảnh tĩnh/chuỗi ảnh nhẹ. Sự đối lập này giúp trò chơi có bản sắc mà màn báo thức, đề bài và lời giải vẫn dễ đọc. Tài liệu này cụ thể hóa [hệ UI](13-he-thiet-ke-ui.md), [linh thú](22-nhan-vat-rpg.md) và [hành trình](23-hanh-trinh-san-pham.md). Đây là **spec thiết kế**, chưa có file Figma hay asset 3D hoàn thiện.
 
+Quy tắc câu chữ và asset không emoji ở [docs/30](30-ngon-ngu-va-tai-san-giao-dien.md). Prototype hiện tại dùng SVG placeholder; React chỉ dùng nếu đội chọn làm web/dashboard, không thay thế bộ asset nhân vật.
+
 ## 1. Bản sắc và những điều cần tránh
 
 **Một hình ảnh nhớ được:** vòng đồng hồ nét đơn, trên nền giấy sáng sau khi thức dậy. Nét kẻ giấy chỉ dùng ở vùng câu hỏi, không phủ khắp app. Chừa khoảng trắng và để nội dung thật tạo nhịp; không tạo nhiều card giống nhau, gradient mờ và bóng đổ cho mọi khối.

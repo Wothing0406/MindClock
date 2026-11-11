@@ -4,6 +4,8 @@
 
 Đọc `docs/README.md` để tìm nguồn chuẩn, rồi chỉ đọc tài liệu liên quan đến task. Hành vi sản phẩm: `docs/04-prd-va-dac-ta-san-pham.md`; UI: `docs/05-ux-va-noi-dung-tieng-viet.md`, `docs/13-he-thiet-ke-ui.md`, `docs/23-hanh-trinh-san-pham.md`, `docs/27-quy-chuan-giao-dien-va-figma.md`; dữ liệu/API: `docs/06-kien-truc-va-du-lieu.md`, `docs/07-hop-dong-api-va-ai.md`, `docs/17-workflow-va-vong-doi-du-lieu.md`, `docs/18-huong-dan-tich-hop-api.md`; iOS: `docs/20-ios-demo-va-phat-hanh.md`; đấu trường: `docs/21-dau-truong-xep-hang.md`; nhân vật: `docs/22-nhan-vat-rpg.md`; AI: `docs/14-vai-tro-va-quy-dinh-ai.md`; kiểm thử: `docs/09-ke-hoach-kiem-thu.md`; bàn giao: `docs/10-to-chuc-coding-agent.md`; skill: `docs/16-lua-chon-skills-cho-du-an.md`. Một sửa lỗi nhỏ không cần đọc toàn bộ bộ docs.
 
+**Tài liệu mới ưu tiên khi bắt đầu coding:** [docs/28](docs/28-backend-sql.md) thay mô hình Firestore cũ; [docs/29](docs/29-ke-hoach-chuan-bi-30-phan-tram.md) định nghĩa lát cắt 30%; [docs/30](docs/30-ngon-ngu-va-tai-san-giao-dien.md) chốt ngôn ngữ và asset không emoji. Không xây tiếp Firestore nếu task hiện tại yêu cầu SQL.
+
 ## Quy tắc không được phá
 
 - Báo thức, hoãn và tắt khẩn cấp chạy trên thiết bị kể cả khi không có mạng/API/đăng nhập; không khóa người dùng trong thử thách.
@@ -12,6 +14,7 @@
 - Không lưu ảnh bài làm mặc định và không ghi ảnh, token, lời giải cá nhân vào log.
 - Client không ghi điểm/tiến độ có thẩm quyền. Backend xác minh Firebase ID token, kiểm tra quyền, dùng idempotency cho phiên/attempt/XP.
 - Giao diện tiếng Việt `vi-VN`, ngôn ngữ khích lệ, có đường nhập đáp án thay camera.
+- UI và prototype không dùng emoji hệ thống, câu quảng cáo/phóng đại hoặc khẩu hiệu trong màn dùng hằng ngày; dùng icon vector và câu ngắn theo docs/30.
 - Đấu trường tự nguyện; không dùng giờ dậy để xếp hạng; chỉ server chốt kết quả/rating. iOS AlarmKit không được mô tả là khóa nút Dừng của OS.
 - Đăng ký/đăng nhập và xóa tài khoản theo `docs/24-dang-ky-va-quan-ly-tai-khoan.md`; dữ liệu/consent theo `docs/25-bao-mat-va-du-lieu.md`. Không dùng ảnh học sinh thật trong demo Gemini free tier khi chưa có đánh giá và đồng ý phù hợp.
 - Không tuyên bố tính năng đã chạy nếu mới là mock, storyboard hoặc video dự phòng.

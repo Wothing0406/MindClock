@@ -1,5 +1,7 @@
 # Kế hoạch triển khai từ tài liệu đến sản phẩm
 
+> **Cập nhật 11/11/2026:** gói `30% sản phẩm` và prompt giao AI tại [docs/29](29-ke-hoach-chuan-bi-30-phan-tram.md). Backend chuyển sang SQL theo [docs/28](28-backend-sql.md); các nhắc Firestore trong backlog cũ phải được đổi khi mở task coding tương ứng.
+
 **Nguyên tắc:** bản DevFest là lát cắt trình diễn; MVP là ứng dụng Android có báo thức thật, dữ liệu thật và thử 7 ngày; sản phẩm đầy đủ chỉ mở rộng sau khi đo nhu cầu. Các mốc dưới đây là **ước lượng công việc**, không phải cam kết lịch khi chưa biết số người và năng lực đội.
 
 ## 1. Thứ tự phụ thuộc

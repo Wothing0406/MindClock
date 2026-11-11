@@ -1,5 +1,7 @@
 # Chính sách bảo mật và quản trị dữ liệu — bản đặc tả triển khai
 
+> **Cập nhật CSDL:** các nơi ghi Firestore dưới đây là thiết kế trước. Khi coding SQL, áp dụng mục đích/quyền/thời hạn như cũ nhưng lưu theo [docs/28](28-backend-sql.md); kiểm tra quyền tại FastAPI và DB, không dựa Firestore Rules.
+
 **Trạng thái:** quy tắc kỹ thuật và bản nháp chính sách; chưa phải văn bản pháp lý đã duyệt hay chính sách công bố. Trước pilot với người chưa thành niên, đội phải xác định đơn vị kiểm soát dữ liệu, người liên hệ, nơi lưu và thời hạn theo thị trường áp dụng. Firebase nêu khách hàng thường là bên kiểm soát dữ liệu; Firebase Authentication xử lý tại [trung tâm dữ liệu Hoa Kỳ](https://firebase.google.com/support/privacy/), cần nói rõ khi công bố.
 
 ## 1. Danh mục và mục đích

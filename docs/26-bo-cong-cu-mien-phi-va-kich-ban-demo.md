@@ -1,5 +1,7 @@
 # Công cụ miễn phí cho đội và kịch bản demo
 
+> **Cập nhật 11/11/2026:** để làm trước 30% sản phẩm, chọn FastAPI + SQLite local theo [docs/29](29-ke-hoach-chuan-bi-30-phan-tram.md). Firebase Emulator/Spark ở các mục dưới là lựa chọn khi đội bật xác thực/online, không bắt buộc cho lát cắt 30%.
+
 **Mục tiêu chi phí DevFest: 0 đồng tiền dịch vụ.** Không tạo project billing/Blaze, không mua Apple Developer Program, không cần domain. Mọi tài khoản demo là tài khoản thử, mọi ảnh là bài tự viết của thành viên hoặc fixture có quyền. Giới hạn miễn phí có thể đổi; kiểm tra lại trước ngày thi theo [Firebase Pricing](https://firebase.google.com/pricing/) và [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing).
 
 ## 1. Mỗi thành viên cài gì
