@@ -8,7 +8,7 @@
 
 **Luồng báo thức/học tập mới:** [docs/31](docs/31-bao-thuc-thu-thach.md) quy định chế độ thử thách không Hoãn, chỉ gợi ý từ sai rõ lần 3 và luôn Dừng khẩn cấp; [docs/32](docs/32-ho-so-hoc-tap-va-nhieu-mon.md) quy định cá nhân hóa nhiều môn/mục tiêu thi. Các câu cũ về Hoãn và gợi ý ngay chỉ áp dụng chế độ thường.
 
-**Solo 1v1:** [docs/33](docs/33-dau-truong-solo-ranked-gdd.md) là nguồn chuẩn luật trận ba câu, điểm, rating và UI; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn ngân hàng câu/biên tập. Luật một câu/ưu tiên tốc độ ở docs/21 là phương án cũ, không code cho ranked v1.
+**Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn luật trận hiện hành (HP, kỹ năng, đồng bộ, ghép cùng nội dung); [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm, humor và mục tiêu tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn ngân hàng câu. Docs/33 và luật một câu trong docs/21 là phương án cũ, không code cho Solo mới.
 
 ## Quy tắc không được phá
 

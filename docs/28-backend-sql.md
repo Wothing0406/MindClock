@@ -72,7 +72,7 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 | `score_ledger` | unique `(board_id,user_id,source_id)`, điểm học tuần do server tính |
 | `leaderboard_entries` | PK `(board_id,user_id)`, score, alias snapshot, updated_at; index `(board_id,score DESC,user_id)` |
 
-`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi rating. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo ba vòng và bảng SQL bổ sung (`match_rounds`, `round_submissions`, `match_results`) ở [docs/33](33-dau-truong-solo-ranked-gdd.md); quản lý revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md). Phần Firestore trong docs/21 là mô hình cũ.
+`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi rating. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL bổ sung (`match_rounds`, `round_skills`, `round_submissions`, `round_results`, `match_results`) ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); quản lý revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md). Phần Firestore trong docs/21 là mô hình cũ.
 
 ## 6. Transaction bắt buộc
 

@@ -1,6 +1,6 @@
 # Đấu trường trực tuyến và bảng xếp hạng — đặc tả v1
 
-> **Solo 1v1 cập nhật:** [docs/33](33-dau-truong-solo-ranked-gdd.md) thay luật một câu/ưu tiên người nộp nhanh trong §4–5 bằng trận ba vòng, mỗi vòng một câu, không tính điểm tốc độ ở bản đầu. [docs/34](34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn câu hỏi và bộ ngôn ngữ; dùng SQL theo docs/28. Phần nhóm/bảng học tập tuần trong tài liệu này vẫn là định hướng mở rộng.
+> **Solo 1v1 cập nhật:** [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md) là luật trận hiện hành có HP, kỹ năng và thưởng nhanh có điều kiện. Luật một câu trong tài liệu này và bản đếm câu đúng ở docs/33 là lịch sử, không dùng để coding. [docs/34](34-ngan-hang-cau-hoi-da-mon.md) là nguồn chuẩn câu hỏi; dùng SQL theo docs/28. Phần nhóm/bảng học tập tuần ở đây vẫn là định hướng mở rộng.
 
 > **Cập nhật CSDL:** luật trận/bảng giữ nguyên; các đoạn Firestore/projection/collection dưới đây là thiết kế trước khi chọn SQL. Khi coding dùng bảng, index và transaction trong [docs/28](28-backend-sql.md).
 
@@ -60,7 +60,7 @@ Máy trạng thái: `queued → matched → active → grading → settled`; nh�
 
 ### Luật kết quả giao hữu đề xuất
 
-1. **Giao hữu một câu cũ:** câu có đáp án kiểm chứng được, cùng đề, cùng giới hạn thời gian. **Solo ba vòng mới** tính 1 điểm/câu đúng, không thưởng tốc độ; cùng tổng điểm là hòa theo [docs/33](33-dau-truong-solo-ranked-gdd.md).
+1. **Luật cũ lưu tham khảo:** giao hữu một câu và bản ba câu tính điểm đã được thay. Solo hiện hành dùng HP/kỹ năng, thưởng nhanh có điều kiện và cùng bộ nội dung theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md).
 2. Mất kết nối sau `matched` trước khi hiển thị đề: hủy, không phạt. Mất kết nối trong trận: cho gửi lại cùng khóa trước deadline; sau deadline có `forfeit` chỉ nếu có bằng chứng kết nối/hiển thị đủ, nếu không `voided`.
 3. AI `uncertain`, ảnh không đọc được, lỗi rubric hoặc tranh chấp: `needs_review`/`voided`; rating không đổi. Ảnh không được giữ mặc định; muốn khiếu nại ảnh cần xin phép lưu tạm với thời hạn rõ, hoặc chấp nhận hủy trận.
 4. Chấm tự động chỉ cho câu có đáp án chính xác/cấu trúc rõ; Gemini có thể giải thích bước, nhưng backend/rubric quyết định trạng thái hợp lệ. Không dùng tốc độ chụp ảnh làm tiêu chí thắng khi ảnh cần AI đọc và mạng biến động.

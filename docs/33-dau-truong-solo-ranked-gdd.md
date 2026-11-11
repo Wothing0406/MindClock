@@ -1,5 +1,7 @@
 # Đấu trường Solo 1v1 và bảng hạng — thiết kế sản phẩm
 
+> **Lưu trữ bản v1 (10/11/2026).** Luật ba câu tính điểm, không máu/kỹ năng trong tài liệu này đã được thay bởi [Solo RPG v2](35-solo-rpg-dong-bo-va-ky-nang.md). Không dùng bản v1 để coding luật trận. Các nguyên tắc opt-in, quyền riêng tư và cổng mở rank vẫn tham khảo được nếu không mâu thuẫn với v2.
+
 **Trạng thái:** đặc tả để lập task coding; chưa có trận online/rating chạy thật. Tài liệu này cụ thể hóa [luật đấu trường v1](21-dau-truong-xep-hang.md) và [hồ sơ nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md). Nếu khác nhau, dùng tài liệu này cho **Solo 1v1**; [schema SQL](28-backend-sql.md) là nguồn chuẩn lưu trữ. Thi đấu độc lập với báo thức; không ép tham gia lúc mới thức.
 
 ## 1. Đề xuất một câu

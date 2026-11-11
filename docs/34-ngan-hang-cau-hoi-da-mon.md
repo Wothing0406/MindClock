@@ -1,6 +1,6 @@
 # Ngân hàng câu hỏi đa môn cho luyện tập và thi đấu
 
-**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu ranked theo [docs/33](33-dau-truong-solo-ranked-gdd.md). “Ngân hàng ngôn ngữ” ở đây gồm **văn bản tiếng Việt của câu, thuật ngữ môn, đáp án tương đương, gợi ý/giải thích và thông báo UI**, không chỉ một danh sách câu trắc nghiệm.
+**Mục tiêu:** đội nội dung có thể soạn, duyệt, xuất bản và thu hồi câu hỏi; mobile/backend có thể chọn, chấm và giải thích nhất quán. Không dùng Gemini sinh câu mới ngay lúc ghép trận. Câu báo thức theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), câu Solo mới theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md). “Ngân hàng ngôn ngữ” ở đây gồm **văn bản tiếng Việt của câu, thuật ngữ môn, đáp án tương đương, gợi ý/giải thích và thông báo UI**, không chỉ một danh sách câu trắc nghiệm.
 
 ## 1. Cấu trúc một câu chuẩn
 
@@ -51,7 +51,7 @@ Không cần mở mọi môn ngay. Mỗi môn có trạng thái `not_available`,
 ## 3. Phân loại và cân bằng
 
 - `subject → gradeBand → topic → learningOutcome → difficultyBand (1..4) → answerType` là taxonomy bắt buộc. `tags` tự do chỉ bổ trợ, không thay taxonomy.
-- Một bộ 3 câu ranked dùng 1 câu nhận biết, 1 câu thông hiểu, 1 câu vận dụng ngắn; hai người nhận **cùng bộ theo cùng thứ tự**. Nếu môn không có ba câu tương đương đã duyệt, không mở ranked.
+- Một bộ 3 câu ranked dùng 1 câu nhận biết, 1 câu thông hiểu, 1 câu vận dụng ngắn; hai người nhận **cùng bộ theo cùng thứ tự** và cùng `curriculum_id/content_version/question_pool_version` theo docs/35. Nếu môn không có ba câu tương đương đã duyệt, không mở ranked.
 - Dùng câu đã qua thử với người học để ước lượng thời gian và tỷ lệ đúng. `difficultyBand` là nhận định ban đầu của người dạy, cần hiệu chuẩn; không đưa câu quá khó vào trận chỉ để tạo thắng thua.
 - Giảm học vẹt bằng biến thể có cùng mục tiêu học nhưng số liệu/ngữ cảnh khác, tránh lặp `questionId` và `variantFamilyId` trong khoảng gần. Biến thể do AI đề xuất phải được duyệt trước publish.
 - Với câu nhiều lựa chọn, phương án nhiễu phải phản ánh lỗi hiểu thường gặp, không chơi chữ vô lý. Tránh tiết lộ đáp án qua độ dài hoặc ngữ pháp.
@@ -84,7 +84,7 @@ flowchart LR
   R -->|Ổn| U
 ```
 
-Người duyệt không là người duy nhất soạn câu nếu có thể. AI hỗ trợ đề xuất biến thể, rubric, phương án nhiễu và phát hiện mơ hồ; không tự publish, không tự định đáp án cuối hoặc tự tạo câu ranked đang chơi. Khi báo lỗi, ngừng chọn revision, xác định các trận bị ảnh hưởng, void và sửa rating ledger có audit theo [docs/33](33-dau-truong-solo-ranked-gdd.md).
+Người duyệt không là người duy nhất soạn câu nếu có thể. AI hỗ trợ đề xuất biến thể, rubric, phương án nhiễu và phát hiện mơ hồ; không tự publish, không tự định đáp án cuối hoặc tự tạo câu ranked đang chơi. Khi báo lỗi, ngừng chọn revision, xác định các trận bị ảnh hưởng, void và sửa rating ledger có audit theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md).
 
 ## 6. SQL và API nội dung
 
@@ -96,5 +96,5 @@ API quản trị nội bộ: tạo nháp → submit review → approve → publi
 
 - **Demo:** một môn/khối, 3 câu được người có chuyên môn kiểm tra; nếu show nhiều môn, mỗi môn thêm ít nhất một câu cấu trúc nhưng ghi rõ là mô phỏng/giao hữu, chưa mở ranked.
 - **Giao hữu pilot:** mỗi môn/khối tối thiểu 3 bộ câu không trùng trong một buổi chơi ngắn, có phương án void khi phát hiện lỗi.
-- **Ranked:** ngưỡng bộ câu cần quyết định bằng dữ liệu số người chơi/tần suất, không chốt tùy tiện con số cố định; phải đủ để giảm học thuộc câu, có người duyệt và theo dõi chất lượng theo [cổng mở hạng](33-dau-truong-solo-ranked-gdd.md#13-cổng-mở-solo-có-hạng).
+- **Ranked:** ngưỡng bộ câu cần quyết định bằng dữ liệu số người chơi/tần suất, không chốt tùy tiện con số cố định; phải đủ để giảm học thuộc câu, có người duyệt và theo dõi chất lượng theo [cổng mở hạng](35-solo-rpg-dong-bo-va-ky-nang.md#10-cổng-mở-ranked-và-acceptance).
 
