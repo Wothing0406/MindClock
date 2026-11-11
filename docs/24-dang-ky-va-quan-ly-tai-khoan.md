@@ -18,7 +18,7 @@
 
 ## 2. Ràng buộc đầu vào và tài khoản
 
-- Email chuẩn hóa chữ thường cho tra cứu, không hiện trên leaderboard. Mật khẩu không lưu trong Firestore/backend/log; Firebase Auth quản lý. Quy tắc độ dài và chống mật khẩu yếu phải dùng chính sách của Auth tại thời điểm coding, không tự cắt hoặc log chuỗi nhập.
+- Email chuẩn hóa chữ thường cho tra cứu, không hiện trên leaderboard. Mật khẩu không lưu trong PostgreSQL/backend/log; Firebase Auth quản lý. Quy tắc độ dài và chống mật khẩu yếu phải dùng chính sách của Auth tại thời điểm coding, không tự cắt hoặc log chuỗi nhập.
 - Biệt danh 3–20 ký tự, chỉ ký tự chữ/số/khoảng trắng đơn giản; lọc tên xúc phạm, thông tin liên hệ và tên thật tự nhận diện; cho sửa và có nút báo cáo. Không lấy biệt danh từ email.
 - Khối chỉ dùng để chọn nội dung/ghép trận; không công khai trường/lớp cụ thể. Chỉ một tài khoản thi đấu đang hoạt động trên một thiết bị tại một thời điểm là quy tắc chống lạm dụng đề xuất, cần test trải nghiệm đổi máy.
 - Xác minh email trước leaderboard; giới hạn đăng ký từ cùng thiết bị/IP bằng dịch vụ và backend, không chặn hàng loạt học sinh dùng chung Wi-Fi trường.
@@ -31,5 +31,7 @@
 
 ## 4. API và test để coding
 
-`GET /v1/me`, `PUT /v1/me/profile`, `POST /v1/me/export`, `POST /v1/me/delete-request`, `GET /v1/me/delete-status`; Firebase SDK xử lý đăng ký/đăng nhập/reset, backend chỉ nhận ID token. Test: người chưa đăng nhập dùng chuông local; token sai/expired bị 401; email chưa xác minh không vào bảng; user A không đọc user B; đăng xuất không hủy chuông; xóa không để tên cũ trên leaderboard; retry xóa idempotent; dữ liệu local được xóa khi người dùng chọn `Xóa cả dữ liệu trên máy`.
+**API chuẩn theo [docs/07](07-hop-dong-api-va-ai.md):** `GET /v1/me`, `PATCH /v1/me`, `POST /v1/me/export`, `GET /v1/me/exports/{id}`, `DELETE /v1/me` (202 tạo yêu cầu xóa), `GET /v1/me/delete-status`; không dùng các đường `PUT /me/profile` hoặc `POST /me/delete-request` cũ. Firebase SDK xử lý đăng ký/đăng nhập/reset, backend chỉ nhận ID token. Test: người chưa đăng nhập dùng chuông local; token sai/expired bị 401; email chưa xác minh không vào bảng; user A không đọc user B; đăng xuất không hủy chuông; xóa không để tên cũ trên leaderboard; retry xóa idempotent; dữ liệu local được xóa khi người dùng chọn `Xóa cả dữ liệu trên máy`.
+
+**Máy dùng chung:** khi đăng xuất/đổi tài khoản, app không hiển thị lịch, bài nháp, điểm, thông báo chi tiết của tài khoản trước cho người sau. Báo thức local đã đặt vẫn tồn tại cho đến khi chủ máy xác nhận sửa/xóa; UI phải hiện rõ chuông nào còn hoạt động mà không tiết lộ lịch học cá nhân trên màn khóa. Bản nháp chữ offline gắn local profile, xóa sau 24 giờ hoặc khi người dùng chọn xóa; không tự chuyển sang tài khoản mới. Kiểm thử trên một máy với hai tài khoản và khách local.
 

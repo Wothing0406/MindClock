@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | Tất cả | Git, tài khoản GitHub, trình duyệt Chrome/Edge, VS Code hoặc IDE quen dùng, đọc docs/README | Figma bản miễn phí để xem prototype nếu dùng |
 | Flutter Android | Flutter SDK, Android Studio/Android SDK, JDK tương thích với Flutter, điện thoại Android + cáp USB hoặc emulator | Xcode/Mac chỉ nếu làm iOS |
-| Backend | Python bản được pin khi tạo code, venv, Firebase CLI + Emulator Suite, tài khoản Firebase Spark | Gemini API key demo giới hạn, chỉ backend giữ |
+| Backend | Python bản được pin khi tạo code, venv, SQLite local | PostgreSQL cho online/transaction test; Firebase CLI/Auth Emulator nếu triển khai đăng nhập; Gemini key chỉ ở backend |
 | UI/đồ họa | Figma free hoặc Penpot, trình duyệt; font có licence, export PNG/SVG | Không cần phần mềm vẽ trả phí |
 | Pitch/demo | Laptop có HDMI/USB-C phù hợp, trình duyệt, điện thoại Android, bộ sạc, video dự phòng, hotspot | OBS miễn phí nếu cần quay màn hình |
 
@@ -22,8 +22,8 @@
 | --- | --- | --- |
 | GitHub | Repo hiện có để chia docs và code | Đội tự quản lý quyền ghi |
 | Figma/Penpot hoặc [demo HTML](../demo/index.html) | Xem UI trên laptop/iPhone qua browser | Prototype không chứng minh báo thức nền |
-| Firebase Emulator Suite | Đăng ký/Firestore/Rules offline trên máy dev | Chỉ laptop cùng máy/mạng; không phải dịch vụ production |
-| Firebase Spark | Nếu cần hai máy thi online thật | Theo quota miễn phí; không bật dịch vụ cần billing; kiểm tra quota hiện hành |
+| Firebase Auth Emulator | Thử đăng nhập offline trên máy dev nếu làm tài khoản | Không có Firestore nghiệp vụ; giả lập auth không là production |
+| Firebase Spark | Nếu cần xác thực hai máy online thật | Theo quota miễn phí; vẫn cần nơi chạy FastAPI/PostgreSQL mà hai máy truy cập; kiểm tra quota hiện hành |
 | Gemini free tier | Một vài ảnh **do đội tự tạo** để demo live | Rate limit; nội dung free tier có điều kiện sử dụng dữ liệu; có fixture fallback |
 | Android APK debug | Cài trực tiếp trên máy của đội | Không cần Google Play; phải test đúng máy đi thi |
 | iPhone prototype Safari | Xem UI tương tác | Không có AlarmKit; muốn build iOS cần Mac/Xcode, TestFlight cần membership trả phí |
@@ -32,10 +32,10 @@
 
 ## 3. Demo cho giám khảo trong một buổi sáng
 
-1. Mở [demo giao diện](../demo/index.html) trên laptop, trình chiếu màn `Hôm nay` và chọn `Đấu trường`. Nếu mở file trực tiếp thì chạy offline; trên iPhone cần đưa file vào cùng mạng/local server hoặc host tĩnh có kiểm tra trước.
+1. Mở [demo giao diện](../demo/index.html) trên laptop, trình chiếu màn `Hôm nay` và chọn `Đấu trường`. **Demo HTML hiện là bản xem UI cũ**: nút `Xem gợi ý` có thể mở ngay và `Xem phản hồi` không kiểm tra bài; **không dùng màn Luyện tập đó để chứng minh luật báo thức thử thách/chấm thật**. Màn đã ghi rõ dữ liệu mô phỏng. Nếu mở file trực tiếp thì chạy offline; trên iPhone cần đưa file vào cùng mạng/local server hoặc host tĩnh có kiểm tra trước.
 2. Trên Android thật cho xem lát cắt có code nếu đội đã hoàn thành: đặt chuông, câu đã duyệt, chụp bài, phản hồi. Nếu chưa có, ghi rõ `Prototype` trên màn và lời nói.
 3. Hai tài khoản thử/thiết bị thực hiện giao hữu nếu backend đã chạy; nếu chưa, dùng bảng mẫu có nhãn `Dữ liệu mô phỏng`. Không gọi dữ liệu mẫu là live.
-4. Trình bày ba trạng thái AI: đúng, cần xem lại, chưa đọc rõ; dùng ảnh tự viết của đội. Khi mạng lỗi, phát video dự phòng có nhãn.
+4. Trình bày ba trạng thái chấm: đúng, cần xem lại, chưa đủ rõ; nhập đáp án + một bước giải là đường chính, ảnh tự viết của đội là tùy chọn. Khi mạng lỗi, phát video dự phòng có nhãn; không gọi fixture là AI live.
 5. Chốt bằng giới hạn thật: báo thức không khóa nút Dừng, ELO chưa mở nếu chưa có câu hiệu chuẩn, quyền riêng tư opt-in.
 
 **Túi đồ demo:** laptop + sạc, Android + sạc/cáp, adapter trình chiếu, ảnh viết tay giấy thật, bản HTML offline, video 20–30 giây, slide/PDF offline, danh sách tài khoản thử, hotspot dự phòng. Đặt thiết bị ở chế độ không hiện thông báo cá nhân.

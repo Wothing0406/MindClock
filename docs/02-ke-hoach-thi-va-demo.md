@@ -4,7 +4,7 @@
 
 ## 1. Mục tiêu của buổi thi
 
-**Một câu chuyện, một luồng chạy trọn, một bằng chứng thật:** từ thời khóa biểu mẫu đến ảnh lời giải viết tay, phản hồi của AI và EXP. Giám khảo phải phân biệt ngay phần nào đang chạy, phần nào chỉ là thiết kế tương lai.
+**Một câu chuyện, một luồng chạy trọn, một bằng chứng thật:** từ lịch mẫu đến một câu đã duyệt, bài làm có trình bày, phản hồi và đường dừng chuông an toàn. Giám khảo phải phân biệt ngay phần nào đang chạy, phần nào chỉ là thiết kế tương lai; không hứa XP nếu chưa có backend ledger.
 
 ### Hình thức demo nên chuẩn bị
 
@@ -41,10 +41,10 @@ Các mốc trên là kế hoạch **đề xuất**, không phải lịch do ban 
 ## 4. Storyboard demo 75–90 giây
 
 1. **0–10 giây — Lịch học:** “Minh có tiết Toán đầu buổi. MindClock chọn một câu ôn đúng chủ đề.” Hiện lịch mẫu và giờ báo thức 06:30.
-2. **10–20 giây — Chuông reo:** Bật **chế độ mô phỏng thời gian** ngay trước mặt giám khảo; không chờ đến 06:30 thật. Hiện nút “Bắt đầu”, “Hoãn 5 phút”, “Tắt khẩn cấp”.
-3. **20–35 giây — Làm bài:** Hiện câu `2(x − 3) = 10`. Người trình diễn viết lời giải sai có chủ ý: `2x − 3 = 10`. Chụp ảnh giấy thật.
-4. **35–55 giây — AI phản hồi:** Hiện AI xác định sai ở bước phân phối 2 vào ngoặc và hỏi “`2 × 3` bằng bao nhiêu?”; không đưa ngay toàn bộ đáp án.
-5. **55–75 giây — Sửa và hoàn thành:** Chụp lời giải đúng hoặc dùng ảnh đúng đã ghi rõ là dữ liệu dự phòng; hiện `x = 8`, chuông dừng, EXP và chủ đề cần ôn.
+2. **10–20 giây — Chuông reo:** Bật **chế độ mô phỏng thời gian** ngay trước mặt giám khảo; không chờ đến 06:30 thật. Hiện `Mở câu hỏi` và `Dừng khẩn cấp`; mode thử thách không có Hoãn. Nói rõ chuông mô phỏng nếu chưa là alarm OS.
+3. **20–35 giây — Làm bài:** Hiện câu `2(x − 3) = 10`. Người trình diễn nhập đáp án và bước giải sai có chủ ý: `2x − 3 = 10`; nếu phần ảnh chạy thật, chụp giấy do đội tự viết và đồng ý gửi.
+4. **35–55 giây — Nhận xét:** Ở lần sai đầu mode thử thách chỉ hiện `Bài này chưa đúng. Bạn có thể thử lại`, chưa lộ bước sai/gợi ý. Nếu AI chưa chắc, hiện `Chưa đủ rõ` và đường nhập chữ, không ép kết luận.
+5. **55–75 giây — Sửa và hoàn thành:** Nhập/chụp bước đúng hoặc dùng fixture ghi rõ là dự phòng; hiện `x = 8`, phản hồi và **sau khi hoàn thành** mới xem giải thích lỗi phân phối 2, rồi lịch hôm nay. Chỉ hiện XP nếu API đã ghi ledger thật; nhấn Dừng khẩn cấp để chứng minh âm dừng nếu alarm local đã chạy.
 6. **75–90 giây — Kết:** “Ngày mai MindClock tiếp tục chọn câu phù hợp với lịch học và lỗi hôm nay.” Chỉ nói đây là kế hoạch nếu chưa chạy thật.
 
 **Điểm quan trọng:** Nếu Gemini chỉ nhận ra ảnh nhưng chấm sai, người demo chuyển sang trạng thái “chưa chắc chắn, xin chụp lại/xem bước này” thay vì cố ép kết quả đúng. Ảnh dự phòng và video phải được ghi nhãn là dự phòng, không giả là xử lý trực tiếp.
@@ -83,7 +83,7 @@ Không dành slide riêng cho danh sách công nghệ, linh thú, ELO và mọi 
 
 | Câu hỏi | Trả lời gọn, trung thực |
 | --- | --- |
-| “Nếu học sinh ngủ quá ít mà vẫn bị ép làm bài?” | Sản phẩm cho hoãn/tắt khẩn cấp; thử nghiệm sẽ đo cả mức khó chịu và không khuyến khích dậy sớm bằng cách giảm ngủ. |
+| “Nếu học sinh ngủ quá ít mà vẫn bị ép làm bài?” | Chế độ thử thách là tùy chọn, không có Hoãn nhưng luôn có Dừng khẩn cấp; mode thường có thể Hoãn. Giờ gợi ý do lịch người dùng nhập, không thi dậy sớm. |
 | “Gemini chấm sai lời giải thì sao?” | AI trả về mức chắc chắn và bước trích từ ảnh; trạng thái chưa chắc không phạt người học; có cách phản hồi lỗi. |
 | “Có thể dùng bài giải của người khác chụp lại không?” | Có thể. MVP không tuyên bố chống gian lận tuyệt đối; mục tiêu là thúc đẩy tự học, không dùng ảnh để trừng phạt. |
 | “Tại sao không dùng app báo thức hoặc app ôn tập riêng?” | MindClock kiểm chứng liệu một lần tự nhớ lại kiến thức, gắn với lịch học đúng lúc dậy, có làm người học bắt đầu ngày học tốt hơn. Chưa có dữ liệu để khẳng định vượt trội. |

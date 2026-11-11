@@ -5,7 +5,7 @@
 ## 1. Mục tiêu và giới hạn
 
 - Mục tiêu: người học phải thực hiện một hành động tư duy ngắn trước khi quay lại ngủ; không biến bài sáng thành bài kiểm tra áp lực.
-- Chế độ thử thách **không có Hoãn** trong UI app. `Dừng khẩn cấp` luôn có, giữ 2 giây rồi xác nhận để tránh chạm nhầm; dừng âm thanh ngay cả khi offline/AI lỗi. Không trừ XP/rank, không công khai lý do.
+- Chế độ thử thách **không có Hoãn** trong UI app. `Dừng khẩn cấp` luôn có; một lần chạm dừng âm/rung local ngay cả khi offline/AI lỗi. Có thể hỏi xác nhận/lý do tùy chọn **sau khi đã dừng**, không phát lại chuông nếu người dùng bỏ qua. Không trừ XP/rank, không công khai lý do.
 - Không khóa nút nguồn, điều khiển âm lượng, Home, khóa màn hình, gỡ app hay hành động hệ thống. Android full-screen intent phụ thuộc quyền/thiết bị; trên iOS AlarmKit có nút Dừng của hệ thống.
 - Âm lượng và âm báo do người dùng chọn trong mức OS cho phép. Không tự tăng về mức tối đa hoặc cố phát qua chế độ người dùng đã tắt quyền.
 
@@ -44,18 +44,18 @@ Khi mở câu hỏi, có thể **giảm âm lượng** để đọc/làm bài, n
 
 | Tình huống | Phản hồi | Gợi ý/đáp án |
 | --- | --- | --- |
-| Sai rõ lần 1–2 | `Chưa đúng. Xem lại bước này và thử tiếp.` hoặc `Đáp án chưa khớp.` | Không gợi ý, không hiện đáp án |
+| Sai rõ lần 1–2 | `Bài này chưa đúng. Bạn có thể thử lại.` | Không lộ bước sai, gợi ý hoặc đáp án |
 | Sai rõ lần 3 | Một câu hướng dẫn **phương pháp**; ví dụ `Thử phân tích thành nhân tử.` | Không cho kết quả cuối |
 | Sai rõ lần 4–5 | Gợi ý cụ thể hơn hoặc **câu tương đương dễ hơn** theo rubric đã duyệt | Không lặp vô hạn; người dùng vẫn có Dừng khẩn cấp |
 | `uncertain`, ảnh mờ, AI timeout | `Chưa đủ rõ để chấm. Chụp lại hoặc nhập đáp án.` | **Không tăng bộ đếm sai**; không trừng phạt |
-| Không có mạng | Câu/đáp án offline kiểm tra được nếu loại câu phù hợp; còn lại Dừng khẩn cấp | Không tự chấm ảnh bằng kết quả giả |
+| Không có mạng | Đề đã cache hoặc câu dự phòng local; người học có thể viết bài và `Hoàn thành không chấm` hoặc Dừng khẩn cấp | Không gửi đáp án/rubric trong cache API; không tự tuyên bố bài tự do là `correct` |
 
 Không có gợi ý trước khi nộp sai trong chế độ thử thách. Bộ đếm sai là **số lần `incorrect` đã xác nhận**, không phải số lần chụp/timeout. Sau 5 lần, app không tiếp tục tăng âm lượng/độ khó; người dùng có thể thử câu tương đương ngắn hoặc dừng khẩn cấp. Khi dừng, có thể xem lời giải sau khi chuông đã tắt, không dùng lời giải để “qua cửa”.
 
 ## 5. Chống làm vẹt và dùng AI giải hộ
 
 - Câu lấy từ ngân hàng được duyệt, có nhiều biến thể cùng kỹ năng; chọn theo môn/chủ đề và tránh lặp câu gần đây. Không sinh câu chưa kiểm chứng lúc chuông reo.
-- Với mọi môn có chấm, yêu cầu **một lý do/bước giải ngắn do người học viết** bằng ô chữ hoặc ảnh nháp; câu trắc nghiệm chỉ khoanh đáp án không đủ để nhận `correct`. Rubric do người dạy duyệt theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Nếu offline/bộ chấm lỗi, cho `Hoàn thành không chấm` hoặc Dừng khẩn cấp; không giả vờ đọc/chấm bài tự do bằng local validator.
+- Với mọi môn có chấm, yêu cầu **một lý do/bước giải ngắn do người học viết** bằng ô chữ hoặc ảnh nháp; câu trắc nghiệm chỉ khoanh đáp án không đủ để nhận `correct`. Rubric do người dạy duyệt theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Nếu offline/bộ chấm lỗi, cho `Hoàn thành không chấm` hoặc Dừng khẩn cấp; bản nháp chữ chỉ gửi sau khi người học chọn theo [hợp đồng offline](07-hop-dong-api-va-ai.md#8-quy-tắc-offline-khách-local-và-đồng-bộ-bài). Không giả vờ đọc/chấm bài tự do bằng local validator.
 - Android có thể dùng `FLAG_SECURE` trên màn đề để hạn chế chụp màn hình/chiếu màn; phải thử thiết bị và báo rõ giới hạn. Không thể ngăn điện thoại khác chụp đề hoặc người dùng dùng AI ngoài app.
 - Không yêu cầu camera chụp khuôn mặt, không theo dõi app khác, không đọc clipboard hay tự kết luận gian lận. Mục tiêu là tăng khả năng tự làm, không đạt bảo đảm chống gian lận.
 - Ghi phương thức trả lời (`text`, `photo`, `choice`), độ tin cậy và `rubricRevision`; chỉ cấp XP khi kết quả rõ, server kiểm tra idempotency. AI không tự cấp điểm.

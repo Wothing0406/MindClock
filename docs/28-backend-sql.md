@@ -1,6 +1,6 @@
 # Backend SQL — thiết kế khởi đầu
 
-**Quyết định kiến trúc ngày 11/11/2026:** FastAPI tiếp tục là API; **PostgreSQL là nguồn dữ liệu có thẩm quyền** cho phiên, câu hỏi, XP và thi đấu. SQLite chỉ dùng cho demo/local một máy; không dùng SQLite làm server nhiều người thi trực tuyến. Firebase Authentication có thể giữ để xác thực ở giai đoạn đầu, backend xác minh ID token rồi ánh xạ `uid` sang `users.auth_subject`; không dùng Firestore cho dữ liệu nghiệp vụ mới. Đây là thay đổi thiết kế, **chưa có backend SQL đang chạy**. Quyết định này thay thế phần CSDL Firestore trong [docs/06](06-kien-truc-va-du-lieu.md); hợp đồng HTTP ở [docs/07](07-hop-dong-api-va-ai.md) vẫn giữ, trừ khi task coding ghi thay đổi cụ thể.
+**Quyết định kiến trúc ngày 11/11/2026:** FastAPI tiếp tục là API; **PostgreSQL là nguồn dữ liệu có thẩm quyền** cho phiên, câu hỏi, XP và thi đấu. SQLite chỉ dùng cho demo/local một máy; không dùng SQLite làm server nhiều người thi trực tuyến. Firebase Authentication dùng cho tài khoản online, backend xác minh ID token rồi ánh xạ `uid` sang `users.auth_subject`; khách local không có tài khoản server. Không dùng Firestore cho dữ liệu nghiệp vụ. Đây là thiết kế, **chưa có backend SQL đang chạy**. [Docs/06](06-kien-truc-va-du-lieu.md) nay đã mô tả kiến trúc SQL; hợp đồng HTTP ở [docs/07](07-hop-dong-api-va-ai.md) là nguồn chuẩn giao tiếp.
 
 **Mở rộng sản phẩm:** [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md) thêm bảng hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và gợi ý giờ dậy; [docs/31](31-bao-thuc-thu-thach.md) thêm mode không Hoãn và số lần sai rõ; [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) thêm grading decisions/reviews; [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md) thêm status/FX trận. Cần đưa các bảng/cột này vào migration khi code, không lưu dưới dạng JSON tùy tiện trong `users`.
 
@@ -65,14 +65,15 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 | Bảng | Khóa và ý nghĩa |
 | --- | --- |
 | `competition_profiles` | PK `user_id`, opt-in, alias công khai, avatar allowlist |
-| `matches` | PK `id`, mode, question_id, state, deadline_at, rule_version |
-| `match_players` | PK `(match_id,user_id)`, seen/submitted time, outcome |
-| `match_submissions` | PK `id`, unique `(match_id,user_id)`, answer status, review state |
-| `rating_ledger` | unique `(match_id,user_id)`, before/delta/after; hai dòng cùng transaction |
+| `matches` | PK `id`, scope nội dung, mode, state, combat/grading rule version |
+| `match_players`, `match_rounds` | PK `(match_id,user_id)` và `(match_id,round_no)`; HP, bộ ba câu/revision, mốc giờ server |
+| `round_skills`, `round_submissions`, `round_results` | Unique `(match_id,round_no,user_id)` cho lựa chọn/nộp, `(match_id,round_no)` cho kết quả |
+| `match_results`, `match_events` | Một kết quả/trận; event sequence bất biến để reconnect |
+| `rating_ledger` | Unique `(match_id,user_id,scope)` cho RP/MMR; hai phía cùng transaction khi trận ranked hợp lệ |
 | `score_ledger` | unique `(board_id,user_id,source_id)`, điểm học tuần do server tính |
 | `leaderboard_entries` | PK `(board_id,user_id)`, score, alias snapshot, updated_at; index `(board_id,score DESC,user_id)` |
 
-`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi RP/MMR. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và bảng SQL trận ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); ví/coin/RP ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); bài giải/quyết định chấm ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md); status/HP/FX ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md); staging/provenance ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Các bảng `rating_ledger`/`match_submissions` một dòng mỗi trận trong bảng trên là mẫu cũ, **không triển khai song song** với schema trận v3. Phần Firestore trong docs/21 là mô hình cũ.
+`boards` định nghĩa môn/khối/tuần; `groups` và `group_memberships` thêm khi mở thi nhóm. Trận `uncertain/voided` không ghi RP/MMR. Bảng top 20 query theo index và keyset cursor, không quét toàn bộ attempts. Luật Solo RPG ba vòng và schema chi tiết ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); ví/coin/RP ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); bài giải/quyết định chấm ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md); status/HP/FX ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); revision câu ở [docs/34](34-ngan-hang-cau-hoi-da-mon.md); staging/provenance ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Không tạo bảng `match_submissions` kiểu một dòng/người/trận của thiết kế cũ.
 
 ## 6. Transaction bắt buộc
 
@@ -94,11 +95,11 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 
 | Tài liệu cũ | Tình trạng khi coding SQL |
 | --- | --- |
-| `docs/06` §5–7 | Schema Firestore là lịch sử thiết kế; thay bằng bảng và quy tắc ở docs/28. Luồng báo thức/state §1–4 vẫn áp dụng. |
-| `docs/17` vòng đời dữ liệu | Giữ nghiệp vụ, đổi tên collection thành bảng; cập nhật khi task đầu tiên code. |
-| `docs/18` tích hợp API | Giữ client → FastAPI → Gemini; thay Firestore adapter bằng SQL repository. |
-| `docs/21` bảng đấu trường | Giữ luật; thay projection Firestore bằng `leaderboard_entries` SQL. |
-| `docs/12`, `docs/25` | Thay kiểm thử Firestore Rules bằng DB/API authorization, migration, backup và SQL retention; Firebase Auth vẫn cần cấu hình an toàn. |
+| `docs/06` | Đã viết lại kiến trúc SQL và local-first; dùng trực tiếp khi code. |
+| `docs/17` | Đã viết lại workflow với PostgreSQL, guest local và bài offline không chấm. |
+| `docs/18` | Đã viết lại hướng dẫn API/SQL/Gemini; không tạo Firestore adapter. |
+| `docs/21` bảng đấu trường | Đã viết lại ranh giới xã hội/bảng; luật trận ở docs/35–40, SQL ở docs/28. |
+| `docs/12`, `docs/25` | Kiểm thử quyền API/DB, migration, backup và SQL retention; Firebase Auth vẫn cần cấu hình an toàn. |
 
-**Cổng bắt đầu code:** tạo ADR-002 mới ghi thay Firestore, cập nhật docs liên quan trong cùng task, chốt PostgreSQL version/hosting ngân sách, lập migration đầu và test unique/transaction. Vì repo hiện chưa có dữ liệu production, chưa cần chuyển dữ liệu thật. Không tuyên bố SQL đã được triển khai chỉ vì có tài liệu này.
+**Cổng bắt đầu code:** quyết định ADR-002 ở đầu trang đã chốt PostgreSQL về mặt thiết kế; task triển khai ghi version/hosting/ngân sách, migration đầu và test unique/transaction. Vì repo hiện chưa có dữ liệu production, chưa cần chuyển dữ liệu thật. Không tuyên bố SQL đã được triển khai chỉ vì có tài liệu này.
 

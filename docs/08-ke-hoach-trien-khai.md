@@ -1,6 +1,6 @@
 # Kế hoạch triển khai từ tài liệu đến sản phẩm
 
-> **Cập nhật 11/11/2026:** gói `30% sản phẩm` và prompt giao AI tại [docs/29](29-ke-hoach-chuan-bi-30-phan-tram.md). Backend chuyển sang SQL theo [docs/28](28-backend-sql.md); các nhắc Firestore trong backlog cũ phải được đổi khi mở task coding tương ứng.
+> **Cập nhật 11/11/2026:** gói `30% sản phẩm` tại [docs/29](29-ke-hoach-chuan-bi-30-phan-tram.md); nhu cầu người học và cổng kiểm chứng tại [docs/41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md). Backend dùng PostgreSQL theo [docs/28](28-backend-sql.md), SQLite chỉ cho demo một máy.
 
 **Nguyên tắc:** bản DevFest là lát cắt trình diễn; MVP là ứng dụng Android có báo thức thật, dữ liệu thật và thử 7 ngày; sản phẩm đầy đủ chỉ mở rộng sau khi đo nhu cầu. Các mốc dưới đây là **ước lượng công việc**, không phải cam kết lịch khi chưa biết số người và năng lực đội.
 
@@ -9,9 +9,9 @@
 ```mermaid
 flowchart LR
   A[Chốt quy tắc và bộ câu] --> B[Hợp đồng API + dữ liệu]
-  B --> C[Backend + Auth]
+  B --> C[Backend SQL + Auth khi online]
   B --> D[Flutter UI + local alarm]
-  C --> E[Chấm ảnh + XP]
+  C --> E[Chấm bài chữ/ảnh + XP]
   D --> F[Tích hợp end-to-end]
   E --> F
   F --> G[Kiểm thử thiết bị + pilot]
@@ -20,7 +20,7 @@ flowchart LR
 
 ## 2. Giai đoạn D0 — DevFest, một buổi sáng
 
-**Đầu ra:** demo theo [kịch bản thi](02-ke-hoach-thi-va-demo.md), một câu Toán lớp 9 đã duyệt, ảnh đúng/sai, màn “chưa chắc”, pitch nêu rõ live và mô phỏng. Nếu thể lệ không cho chuẩn bị sản phẩm trước, chỉ dùng tài liệu và tài sản được phép.
+**Đầu ra:** demo theo [kịch bản thi](02-ke-hoach-thi-va-demo.md), một câu Toán lớp 9 tự biên soạn/đã duyệt có rubric; cho nhập đáp án và một bước giải bằng chữ, ảnh là đường tùy chọn; có `uncertain` và Dừng khẩn cấp. Pitch nêu rõ live và mô phỏng. Nếu thể lệ không cho chuẩn bị sản phẩm trước, chỉ dùng tài liệu và tài sản được phép.
 
 **Chốt phạm vi:** 5 màn hình chính; báo thức mô phỏng để không chờ thời gian thật; backend Gemini nếu kịp và Internet ổn; fallback video có nhãn. D0 **không được dùng làm bằng chứng** báo thức hệ thống/AI chấm rộng đã hoàn thiện.
 
@@ -28,9 +28,9 @@ flowchart LR
 
 | Sprint/gói | Công việc | Đầu ra kiểm tra được | Phụ thuộc |
 | --- | --- | --- | --- |
-| M1.0 nền tảng | Repo, CI, môi trường local/staging, Firebase project, secret, quy tắc quyền mặc định, bộ câu 10–20 câu đã duyệt | App mở được, API health, emulator, không có key trong repo | Tài liệu hiện tại |
-| M1.1 báo thức | Flutter setup, lịch, native bridge Android, quyền, lập lịch, restart/timezone, hoãn/tắt | Chuông chạy khi app đóng/màn khóa/mất mạng trên thiết bị thử | M1.0 |
-| M1.2 học tập | Lịch học, tải câu trước, câu dự phòng, UI thử thách, camera/nhập đáp án | Hoàn thành một buổi sáng offline và một buổi có mạng | M1.0–M1.1 |
+| M1.0 nền tảng | Repo, CI, PostgreSQL/migration, local guest, Firebase Auth cho online, secret, API deny-all, bộ câu 10–20 câu đã duyệt | App mở được, API health, DB/schema test, không có key trong repo | Tài liệu hiện tại |
+| M1.1 báo thức | Flutter setup, lịch, native bridge Android, quyền, lập lịch, restart/timezone, Dừng khẩn cấp và Hoãn chỉ mode thường | Chuông chạy/dừng khi app đóng/màn khóa/mất mạng trên thiết bị thử | M1.0 |
+| M1.2 học tập | Lịch học, tải câu trước, câu dự phòng, UI thử thách, nhập đáp án + trình bày hoặc camera | Hoàn thành buổi sáng offline không chấm và buổi có mạng | M1.0–M1.1 |
 | M1.3 server/AI | Auth verify, question bank, session/attempt, Gemini chấm, `uncertain`, XP ledger | API theo hợp đồng, test idempotency, phản hồi 3 trạng thái | M1.0 |
 | M1.4 tích hợp | Đồng bộ offline, tiến độ, báo AI chấm sai, xóa dữ liệu, telemetry tối thiểu | Chạy end-to-end và xử lý lỗi mạng/quyền | M1.1–M1.3 |
 | M1.5 phát hành nội bộ | Kiểm thử thiết bị, AI evaluation, bảo mật, sửa lỗi | Bản nội bộ đủ điều kiện thử 7 ngày | M1.4 |
@@ -64,7 +64,7 @@ Không tiến sang M1.4 khi nút tắt khẩn cấp chưa hoạt động ở m�
 | --- | --- | --- | --- |
 | X01 | Prototype iPhone + xác định mức demo | Ghi rõ A/B/C, đường đi trên iPhone, video dự phòng | Thiết bị và thể lệ DevFest |
 | X02 | iOS build và AlarmKit bridge | Test quyền/lịch/chuông/Dừng/deep link trên iPhone iOS 26+ | Mac, Xcode, signing, X01 |
-| X03 | Nhân vật/asset | 3 nhân vật, state tĩnh, avatar 48 px, metadata/licence | Brief docs/22, đánh giá với người học |
+| X03 | Nhân vật/asset | 4 nhân vật theo docs/40, state tĩnh, avatar 48 px, metadata/licence | Brief docs/22 và 40, đánh giá với người học |
 | X04 | Giao hữu online | Hai tài khoản cùng câu, nộp một lần, chốt kết quả idempotent | Bộ câu duyệt, auth, test mạng |
 | X05 | Bảng tuần | Projection theo môn/khối/tuần, opt-in/out, top 20 | X04, quyền riêng tư, ngưỡng người tham gia |
 | X06 | Rating/ELO | Ledger hai phía trong transaction, khiếu nại, anti-farm | X04–X05 và cổng docs/19 |
@@ -75,10 +75,10 @@ Không tiến sang M1.4 khi nút tắt khẩn cấp chưa hoạt động ở m�
 | --- | --- | --- | --- |
 | T01 | P0 | Thiết lập cấu trúc repo, môi trường, CI và tài liệu chạy local | Người mới làm theo README chạy được app/API/emulator |
 | T02 | P0 | Định nghĩa schema câu hỏi và nhập 10 câu Toán 9 đã duyệt | Mỗi câu có đáp án, rubric, revision, thời gian dự kiến |
-| T03 | P0 | Auth, `/me`, rules deny-all và kiểm thử quyền | Token sai/uid khác bị từ chối |
+| T03 | P0 | Khách local, Firebase Auth online, `/me`, SQL/API deny-all và kiểm thử quyền | Chuông không cần login; token sai/uid khác bị từ chối |
 | T04 | P0 | API alarm/timetable/challenge | Contract test pass; trả đúng câu theo ngày/môn |
 | T05 | P0 | Native Android alarm + quyền + local cache | Chạy khi màn khóa, mất mạng, reboot trên thiết bị đích |
-| T06 | P0 | UI S03–S10 tiếng Việt + accessibility | Theo [UX](05-ux-va-noi-dung-tieng-viet.md), không kẹt luồng |
+| T06 | P0 | UI tiếng Việt + accessibility, chữ thay camera | Theo [UX](05-ux-va-noi-dung-tieng-viet.md) và U01–U10 ở docs/41, không kẹt luồng |
 | T07 | P0 | API session/idempotency/attempt | Không có duplicate session/XP |
 | T08 | P0 | Gemini đọc/chấm + validator + `uncertain` | Dùng bộ ảnh test; không trả đúng khi validator bất đồng |
 | T09 | P0 | XP ledger/progress và thống kê cá nhân | Quy tắc điểm đúng, không trừ điểm sai |
@@ -92,5 +92,5 @@ Một task hoàn thành khi: hành vi khớp PRD/UX/API; có kiểm thử phù h
 
 ## 8. Quyết định cần ghi thành ADR khi coding
 
-ADR-001 Flutter + Android native bridge; ADR-002 Firestore thay Realtime Database; ADR-003 ảnh chỉ xử lý tạm; ADR-004 question bank đã duyệt; ADR-005 AI chấm với `uncertain`; ADR-006 XP server authoritative. Mỗi ADR ghi bối cảnh, lựa chọn, phương án khác, hệ quả, ngày và người quyết định. Nếu đội thay stack, sửa ADR và các hợp đồng liên quan trước khi chia việc.
+ADR-001 Flutter + Android native bridge; ADR-002 PostgreSQL cho nghiệp vụ, Firebase Authentication chỉ online (quyết định ở docs/28); ADR-003 ảnh chỉ xử lý tạm; ADR-004 question bank đã duyệt; ADR-005 AI chấm với `uncertain`; ADR-006 XP server authoritative. Mỗi ADR ghi bối cảnh, lựa chọn, phương án khác, hệ quả, ngày và người quyết định. Nếu đội thay stack, sửa ADR và các hợp đồng liên quan trước khi chia việc. Mã backlog T01–T12 ở trên **không phải ID thư mục task**; khi coding dùng TNNN theo tasks/README.
 

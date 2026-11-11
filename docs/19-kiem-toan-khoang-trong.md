@@ -1,53 +1,36 @@
-# Kiểm toán khoảng trống tài liệu và quyết định sản phẩm
+# Kiểm toán khoảng trống còn lại
 
-**Ngày rà soát:** 10/11/2026. **Trạng thái repo:** chỉ có đặc tả; chưa có app/build. Tài liệu này là danh sách kiểm tra để đội không nhầm kế hoạch với tính năng đã chạy.
+**Rà soát 11/11/2026.** Repo hiện là bộ đặc tả/prototype, chưa có app/API/PvP phát hành. Trang này ghi việc **chưa thể giải quyết bằng viết docs**, không phải danh sách tính năng được phép nhận là đã có. [Nhu cầu học sinh](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md) và [ma trận giao việc](42-ma-tran-yeu-cau-va-giao-viec.md) là đầu vào của từng task.
 
-## 1. Kết luận nhanh
+## 1. Đã được đặc tả để bắt đầu coding
 
-Bộ docs 01–18 đủ để bắt đầu lát cắt Android báo thức + câu hỏi + chấm hỗ trợ. Các phần còn thiếu để biến ý tưởng thành sản phẩm đa nền tảng và cộng đồng được đặc tả tại [iOS](20-ios-demo-va-phat-hanh.md), [đấu trường](21-dau-truong-xep-hang.md), [nhân vật](22-nhan-vat-rpg.md) và [hành trình sử dụng](23-hanh-trinh-san-pham.md). Đây là **đặc tả giai đoạn sau**, chưa tự động mở phạm vi coding MVP.
+| Mảng | Nguồn chuẩn | Còn phải làm thật |
+| --- | --- | --- |
+| Chuông, Dừng, offline | [04](04-prd-va-dac-ta-san-pham.md), [06](06-kien-truc-va-du-lieu.md), [31](31-bao-thuc-thu-thach.md) | Native Android, quyền OS, test nhiều thiết bị thật |
+| Lịch, nhiều môn, việc trong ngày | [32](32-ho-so-hoc-tap-va-nhieu-mon.md), [41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md) | Bộ câu phủ môn/chủ đề, sửa lịch nhanh, thử với học sinh |
+| API, SQL, quyền, xóa | [07](07-hop-dong-api-va-ai.md), [24](24-dang-ky-va-quan-ly-tai-khoan.md), [25](25-bao-mat-va-du-lieu.md), [28](28-backend-sql.md) | Migration, kiểm quyền A/B, export/delete thực, backup/restore |
+| Chấm bài có trình bày | [34](34-ngan-hang-cau-hoi-da-mon.md), [39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) | Người duyệt nội dung, bộ bài đánh giá, đo lỗi/`uncertain` |
+| Giao hữu/PvP/rank/asset | [35](35-solo-rpg-dong-bo-va-ky-nang.md), [37](37-kinh-te-rank-va-nhan-vat-2d.md), [40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md) | Hai máy thật, cân bằng, chống lạm dụng, quyền asset, cổng ranked |
+| iOS | [20](20-ios-demo-va-phat-hanh.md) | Mac/iPhone phù hợp, build ký và test AlarmKit; web prototype không chứng minh alarm iOS |
 
-## 2. Khoảng trống theo mức ưu tiên
+## 2. Quyết định/cổng chưa có bằng chứng
 
-| Mức | Khoảng trống trước lần rà soát | Cách xử lý trong docs | Bằng chứng còn cần trước khi code/phát hành |
+| Mức | Khoảng trống | Người chịu trách nhiệm đề xuất | Cổng quyết định |
 | --- | --- | --- | --- |
-| P0 | Lời hứa “chỉ giải đúng mới tắt chuông” xung đột quyền tắt của OS và an toàn | Chốt chuông luôn có tắt/hoãn; thử thách học là bước tự nguyện sau khi mở app | Test AlarmKit và Android trên máy thật, kể cả màn khóa |
-| P0 | Chưa có cách demo iOS trên máy Windows | Ba mức demo, checklist Mac/Xcode/TestFlight và kịch bản sân khấu | Mac, iPhone iOS 26+, Apple ID, build ký thật |
-| P0 | Chưa có định nghĩa thắng/thua, điểm, tính hạng và xử lý AI chưa chắc cho thi online | Luật trận, bảng môn/khối/tuần, rating ledger, API, test | Bộ câu đã duyệt và hiệu chuẩn độ khó, thử tải và chống gian lận |
-| P0 | Chưa phân biệt XP/streak/rank học tập/ELO | Tách bốn chỉ số và quyền tham gia bảng | User test xem người học hiểu từng chỉ số |
-| P1 | Thiết kế linh thú còn khái quát, chưa thể giao việc cho họa sĩ/dev | Character bible, trạng thái, asset spec, accessibility | Ảnh gốc có quyền sử dụng, thử nhận diện ở 48 px |
-| P1 | Chưa có flow từ onboarding tới tham gia thi online, rời bảng, đổi nhân vật | Wireflow, nhãn tiếng Việt và trạng thái lỗi | Prototype test với 5–8 người học/phụ huynh phù hợp |
-| P1 | Chưa có ranh giới giữa demo giả lập và năng lực thật | Nhãn demo, ba mức iOS, fixture đã kiểm soát | Video/thiết bị dự phòng và log demo không chứa dữ liệu thật |
-| P1 | Chưa có chính sách leaderboard cho người chưa thành niên | Biệt danh, opt-in, không lộ giờ dậy/lớp nhỏ, không chat tự do | Rà soát pháp lý và đồng ý trước pilot |
-| P2 | Chưa có mô hình đo khả thi kinh tế của trận thời gian thực | Ước lượng theo số trận, đọc/ghi, ảnh, AI và giới hạn | Dữ liệu pilot, báo giá hạ tầng thực tế |
+| P0 | Thể lệ DevFest: phần được chuẩn bị trước, hạn nộp, thời lượng pitch | Trưởng nhóm | Có thông báo chính thức trước khi chốt demo |
+| P0 | Báo thức có reo/dừng đủ tin cậy trên máy mục tiêu | Mobile + QA | Ma trận thiết bị [09](09-ke-hoach-kiem-thu.md) đạt; nếu không giới hạn thiết bị hỗ trợ |
+| P0 | Quyền dùng từng câu ngoài và người duyệt chuyên môn | Nội dung + người phụ trách quyền | Mỗi câu published có provenance/licence/rubric và người duyệt; chưa rõ thì chỉ dùng câu tự biên soạn |
+| P0 | Xử lý dữ liệu học sinh, tuổi/consent theo thị trường pilot | Product + người tư vấn pháp lý phù hợp | Rà soát trước khi mời người chưa thành niên, không dùng ảnh thật trên Gemini free tier khi chưa đủ điều kiện |
+| P0 | Chấm oan/giải thích sai | AI/QA + giáo viên | Tập đánh giá và ngưỡng [09](09-ke-hoach-kiem-thu.md) đạt; fallback chữ/`uncertain` |
+| P1 | Học sinh thấy câu buổi sáng hữu ích hay gây áp lực | Product/UX | 5–8 buổi usability và pilot 7 ngày theo [41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md); giảm yêu cầu nếu phiền |
+| P1 | Khả năng ghép hai người cùng lớp/môn/chương trình và công bằng HP/kỹ năng | Game/QA | Giao hữu hai máy, bộ câu hiệu chuẩn, đo latency/khiếu nại trước ranked |
+| P1 | Chi phí API/hosting thật và nguồn thu phù hợp học sinh | Backend/Product | Đo cost/attempt và tải trước khi hứa miễn phí rộng; demo 0 đồng không suy ra vận hành 0 đồng |
+| P2 | Asset 2D và map có bản quyền, chuyển động mượt máy yếu | Art/Mobile | Metadata licence, test 48 px, giảm chuyển động, máy yếu |
 
-## 3. Những giả thuyết chưa thể gọi là sự thật
+## 3. Những điều không được tuyên bố trước khi có bằng chứng
 
-1. Học sinh sẽ thấy thử thách buổi sáng hữu ích hơn phiền: cần phỏng vấn và thử 7–14 ngày.
-2. Gemini đọc được lời giải viết tay tiếng Việt đủ tin cậy cho điểm thưởng cạnh tranh: cần tập ảnh đa dạng, người chấm chuẩn và ngưỡng `uncertain`.
-3. Một bộ câu có thể so sánh công bằng giữa hai người: cần chuyên gia môn học hiệu chuẩn, không chỉ cùng nhãn “khó”.
-4. Báo thức AlarmKit có hành vi giống Android trên mọi iPhone: cần thử thiết bị; OS sở hữu nút dừng.
-5. Thi đấu/xếp hạng tạo động lực lành mạnh: cần đo cả cảm giác áp lực và tỷ lệ tắt tính năng.
+Không nói MindClock cải thiện điểm thi/giấc ngủ, chống gian lận tuyệt đối, khóa được điện thoại/gỡ app, chấm được mọi môn, có bảng xếp hạng online thật, hoặc có iOS alarm chỉ từ storyboard/mock. Dữ liệu nghiên cứu VNHSGE/VMLU trong `data/research` **không là ngân hàng đã nhập vào sản phẩm**; xem [38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Báo thức chỉ chứng minh trên thiết bị thật; prototype demo phải gắn nhãn.
 
-## 4. Quyết định phạm vi để coding
+## 4. Cổng mở rộng
 
-| Giai đoạn | Xây thật | Demo được phép | Chưa đưa vào |
-| --- | --- | --- | --- |
-| DevFest buổi sáng | Một lát cắt Android hoặc bản tương tác rõ nhãn, một môn Toán, 1 câu đã duyệt, phản hồi AI có `uncertain` | iPhone mở bản prototype/web hoặc build iOS đã chuẩn bị trước; bảng xếp hạng dữ liệu mẫu phải ghi “Mô phỏng” | ELO thật, chat, dashboard phụ huynh, sinh đề tự do |
-| Pilot học tập | Báo thức ổn định, câu theo lịch, tiến bộ cá nhân, sửa lỗi chấm | Trận không tính hạng với nhóm thử nhỏ | Bảng công khai rộng |
-| Cộng đồng | Trận theo môn/khối, bảng tuần opt-in, nhóm; rating khi đạt cổng chất lượng | Dữ liệu staging riêng | Cạnh tranh dựa giờ thức dậy hoặc phạt sai bằng trừ XP |
-
-## 5. Cổng ra quyết định trước khi mở ELO
-
-- Có tối thiểu một tập câu đủ lớn trong từng môn/khối được người dạy duyệt, cùng bản rubric và độ khó đã kiểm tra.
-- Hai người nhận cùng câu hoặc hai câu tương đương đã hiệu chuẩn; thời gian tính ở server; thử mạng yếu.
-- Kết quả AI `uncertain` không làm thay đổi rating; có cơ chế khiếu nại và sửa điểm có audit.
-- Bảng xếp hạng chỉ người tự bật; biệt danh; không hiển thị giờ báo thức, vị trí, trường/lớp cụ thể nếu dễ nhận diện.
-- Có người phụ trách nội dung, hỗ trợ và vận hành. Nếu thiếu một cổng, duy trì trận giao hữu và bảng riêng tư.
-
-## 6. Việc đội cần tự xác nhận
-
-- Quy chế DevFest, phần được làm trước cuộc thi, kết nối mạng, thiết bị được mang vào, hạn nộp và cách chấm.
-- Thành viên có Mac/Xcode và iPhone phiên bản phù hợp hay không; nếu không, chọn demo iOS ở mức prototype và nói rõ.
-- Đối tượng thí điểm/độ tuổi, cơ chế xin đồng ý, bộ câu có quyền sử dụng.
-- Người chịu trách nhiệm duyệt đáp án, xét khiếu nại, vận hành dịch vụ và ngân sách.
-
+MVP trước: alarm Android an toàn, một câu đã duyệt phù hợp lịch, nhập đáp án + cách làm, AI `uncertain`, tài khoản tùy chọn, quyền dữ liệu/xóa. Sau đó pilot học tập và giao hữu tự nguyện. Ranked, RP, cửa hàng, nhóm/lớp, giáo viên/phụ huynh, iOS alarm chỉ mở sau cổng riêng ở [08](08-ke-hoach-trien-khai.md), [09](09-ke-hoach-kiem-thu.md) và docs tính năng. Người dùng có thể rời bảng/thi đấu mà vẫn dùng báo thức và lịch.

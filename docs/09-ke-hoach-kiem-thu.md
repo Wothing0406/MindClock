@@ -1,6 +1,6 @@
 # Kế hoạch kiểm thử MindClock
 
-> **Bổ sung bắt buộc khi code:** kiểm thử chế độ không Hoãn/gợi ý sau ba lần sai trong [docs/31](31-bao-thuc-thu-thach.md), và chọn câu nhiều môn/tổ hợp/nhắc lịch trong [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). Các ca Hoãn/gợi ý sớm phía dưới chỉ áp dụng chế độ thường hoặc test hồi quy cũ.
+> **Bổ sung bắt buộc khi code:** kiểm thử chế độ không Hoãn/gợi ý sau ba lần sai trong [docs/31](31-bao-thuc-thu-thach.md), chọn câu nhiều môn/tổ hợp/nhắc lịch trong [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), và U01–U10 theo [nhu cầu học sinh](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md). Ca Hoãn chỉ áp dụng mode thường.
 
 > **Khi mở đấu trường/cửa hàng/kho dữ liệu:** thêm acceptance S01–S12 ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), E01–E08 ở [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), G01–G08 ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), PvP heal/hút/choáng ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md) và contract import/quyền nguồn ở [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Test ví/RP cần PostgreSQL concurrent, hai máy thật cho đồng bộ, bộ bài người chấm độc lập và asset 2D khi giảm chuyển động.
 
@@ -16,19 +16,19 @@
 | Thiết bị | Báo thức khi khóa màn, app đóng, không mạng, reboot, quyền bị từ chối | Mobile + QA |
 | AI evaluation | Ảnh viết tay thật có nhãn người chấm, đúng/sai/chưa rõ; lỗi bước giải | AI + giáo viên duyệt |
 | Usability | Học sinh hiểu cách dùng và cách tắt chuông, không bị căng thẳng | Product + QA |
-| Security/privacy | Truy cập chéo tài khoản, upload, log, xóa dữ liệu, rules | Backend + QA |
+| Security/privacy | Truy cập chéo tài khoản, upload, log, xóa dữ liệu, quyền API/SQL | Backend + QA |
 
 ## 2. Ma trận P0 — phải đạt trước pilot
 
 | ID | Tình huống | Kỳ vọng |
 | --- | --- | --- |
-| A01 | Đến giờ, app bị đóng/màn khóa | Chuông hiển thị/phát theo quyền OS; hoãn/tắt được |
+| A01 | Đến giờ, app bị đóng/màn khóa | Chuông hiển thị/phát theo quyền OS; Dừng được, Hoãn chỉ mode thường |
 | A02 | Đến giờ, không Internet | Chuông hoạt động local; câu dự phòng hoặc chế độ chỉ báo thức |
 | A03 | Đến giờ, token hết hạn | Không chặn chuông; chỉ yêu cầu đăng nhập khi đồng bộ |
 | A04 | Quyền exact alarm/full-screen bị từ chối hoặc thu hồi | App báo rõ hạn chế, không hiển thị “đã đảm bảo đúng giờ” |
 | A05 | Reboot, đổi múi giờ, đổi giờ báo thức | Lần reo tiếp theo được tính/lập lịch lại, không chuông trùng |
 | A06 | Đang chấm hoặc API treo | Tắt khẩn cấp hoạt động ngay; sau timeout có đường kết thúc |
-| A07 | Hoãn nhiều lần | Không tạo nhiều phiên/XP; vẫn có tắt khẩn cấp |
+| A07 | Mode thường Hoãn nhiều lần; mode thử thách yêu cầu Hoãn | Mode thường không tạo nhiều phiên/XP; mode thử thách không cho Hoãn; cả hai có Dừng khẩn cấp |
 | A08 | Cùng `Idempotency-Key` gửi 2 lần | Một attempt/XP; payload khác trả xung đột |
 | A09 | Ảnh sai nhưng AI nói đúng, validator bất đồng | `uncertain`, không cấp XP đúng |
 | A10 | Ảnh mờ/cắt thiếu | Không kết luận “sai” hay “gian lận”; chụp lại/nhập đáp án |
@@ -45,9 +45,9 @@
 | L02 | Ngày không có môn | Câu ôn dự phòng hoặc chỉ báo thức theo cài đặt |
 | L03 | Câu hết `revision`/bị retired | Không dùng để chấm mới; fallback an toàn |
 | L04 | Đúng lần đầu | `+10 XP`, một ledger entry, streak ngày đó tăng 1 |
-| L05 | Sai rồi đúng | `+6 XP`, một ledger entry, gợi ý không chứa đáp án cuối |
-| L06 | Hai lần sai | Cho xem lời giải và kết thúc, không trừ XP |
-| L07 | Hoàn thành không chấm | `+2 XP` tối đa 1 lần nếu đã có nỗ lực; không gắn nhãn đúng |
+| L05 | Sai rồi đúng | `+6 XP`, một ledger entry; không có hint trước sai rõ lần 3 trong mode thử thách |
+| L06 | Sai rõ 1–2 lần trong mode thử thách | Được thử lại/thoát an toàn, chưa hiện gợi ý; lời giải chỉ sau khi kết thúc, không trừ XP |
+| L07 | Hoàn thành không chấm | `+2 XP` tối đa 1 lần **chỉ nếu backend đã nhận attempt hợp lệ**; offline event riêng `0 XP`, không gắn nhãn đúng |
 | L08 | Hoãn/tắt khẩn cấp | `0 XP`, không trừ điểm, không công khai |
 | L09 | Hai alarm trong cùng ngày hoàn thành | Streak tăng tối đa 1 ngày; XP theo từng phiên hợp lệ |
 | L10 | Client gửi `xpAwarded=9999` hoặc `correct=true` | Bỏ qua/từ chối; server tự tính |
@@ -72,7 +72,7 @@
 
 ## 6. Kiểm thử quyền riêng tư và an toàn
 
-Test Firestore rules với user A/B, người chưa đăng nhập, vai trò biên tập; Storage deny-all nếu chưa dùng; tệp ảnh tạm được dọn cả khi exception; không có API key trong APK; không có ảnh/chữ viết/token trong log; kiểm tra giới hạn size/MIME/magic bytes, rate limit, prompt injection trong ảnh, phản hồi AI chứa nội dung ngoài rubric; thử xóa dữ liệu và thu hồi quyền. Kiểm tra nội dung tiếng Việt không gán nhãn học sinh theo năng lực hoặc trừng phạt khi sai.
+Test quyền API/SQL mặc định từ chối với user A/B, người chưa đăng nhập, vai trò biên tập; DB credential không vào client; tệp ảnh tạm được dọn cả khi exception; không có API key trong APK; không có ảnh/chữ viết/token trong log; kiểm tra giới hạn size/MIME/magic bytes, rate limit, prompt injection trong ảnh, phản hồi AI chứa nội dung ngoài rubric; thử xóa dữ liệu/thu hồi quyền/đổi tài khoản máy chung. Kiểm tra nội dung tiếng Việt không gán nhãn học sinh theo năng lực hoặc trừng phạt khi sai.
 
 ## 7. Pilot người dùng
 
@@ -89,4 +89,15 @@ Test Firestore rules với user A/B, người chưa đăng nhập, vai trò biê
 **Đấu trường:** hai máy thật hoặc hai phiên độc lập, cùng đề và deadline server; thử nộp lặp, mạng yếu, đồng hồ máy lệch, AI `uncertain`, khiếu nại, rút khỏi bảng, thay alias, truy cập trái quyền. Rating chỉ đạt cổng khi một match có tối đa hai ledger hợp lệ và retry không thay kết quả; xem [docs/21](21-dau-truong-xep-hang.md).
 
 **Nhân vật:** kiểm tra silhouette 48 px, alt text, giảm chuyển động, không che nút Dừng, không hiển thị trạng thái trừng phạt và không có asset thiếu quyền sử dụng; xem [docs/22](22-nhan-vat-rpg.md).
+
+## 10. Ma trận kiểm chứng nhu cầu học sinh
+
+| Cổng | Bằng chứng bắt buộc trước pilot |
+| --- | --- |
+| U01–U03: đặt/dừng chuông | Video và log kiểm thử Android thật khi không login, không mạng, màn khóa, AI treo; mọi người thử đều tìm được nút Dừng |
+| U04–U05: làm/chấm bài | Camera bị từ chối vẫn nhập đáp án + lý do; `uncertain` không kết luận sai/không phạt; bài offline không tự hiện đúng |
+| U06–U07: học theo nhịp | Ngày nghỉ không mất nhân vật/coin; câu đầu dễ; giáo viên duyệt phản hồi lỗi và một câu cùng kỹ năng |
+| U08–U10: quyền và khả dụng | Opt-in bảng, rời bảng, máy dùng chung, cỡ chữ 200%, giảm chuyển động; thử với 5–8 người học theo docs/41 |
+
+Ghi nhiệm vụ, quan sát, tỷ lệ hoàn thành trên đúng số người thử, lỗi và quyết định sửa. Mẫu nhỏ chỉ giúp tìm vấn đề UX; không chứng minh cải thiện điểm thi hoặc giấc ngủ.
 

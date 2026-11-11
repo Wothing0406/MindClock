@@ -4,7 +4,7 @@
 
 ## 1. Một câu = đáp án + cách nghĩ
 
-Mỗi câu được phát hành cho chế độ có chấm cần `answer_spec` (kết luận kiểm được), `reasoning_prompt_vi` (một yêu cầu giải thích ngắn), `reasoning_rubric` (các ý/bước chấp nhận được, cách tương đương, lỗi nghiêm trọng), `rubric_revision`, `estimated_seconds`, `offline_gradable`, `grading_modes`. Không lấy câu trắc nghiệm nguồn ngoài rồi tự suy rubric từ đáp án A/B/C/D. Nếu câu không có rubric trình bày được người dạy duyệt, giữ `research_only` hoặc `practice_feedback_only`.
+Mỗi câu được phát hành cho chế độ có chấm cần `answer_spec` (kết luận kiểm được), `reasoning_prompt_vi` (một yêu cầu giải thích ngắn), `reasoning_rubric` (các ý/bước chấp nhận được, cách tương đương, lỗi nghiêm trọng), `rubric_revision`, `estimated_seconds`, `offline_gradable`, `grading_modes`. Trong MVP, `offline_gradable=false` với bài có trình bày; app không giữ rubric/đáp án để tự chấm khi mất mạng. Không lấy câu trắc nghiệm nguồn ngoài rồi tự suy rubric từ đáp án A/B/C/D. Nếu câu không có rubric trình bày được người dạy duyệt, giữ `research_only` hoặc `practice_feedback_only`.
 
 Người học chọn/nhập đáp án và **viết ít nhất một lý do hoặc bước làm** bằng ô chữ; có thể chụp giấy viết tay nếu đồng ý. Không buộc dùng camera, không buộc nét chữ đẹp, không chấm chính tả ngoài môn đang kiểm tra. Câu ngắn là một bước tư duy có thể làm trong 60–90 giây, không ép viết bài dài khi vừa thức dậy. Nút `Nộp bài` chỉ bật khi đã nhập phần giải thích; kiểm tra nhập liệu chỉ xác nhận có nội dung, không dùng độ dài/chữ mẫu để suy đúng sai. Người dùng vẫn có `Dừng khẩn cấp` ở báo thức mọi lúc.
 
@@ -21,7 +21,7 @@ Người học chọn/nhập đáp án và **viết ít nhất một lý do ho�
 Rubric v1 có tối đa **3 điểm nhận định**: đáp án cuối hợp lệ 1; luận cứ/bước 1 hợp lệ 1; luận cứ/bước 2 hoặc cách lý giải tương đương hợp lệ 1. Từng checkpoint ghi điều kiện đạt, các cách thay thế, lỗi logic rõ và ví dụ do người dạy duyệt. Với câu chỉ cần một bước, rubric ghi `reasoning_required=1` và điểm tối đa 2. Không dùng tổng điểm này làm RP hoặc sát thương trực tiếp.
 
 - `correct`: kết quả cuối đúng theo validator và đạt ít nhất một checkpoint lý do bắt buộc, không có mâu thuẫn logic rõ. Đáp án đúng nhưng giải thích “đoán”, sao chép lại đề hoặc lý do không liên quan **chưa đủ**; trả `uncertain` nếu không phân biệt được thiếu/khác cách, `incorrect` chỉ khi thấy lỗi xác định.
-- `incorrect`: kết quả sai đã xác minh, hoặc bước suy luận sai rõ ràng dù khoanh trúng. Phản hồi chỉ chỉ ra bước đầu cần xem lại; không trừ XP/streak.
+- `incorrect`: kết quả sai đã xác minh, hoặc bước suy luận sai rõ ràng dù khoanh trúng. Backend lưu bước sai đầu để review; mode thử thách chỉ tiết lộ bước này từ lần sai rõ thứ ba hoặc sau khi kết thúc, theo docs/31. Không trừ XP/streak.
 - `uncertain`: ảnh mờ, OCR thiếu bước, rubric thiếu cách giải hợp lệ, AI/validator bất đồng, câu lỗi, timeout, model blocked. Không biến `uncertain` thành sai vì hết ngân sách. Người học có thể nhập lại/chụp lại; báo thức còn Dừng khẩn cấp.
 
 AI chỉ trích bước nhìn thấy và đưa **đề xuất** `candidate_verdict` + chứng cứ checkpoint. Backend kiểm tra đáp án cấu trúc, schema, rubric/version và policy rồi ghi kết quả. AI không tự tính XP, HP, RP, MMR, streak hoặc “gian lận”. Nếu hai bài có cùng nội dung và rubric, server cùng dùng một `grading_policy_version`/model/prompt cố định cho toàn trận; thay model giữa trận phải void. Không giữ ảnh mặc định; tranh chấp ảnh chỉ lưu khi có đồng ý riêng, TTL và quyền xem hạn chế.
@@ -31,7 +31,7 @@ AI chỉ trích bước nhìn thấy và đưa **đề xuất** `candidate_verdi
 | Chế độ | Bài có trình bày | Khi AI không chắc/mất mạng | Điểm |
 | --- | --- | --- | --- |
 | Luyện | yêu cầu viết; được sửa/nộp lại | hiện `Chưa đủ rõ để chấm`, gợi ý nhập chữ | không phạt |
-| Báo thức thử thách | yêu cầu viết trong đường chấm; câu dự phòng local | cho thử lại hoặc `Hoàn thành không chấm` sau nỗ lực, và luôn Dừng khẩn cấp; dừng âm thanh an toàn | chỉ cấp XP khi chấm rõ và server xác minh; không phạt khi dừng |
+| Báo thức thử thách | yêu cầu viết trong đường chấm; câu dự phòng local | cho thử lại hoặc `Hoàn thành không chấm` sau nỗ lực, và luôn Dừng khẩn cấp; dừng âm thanh an toàn | XP đúng bài chỉ khi `correct`; `+2` nỗ lực chưa chấm chỉ khi server nhận attempt hợp lệ theo docs/07; không phạt khi dừng |
 | Giao hữu | một bài/vòng, không hint trước reveal | vòng `needs_review`/void, không xử thua vì AI lỗi | không tính RP |
 | Ranked (chưa bật) | cùng câu, cùng rubric, một bài/vòng | **void cả trận**, không đổi RP/MMR, hoàn phần thưởng nếu đã treo | chỉ server chốt thắng/hòa/thua sau khi cả hai bài có kết quả rõ |
 

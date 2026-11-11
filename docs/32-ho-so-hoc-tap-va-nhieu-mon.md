@@ -14,11 +14,11 @@ Môn dùng cho Solo 1v1 chỉ được mở theo chất lượng [ngân hàng c�
 
 ## 2. Cách chọn một câu buổi sáng
 
-1. Lấy danh sách môn **được bật và có câu đã duyệt**, đúng lớp/cấp và phương thức chấm được hỗ trợ offline hoặc có fallback an toàn.
+1. Lấy danh sách môn **được bật và có câu đã duyệt**, đúng lớp/cấp và phương thức chấm có fallback an toàn khi offline.
 2. Ưu tiên môn có trong lịch hôm nay (hoặc buổi sáng tiếp theo theo giờ địa phương); nếu nhiều môn, dùng môn chưa xuất hiện trong các lần gần đây và thuộc mức ưu tiên của người dùng.
 3. Nếu hôm nay không có môn, chọn chủ đề đến hạn ôn từ các môn ưu tiên; nếu không có thì câu dự phòng dễ hoặc `Chỉ báo thức` theo cài đặt. Không tự chuyển sang môn người dùng đã loại.
 4. Chọn câu đúng chủ đề, độ khó cá nhân theo [quy tắc ba phiên đầu và tăng dần](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md#5-độ-khó-ngày-đầu-và-tăng-dần), thời lượng mục tiêu 60–90 giây; tránh lặp `questionId`/biến thể gần đây. **Rank/ELO không quyết định độ khó**.
-5. Tải trước `questionId`, revision, đề, answer spec tối thiểu và câu dự phòng vào cache bảo vệ trên máy. Đến giờ reo không chờ AI sinh đề hay mạng.
+5. Tải trước `questionId`, revision, **đề và yêu cầu trình bày**, không có đáp án/rubric trong API cache; có câu dự phòng đội tự biên soạn ở máy. Đến giờ reo không chờ AI/mạng. Offline chỉ hoàn thành không chấm theo [docs/07 §8](07-hop-dong-api-va-ai.md#8-quy-tắc-offline-khách-local-và-đồng-bộ-bài).
 
 **Công thức lựa chọn v1 để đội có thể code/test:** lọc điều kiện bắt buộc → xếp theo `môn có tiết hôm nay` (+4), `môn ưu tiên cao` (+3), `chủ đề đến hạn` (+2), `chưa hỏi 7 ngày` (+2), `vừa hỏi 2 ngày` (−5); hòa thì xoay vòng cố định theo UID+ngày, không random lại mỗi lần mở app. Điểm chỉ là heuristic chọn câu, không hiển thị là điểm năng lực. Đội có thể điều chỉnh qua pilot và ghi `selectionRuleVersion`.
 
@@ -26,9 +26,9 @@ Môn dùng cho Solo 1v1 chỉ được mở theo chất lượng [ngân hàng c�
 
 | Nhóm môn | Câu 60–90 giây phù hợp | Trả lời/chấm ban đầu | Tránh trong báo thức |
 | --- | --- | --- | --- |
-| Toán, Vật lí, Hóa học | Tính nhanh một bước, chọn công thức/đơn vị, điền kết quả; ảnh một bước khi evaluator đã kiểm chứng | Số/biểu thức có tolerance và rubric; `uncertain` cho ảnh | Bài nhiều trang, lời giải dài |
-| Tiếng Anh | Điền từ, chọn cấu trúc, sắp câu ngắn, hiểu ý một câu | Chuỗi chuẩn hóa/danh sách đáp án; không chấm phát âm ở v1 | Bài nghe cần tai nghe, accent scoring chưa kiểm chứng |
-| Sinh học, Lịch sử, Địa lí | Truy hồi một khái niệm, thứ tự sự kiện, ghép nguyên nhân–kết quả, đọc biểu đồ rất nhỏ | Đáp án cấu trúc/multiple choice + lý do ngắn | Câu đòi học thuộc cả đoạn hoặc dữ kiện dễ gây tranh cãi |
+| Toán, Vật lí, Hóa học | Tính nhanh một bước, chọn công thức/đơn vị, điền kết quả; ảnh một bước khi evaluator đã kiểm chứng | Số/biểu thức có tolerance **và một bước viết**, `uncertain` khi ảnh/chữ không rõ | Bài nhiều trang, lời giải dài |
+| Tiếng Anh | Điền từ, chọn cấu trúc, sắp câu ngắn, hiểu ý một câu | Chuỗi chuẩn hóa/danh sách đáp án **và lý do/dấu hiệu ngắn**; không chấm phát âm ở v1 | Bài nghe cần tai nghe, accent scoring chưa kiểm chứng |
+| Sinh học, Lịch sử, Địa lí | Truy hồi một khái niệm, thứ tự sự kiện, ghép nguyên nhân–kết quả, đọc biểu đồ rất nhỏ | Đáp án cấu trúc/multiple choice + **một lý do ngắn có rubric** | Câu đòi học thuộc cả đoạn hoặc dữ kiện dễ gây tranh cãi |
 | Ngữ văn | Nhận diện biện pháp tu từ từ một câu ngắn, chọn luận điểm phù hợp | Câu có rubric rõ; nếu mở nhiều đáp án thì chỉ phản hồi, không buộc chấm đúng/sai để dừng | Chấm bài văn/diễn giải mở lúc mới thức |
 | Tin học, Công nghệ, Kinh tế & pháp luật | Dự đoán một kết quả lệnh, chọn bước quy trình, nhận diện khái niệm/tình huống ngắn | Câu cấu trúc do người duyệt | Tình huống pháp lý dài hoặc thông tin có thể lỗi thời |
 
@@ -59,7 +59,7 @@ API đề xuất: `GET/PUT /v1/study-profile`, `GET/PUT /v1/exam-goals`, `GET/PU
 
 - Hai người cùng lớp khác môn ưu tiên nhận câu/nhắc lịch khác nhau; cùng người đổi tổ hợp thì câu kế tiếp đổi theo nhưng không sửa lịch sử.
 - Ngày có nhiều môn: xoay vòng công bằng, không lặp một môn suốt tuần; ngày nghỉ: đúng fallback.
-- Môn chưa có câu được duyệt/không chấm offline: app báo rõ và không dùng làm câu khóa chuông.
+- Môn chưa có câu được duyệt: app báo rõ và không dùng làm câu thử thách; offline không khóa chuông vì chưa chấm được, có `Hoàn thành không chấm`/Dừng khẩn cấp.
 - `incorrect` đếm lần sai theo [docs/31](31-bao-thuc-thu-thach.md); `uncertain` không đếm. Ngữ văn câu mở không kẹt chuông.
 - AI đọc thời khóa biểu sai: không lưu/nhắc trước khi người dùng xác nhận; đổi lịch hủy nhắc cũ.
 - Mất mạng, đổi múi giờ, đổi lớp, xóa hồ sơ, quyền thông báo bị từ chối đều có trạng thái rõ và không chặn Dừng khẩn cấp.

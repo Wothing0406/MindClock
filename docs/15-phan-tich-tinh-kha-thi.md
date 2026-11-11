@@ -28,12 +28,12 @@ Không gộp ba vấn đề thành một câu chuyện “AI giải quyết tấ
 | iOS alarm | Có hướng với AlarmKit trên iOS 26+, cần phân nhánh cho bản cũ | Thiết bị thật, UX quyền, chính sách cửa hàng. [Apple AlarmKit](https://developer.apple.com/documentation/AlarmKit) |
 | Gemini đọc ảnh bài viết tay | API nhận ảnh; độ đúng của chữ viết và logic toán phải tự đánh giá | Tập ảnh 50+, lỗi false-correct, ảnh mờ, thời gian. [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) |
 | Gemini output có cấu trúc | Dùng được để tạo schema nhất quán; vẫn cần validate ngữ nghĩa | Không cấp XP khi JSON đúng nhưng nội dung sai. [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) |
-| Firestore + FastAPI | Phù hợp MVP cá nhân, nhưng cần thiết kế query, idempotency và rules | Quyền A/B, transaction điểm, chi phí đọc/ghi |
+| PostgreSQL + FastAPI | Phù hợp quan hệ phiên/attempt/XP và transaction hai người; cần migration, hosting và backup | Quyền A/B, idempotency, transaction điểm, chi phí vận hành |
 | Offline | Chuông local khả thi; chấm ảnh không hoạt động offline | Chế độ hoàn thành không chấm và đồng bộ sau không gây trùng |
 
 ## 4. Khả dụng với học sinh
 
-**Điểm mạnh tiềm năng:** một việc rõ ràng khi dậy; liên quan tiết học; phản hồi ngay ở bước làm sai; tiến độ cá nhân. **Điểm cản:** chụp giấy lúc sáng bất tiện, ánh sáng yếu, camera chậm, mạng chậm, sai do chữ xấu, áp lực bị “chấm” trước khi đi học. Do đó có phương án nhập đáp án, hoãn/tắt, giảm âm khi bắt đầu và câu ngắn. Kiểm thử trực tiếp với học sinh có giá trị hơn đánh giá của đội chỉ trên màn hình đẹp.
+**Điểm mạnh tiềm năng:** một việc rõ ràng khi dậy; liên quan tiết học; phản hồi ngay ở bước làm sai; tiến độ cá nhân. **Điểm cản:** chụp giấy lúc sáng bất tiện, ánh sáng yếu, camera chậm, mạng chậm, sai do chữ xấu, áp lực bị “chấm” trước khi đi học. Do đó có phương án nhập đáp án kèm lý do, Dừng khẩn cấp, Hoãn chỉ ở mode thường, giảm âm khi bắt đầu và câu ngắn. [Docs/41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md) định nghĩa cách kiểm thử trực tiếp với học sinh.
 
 ## 5. Khả thi vận hành/chi phí
 

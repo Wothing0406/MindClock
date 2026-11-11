@@ -7,13 +7,13 @@
 | Phần sản phẩm | Làm trước đến mức nào | Bằng chứng hoàn thành |
 | --- | --- | --- |
 | Khung app mobile | Flutter mở được trên một máy Android; 4 tab `Hôm nay`, `Luyện tập`, `Đấu trường`, `Tôi`; icon SVG/vector, không emoji | APK/debug build hoặc chạy trên thiết bị; tab chuyển đúng |
-| Luồng học cốt lõi | Một luồng đầy đủ với câu Toán đã duyệt; thêm hồ sơ chọn nhiều môn và 1 câu cấu trúc Anh/Sinh nếu có người duyệt, phản hồi theo fixture | Đổi môn → câu đổi đúng; từ trang chủ đến kết quả trong ≤2 phút, ghi rõ dữ liệu mẫu |
-| Báo thức demo | Chọn giờ và hiển thị giờ kế tiếp; mô phỏng sự kiện reo để diễn tập; nút `Dừng chuông` hoạt động trong luồng demo | Không gọi đó là báo thức OS nếu chưa test native trên máy thật |
+| Luồng học cốt lõi | Một luồng đầy đủ với câu Toán đội tự biên soạn/duyệt, yêu cầu đáp án **và một bước giải**; thêm hồ sơ nhiều môn và một câu Anh/Sinh nếu có người duyệt, phản hồi theo fixture | Đổi môn → câu đổi đúng; từ trang chủ đến kết quả trong ≤2 phút, ghi rõ dữ liệu mẫu |
+| Báo thức demo | Chọn giờ và hiển thị giờ kế tiếp; mô phỏng sự kiện reo để diễn tập; nút `Dừng khẩn cấp` một chạm dừng âm demo | Không gọi đó là báo thức OS nếu chưa test native trên máy thật |
 | Backend SQL tối thiểu | FastAPI local + SQLite: `questions`, `users` demo (nếu cần), `alarm_sessions`, `attempts`; endpoint health, câu tiếp theo, nộp đáp án văn bản | Chạy local, có migration/seed và request mẫu; không cần hosting |
 | Thiết kế và asset | Token UI, một bộ icon nhất quán, avatar SVG placeholder gốc; sprite 2D thật có thể làm sau | Figma/prototype hoặc app có màn thật; asset có licence |
 | Kiểm thử/demo | 3 trường hợp đúng, sai, chưa rõ; lỗi mạng/mock; video dự phòng | Test ghi kết quả và kịch bản demo 3 phút |
 
-**Phần lõi cần chạy thật:** mở app, điều hướng, chọn nhiều môn, hiển thị câu đúng môn, nhập đáp án, phản hồi theo dữ liệu mẫu, API/SQLite local nếu đội đủ người. **Phần phải gắn nhãn mô phỏng:** chuông hệ thống chưa tích hợp, AI chưa gọi thật, bảng xếp hạng/thi đấu chưa nối server. Đây vẫn là sản phẩm dở dang có lát cắt hoạt động, không phải chỉ một bộ slide.
+**Phần lõi cần chạy thật:** mở app, điều hướng, chọn nhiều môn, hiển thị câu đúng môn, nhập đáp án và một bước giải, phản hồi theo dữ liệu mẫu, API/SQLite local nếu đội đủ người. **Phần phải gắn nhãn mô phỏng:** chuông hệ thống chưa tích hợp, AI chưa gọi thật, bảng xếp hạng/thi đấu chưa nối server. Đây vẫn là sản phẩm dở dang có lát cắt hoạt động, không phải chỉ một bộ slide.
 
 ## 2. Để lại 70% cho các task sau
 
@@ -27,7 +27,7 @@ Lý do để lại: các phần này cần máy thật, kiểm thử quyền/d�
 
 ## 3. Thứ tự giao AI để xây 30%
 
-Tạo một task folder cho từng lát cắt theo [quy trình tasks](../tasks/README.md). Ưu tiên: `T003` khung Flutter và design tokens → `T004` câu Toán/fixture và luồng nhập đáp án → `T005` FastAPI + SQLite local → `T006` nối app/API và demo lỗi. ID chỉ là gợi ý; lấy ID kế tiếp thực tế trong repo. Mỗi task có spec, plan, tests, worklog, handoff; không báo xong nếu mới có ảnh chụp màn hình.
+Tạo một task folder cho từng lát cắt theo [quy trình tasks](../tasks/README.md). Ưu tiên: khung Flutter và design tokens → câu Toán/fixture với lời giải ngắn → FastAPI + SQLite local → nối app/API và demo lỗi. **Không lấy mã T003/T005 trong kế hoạch cũ làm ID mới; kiểm tra thư mục `tasks/` và lấy số kế tiếp.** Mỗi task có spec, plan, tests, worklog, handoff; không báo xong nếu mới có ảnh chụp màn hình.
 
 ### Prompt giao AI chuẩn bị 30% sản phẩm
 
@@ -36,9 +36,9 @@ Bạn là coding agent của MindClock. Mục tiêu là tạo lát cắt sản p
 
 Đọc AGENTS.md, tasks/README.md, docs/README.md và các docs liên quan: 04 (PRD), 05/13/27/30 (UI và ngôn ngữ), 07 (API), 09 (test), 28 (backend SQL), 29 (phạm vi 30%). Kiểm tra repo thực tế trước khi sửa. Với mỗi lát cắt coding, tạo/tiếp tục task folder và điền spec.md, plan.md, tests.md trước khi code.
 
-Xây theo thứ tự: (1) app Flutter Android mở được với 4 tab và icon vector không emoji; (2) hồ sơ chọn nhiều môn/môn ưu tiên theo docs/32, một luồng câu Toán hoàn chỉnh và ít nhất một câu cấu trúc ở môn khác nếu đã duyệt; (3) chế độ thử thách theo docs/31 không Hoãn, chỉ gợi ý từ sai rõ lần 3, luôn Dừng khẩn cấp; nếu chưa có alarm native thì ghi mô phỏng; (4) FastAPI + SQLite local có migration, seed câu mẫu, endpoint health/câu hỏi/nộp đáp án; (5) nối app tới API local nếu khả thi và giữ fixture khi API mất. UI tiếng Việt ngắn, rõ chức năng; không dùng khẩu hiệu trong màn. Không thêm ELO, chat, dashboard, 3D realtime, iOS hoặc thu dữ liệu học sinh thật.
+Xây theo thứ tự: (1) app Flutter Android mở được với 4 tab và icon vector không emoji; (2) hồ sơ chọn nhiều môn/môn ưu tiên theo docs/32, một luồng câu Toán có đáp án + cách làm ngắn và ít nhất một câu cấu trúc ở môn khác nếu đã duyệt; (3) chế độ thử thách theo docs/31 không Hoãn, chỉ gợi ý từ sai rõ lần 3, Dừng khẩn cấp một chạm tắt âm; nếu chưa có alarm native thì ghi mô phỏng; (4) FastAPI + SQLite local có migration, seed câu mẫu, endpoint health/câu hỏi/nộp bài có lý do; (5) nối app tới API local nếu khả thi và giữ fixture khi API mất, nhưng offline không giả chấm đúng/không tự cấp XP. UI tiếng Việt ngắn, rõ chức năng; không dùng khẩu hiệu trong màn. Không thêm ELO, chat, dashboard, 3D realtime, iOS hoặc thu dữ liệu học sinh thật.
 
-Mỗi bước phải chạy app/test phù hợp, ghi lệnh và kết quả thật trong task/tests.md. Kiểm tra trên Android thật nếu có; nếu không có, nói rõ giới hạn emulator. Phần chuông/AI/thi online chưa chạy phải có nhãn mô phỏng ngay trong demo. Khi gặp lỗi, ghi vòng tái hiện → nguyên nhân → sửa → test lại; bàn giao điểm tiếp tục chính xác. Không tự đẩy code hoặc tuyên bố đã triển khai tính năng chưa kiểm chứng.
+Mỗi bước phải chạy app/test phù hợp, ghi lệnh và kết quả thật trong task/tests.md. Kiểm tra trên Android thật nếu có; nếu không có, nói rõ giới hạn emulator. Phần chuông/AI/thi online chưa chạy phải có nhãn mô phỏng ngay trong demo. Khi gặp lỗi, ghi vòng tái hiện → nguyên nhân → sửa → test lại; bàn giao điểm tiếp tục chính xác. Chỉ tuyên bố tính năng đã chạy khi có bằng chứng kiểm thử tương ứng; việc commit/push theo yêu cầu và quyền của đội.
 ```
 
 **Khi dùng prompt:** đội phải chốt trước quy chế cuộc thi về code làm sẵn. Nếu không được mang code trước, dùng prompt này để luyện tập nội bộ và tạo một kế hoạch tái tạo hợp lệ trong buổi thi; không dùng code làm trước để nộp trái quy chế.

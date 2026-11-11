@@ -39,8 +39,8 @@ Giữ palette đã chọn trong [docs/13](13-he-thiet-ke-ui.md): `paper #F7F7F2`
 | Câu hỏi | quyển vở | Câu hôm nay | Mở đề |
 | Gợi ý | bóng đèn nét nhỏ | Xem gợi ý | Hiện đúng một gợi ý |
 | Chụp | camera | Chụp bài | Xin quyền rồi mở camera |
-| Nhập | bàn phím | Nhập đáp án | Đường thay thế camera |
-| Hoãn/Dừng | đồng hồ có dấu cộng / hình vuông dừng | Hoãn 5 phút / Dừng chuông | Dùng chữ rõ, không chỉ icon |
+| Nhập | bàn phím | Nhập đáp án và cách làm | Đường thay thế camera, đủ thông tin để chấm |
+| Dừng | hình vuông dừng | Dừng khẩn cấp | Luôn hiện khi chuông reo; Hoãn 5 phút chỉ ở mode thường |
 | Riêng tư | ổ khóa | Quyền riêng tư | Xem dữ liệu/consent |
 
 Không dùng biểu tượng kiếm, vương miện hoặc tia sét ở màn báo thức/học. Icon rank là **huy hiệu riêng** trong hồ sơ và bảng. Mỗi icon có `semanticLabel` tiếng Việt; icon chỉ trang trí thì ẩn khỏi trình đọc màn hình.
@@ -64,7 +64,7 @@ Giải thích cách tính          Quyền riêng tư/cài đặt
 Tab bar                       Tab bar
 ```
 
-**Chuông reo:** chỉ giờ lớn, môn/câu một dòng, `Bắt đầu thử thách`, `Hoãn 5 phút`, `Dừng chuông`; nút Dừng không chìm vào menu. **Làm bài:** tối đa một câu, không banner rank/nhân vật che bài. **Kết quả:** một câu nhận xét và một bước cần sửa; chỉ sau đó mới có XP/huy hiệu. **Đấu trường:** hiển thị giao hữu trước bảng, không mở bằng bảng thành tích để tránh áp lực. **Tôi:** tách `Hạng học tập` khỏi `Điểm đấu trường` bằng nhãn giải thích, không để hai số cạnh nhau như cùng thang đo.
+**Chuông reo:** chỉ giờ lớn, môn/câu một dòng, `Mở câu hỏi`, `Dừng khẩn cấp`; mode thường mới có `Hoãn 5 phút`, nút Dừng không chìm vào menu. **Làm bài:** tối đa một câu, ô đáp án + cách làm ngắn, camera tùy chọn; không banner rank/nhân vật che bài. **Kết quả:** một câu nhận xét và một bước cần sửa; chỉ hiện XP sau khi server xác nhận, `Chưa đủ rõ` có đường thử lại/nhập chữ. **Đấu trường:** hiển thị giao hữu trước bảng, không mở bằng bảng thành tích để tránh áp lực. **Tôi:** tách `Hạng học tập` khỏi `Điểm đấu trường` bằng nhãn giải thích, không để hai số cạnh nhau như cùng thang đo.
 
 Mỗi thao tác phải có trạng thái `đang xử lý`, `thành công`, `không có dữ liệu`, `mất mạng`, `không đủ quyền`. Tên nút và thông báo kết quả dùng cùng động từ: `Lưu báo thức` → `Đã lưu báo thức`; `Gửi bài` → `Đã nhận bài`. Không dùng toast biến mất cho lỗi cần xử lý.
 
@@ -80,7 +80,7 @@ Mỗi thao tác phải có trạng thái `đang xử lý`, `thành công`, `khô
 | Bạch Kim/Kim Cương | Hình vòng có 4/5 cạnh nhẹ, nét rõ; nhãn hạng bên dưới | Không gai nhọn/vương miện lớn; không rung/nhấp nháy |
 | Huy hiệu mùa | Phù hiệu nhỏ bên cạnh tên, mở trang giải thích khi chạm | Không gắn lên mặt nhân vật |
 
-Khung học tập từ XP là cosmetic; điểm đấu trường dùng nhãn đầy đủ `Đồng 4 · Toán 9` và 1–5 vạch nhỏ cho bậc theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), không chỉ màu. Khi lên bậc, hiển thị một lần ở màn kết quả trận, có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Chi tiết 3 nhân vật và asset tại [docs/22](22-nhan-vat-rpg.md).
+Khung học tập từ XP là cosmetic; điểm đấu trường dùng nhãn đầy đủ `Đồng 4 · Toán 9` và 1–5 vạch nhỏ cho bậc theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), không chỉ màu. Khi lên bậc, hiển thị một lần ở màn kết quả trận, có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Bộ 4 nhân vật hiện hành và asset ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); [docs/22](22-nhan-vat-rpg.md) là brief nền.
 
 ## 6. Chuyển động không gây lag
 

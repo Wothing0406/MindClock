@@ -10,7 +10,7 @@ Tài liệu này dùng khi đội chia việc cho người hoặc coding agent. 
 | --- | --- | --- | --- |
 | Product/UX agent | Làm rõ user story, acceptance, chuỗi tiếng Việt, storyboard | `docs/04*`, `docs/05*`, tài sản UX sau này | Quy tắc điểm, API, dữ liệu |
 | Mobile agent | Flutter, Android alarm bridge, cache local, camera, accessibility | `apps/mobile/**` (khi tạo) | API contract, state machine |
-| Backend agent | FastAPI, Firebase Auth, Firestore, session, XP, bảo mật | `services/api/**`, rules/config backend | API contract, schema, điểm |
+| Backend agent | FastAPI, Firebase Auth cho online, PostgreSQL, session, XP, bảo mật | `services/api/**`, migration/config backend | API contract, schema, điểm |
 | AI/Content agent | Question bank, rubric, Gemini adapter, evaluator, gợi ý | `services/api/ai/**`, `content/**`, `evals/**` | `result` semantics, rubric, ngưỡng |
 | QA/Release agent | Test plan, emulator, device matrix, CI gates, báo lỗi | `tests/**`, `evals/**`, `docs/09*` | Không sửa production logic nếu chưa phối hợp chủ sở hữu |
 | Integration lead | Khóa scope, duyệt thay đổi liên vùng, xử lý mâu thuẫn, release | Toàn repo theo PR/review | Bất kỳ thay đổi phá hợp đồng |
@@ -25,13 +25,13 @@ Mỗi task phải có: `ID`, mục tiêu, tài liệu nguồn, vùng file, phụ
 
 ```text
 ID: T05 — Báo thức Android local
-Mục tiêu: chuông reo, hoãn và tắt khi app đóng/mất mạng.
-Tài liệu: PRD §5; Kiến trúc §3–4; Test A01–A07/A13.
+Mục tiêu: chuông reo và Dừng khẩn cấp khi app đóng/mất mạng; Hoãn chỉ mode thường.
+Tài liệu: PRD §5; Kiến trúc §2–3; Test A01–A07/A13; docs/41 U01/U03.
 Vùng sửa: apps/mobile/**.
 Phụ thuộc: cấu hình app, quyền Android, local question cache interface.
 Đầu ra: UI trạng thái quyền, native bridge, hướng dẫn thử thiết bị.
 Kiểm thử: unit next-fire; 3 thiết bị thật; màn khóa, reboot, offline.
-Chấp nhận: không chặn tắt chuông; không duplicate alarm/session.
+Chấp nhận: một chạm Dừng tắt âm/rung local; không duplicate alarm/session.
 Bàn giao: file thay đổi, quyết định kỹ thuật, kết quả test, rủi ro còn lại.
 ```
 

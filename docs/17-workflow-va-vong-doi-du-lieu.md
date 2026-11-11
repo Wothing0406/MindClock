@@ -1,112 +1,62 @@
-# Workflow từ mở app đến xóa dữ liệu
+# Workflow và vòng đời dữ liệu
 
-Tài liệu này nối [PRD](04-prd-va-dac-ta-san-pham.md), [kiến trúc/CSDL](06-kien-truc-va-du-lieu.md) và [API](07-hop-dong-api-va-ai.md). Đọc theo thứ tự khi coding một luồng end-to-end. Các trạng thái, thứ tự và quyền ghi dưới đây là hợp đồng; tên method cụ thể của SDK được chọn khi triển khai.
+**Nguồn chuẩn:** [PRD](04-prd-va-dac-ta-san-pham.md), [kiến trúc](06-kien-truc-va-du-lieu.md), [API](07-hop-dong-api-va-ai.md), [SQL](28-backend-sql.md), [dữ liệu cá nhân](25-bao-mat-va-du-lieu.md). Đây là workflow dự kiến, chưa phải luồng đang chạy.
 
-## 1. Onboarding và quyền
+## 1. Bắt đầu không cần tài khoản
+
+1. Học sinh chọn `Dùng thử không cần tài khoản`, nhập giờ dậy hoặc giờ vào học, thời gian chuẩn bị/đi đường và môn muốn ôn; thời khóa biểu có thể để sau. Dữ liệu nằm local theo hồ sơ thiết bị.
+2. App cho xem giờ gợi ý và phép tính; chỉ người dùng xác nhận mới lưu. Không tự kéo giờ dậy sớm hơn. Xin quyền alarm/notification khi cần và lập lịch OS. Chỉ hiển thị `Đã sẵn sàng` khi có bằng chứng từ OS; nếu thiếu quyền, giải thích và vẫn cho luyện tập thủ công.
+3. App thử âm chuông, hiển thị `Dừng khẩn cấp`, tải/cache prompt đã duyệt khi online. Nếu không có câu phù hợp, dùng câu đóng gói đã duyệt hoặc `Chỉ báo thức`.
+4. Đăng nhập là lựa chọn khi muốn đồng bộ/XP/đấu trường. Trước nhập dữ liệu local vào tài khoản, cho xem phạm vi và xác nhận; không gộp dữ liệu của người khác trên máy dùng chung. Backend xác minh Firebase ID token, tạo/đọc `users.auth_subject`, áp dụng revision.
+
+## 2. Chuẩn bị câu và giờ học
+
+Khi người dùng sửa lịch hoặc mở app trước buổi học, mobile hỏi `/v1/challenges/next` với local date/môn/lớp. Backend lọc `questions.status=published`, lớp/chủ đề/mức độ hợp lệ và lịch, trả prompt + `reasoningPromptVi` + revision, **không trả đáp án/rubric**. Mobile lưu snapshot có hạn dùng và tự xác minh còn phù hợp ngày. Server giữ answer/rubric để chấm. AI có thể đề xuất giờ từ dữ liệu người dùng đã nhập, nhưng API gợi ý chỉ là preview; app kiểm phép tính và người dùng xác nhận mới thay alarm. Lịch thay đổi không tự sửa chuông.
+
+## 3. Một buổi sáng
 
 ```mermaid
 sequenceDiagram
   actor H as Học sinh
-  participant M as Flutter
   participant OS as Android
+  participant M as Flutter/local
   participant API as FastAPI
-  participant DB as Firestore
-  H->>M: Chọn lớp, giờ dậy, lịch học
-  M->>OS: Kiểm tra quyền báo thức/thông báo
-  OS-->>M: Có quyền hoặc bị từ chối
-  M->>API: PATCH /me, POST /alarms, PUT /timetable
-  API->>DB: Ghi cấu hình theo uid đã xác minh
-  API-->>M: Revision cấu hình
-  M->>OS: Lập lịch alarm local nếu có quyền
-  M-->>H: Hiện giờ reo tiếp theo và trạng thái quyền thực tế
+  participant DB as PostgreSQL
+  OS->>M: Đến giờ đã đặt
+  M->>H: Phát chuông + nút Dừng khẩn cấp
+  H->>M: Mở câu / Dừng
+  M->>M: Tạo localSessionId, lưu event tối thiểu
+  opt Có mạng và đã đăng nhập
+    M->>API: POST /sessions (idempotent)
+    API->>DB: Kiểm tra owner + question revision
+    DB-->>API: session
+    API-->>M: sessionId/state
+  end
 ```
 
-**Quy tắc:** server trả thành công không có nghĩa OS đã lập lịch. Chỉ hiện “Báo thức đã sẵn sàng” khi mobile xác minh quyền và đặt được alarm local; nếu không, hiển thị cảnh báo. Camera chỉ xin quyền lúc chụp. UID luôn lấy từ Firebase ID token đã xác minh, không từ body.
+Phát/dừng chuông không đợi API, token hay Gemini. `Dừng khẩn cấp` hoạt động cả khi upload/chấm treo và không trừ điểm. `short_review` không có Hoãn; mode thường có thể Hoãn theo [31](31-bao-thuc-thu-thach.md). Offline có thể viết bài nhưng chỉ hiện `Hoàn thành không chấm`; ảnh không xếp hàng tải ngầm. Bản nháp chữ chỉ lưu tối đa 24 giờ nếu người dùng chọn, hỏi lại trước khi gửi. Metadata sự kiện có thể đồng bộ trong 7 ngày nhưng **không đủ để cấp XP**.
 
-## 2. Tải câu trước và chọn dự phòng
+## 4. Nộp bài và chốt kết quả
 
-```mermaid
-sequenceDiagram
-  participant M as Flutter
-  participant API as FastAPI
-  participant DB as Firestore
-  M->>API: GET /challenges/next?date=ngày_địa_phương
-  API->>DB: Đọc lịch + tiến độ + question_bank published
-  DB-->>API: Câu hợp lệ + revision
-  API-->>M: Prompt, metadata, không có đáp án
-  M->>M: Lưu snapshot local mã hóa
-```
+1. Học sinh nhập đáp án + một cách làm ngắn hoặc chụp giấy; xem lại trước khi bấm `Gửi bài`. Camera chỉ xin quyền lúc chụp. Bài chữ offline chưa được upload khi chưa xác nhận.
+2. API kiểm token, quyền session, MIME/size, revision, state, attempt ID và idempotency. Backend lấy rubric/answer từ SQL, kiểm tra đáp án có thể xác định bằng quy tắc, nhờ Gemini đọc/nhận xét khi cần, không giữ transaction mở khi chờ model.
+3. Backend đối chiếu bằng validator và policy chấm; kết quả `correct`, `incorrect` hoặc `uncertain`. Bất đồng, ảnh khó đọc, thiếu bằng chứng hoặc timeout → `uncertain`; không gắn nhãn gian lận. Chế độ thử thách chỉ gợi ý phương pháp từ lần sai rõ thứ ba; `uncertain` không cộng lượt sai.
+4. Transaction ngắn ghi attempt, state và ledger XP đúng một lần. `correct`/`incorrect` không do client quyết; không trả điểm thành công trước commit. Nếu phản hồi đến muộn, retry cùng key trả kết quả cũ. Ảnh tạm được xóa khi thành công/lỗi.
+5. Người dùng xem lỗi đầu tiên, có thể báo chấm sai; xem lời giải sau khi hoàn thành. Bài `uncertain` không trừ XP/RP; trận ranked chưa được mở nếu bộ câu/chấm không đạt cổng ở [39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md).
 
-Ưu tiên tải khi lưu báo thức và khi app mở vào chiều/tối hôm trước; không phụ thuộc một background job có thể bị OS hoãn. Nếu câu retired sau khi đã cache, server không chấm tự động câu đó mà dùng phản hồi “chưa thể chấm”; alarm local vẫn chạy. Snapshot có `validForDate`, `questionId`, `revision`; quá ngày thì không dùng làm câu chính.
+## 5. Quyền ghi và lỗi
 
-## 3. Chuông reo và đồng bộ phiên
+| Tình huống | Hành vi an toàn |
+| --- | --- |
+| OS từ chối quyền/reboot/đổi giờ | Hiện trạng thái thật; tính và lập lại lịch khi OS cho phép; test trên máy thật |
+| Mất mạng/token hết hạn | Chuông local tiếp tục; bài không chấm; không hỏi đăng nhập để dừng |
+| Gemini timeout/không chắc | `uncertain`, kết thúc an toàn, không cộng lượt sai/điểm đúng muộn |
+| SQL transaction lỗi | Không tuyên bố XP đã cấp; retry idempotent và đối soát ledger |
+| Đổi tài khoản cùng máy | Che/xóa cache cá nhân cũ theo lựa chọn; không hiện bản nháp của người trước |
+| Xóa tài khoản | Thu hồi/ẩn bảng ngay; tiến trình `pending → processing → completed|failed`, báo hoàn tất khi xóa xong |
 
-1. Android đánh thức thành phần alarm. Thiết bị phát chuông/rung và hiện màn đúng khả năng quyền OS; tạo `localSessionId` duy nhất.
-2. Mobile đọc câu snapshot của ngày; thiếu câu thì dùng câu đóng gói sẵn, thiếu cả hai thì cho “chỉ báo thức”. Không gọi API trước khi phát chuông.
-3. Người dùng chọn `start`, `snooze` hoặc `dismiss`. Hành động local có hiệu lực ngay; sự kiện được lưu vào hàng đợi đồng bộ.
-4. Khi có mạng/token, mobile `POST /sessions` rồi `POST /sessions/{id}/events` theo thứ tự, mỗi thao tác có idempotency key cố định cho sự kiện.
-5. Backend kiểm tra alarm thuộc uid, chuỗi state hợp lệ, thời điểm hợp lý, `questionRevision` và ghi transaction. Event đến lại không tạo phiên mới.
+Mobile chỉ ghi cấu hình alarm và bản nháp/metadata local; backend là writer của bảng `users`, `questions`, `sessions`, `attempts`, `xp_ledger`, consent và trận. Không cho client đọc SQL trực tiếp. Quyền owner kiểm tra ở API/repository; xem [25](25-bao-mat-va-du-lieu.md). Ảnh bài không lưu mặc định, log không chứa token/ảnh/lời giải. Xuất/xóa tài khoản theo [24](24-dang-ky-va-quan-ly-tai-khoan.md)–[25](25-bao-mat-va-du-lieu.md).
 
-**Ví dụ sự kiện:** `ring(localSessionId, 06:30)` → `start(06:31)` → `complete_ungraded(06:33)`. `complete_ungraded` chỉ có `+2 XP` khi backend đã nhận một attempt hoặc đáp án văn bản; còn không `0 XP`. Người dùng không cần chờ đồng bộ để tắt chuông.
+## 6. Luồng hậu buổi học
 
-## 4. Chấm ảnh và ghi XP
-
-```mermaid
-sequenceDiagram
-  actor H as Học sinh
-  participant M as Flutter
-  participant API as FastAPI
-  participant DB as Firestore
-  participant G as Gemini
-  H->>M: Chụp, xem lại, nhấn Gửi bài
-  M->>API: POST /sessions/{id}/attempts + ảnh + idempotency key
-  API->>DB: Kiểm tra session, câu/revision, số lần thử
-  API->>G: Ảnh tạm + prompt/rubric có cấu trúc
-  G-->>API: Bước đọc được + kết luận ứng viên
-  API->>API: Validate schema, đáp án và quy tắc uncertain
-  API->>DB: Transaction attempt + state + XP ledger nếu đủ điều kiện
-  API-->>M: correct/incorrect/uncertain + feedback + nextActions
-  M-->>H: Phản hồi và hành động tiếp theo
-```
-
-**Không tin client:** client không gửi `correct`, `xpAwarded`, `rank`, rubric hoặc đáp án chuẩn. **Không tin model:** Gemini không ghi DB hoặc quyết định điểm. **Không giữ ảnh:** backend dọn ảnh tạm trong cả thành công và exception; Firestore chỉ có bước đã trích và phản hồi nếu người dùng đồng ý lưu kết quả học tập.
-
-## 5. Lỗi theo từng tầng
-
-| Tầng lỗi | Hành vi bắt buộc | Dữ liệu |
-| --- | --- | --- |
-| OS từ chối quyền | Cảnh báo độ tin cậy; hướng dẫn cài đặt; không giả trạng thái “đúng giờ” | Alarm config vẫn lưu, local schedule chưa sẵn sàng |
-| Không mạng lúc reo | Chuông, hoãn/tắt và câu dự phòng local | Event xếp hàng, không gửi ảnh tự động |
-| Không mạng lúc chụp | Cho nhập đáp án ngắn hoặc kết thúc không chấm | Chỉ lưu local có giới hạn và đồng ý; không lén upload ảnh |
-| Backend 401 | Chuông local không dừng; mời đăng nhập lại sau | Event local giữ 7 ngày |
-| Gemini timeout/safety block | `uncertain`, cho hoàn thành an toàn | Không ghi sai, không cấp XP đúng |
-| Firestore transaction lỗi | Không trả XP thành công khi chưa commit | Retry idempotent; đối soát ledger |
-| App bị kill khi đang chấm | Khi mở lại đọc phiên từ server nếu có; local alarm vẫn tắt được | Không tạo attempt mới với key cũ |
-
-## 6. Mô hình đọc/ghi CSDL
-
-| Dữ liệu | Nguồn chuẩn | Ai được ghi | Client được đọc gì |
-| --- | --- | --- | --- |
-| Hồ sơ/lịch/báo thức | Firestore + bản local cho alarm | Backend thay mặt người dùng | Chỉ dữ liệu của mình |
-| Câu hỏi/rubric | `question_bank` | Biên tập viên có quyền, qua công cụ kiểm duyệt | Chỉ prompt của câu published, không có đáp án trước khi kết thúc |
-| Phiên/attempt | Firestore | Backend sau kiểm tra trạng thái | Chỉ phiên của mình, không có ảnh gốc |
-| XP/streak/progress | Ledger + bản tổng hợp server | Backend transaction | Chỉ dữ liệu của mình |
-| Ảnh bài làm | Bộ nhớ/tệp tạm backend trong request | Upload có chủ đích từ người dùng | Preview local; không đọc lại từ DB |
-| Telemetry | Hệ vận hành | Client/server tối thiểu hóa | Không dùng làm điểm học tập |
-
-**Firestore thiết kế theo truy vấn:** tài liệu câu hỏi chung có index theo lớp/môn/chủ đề/độ khó; phiên/attempt đặt dưới user để cô lập quyền; điểm có ledger để sửa/đối soát; báo cáo lớp tương lai dùng aggregate riêng, không quét toàn bộ ảnh/attempt của trẻ em mỗi lần xem.
-
-## 7. Vòng đời dữ liệu
-
-Ảnh preview tồn tại trên máy cho tới khi người dùng hủy/gửi, không tự vào thư viện; ảnh trên server chỉ trong request. Attempt/feedback dự kiến 90 ngày, log kỹ thuật 30 ngày, progress giữ đến khi xóa tài khoản theo [kiến trúc](06-kien-truc-va-du-lieu.md). Khi người dùng xóa tài khoản: ngừng đăng nhập, hủy alarm local, bắt đầu job xóa dữ liệu có `deletionRequestId`, hiển thị trạng thái; không nói “đã xóa” khi job chưa xong. Rà soát backup/retention và quy định áp dụng trước phát hành.
-
-## 8. Checklist tích hợp end-to-end
-
-- Tạo alarm → local schedule thành công → đúng `nextFireAt` trên app.
-- Tắt mạng → chuông reo → start → hoãn/tắt vẫn được → khi mạng trở lại sync một lần.
-- Chụp bài sai → AI chỉ đúng bước → thử lại đúng → một ledger entry theo mức XP phù hợp.
-- Gửi lại cùng request/key → cùng kết quả, không nhân đôi attempt/XP.
-- Ảnh mờ/API lỗi → `uncertain`, không phạt, không mắc kẹt.
-- User khác truy cập ID session → bị từ chối, không lộ metadata.
-- Thu hồi quyền OS/reboot/đổi giờ → app phản ánh trạng thái thật.
-
+Trang `Hôm nay` hiển thị một việc tiếp theo đã xác nhận, lịch học và chủ đề cần ôn; người dùng sửa/bỏ nhắc dễ. Không tự tạo nhiều task từ AI, không đẩy thông báo tụt hạng hoặc buộc mở app tối muộn. Một lỗi học tập có thể dẫn tới câu cùng kỹ năng **đã duyệt** sau giờ học; không tự sinh đề mới vào ngân hàng. Đấu trường giao hữu/bảng chỉ xuất hiện sau tự bật, không nằm trong đường dừng chuông.

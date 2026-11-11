@@ -2,13 +2,13 @@
 
 ## Đọc tài liệu theo việc đang làm
 
-Đọc `docs/README.md` để tìm nguồn chuẩn, rồi chỉ đọc tài liệu liên quan đến task. Hành vi sản phẩm: `docs/04-prd-va-dac-ta-san-pham.md`; UI: `docs/05-ux-va-noi-dung-tieng-viet.md`, `docs/13-he-thiet-ke-ui.md`, `docs/23-hanh-trinh-san-pham.md`, `docs/27-quy-chuan-giao-dien-va-figma.md`; dữ liệu/API: `docs/06-kien-truc-va-du-lieu.md`, `docs/07-hop-dong-api-va-ai.md`, `docs/17-workflow-va-vong-doi-du-lieu.md`, `docs/18-huong-dan-tich-hop-api.md`; iOS: `docs/20-ios-demo-va-phat-hanh.md`; đấu trường: `docs/21-dau-truong-xep-hang.md`; nhân vật: `docs/22-nhan-vat-rpg.md`; AI: `docs/14-vai-tro-va-quy-dinh-ai.md`; kiểm thử: `docs/09-ke-hoach-kiem-thu.md`; bàn giao: `docs/10-to-chuc-coding-agent.md`; skill: `docs/16-lua-chon-skills-cho-du-an.md`. Một sửa lỗi nhỏ không cần đọc toàn bộ bộ docs.
+Đọc `docs/README.md` để tìm nguồn chuẩn, rồi chỉ đọc tài liệu liên quan đến task. Hành vi sản phẩm: `docs/04-prd-va-dac-ta-san-pham.md`, nhu cầu học sinh `docs/41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md`; UI: `docs/05-ux-va-noi-dung-tieng-viet.md`, `docs/13-he-thiet-ke-ui.md`, `docs/23-hanh-trinh-san-pham.md`, `docs/27-quy-chuan-giao-dien-va-figma.md`; dữ liệu/API: `docs/06-kien-truc-va-du-lieu.md`, `docs/07-hop-dong-api-va-ai.md`, `docs/17-workflow-va-vong-doi-du-lieu.md`, `docs/18-huong-dan-tich-hop-api.md`, `docs/28-backend-sql.md`; iOS: `docs/20-ios-demo-va-phat-hanh.md`; đấu trường: `docs/21-dau-truong-xep-hang.md`, luật ở `docs/35–40`; nhân vật: `docs/22-nhan-vat-rpg.md`; AI: `docs/14-vai-tro-va-quy-dinh-ai.md`; kiểm thử: `docs/09-ke-hoach-kiem-thu.md`, ma trận giao việc `docs/42-ma-tran-yeu-cau-va-giao-viec.md`; bàn giao: `docs/10-to-chuc-coding-agent.md`; skill: `docs/16-lua-chon-skills-cho-du-an.md`. Một sửa lỗi nhỏ không cần đọc toàn bộ bộ docs.
 
-**Tài liệu mới ưu tiên khi bắt đầu coding:** [docs/28](docs/28-backend-sql.md) thay mô hình Firestore cũ; [docs/29](docs/29-ke-hoach-chuan-bi-30-phan-tram.md) định nghĩa lát cắt 30%; [docs/30](docs/30-ngon-ngu-va-tai-san-giao-dien.md) chốt ngôn ngữ và asset không emoji. Không xây tiếp Firestore nếu task hiện tại yêu cầu SQL.
+**Tài liệu ưu tiên khi bắt đầu coding:** [docs/06](docs/06-kien-truc-va-du-lieu.md) và [docs/28](docs/28-backend-sql.md) chốt PostgreSQL cho nghiệp vụ; [docs/29](docs/29-ke-hoach-chuan-bi-30-phan-tram.md) định nghĩa lát cắt 30%; [docs/30](docs/30-ngon-ngu-va-tai-san-giao-dien.md) chốt ngôn ngữ và asset không emoji. Không xây nghiệp vụ Firestore.
 
-**Luồng báo thức/học tập mới:** [docs/31](docs/31-bao-thuc-thu-thach.md) quy định chế độ thử thách không Hoãn, chỉ gợi ý từ sai rõ lần 3 và luôn Dừng khẩn cấp; [docs/32](docs/32-ho-so-hoc-tap-va-nhieu-mon.md) quy định cá nhân hóa nhiều môn/mục tiêu thi. Các câu cũ về Hoãn và gợi ý ngay chỉ áp dụng chế độ thường.
+**Luồng báo thức/học tập:** [docs/31](docs/31-bao-thuc-thu-thach.md) quy định chế độ thử thách không Hoãn, chỉ gợi ý từ sai rõ lần 3 và luôn Dừng khẩn cấp; [docs/32](docs/32-ho-so-hoc-tap-va-nhieu-mon.md) quy định cá nhân hóa nhiều môn/mục tiêu thi. Hoãn chỉ áp dụng chế độ thường; Dừng khẩn cấp một chạm dừng âm/rung ngay.
 
-**Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn đồng bộ trận/HP/ghép nội dung; [docs/37](docs/37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn kinh tế, RP, kỹ năng nhân vật và sprite 2D; [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm/humor/tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) và [docs/38](docs/38-nguon-du-lieu-va-duong-nhap-cau-hoi.md) là nguồn chuẩn câu/nguồn dữ liệu. Docs/33 và luật một câu trong docs/21 là phương án cũ.
+**Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn đồng bộ trận/HP/ghép nội dung; [docs/37](docs/37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn kinh tế, RP, kỹ năng nhân vật và sprite 2D; [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm/humor/tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) và [docs/38](docs/38-nguon-du-lieu-va-duong-nhap-cau-hoi.md) là nguồn chuẩn câu/nguồn dữ liệu. Docs/33 là phương án cũ; docs/21 chỉ chốt hành trình xã hội và bảng.
 
 ## Quy tắc không được phá
 
@@ -33,7 +33,7 @@
 - Làm từng lát cắt dọc theo `docs/08-ke-hoach-trien-khai.md`, ưu tiên P0.
 - Giữ hợp đồng API và trạng thái thống nhất. Khi thay đổi, sửa docs + contract tests cùng lần.
 - Thêm test theo rủi ro thực tế, nhất là báo thức OS, quyền truy cập, AI chấm sai và XP trùng. Emulator không thay kiểm thử thiết bị thật.
-- Bảo mật mặc định deny-all; chỉ mở quyền cần thiết, có test rules.
+- Bảo mật mặc định deny-all; chỉ mở quyền API/SQL cần thiết, có test truy cập chéo tài khoản.
 - Linh thú, ví/coin/RP, dashboard và iOS đã có **đặc tả** nhưng chưa tự động thuộc MVP; chỉ code khi task/giai đoạn yêu cầu rõ. Giao hữu trước ranked. Không bán sức mạnh/coin bằng tiền thật hoặc để client tự ghi ví/RP.
 - Kết thúc task bằng bản bàn giao theo `docs/10-to-chuc-coding-agent.md` §4.
 
