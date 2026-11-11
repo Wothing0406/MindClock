@@ -59,7 +59,7 @@ Tài liệu này giữ trọn ý tưởng MindClock ban đầu để đội có 
 - Bắt đầu bằng trận **không tính hạng** và bảng kết quả riêng tư. Chỉ mở ELO khi có đủ người chơi, bộ câu cân bằng, kiểm soát độ trễ và tranh chấp kết quả.
 - Nếu có ELO: kết quả từ server, thời hạn nộp theo server clock, xử lý mất kết nối, hòa, hủy trận, AI `uncertain`, chống nộp lại. Không trừ ELO khi AI chấm chưa chắc. K-factor và matchmaking phải được thử nghiệm, không chốt số trong MVP.
 - Không cho nhắn tin tự do giữa trẻ em, có chặn/báo cáo người dùng; leaderboard biệt danh và opt-out.
-- `matches`, `match_participants`, `match_submissions`, `rating_ledger`; audit để giải quyết tranh chấp.
+- `matches`, `match_players`, `match_rounds`, `round_submissions`, `rank_ledger`; audit để giải quyết tranh chấp. Schema hiện hành ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md) và [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md).
 - Kiểm thử: cùng đề/độ khó, race condition, trễ mạng, nộp kép, hủy trận, phản hồi chấm sai, lạm dụng tài khoản.
 
 ## 7. Nhiều môn và đa phương thức

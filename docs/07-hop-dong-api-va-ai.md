@@ -2,7 +2,7 @@
 
 > **Mở rộng cần version hóa khi coding:** hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và chế độ thử thách tại [docs/31](31-bao-thuc-thu-thach.md), [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). `snooze` chỉ còn cho chế độ thường; `incorrect` lần 1–2 của chế độ thử thách không trả hint, `uncertain` không tăng số lần sai. Endpoint mới ở docs/32 là đề xuất, chưa là API chạy.
 
-> **API giai đoạn đấu trường/kinh tế/nội dung:** danh sách endpoint và bảng dữ liệu dự kiến ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Chúng chưa là API đã triển khai; task coding phải chốt payload, quyền, idempotency và contract tests trong cùng lần.
+> **API giai đoạn đấu trường/kinh tế/nội dung:** danh sách endpoint và bảng dữ liệu dự kiến ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md), hợp đồng nhân vật/rank/bảng ở [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md). Chúng chưa là API đã triển khai; task coding phải chốt payload, quyền, idempotency và contract tests trong cùng lần.
 
 > **Hợp đồng bài có trình bày:** `answer_value` + `reasoning_text|handwritten`, ba kết quả và policy chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). PvP heal/hút/choáng ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Endpoint gợi ý giờ dậy chỉ preview theo [docs/32 §5–6](32-ho-so-hoc-tap-va-nhieu-mon.md); không tự tạo alarm. Đây là phần mở rộng chưa triển khai; khi code phải đổi payload/contract tests của `/answers`, `/attempts`, match submission cùng lúc.
 

@@ -77,10 +77,10 @@ Mỗi thao tác phải có trạng thái `đang xử lý`, `thành công`, `khô
 | Nhân vật | Nét giấy/bút phẳng, 2–3 mảng màu, mắt rõ, không bóng kim loại | 3/4 front là góc chính; silhouette rõ ở 48 px |
 | Khung avatar thường | Vòng mảnh màu `outline`, nền giấy | Không gradient/glow |
 | Đồng/Bạc/Vàng | Vòng đôi mảnh, chấm/rãnh 1/2/3 ở cạnh dưới; màu đồng/bạc/vàng dịu | Nhận ra cả khi bỏ màu nhờ số rãnh |
-| Bạch Kim/Kim Cương | Hình vòng có 4/5 cạnh nhẹ, nét rõ; nhãn hạng bên dưới | Không gai nhọn/vương miện lớn; không rung/nhấp nháy |
+| Bạch Kim/Kim Cương/Tinh Anh | Khung 4/5 cạnh nhẹ hoặc vòng kép 6 rãnh; nhãn hạng bên dưới | Không gai nhọn/vương miện lớn; không rung/nhấp nháy |
 | Huy hiệu mùa | Phù hiệu nhỏ bên cạnh tên, mở trang giải thích khi chạm | Không gắn lên mặt nhân vật |
 
-Khung học tập từ XP là cosmetic; điểm đấu trường dùng nhãn đầy đủ `Đồng 4 · Toán 9` và 1–5 vạch nhỏ cho bậc theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), không chỉ màu. Khi lên bậc, hiển thị một lần ở màn kết quả trận, có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Bộ 4 nhân vật hiện hành và asset ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); [docs/22](22-nhan-vat-rpg.md) là brief nền.
+Khung học tập từ XP là cosmetic; điểm đấu trường dùng nhãn đầy đủ `Đồng 4 · Toán 9` và 1–5 vạch nhỏ cho bậc theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), không chỉ màu. Khi lên bậc, hiển thị một lần ở màn kết quả trận, có thể đóng ngay; không chiếm màn báo thức. Nhân vật giữ nguyên vẻ khỏe/vui khi người dùng nghỉ hoặc sai bài. Bộ 4 nhân vật hiện hành và asset ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); [docs/43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md) là đặc tả từng màn/khung; [docs/22](22-nhan-vat-rpg.md) là brief nền.
 
 ## 6. Chuyển động không gây lag
 

@@ -57,7 +57,7 @@ flowchart LR
 
 ## 4. Chọn nhân vật và rank
 
-- `Tôi` → `Linh thú` → chọn **một nhân vật miễn phí** trong ba mẫu sprite 2D, xem bộ ba kỹ năng, nhấn `Chọn nhân vật`; nhân vật còn lại hiện giá **300 Đồng Mực**, nút `Xem thử` và `Mở bằng Đồng Mực` theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Có `Đổi sau` và `Tắt linh thú`.
+- `Tôi` → `Nhân vật` → xem **bốn** mẫu sprite 2D, chọn **một nhân vật miễn phí** khi tạo tài khoản; nhân vật chưa sở hữu hiện giá **300 Đồng Mực**, nút `Xem thử` và `Mở bằng Đồng Mực` theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Khách local được xem/chọn hình trên máy nhưng chưa có sở hữu/ví server. Có `Đổi sau` và `Tắt linh thú`; chi tiết màn ở [docs/43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md).
 - `Tôi` → `Thành tích` hiển thị **XP và hạng học tập** trước, kèm mốc kế tiếp; **RP đấu trường** nằm thẻ riêng chỉ khi bật tham gia, có nhãn `Đồng 1–5` theo môn/lớp. Tooltip: `XP ghi nhận quá trình học; RP chỉ tính từ trận có hạng; Đồng Mực dùng để mở nhân vật.`
 - Khi đạt mốc XP, thông báo `Bạn đã mở phụ kiện mới` và cho xem sau; không ép mở màn thưởng lúc sáng sớm.
 - `Cài đặt` → `Riêng tư & thi đấu` → bật/tắt hiện trên bảng, đổi biệt danh, rời nhóm, yêu cầu xóa dữ liệu. Tắt tham gia không tắt báo thức/học tập.

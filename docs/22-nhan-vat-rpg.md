@@ -2,7 +2,7 @@
 
 **Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md) và [quy chuẩn v2](27-quy-chuan-giao-dien-va-figma.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm. Chỉ thiết kế sprite/FX 2D; roster và kỹ năng hiện hành theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), mở nhân vật bằng Đồng Mực theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md).
 
-Trong [Solo RPG](35-solo-rpg-dong-bo-va-ky-nang.md), mỗi nhân vật chọn hai trong bốn thẻ chung và một thẻ riêng; tất cả dùng cùng HP/câu hỏi, không có thưởng tốc độ mode viết. Kỹ năng riêng cần qua cổng cân bằng trước ranked. Phụ kiện/khung là cosmetic.
+Trong [Solo RPG](35-solo-rpg-dong-bo-va-ky-nang.md), mỗi nhân vật chọn hai trong bốn thẻ chung và một thẻ riêng; tất cả dùng cùng HP/câu hỏi, không có thưởng tốc độ mode viết. Kỹ năng riêng cần qua cổng cân bằng trước ranked. Phụ kiện/khung là cosmetic. Bản giao diện từng nhân vật, avatar, khung và bảng ở [docs/43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md); quyền sở hữu/API/test ở [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md).
 
 ## 1. Hướng mỹ thuật thống nhất
 

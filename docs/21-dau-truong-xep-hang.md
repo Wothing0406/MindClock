@@ -14,7 +14,7 @@ Ranked và bảng chỉ mở khi người dùng chủ động bật, chọn bi�
 | --- | --- | --- |
 | XP | Tiến độ học cá nhân, riêng tư mặc định; không dùng xếp bảng | `xp_ledger` server |
 | Chuỗi ôn tập | Ngày có hoạt động hợp lệ, có thể ẩn; nghỉ không trừ điểm/coin | Server sau đồng bộ đủ điều kiện |
-| RP và bậc | Chỉ trận có hạng đã chốt, theo môn/khối/mùa; xem docs/37 | `rating_ledger` server |
+| RP và bậc | Chỉ trận có hạng đã chốt, theo môn/khối/mùa; xem docs/37 | `rank_ledger` server |
 | Đồng Mực | Tiền trong app kiếm qua nhiệm vụ/trận, mở nhân vật/phụ kiện; không bán sức mạnh | Ví/ledger server theo docs/37 |
 
 Không xếp hạng theo giờ dậy, streak hay số phút dùng app. Không đẩy thông báo “tụt hạng” hoặc tạo áp lực dậy sớm.
@@ -24,7 +24,7 @@ Không xếp hạng theo giờ dậy, streak hay số phút dùng app. Không đ
 | Giai đoạn | Màn có thể mở | Quy tắc hiển thị |
 | --- | --- | --- |
 | M3 đầu | Giao hữu và lịch sử trận riêng | Không RP, không bảng công khai, không phạt thua |
-| Sau cổng ranked | Bảng mùa theo `{subject, gradeBand, curriculumScope, season}` | Chỉ người opt-in, top 20 và vị trí bản thân; cùng RP cùng hạng, thứ tự phụ theo số trận hợp lệ chỉ để hiển thị |
+| Sau cổng ranked | Bảng mùa theo `{subject, gradeBand, curriculumScope, season}` | Chỉ người opt-in, top 20 và vị trí bản thân; cùng RP cùng hạng, thứ tự hàng đồng điểm ổn định theo ID nội bộ, không lộ ID hoặc xét giờ dậy |
 | Sau thử quyền nhóm | Nhóm/lớp tự nguyện và thử thách tuần | Không nêu cá nhân nghỉ/sai; nhóm đủ quy mô mới có bảng, thành viên rời được |
 
 Bảng học tập tuần nếu làm sau này dùng **điểm hoạt động riêng** có trần/ngày và `scoreRuleVersion`, không lấy XP hoặc giờ báo thức làm điểm. Đề xuất mở bảng nhóm chỉ khi có tối thiểu 10 người tự tham gia một phân vùng để giảm nguy cơ nhận diện; ngưỡng này cần đánh giá trong pilot trước khi bật. Nếu ít người, hiện tiến độ riêng thay bảng. Alias đổi/opt-out phải cập nhật view công khai, không để tên cũ trong cache.
@@ -37,6 +37,6 @@ Khiếu nại: người học chọn `Báo kết quả chưa đúng`, thấy tr�
 
 ## 5. API/SQL và kiểm thử
 
-Định nghĩa chi tiết endpoint/trạng thái/transaction trận ở [35](35-solo-rpg-dong-bo-va-ky-nang.md), bảng ví/RP ở [37](37-kinh-te-rank-va-nhan-vat-2d.md), SQL chung ở [28](28-backend-sql.md); mọi endpoint cạnh tranh phải xác minh Firebase ID token, owner/participant và opt-in. Bảng `competition_profiles`, `matches`, `match_rounds`, `round_submissions`, `rating_ledger`, `leaderboard_entries`, `boards`, `groups`, `group_memberships` chỉ được tạo khi giai đoạn yêu cầu; không dùng Firestore collection hoặc cho client ghi trực tiếp.
+Định nghĩa chi tiết endpoint/trạng thái/transaction trận ở [35](35-solo-rpg-dong-bo-va-ky-nang.md), bảng ví/RP ở [37](37-kinh-te-rank-va-nhan-vat-2d.md), SQL chung ở [28](28-backend-sql.md), hợp đồng bảng/nhân vật/test ở [44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md); mọi endpoint cạnh tranh phải xác minh Firebase ID token, owner/participant và opt-in. Bảng `competition_profiles`, `matches`, `match_rounds`, `round_submissions`, `rank_ledger`, `leaderboard_entries`, `boards`, `groups`, `group_memberships` chỉ được tạo khi giai đoạn yêu cầu; không cho client ghi trực tiếp.
 
 Test trước bật: hai máy thật/cùng câu, mạng lệch/đồng hồ máy sai, nộp lặp và concurrent settle, AI `uncertain`, appeal/void, rời bảng/đổi alias, truy cập chéo tài khoản, đồng điểm/pagination, câu bị retired và lạm dụng gặp lại một đối thủ. Kiểm thử quyền trẻ em và cảm giác áp lực với người dùng thật; giao hữu trước ranked. Cổng đầy đủ ở [09](09-ke-hoach-kiem-thu.md), [39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) và [41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md).

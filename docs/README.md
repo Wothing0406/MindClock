@@ -1,6 +1,6 @@
 # MindClock — bộ tài liệu triển khai
 
-**Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 11/11/2026.
+**Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 12/11/2026.
 
 **Quy trình khi bắt đầu coding:** đọc [AGENTS.md](../AGENTS.md) và [tasks/README.md](../tasks/README.md); mỗi yêu cầu code có thư mục task riêng với spec, plan, test và điểm tiếp tục.
 
@@ -47,6 +47,8 @@
 39. [40 — PvP, nhân vật và bản đồ](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md): hồi/hút/choáng, bốn nhân vật người/động vật, map/FX 2D, công thức HP và nội dung vui chuẩn mực.
 40. [41 — Nhu cầu học sinh](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md): tình huống thật, yêu cầu U01–U10, hành trình ngày đầu/offline/ngày nghỉ và cách thử với người học.
 41. [42 — Ma trận giao việc](42-ma-tran-yeu-cau-va-giao-viec.md): nối nhu cầu → đặc tả → test → giai đoạn/chủ trì để mở task coding.
+42. [43 — Thiết kế nhân vật, avatar, khung và bảng](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md): bốn character brief cụ thể, sáu khung RP, bốn màn đấu trường và trạng thái Figma/Flutter.
+43. [44 — Backend nhân vật, rank và bảng](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md): bảng SQL, workflow starter/mua/settle/opt-out, API dự kiến và test BR01–BR14.
 
 ## Quyết định đã chốt để coding
 
@@ -61,7 +63,7 @@
 | Quyền riêng tư | Hồ sơ học tập cá nhân mặc định; giáo viên/phụ huynh là giai đoạn sau và phải cấp quyền rõ |
 | iOS | AlarmKit iOS 26+ qua native Swift; OS vẫn có nút Dừng; bản iOS cũ chỉ được gọi là nhắc ôn nếu dùng notification; xem docs/20 |
 | Đấu trường | Opt-in, giao hữu trước; ranked/RP/bảng là giai đoạn sau khi đạt cổng chất lượng; xem docs/35 và 37 |
-| Nhân vật | Sprite 2D, chọn một nhân vật miễn phí, nhân vật còn lại mở bằng Đồng Mực; kỹ năng riêng phải cân bằng trước ranked, không phạt hình ảnh khi nghỉ/sai; xem docs/22 và 37 |
+| Nhân vật | Sprite 2D, chọn một trong bốn nhân vật miễn phí, nhân vật còn lại mở bằng Đồng Mực; kỹ năng riêng phải cân bằng trước ranked, không phạt hình ảnh khi nghỉ/sai; xem docs/22,37,40,43–44 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
 | Solo RPG | Giao hữu trước; 60 HP/3 vòng, chọn 2/4 thẻ chung + thẻ nhân vật, hồi/hút/choáng; Gemini chỉ đề xuất chấm **sau nộp**, không sinh đề trực tiếp; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 40 |

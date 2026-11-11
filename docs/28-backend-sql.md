@@ -69,7 +69,7 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 | `match_players`, `match_rounds` | PK `(match_id,user_id)` và `(match_id,round_no)`; HP, bộ ba câu/revision, mốc giờ server |
 | `round_skills`, `round_submissions`, `round_results` | Unique `(match_id,round_no,user_id)` cho lựa chọn/nộp, `(match_id,round_no)` cho kết quả |
 | `match_results`, `match_events` | Một kết quả/trận; event sequence bất biến để reconnect |
-| `rating_ledger` | Unique `(match_id,user_id,scope)` cho RP/MMR; hai phía cùng transaction khi trận ranked hợp lệ |
+| `rank_ledger` | Một dòng settle/người/trận/scope/mùa; correction là dòng bù trừ riêng có `review_id` unique; hai phía settle cùng transaction theo docs/44 |
 | `score_ledger` | unique `(board_id,user_id,source_id)`, điểm học tuần do server tính |
 | `leaderboard_entries` | PK `(board_id,user_id)`, score, alias snapshot, updated_at; index `(board_id,score DESC,user_id)` |
 

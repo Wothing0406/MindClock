@@ -86,9 +86,9 @@ Test quyền API/SQL mặc định từ chối với user A/B, người chưa đ
 
 **iOS:** dùng checklist và tiêu chí máy thật trong [docs/20](20-ios-demo-va-phat-hanh.md); lưu bản OS/Xcode/model/quyền và video chứng minh từng trạng thái. Prototype/web chỉ đạt cổng demo UI, không đạt cổng báo thức iOS.
 
-**Đấu trường:** hai máy thật hoặc hai phiên độc lập, cùng đề và deadline server; thử nộp lặp, mạng yếu, đồng hồ máy lệch, AI `uncertain`, khiếu nại, rút khỏi bảng, thay alias, truy cập trái quyền. Rating chỉ đạt cổng khi một match có tối đa hai ledger hợp lệ và retry không thay kết quả; xem [docs/21](21-dau-truong-xep-hang.md).
+**Đấu trường:** hai máy thật hoặc hai phiên độc lập, cùng đề và deadline server; thử nộp lặp, mạng yếu, đồng hồ máy lệch, AI `uncertain`, khiếu nại, rút khỏi bảng, thay alias, truy cập trái quyền. Rating chỉ đạt cổng khi một match có đúng hai `rank_ledger` hợp lệ và retry không thay kết quả; test nhân vật/bảng BR01–BR14 ở [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md). Xem [docs/21](21-dau-truong-xep-hang.md).
 
-**Nhân vật:** kiểm tra silhouette 48 px, alt text, giảm chuyển động, không che nút Dừng, không hiển thị trạng thái trừng phạt và không có asset thiếu quyền sử dụng; xem [docs/22](22-nhan-vat-rpg.md).
+**Nhân vật:** kiểm tra silhouette 48 px, alt text, giảm chuyển động, không che nút Dừng, không hiển thị trạng thái trừng phạt và không có asset thiếu quyền sử dụng; test màn/khung ở [docs/43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md), dữ liệu/sở hữu ở [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md).
 
 ## 10. Ma trận kiểm chứng nhu cầu học sinh
 

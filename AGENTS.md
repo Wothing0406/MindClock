@@ -10,6 +10,8 @@
 
 **Solo 1v1:** [docs/35](docs/35-solo-rpg-dong-bo-va-ky-nang.md) là nguồn chuẩn đồng bộ trận/HP/ghép nội dung; [docs/37](docs/37-kinh-te-rank-va-nhan-vat-2d.md) là nguồn chuẩn kinh tế, RP, kỹ năng nhân vật và sprite 2D; [docs/36](docs/36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md) là nguồn chuẩn model thử nghiệm/humor/tốc độ; [docs/34](docs/34-ngan-hang-cau-hoi-da-mon.md) và [docs/38](docs/38-nguon-du-lieu-va-duong-nhap-cau-hoi.md) là nguồn chuẩn câu/nguồn dữ liệu. Docs/33 là phương án cũ; docs/21 chỉ chốt hành trình xã hội và bảng.
 
+**Nhân vật/khung/bảng khi mở M3:** [docs/43](docs/43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md) là nguồn thiết kế từng nhân vật, avatar, 6 tier khung và màn bảng; [docs/44](docs/44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md) là hợp đồng backend/test. `rank_ledger` là tên duy nhất cho RP/MMR; không tạo thêm `rating_ledger`. Đây là đặc tả giai đoạn sau, chưa có màn/API chạy thật.
+
 ## Quy tắc không được phá
 
 - Báo thức và Dừng khẩn cấp chạy trên thiết bị kể cả khi không có mạng/API/đăng nhập; không khóa người dùng trong thử thách. Chế độ thử thách không có Hoãn; nếu còn chế độ thường thì Hoãn của chế độ đó cũng chạy cục bộ.
