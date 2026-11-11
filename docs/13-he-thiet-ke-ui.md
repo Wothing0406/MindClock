@@ -2,6 +2,8 @@
 
 **Mục tiêu thị giác:** một buổi sáng rõ ràng và dễ bắt đầu, kết hợp hình ảnh mặt đồng hồ với nét giấy học tập. Trò chơi hóa là lớp động viên sau khi hoàn thành, không biến báo thức thành màn game chói mắt. Nền tảng chính: Flutter Android; dashboard web tương lai dùng cùng token nhưng bố cục riêng.
 
+Quy tắc cụ thể về icon, thao tác, nhân vật 3D nhẹ, khung rank, animation và bàn giao Figma ở [quy chuẩn giao diện v2](27-quy-chuan-giao-dien-va-figma.md). Khi hai tài liệu khác nhau về nhân vật/asset, dùng quyết định v2.
+
 ## 1. Hướng nghệ thuật
 
 - **Chủ đề:** “Bình minh trên trang vở”. Vòng tròn của đồng hồ là hình nhận diện; đường kẻ vở và dấu bút chì chỉ xuất hiện ở màn bài tập/phản hồi.

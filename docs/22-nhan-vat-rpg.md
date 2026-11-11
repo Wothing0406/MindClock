@@ -1,10 +1,10 @@
 # Sổ thiết kế linh thú và phong cách RPG
 
-**Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật là phần thưởng thị giác, không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm.
+**Mục tiêu:** cảm giác đồng hành ấm áp trong hành trình học; nhân vật là phần thưởng thị giác, không đánh giá phẩm chất hay trí thông minh của học sinh. Phong cách khớp [hệ UI](13-he-thiet-ke-ui.md) và [quy chuẩn v2](27-quy-chuan-giao-dien-va-figma.md): “bình minh trên trang vở”, hình tròn đồng hồ, giấy, bút và ánh sáng sáng sớm. **Cập nhật:** nhân vật được tạo hình 3D mềm nhưng xuất ảnh nhẹ cho app; không render 3D liên tục.
 
 ## 1. Hướng mỹ thuật thống nhất
 
-- **Dáng:** 2D vector/illustration mềm, silhouette dễ đọc ở 48 px, viền tối 2–3 px ở kích thước 128 px; nét như bút chì sạch, mảng màu phẳng 2–3 sắc/nhân vật. Tránh pixel art nếu các màn còn lại không theo pixel.
+- **Dáng:** mô hình 3D stylized như đồ chơi bằng giấy/nhựa mờ, ánh sáng ấm một hướng, render ra ảnh 2D nền trong suốt. Silhouette dễ đọc ở 48 px; tối đa 2–3 mảng màu chính/nhân vật. Tránh texture chi tiết, bóng kim loại và pixel art.
 - **Biểu cảm:** mắt/trán/tư thế rõ; không biến nhân vật thành người chấm điểm, không chỉ trỏ/xấu hổ khi sai.
 - **Màu:** lấy `ink`, `primary`, `sunrise` từ token chung; thêm tối đa hai màu riêng mỗi nhân vật, phải kiểm tra tương phản trên nền đêm và nền giấy.
 - **Kích thước:** trang chủ 96–128 dp, màn hồ sơ 160–220 dp, avatar leaderboard 40–48 dp. Ở màn chuông chỉ dùng icon nhỏ hoặc ẩn để giữ ưu tiên giờ và nút tắt.
@@ -36,7 +36,7 @@ Không có state “suy dinh dưỡng”, “phạt”, “cà khịa”. Tiến
 
 ## 4. Inventory asset để giao họa sĩ và dev
 
-Mỗi nhân vật cần một `character sheet` gồm: front, 3/4, profile; 7 trạng thái ở trên; bản sáng/tối; 3 kích thước xuất; avatar tròn; icon silhouette đơn sắc. File nguồn vector SVG/Illustrator/Figma, export PNG/WebP nền trong suốt ở 1x/2x/3x tùy Flutter pipeline. Animation ưu tiên Lottie/Rive **chỉ khi** đội có thời gian và kiểm tra licence/hiệu năng; bản tĩnh là fallback bắt buộc. Mọi chuyển động tuân thủ giảm chuyển động của OS.
+Mỗi nhân vật cần một `character sheet` gồm: front, 3/4, profile; 7 trạng thái ở trên; bản sáng/tối; 3 kích thước xuất; avatar tròn; icon silhouette đơn sắc. Lưu mô hình nguồn và quyền sử dụng; export PNG/WebP nền trong suốt ở kích thước cần dùng sau khi đo trên Flutter. Có thể xuất chuỗi 6–10 frame cho một cử động ngắn, nhưng bản tĩnh là fallback bắt buộc. Không cần engine 3D trong app. Mọi chuyển động tuân thủ giảm chuyển động của OS và [ngân sách hiệu năng](27-quy-chuan-giao-dien-va-figma.md#6-chuyển-động-không-gây-lag).
 
 Tên file dự kiến: `pet_<id>_<state>_<stage>_<theme>.<ext>`. Metadata: `id`, `displayNameVi`, `altTextVi`, `stage`, `states`, `palette`, `assetVersion`, `credit`. Không tải remote asset lúc chuông reo; bundle bản nhỏ trong app. Ảnh đại diện gửi bảng xếp hạng chỉ là `avatarId` từ whitelist, không cho upload ảnh cá nhân ở v1.
 
@@ -50,7 +50,7 @@ Tên file dự kiến: `pet_<id>_<state>_<stage>_<theme>.<ext>`. Metadata: `id`,
 
 ## 6. Brief tạo concept art
 
-> Thiết kế ba linh thú gốc cho ứng dụng học tập tiếng Việt MindClock: Cú Mực, Cáo Nắng, Rồng Giấy. Phong cách minh họa vector mềm, bình minh trên trang vở, thân thiện với học sinh 13–18 tuổi. Silhouette rõ ở avatar 48 px, mỗi nhân vật chỉ 2–3 mảng màu, ánh mắt ấm áp. Tạo front và 3/4, biểu cảm bình thường, suy nghĩ, vui sau khi hoàn thành. Nền trong suốt, không chữ, không vũ khí, không yếu tố phạt hay bệnh tật, không giống nhân vật có bản quyền.
+> Thiết kế ba linh thú gốc cho ứng dụng học tập tiếng Việt MindClock: Cú Mực, Cáo Nắng, Rồng Giấy. Tạo hình 3D stylized mềm như đồ chơi bằng giấy/nhựa mờ, bình minh trên trang vở, thân thiện với học sinh 13–18 tuổi. Render ra ảnh 2D nhẹ. Silhouette rõ ở avatar 48 px, mỗi nhân vật chỉ 2–3 mảng màu, ánh mắt ấm áp. Tạo front và 3/4, biểu cảm bình thường, suy nghĩ, vui sau khi hoàn thành. Nền trong suốt, không chữ, không vũ khí, không yếu tố phạt hay bệnh tật, không giống nhân vật có bản quyền.
 
 **Điều kiện duyệt:** 5 người xem nhận ra ba nhân vật ở 48 px; đủ phân biệt khi bỏ màu; câu thoại không tạo áp lực; file có nguồn gốc/quyền sử dụng. Chưa có artwork thật trong repo.
 
