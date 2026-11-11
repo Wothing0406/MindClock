@@ -1,5 +1,7 @@
 # Hợp đồng API và đặc tả AI
 
+> **Mở rộng cần version hóa khi coding:** hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và chế độ thử thách tại [docs/31](31-bao-thuc-thu-thach.md), [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). `snooze` chỉ còn cho chế độ thường; `incorrect` lần 1–2 của chế độ thử thách không trả hint, `uncertain` không tăng số lần sai. Endpoint mới ở docs/32 là đề xuất, chưa là API chạy.
+
 **Base path:** `/v1` · **Transport:** HTTPS + JSON UTF-8, riêng ảnh dùng `multipart/form-data` · **Auth:** `Authorization: Bearer <Firebase ID token>` cho mọi endpoint trừ `/health`. Backend xác minh token, lấy `uid` từ token. Mọi thời điểm API trả ISO 8601 UTC; `localDate` theo múi giờ IANA của người dùng.
 
 Đây là **hợp đồng triển khai**, chưa phải API đang chạy. Nếu thay đổi field, sửa tài liệu và contract test cùng lúc; không tự ý đổi từ mobile hoặc backend một phía.

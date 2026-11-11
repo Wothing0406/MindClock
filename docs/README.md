@@ -35,6 +35,8 @@
 27. [28 — Backend SQL](28-backend-sql.md): PostgreSQL đích, SQLite demo, bảng, ràng buộc, transaction và lộ trình thay Firestore.
 28. [29 — Làm trước 30% sản phẩm](29-ke-hoach-chuan-bi-30-phan-tram.md): lát cắt app/API chạy được, phần để lại và prompt giao AI coding.
 29. [30 — Ngôn ngữ và asset](30-ngon-ngu-va-tai-san-giao-dien.md): chữ ngắn, không quảng cáo, không emoji, lựa chọn icon/animation.
+30. [31 — Báo thức thử thách](31-bao-thuc-thu-thach.md): chế độ không Hoãn, gợi ý sau nhiều lần sai, Dừng khẩn cấp, giới hạn chống giải hộ.
+31. [32 — Hồ sơ nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md): môn/tổ hợp người dùng chọn, chọn câu theo lịch, dạng chấm theo môn, nhắc lịch/task và dữ liệu SQL.
 
 ## Quyết định đã chốt để coding
 
@@ -50,6 +52,8 @@
 | iOS | AlarmKit iOS 26+ qua native Swift; OS vẫn có nút Dừng; bản iOS cũ chỉ được gọi là nhắc ôn nếu dùng notification; xem docs/20 |
 | Đấu trường | Opt-in, giao hữu trước; bảng tuần và ELO là giai đoạn sau khi đạt cổng chất lượng; xem docs/21 |
 | Linh thú | Cosmetic, có thể tắt, không phạt hình ảnh khi nghỉ/sai; xem docs/22 |
+| Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
+| Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
 
 ## Các điểm còn mở phải quyết định trước khi triển khai rộng
 

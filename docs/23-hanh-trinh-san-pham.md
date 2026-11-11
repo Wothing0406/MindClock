@@ -1,5 +1,7 @@
 # Hành trình sử dụng MindClock và quyết định màn hình
 
+> **Chế độ mới:** [Báo thức thử thách](31-bao-thuc-thu-thach.md) không có Hoãn và chỉ hiện gợi ý sau lần sai rõ thứ ba; [hồ sơ học tập nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md) quyết định môn/câu theo lịch và mục tiêu người dùng. Các bước Hoãn/gợi ý sớm bên dưới mô tả chế độ thường trước đây.
+
 **Cấu trúc điều hướng đề xuất:** 4 tab chính `Hôm nay`, `Luyện tập`, `Đấu trường`, `Tôi`; báo thức là luồng hệ thống đi vào `Hôm nay/Thử thách`. Chỉ hiển thị `Đấu trường` như lời mời khi tính năng đã mở cho cohort; không đặt bảng xếp hạng ngay trên trang báo thức.
 
 ## 1. Người dùng mới
@@ -22,10 +24,10 @@ Chỉ xin quyền báo thức khi lưu giờ; quyền camera khi chụp lần đ
 
 ## 2. Buổi sáng
 
-1. Chuông reo; hiển thị giờ, môn theo lịch, đề đã cache; có **Hoãn**, **Dừng chuông**, **Bắt đầu thử thách**. Dừng luôn sử dụng được.
+1. Chuông reo; hiển thị giờ, môn theo lịch, đề đã cache. Ở chế độ thử thách có **Mở câu hỏi** và **Dừng khẩn cấp**, không có Hoãn; chế độ thường có thể có Hoãn. Dừng luôn sử dụng được.
 2. Bắt đầu thử thách: chọn **Viết tay và chụp**, **Nhập đáp án**, hoặc **Làm sau**. Với môn không phù hợp chụp, chỉ hiện phương thức thích hợp.
 3. Chụp: hướng dẫn đặt giấy trong khung → xem lại → đồng ý gửi ảnh tạm để chấm. Không upload trước khi người dùng xác nhận.
-4. Kết quả: `Đúng` → bước đã nhận, XP nếu hợp lệ; `Cần xem lại` → gợi ý một nấc; `Chưa đọc rõ` → chụp lại/nhập tay/hoàn thành không chấm. Nút Dừng vẫn có trên mọi trạng thái chuông.
+4. Kết quả: `Đúng` → bước đã nhận, XP nếu hợp lệ; sai rõ lần 1–2 → thử lại không gợi ý; sai rõ từ lần 3 → một gợi ý phương pháp; `Chưa đọc rõ` → chụp lại/nhập tay, không tăng số lần sai. Nút Dừng khẩn cấp vẫn có trên mọi trạng thái chuông.
 5. Sau hoàn thành: tóm tắt chủ đề và lịch học; linh thú chúc mừng nỗ lực; mời ôn thêm, không tự kéo vào trận đấu.
 
 ## 3. Từ luyện tập sang đấu trường
@@ -64,7 +66,7 @@ flowchart LR
 
 | Tình huống | Hiển thị | Hành động |
 | --- | --- | --- |
-| Mất mạng lúc chuông reo | `Báo thức vẫn hoạt động. Bài chấm sẽ đồng bộ khi có mạng.` | Dừng/Hoãn/Làm offline |
+| Mất mạng lúc chuông reo | `Báo thức vẫn hoạt động. Bài chấm sẽ đồng bộ khi có mạng.` | Dừng khẩn cấp/Làm offline; Hoãn chỉ ở chế độ thường |
 | Camera bị từ chối | `Bạn có thể nhập đáp án thay vì chụp ảnh.` | Nhập tay/Mở cài đặt quyền |
 | AI chấm chưa chắc | `Ảnh này chưa đủ rõ để kết luận.` | Chụp lại/Nhập tay/Hoàn thành |
 | Bảng chưa đủ người | `Chưa đủ người để mở bảng tuần này.` | Luyện cá nhân/Quay lại |

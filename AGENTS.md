@@ -6,9 +6,11 @@
 
 **Tài liệu mới ưu tiên khi bắt đầu coding:** [docs/28](docs/28-backend-sql.md) thay mô hình Firestore cũ; [docs/29](docs/29-ke-hoach-chuan-bi-30-phan-tram.md) định nghĩa lát cắt 30%; [docs/30](docs/30-ngon-ngu-va-tai-san-giao-dien.md) chốt ngôn ngữ và asset không emoji. Không xây tiếp Firestore nếu task hiện tại yêu cầu SQL.
 
+**Luồng báo thức/học tập mới:** [docs/31](docs/31-bao-thuc-thu-thach.md) quy định chế độ thử thách không Hoãn, chỉ gợi ý từ sai rõ lần 3 và luôn Dừng khẩn cấp; [docs/32](docs/32-ho-so-hoc-tap-va-nhieu-mon.md) quy định cá nhân hóa nhiều môn/mục tiêu thi. Các câu cũ về Hoãn và gợi ý ngay chỉ áp dụng chế độ thường.
+
 ## Quy tắc không được phá
 
-- Báo thức, hoãn và tắt khẩn cấp chạy trên thiết bị kể cả khi không có mạng/API/đăng nhập; không khóa người dùng trong thử thách.
+- Báo thức và Dừng khẩn cấp chạy trên thiết bị kể cả khi không có mạng/API/đăng nhập; không khóa người dùng trong thử thách. Chế độ thử thách không có Hoãn; nếu còn chế độ thường thì Hoãn của chế độ đó cũng chạy cục bộ.
 - AI không được tự quyết XP, streak, rank hoặc gán nhãn gian lận. Chấm có `correct`, `incorrect`, `uncertain`; sai/không chắc không bị phạt.
 - Câu hỏi MVP đến từ ngân hàng đã duyệt; Gemini hỗ trợ đọc/chấm/gợi ý. Không gửi API key tới client.
 - Không lưu ảnh bài làm mặc định và không ghi ảnh, token, lời giải cá nhân vào log.

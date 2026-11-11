@@ -2,6 +2,8 @@
 
 **Quyết định kiến trúc ngày 11/11/2026:** FastAPI tiếp tục là API; **PostgreSQL là nguồn dữ liệu có thẩm quyền** cho phiên, câu hỏi, XP và thi đấu. SQLite chỉ dùng cho demo/local một máy; không dùng SQLite làm server nhiều người thi trực tuyến. Firebase Authentication có thể giữ để xác thực ở giai đoạn đầu, backend xác minh ID token rồi ánh xạ `uid` sang `users.auth_subject`; không dùng Firestore cho dữ liệu nghiệp vụ mới. Đây là thay đổi thiết kế, **chưa có backend SQL đang chạy**. Quyết định này thay thế phần CSDL Firestore trong [docs/06](06-kien-truc-va-du-lieu.md); hợp đồng HTTP ở [docs/07](07-hop-dong-api-va-ai.md) vẫn giữ, trừ khi task coding ghi thay đổi cụ thể.
 
+**Mở rộng sản phẩm:** [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md) thêm bảng hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch; [docs/31](31-bao-thuc-thu-thach.md) thêm mode không Hoãn và số lần sai rõ. Cần đưa các bảng/cột này vào migration khi code, không lưu dưới dạng JSON tùy tiện trong `users`.
+
 ## 1. Vì sao SQL
 
 MindClock có nhiều quan hệ và bất biến: một người có lịch/báo thức/phiên; một phiên có lượt nộp; một sự kiện chỉ cấp XP một lần; hai bên trận đấu cùng chốt kết quả. SQL cho khóa ngoại, unique constraint và transaction rõ. PostgreSQL hỗ trợ [ràng buộc unique](https://www.postgresql.org/docs/current/ddl-constraints.html); dùng transaction để ghi phiên, XP và kết quả nhất quán. Không chuyển sang SQL vì giao diện cần React; lựa chọn giao diện và CSDL độc lập.

@@ -7,13 +7,13 @@
 | Phần sản phẩm | Làm trước đến mức nào | Bằng chứng hoàn thành |
 | --- | --- | --- |
 | Khung app mobile | Flutter mở được trên một máy Android; 4 tab `Hôm nay`, `Luyện tập`, `Đấu trường`, `Tôi`; icon SVG/vector, không emoji | APK/debug build hoặc chạy trên thiết bị; tab chuyển đúng |
-| Luồng học cốt lõi | Một câu Toán lớp 9 đã duyệt, nhập đáp án, xem gợi ý và phản hồi **theo fixture** | Từ trang chủ đến kết quả trong ≤2 phút, ghi rõ dữ liệu mẫu |
+| Luồng học cốt lõi | Một luồng đầy đủ với câu Toán đã duyệt; thêm hồ sơ chọn nhiều môn và 1 câu cấu trúc Anh/Sinh nếu có người duyệt, phản hồi theo fixture | Đổi môn → câu đổi đúng; từ trang chủ đến kết quả trong ≤2 phút, ghi rõ dữ liệu mẫu |
 | Báo thức demo | Chọn giờ và hiển thị giờ kế tiếp; mô phỏng sự kiện reo để diễn tập; nút `Dừng chuông` hoạt động trong luồng demo | Không gọi đó là báo thức OS nếu chưa test native trên máy thật |
 | Backend SQL tối thiểu | FastAPI local + SQLite: `questions`, `users` demo (nếu cần), `alarm_sessions`, `attempts`; endpoint health, câu tiếp theo, nộp đáp án văn bản | Chạy local, có migration/seed và request mẫu; không cần hosting |
 | Thiết kế và asset | Token UI, một bộ icon nhất quán, avatar SVG placeholder gốc; chưa cần 3D render | Figma/prototype hoặc app có màn thật; asset có licence |
 | Kiểm thử/demo | 3 trường hợp đúng, sai, chưa rõ; lỗi mạng/mock; video dự phòng | Test ghi kết quả và kịch bản demo 3 phút |
 
-**Phần lõi cần chạy thật:** mở app, điều hướng, hiển thị câu, nhập đáp án, phản hồi theo dữ liệu mẫu, API/SQLite local nếu đội đủ người. **Phần phải gắn nhãn mô phỏng:** chuông hệ thống chưa tích hợp, AI chưa gọi thật, bảng xếp hạng/thi đấu chưa nối server. Đây vẫn là sản phẩm dở dang có lát cắt hoạt động, không phải chỉ một bộ slide.
+**Phần lõi cần chạy thật:** mở app, điều hướng, chọn nhiều môn, hiển thị câu đúng môn, nhập đáp án, phản hồi theo dữ liệu mẫu, API/SQLite local nếu đội đủ người. **Phần phải gắn nhãn mô phỏng:** chuông hệ thống chưa tích hợp, AI chưa gọi thật, bảng xếp hạng/thi đấu chưa nối server. Đây vẫn là sản phẩm dở dang có lát cắt hoạt động, không phải chỉ một bộ slide.
 
 ## 2. Để lại 70% cho các task sau
 
@@ -36,7 +36,7 @@ Bạn là coding agent của MindClock. Mục tiêu là tạo lát cắt sản p
 
 Đọc AGENTS.md, tasks/README.md, docs/README.md và các docs liên quan: 04 (PRD), 05/13/27/30 (UI và ngôn ngữ), 07 (API), 09 (test), 28 (backend SQL), 29 (phạm vi 30%). Kiểm tra repo thực tế trước khi sửa. Với mỗi lát cắt coding, tạo/tiếp tục task folder và điền spec.md, plan.md, tests.md trước khi code.
 
-Xây theo thứ tự: (1) app Flutter Android mở được với 4 tab và icon vector không emoji; (2) luồng một câu Toán 9 đã duyệt, nhập đáp án, gợi ý và ba trạng thái phản hồi bằng fixture; (3) FastAPI + SQLite local có migration, seed câu mẫu, endpoint health/câu hỏi/nộp đáp án; (4) nối app tới API local nếu khả thi và giữ chế độ fixture khi API mất. UI tiếng Việt ngắn, rõ chức năng; không dùng khẩu hiệu trong màn. Không thêm ELO, chat, dashboard, 3D realtime, iOS hoặc thu dữ liệu học sinh thật.
+Xây theo thứ tự: (1) app Flutter Android mở được với 4 tab và icon vector không emoji; (2) hồ sơ chọn nhiều môn/môn ưu tiên theo docs/32, một luồng câu Toán hoàn chỉnh và ít nhất một câu cấu trúc ở môn khác nếu đã duyệt; (3) chế độ thử thách theo docs/31 không Hoãn, chỉ gợi ý từ sai rõ lần 3, luôn Dừng khẩn cấp; nếu chưa có alarm native thì ghi mô phỏng; (4) FastAPI + SQLite local có migration, seed câu mẫu, endpoint health/câu hỏi/nộp đáp án; (5) nối app tới API local nếu khả thi và giữ fixture khi API mất. UI tiếng Việt ngắn, rõ chức năng; không dùng khẩu hiệu trong màn. Không thêm ELO, chat, dashboard, 3D realtime, iOS hoặc thu dữ liệu học sinh thật.
 
 Mỗi bước phải chạy app/test phù hợp, ghi lệnh và kết quả thật trong task/tests.md. Kiểm tra trên Android thật nếu có; nếu không có, nói rõ giới hạn emulator. Phần chuông/AI/thi online chưa chạy phải có nhãn mô phỏng ngay trong demo. Khi gặp lỗi, ghi vòng tái hiện → nguyên nhân → sửa → test lại; bàn giao điểm tiếp tục chính xác. Không tự đẩy code hoặc tuyên bố đã triển khai tính năng chưa kiểm chứng.
 ```
@@ -46,7 +46,7 @@ Mỗi bước phải chạy app/test phù hợp, ghi lệnh và kết quả th�
 ## 4. Định nghĩa xong 30%
 
 - Người khác clone repo, làm theo README và chạy được lát cắt trên máy/giả lập hỗ trợ.
-- Có một hành trình từ trang chủ đến kết quả, nội dung Toán được duyệt, không có emoji hệ thống.
+- Có một hành trình từ trang chủ đến kết quả, chọn được nhiều môn; ít nhất một môn có câu duyệt đủ dùng và môn thứ hai có câu cấu trúc đã kiểm chứng; không có emoji hệ thống.
 - API local và SQLite có migration/seed nếu đội chọn phần backend trong 30%; test nộp trùng và quyền ở mức demo.
 - Mọi trạng thái mô phỏng được dán nhãn; không có API key hay dữ liệu thật trong repo.
 - Có task records và video dự phòng; đội thuyết trình phân biệt rõ đã chạy/chưa chạy.

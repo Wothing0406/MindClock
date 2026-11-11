@@ -2,6 +2,8 @@
 
 > **Cập nhật 11/11/2026:** [docs/28 — Backend SQL](28-backend-sql.md) thay thế quyết định Firestore và toàn bộ §5–7 về lưu trữ/vận hành CSDL trong tài liệu này. §1–4 về báo thức và máy trạng thái còn hiệu lực; sơ đồ §1 có nhãn Firestore là kiến trúc cũ. API HTTP giữ theo docs/07. Chưa có backend SQL được code.
 
+> **Chế độ thử thách:** [docs/31](31-bao-thuc-thu-thach.md) không đi vào trạng thái `snoozed`; `dismissed` là Dừng khẩn cấp luôn khả dụng. Câu offline dự phòng phải đúng môn/phương thức chấm của [hồ sơ học tập](32-ho-so-hoc-tap-va-nhieu-mon.md).
+
 **Quyết định nền tảng:** Flutter Android trước; lớp native Android cho `AlarmManager`/thông báo; FastAPI (Python) trên Cloud Run; Firebase Authentication; Cloud Firestore; Gemini API do backend gọi. Không dùng Firebase Realtime Database trong MVP vì dữ liệu tiến độ/câu hỏi có truy vấn và quyền theo tài liệu, Firestore phù hợp hơn. Quyết định này thay thế đề xuất stack ban đầu và phải được duyệt nếu đội đã có hạ tầng khác.
 
 ## 1. Sơ đồ hệ thống

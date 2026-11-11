@@ -1,5 +1,7 @@
 # UX, luồng màn hình và nội dung tiếng Việt
 
+> **Cập nhật:** với `Báo thức thử thách`, dùng luồng [docs/31](31-bao-thuc-thu-thach.md): không Hoãn, không gợi ý ở hai lần sai rõ đầu, Dừng khẩn cấp luôn có. Màn chọn môn/tổ hợp và nhắc lịch theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). Các nhãn Hoãn/gợi ý sớm bên dưới thuộc chế độ thường/thiết kế cũ.
+
 **Nguồn quy tắc:** [PRD](04-prd-va-dac-ta-san-pham.md). Thiết kế cho học sinh lớp 9, Android trước, `vi-VN`.
 
 ## 1. Nguyên tắc giao diện

@@ -1,5 +1,7 @@
 # PRD — MindClock
 
+> **Cập nhật 11/11/2026:** chế độ tự chọn `Báo thức thử thách` theo [docs/31](31-bao-thuc-thu-thach.md) **không có Hoãn**, chỉ gợi ý sau lần sai rõ thứ ba, luôn có Dừng khẩn cấp. Cá nhân hóa nhiều môn/tổ hợp do người dùng chọn theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md). Các quy tắc Hoãn/gợi ý sớm/Toán đơn môn bên dưới là mô tả MVP cũ hoặc chế độ thường; nếu mâu thuẫn, dùng docs/31–32 cho chế độ thử thách mới.
+
 **Phiên bản tài liệu:** 1.0 · **Ngày:** 10/11/2026 · **Trạng thái:** sẵn sàng cho triển khai MVP, các giai đoạn sau cần kiểm chứng thêm.
 
 ## 1. Tóm tắt sản phẩm
@@ -35,9 +37,9 @@ Thay thế đồng hồ báo thức hệ thống trên mọi điện thoại; ch
 
 | Mức | Chức năng | Điều kiện chấp nhận tổng quát |
 | --- | --- | --- |
-| D0 — demo DevFest | Lịch mẫu, chuông mô phỏng, 1 câu Toán đã duyệt, ảnh viết tay, phản hồi, gợi ý, XP mẫu | Có một luồng thật, nêu rõ phần mô phỏng |
+| D0 — demo DevFest | Lịch mẫu, chuông mô phỏng, chọn nhiều môn; một câu Toán đã duyệt chạy trọn luồng và một câu cấu trúc môn khác nếu kịp; phản hồi/XP mẫu | Có một luồng thật, nêu rõ phần mô phỏng và môn nào đã được kiểm chứng |
 | M1 — MVP Android | Đăng nhập, lịch học, báo thức thiết bị, ngân hàng câu, chụp và chấm, gợi ý, XP/streak, thống kê cá nhân cơ bản, offline fallback | Dùng được liên tục 7 ngày trên thiết bị thật |
-| M2 — pilot | Nhiều chủ đề/môn, thích ứng độ khó có giới hạn, quản lý bộ câu, phản hồi khi AI chấm sai, quản lý đồng ý/xóa dữ liệu | Đạt tiêu chí kiểm thử và thử với người dùng tự nguyện |
+| M2 — pilot | Mở thêm môn **theo từng bộ câu đã duyệt**, thích ứng độ khó có giới hạn, quản lý bộ câu, phản hồi khi AI chấm sai, quản lý đồng ý/xóa dữ liệu | Mỗi môn mở phải có evaluator/fallback an toàn, đạt tiêu chí kiểm thử |
 | M3 — mở rộng | Linh thú, nhóm lớp, dashboard giáo viên/phụ huynh, thi đấu, iOS | Có nhu cầu xác nhận và thiết kế quyền truy cập riêng |
 
 ## 4. User stories MVP và tiêu chí chấp nhận
@@ -45,12 +47,12 @@ Thay thế đồng hồ báo thức hệ thống trên mọi điện thoại; ch
 | ID | User story | Tiêu chí chấp nhận |
 | --- | --- | --- |
 | US01 | Là học sinh, tôi chọn giờ dậy và ngày lặp | Tạo/sửa/xóa báo thức; hiển thị lần reo kế tiếp theo múi giờ thiết bị; báo rõ khi thiếu quyền |
-| US02 | Tôi nhập môn theo thứ trong tuần | Chọn môn và chủ đề; ngày không có môn dùng câu ôn dự phòng hoặc “chỉ báo thức”, theo cài đặt |
+| US02 | Tôi chọn môn và mục tiêu ôn thi | Chọn nhiều môn ưu tiên, thời khóa biểu, phương thức trả lời; ngày không có môn dùng câu ôn dự phòng hoặc “chỉ báo thức” |
 | US03 | Tôi được báo thức dù mất mạng | Chuông, rung, hoãn/tắt hoạt động cục bộ; không chờ backend; câu đã tải trước hoặc câu dự phòng có sẵn |
 | US04 | Tôi có thể bắt đầu thử thách | Khi nhấn “Bắt đầu”, âm thanh giảm; câu hỏi trong ngân hàng có thời gian dự kiến không quá 90 giây |
 | US05 | Tôi chụp bài viết tay | Xem trước, chụp lại, gửi; không gửi tự động khi chưa nhấn “Gửi bài” |
 | US06 | Tôi biết mình sai ở đâu | Phản hồi nêu bước liên quan; sai thì một gợi ý, ảnh mờ thì yêu cầu chụp lại; không dùng từ “gian lận” |
-| US07 | Tôi có thể rời chuông an toàn | Hoãn 5 phút hoặc tắt khẩn cấp luôn khả dụng; không phạt điểm; ghi nhận trạng thái riêng |
+| US07 | Tôi có thể rời chuông an toàn | Chế độ thường có thể Hoãn; chế độ thử thách không có Hoãn nhưng luôn Dừng khẩn cấp; không phạt điểm |
 | US08 | Tôi xem tiến độ | Hiện số buổi hoàn thành, XP, chuỗi ngày theo quy tắc; không đưa điểm số giả làm “năng lực tư duy” |
 | US09 | Tôi sửa cài đặt quyền riêng tư | Biết ảnh gửi tới dịch vụ AI; xem và xóa dữ liệu học tập của mình; ảnh không lưu mặc định |
 | US10 | Tôi báo AI chấm sai | Gửi phản hồi kèm mã phiên và kết quả, không cần công khai ảnh; XP có thể được sửa sau kiểm tra |
