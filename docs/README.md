@@ -24,9 +24,9 @@
 16. [18 — Hướng dẫn tích hợp API](18-huong-dan-tich-hop-api.md): cách mobile gọi backend, backend dùng SQL/Gemini, lỗi và fixture.
 17. [02 — Kế hoạch thi và demo](02-ke-hoach-thi-va-demo.md), [03 — Nghiên cứu và kiểm chứng](03-nghien-cuu-va-kiem-chung.md): tài liệu cuộc thi và nguồn tham khảo; không thay thế PRD/API mới.
 18. [19 — Kiểm toán khoảng trống](19-kiem-toan-khoang-trong.md): việc chưa thể giải quyết bằng docs, người phụ trách và cổng quyết định.
-19. [20 — iOS và demo](20-ios-demo-va-phat-hanh.md): AlarmKit, ba mức demo, checklist Mac/Xcode/TestFlight và tiêu chí máy thật.
+19. [20 — iOS tương lai](20-ios-demo-va-phat-hanh.md): chỉ mở sau Android P0; điều kiện Mac/Xcode/iPhone, AlarmKit và test máy thật.
 20. [21 — Đấu trường và bảng xếp hạng](21-dau-truong-xep-hang.md): hành trình xã hội, opt-in, bảng/nhóm và cổng mở; luật trận hiện hành ở docs/35–40.
-21. [22 — Linh thú RPG](22-nhan-vat-rpg.md): phong cách nhân vật, trạng thái, asset spec và brief họa sĩ.
+21. [22 — Nhân vật RPG](22-nhan-vat-rpg.md): roster cũ đã hủy, cổng quyết định roster mới.
 22. [23 — Hành trình sản phẩm](23-hanh-trinh-san-pham.md): chọn app/tab, onboarding, rank, trận và các trạng thái UI tiếng Việt.
 23. [24 — Đăng ký và tài khoản](24-dang-ky-va-quan-ly-tai-khoan.md): khách dùng thử, email/mật khẩu, xác minh, đồng ý thi đấu, xóa tài khoản.
 24. [25 — Bảo mật và dữ liệu](25-bao-mat-va-du-lieu.md): mục đích thu thập, quyền, thời hạn, ảnh AI, rút đồng ý, sự cố.
@@ -39,16 +39,20 @@
 31. [32 — Hồ sơ nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md): môn/tổ hợp người dùng chọn, chọn câu theo lịch, dạng chấm theo môn, nhắc lịch/task và dữ liệu SQL.
 32. [33 — Solo 1v1 v1 (lưu trữ)](33-dau-truong-solo-ranked-gdd.md): luật đếm câu đúng cũ; không dùng để coding trận mới.
 33. [34 — Ngân hàng câu đa môn](34-ngan-hang-cau-hoi-da-mon.md): taxonomy, dạng câu theo môn, tiếng Việt/đáp án/gợi ý, quy trình duyệt và schema revision.
-34. [35 — Solo RPG v2](35-solo-rpg-dong-bo-va-ky-nang.md): **nguồn chuẩn luật trận hiện hành** — HP, kỹ năng, ghép cùng nội dung, đồng bộ, API/SQL và test.
+34. [35 — Solo RPG v2](35-solo-rpg-dong-bo-va-ky-nang.md): ghép cùng nội dung, đồng bộ và nguyên tắc an toàn; **số HP/kit cũ không dùng**, luật combat mới ở docs/46.
 35. [36 — Khác biệt, humor, Gemini, tốc độ](36-diem-khac-biet-hai-huoc-gemini-va-hieu-nang.md): đối chiếu ý tưởng, giọng vui/asset, chọn model thử nghiệm và ngân sách hiệu năng.
-36. [37 — Đồng Mực, bậc hạng và nhân vật 2D](37-kinh-te-rank-va-nhan-vat-2d.md): **nguồn chuẩn kinh tế game**, ba kit kỹ năng, RP Đồng 1–Tinh Anh 5, ví/ledger và sprite asset.
+36. [37 — Đồng Mực và bậc hạng](37-kinh-te-rank-va-nhan-vat-2d.md): nguồn kinh tế/RP Đồng 1–Tinh Anh 5, ví/ledger; giá và kit nhân vật cũ đã hủy.
 37. [38 — Nguồn dữ liệu và nhập câu](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md): VNHSGE/mirror VMLU đã tải nghiên cứu local, ViMMRC chưa tải, quyền sử dụng và pipeline duyệt. [Registry](../data/sources/registry.json) và [manifest](../data/research/research-manifest.json) chỉ chứa metadata.
 38. [39 — Bài làm có trình bày và chấm công bằng](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md): yêu cầu giải thích ngắn mọi môn, ba kết quả, rubric/AI/validator, cổng ranked và độ khó ngày đầu.
-39. [40 — PvP, nhân vật và bản đồ](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md): hồi/hút/choáng, bốn nhân vật người/động vật, map/FX 2D, công thức HP và nội dung vui chuẩn mực.
+39. [40 — PvP v3 lưu trữ](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md): công thức và kit cũ chỉ để so sánh, **không dùng để code**; xem docs/46.
 40. [41 — Nhu cầu học sinh](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md): tình huống thật, yêu cầu U01–U10, hành trình ngày đầu/offline/ngày nghỉ và cách thử với người học.
 41. [42 — Ma trận giao việc](42-ma-tran-yeu-cau-va-giao-viec.md): nối nhu cầu → đặc tả → test → giai đoạn/chủ trì để mở task coding.
-42. [43 — Thiết kế nhân vật, avatar, khung và bảng](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md): bốn character brief cụ thể, sáu khung RP, bốn màn đấu trường và trạng thái Figma/Flutter.
+42. [43 — Avatar, khung và bảng](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md): khung RP, màn đấu trường; roster/asset cũ đã hủy.
 43. [44 — Backend nhân vật, rank và bảng](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md): bảng SQL, workflow starter/mua/settle/opt-out, API dự kiến và test BR01–BR14.
+44. [45 — Không gian học và chế độ tập trung](45-khong-gian-hoc-va-che-do-tap-trung.md): timer, UI, nhắc khi rời app, camera/giọng nói tùy chọn, AI Socratic, quyền Android và test F01–F10.
+45. [46 — Solo RPG ba nhân vật mới](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md): nguồn chuẩn **thử nghiệm** cho 100 HP/50 giáp, nội tại/chiêu, action UI, prompt sprite, networking, SQL/API dự kiến và cổng cân bằng. Thay số combat cũ ở docs/35/37/40.
+46. [47 — Demo Android và môi trường kiểm thử](47-demo-android-va-moi-truong-kiem-thu.md): runbook Windows/Android Studio/Flutter, máy thật/emulator, AD01–AD10 và kịch bản sân khấu; hiện chưa có APK.
+47. [48 — Kiểm toán docs](48-kiem-toan-docs-va-dieu-kien-bat-dau-code.md): mức sẵn sàng cho Android P0, bằng chứng đã kiểm, phần chưa đạt và thứ tự đóng các cổng.
 
 ## Quyết định đã chốt để coding
 
@@ -61,12 +65,14 @@
 | Chấm | `correct`, `incorrect`, `uncertain`; AI không kết luận gian lận |
 | Điểm | XP ghi ở server theo attempt/sự kiện đủ điều kiện; metadata offline riêng không tự cấp XP; không trừ điểm vì sai bài, hoãn hoặc tắt khẩn cấp |
 | Quyền riêng tư | Hồ sơ học tập cá nhân mặc định; giáo viên/phụ huynh là giai đoạn sau và phải cấp quyền rõ |
-| iOS | AlarmKit iOS 26+ qua native Swift; OS vẫn có nút Dừng; bản iOS cũ chỉ được gọi là nhắc ôn nếu dùng notification; xem docs/20 |
+| iOS | Sau demo Android/P0, cần Mac/Xcode/iPhone và task riêng; AlarmKit vẫn có nút Dừng OS; xem docs/20 |
 | Đấu trường | Opt-in, giao hữu trước; ranked/RP/bảng là giai đoạn sau khi đạt cổng chất lượng; xem docs/35 và 37 |
-| Nhân vật | Sprite 2D, chọn một trong bốn nhân vật miễn phí, nhân vật còn lại mở bằng Đồng Mực; kỹ năng riêng phải cân bằng trước ranked, không phạt hình ảnh khi nghỉ/sai; xem docs/22,37,40,43–44 |
+| Nhân vật | Roster/kit cũ đã hủy; chưa có nhân vật nào được duyệt để coding. Khung rank và backend chỉ là đặc tả giai đoạn sau; xem docs/22, 40, 43–44 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
-| Solo RPG | Giao hữu trước; 60 HP/3 vòng, chọn 2/4 thẻ chung + thẻ nhân vật, hồi/hút/choáng; Gemini chỉ đề xuất chấm **sau nộp**, không sinh đề trực tiếp; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 40 |
+| Solo RPG | Giao hữu trước; docs/46 là **luật thử nghiệm mới** 100 HP/50 giáp/6 round với ba working names. Luật 60 HP/kit cũ chỉ lưu trữ, không code. Gemini chỉ đề xuất chấm **sau nộp**; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 46 |
+| Không gian học | Timer cục bộ và nhắc khi quay lại; camera/giọng nói tự chọn, AI chỉ gọi khi được hỏi. App cá nhân không khóa người dùng khỏi ứng dụng khác; xem docs/45 |
+| Demo Android | Mức A hiện có là HTML prototype; các bước Android thật ở docs/47 chỉ được gọi đã chạy sau khi có APK và AD01–AD09. iOS để tương lai; xem docs/20 và 48 |
 | Dữ liệu câu ngoài | VNHSGE và mirror VMLU đã tải **chỉ ở khu nghiên cứu local gitignored**, không có câu nào vào app; ViMMRC chỉ metadata. Câu demo do đội biên soạn/duyệt; xem docs/38 và [manifest](../data/research/research-manifest.json) |
 
 ## Các điểm còn mở phải quyết định trước khi triển khai rộng

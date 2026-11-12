@@ -4,6 +4,8 @@
 
 > **API giai đoạn đấu trường/kinh tế/nội dung:** danh sách endpoint và bảng dữ liệu dự kiến ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md), [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md), [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md), hợp đồng nhân vật/rank/bảng ở [docs/44](44-backend-nhan-vat-rank-bang-xep-hang-va-kiem-thu.md). Chúng chưa là API đã triển khai; task coding phải chốt payload, quyền, idempotency và contract tests trong cùng lần.
 
+> **PvP v0.1 mới:** [docs/46 §6](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) thay action/event/payload HP của bản 60 HP cũ; docs/46 là **dự kiến**, chưa có endpoint chạy. Trước code phải chốt schema/contract test hai máy và quyền participant.
+
 > **Hợp đồng bài có trình bày:** `answer_value` + `reasoning_text|handwritten`, ba kết quả và policy chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). PvP heal/hút/choáng ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Endpoint gợi ý giờ dậy chỉ preview theo [docs/32 §5–6](32-ho-so-hoc-tap-va-nhieu-mon.md); không tự tạo alarm. Đây là phần mở rộng chưa triển khai; khi code phải đổi payload/contract tests của `/answers`, `/attempts`, match submission cùng lúc.
 
 **Base path:** `/v1` · **Transport:** HTTPS + JSON UTF-8, riêng ảnh dùng `multipart/form-data` · **Auth:** `Authorization: Bearer <Firebase ID token>` cho mọi endpoint trừ `/health`. Backend xác minh token, lấy `uid` từ token. Mọi thời điểm API trả ISO 8601 UTC; `localDate` theo múi giờ IANA của người dùng.

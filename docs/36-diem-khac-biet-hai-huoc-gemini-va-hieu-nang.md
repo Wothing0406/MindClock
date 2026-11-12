@@ -10,7 +10,7 @@ Không tuyên bố MindClock phát minh báo thức giải toán hoặc game qui
 
 ## 2. Humor có chủ đích, không biến thành áp lực
 
-Humor nằm ở **vật liệu và phản ứng nhân vật**: Cú Mực hơi xoay đầu khi chờ, Cáo Nắng kéo trang vở thành mái che, Rồng Giấy gấp góc giấy làm khiên. Mỗi nhân vật có một kỹ năng riêng được cân bằng theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); một trận chỉ có một chi tiết vui ở phòng chờ hoặc reveal, không spam thoại trên màn câu/báo thức. Sau sai/thua, lời phản hồi trung tính: `Câu này cần xem lại.` hoặc `Bạn đã hoàn thành trận. Xem phần cần ôn.` Không dùng meme nhạo năng lực, nhân vật bị thương, tiếng ồn đột ngột, emoji hệ thống hay GIF tải từ Internet.
+Humor nằm ở **tình huống và phản ứng nhân vật mới sau khi được duyệt**; roster trước đã hủy theo [docs/22](22-nhan-vat-rpg.md). Một trận chỉ có một chi tiết vui ở phòng chờ hoặc reveal, không spam thoại trên màn câu/báo thức. Sau sai/thua, lời phản hồi trung tính: `Câu này cần xem lại.` hoặc `Bạn đã hoàn thành trận. Xem phần cần ôn.` Không dùng meme nhạo năng lực, nhân vật bị thương, tiếng ồn đột ngột, emoji hệ thống hay GIF tải từ Internet.
 
 Asset: sprite 2D vẽ gốc có quyền dùng, WebP/PNG trong suốt, bundle local cho màn cốt lõi; không có mô hình 3D. Một hiệu ứng reveal 300–500 ms, có bản tĩnh và nhãn chữ. Không tải asset khi chuông reo hay đang nhận câu. Hỗ trợ `Reduce motion`, cỡ chữ lớn và tắt âm. Ngôn ngữ tiếng Việt ngắn theo [docs/30](30-ngon-ngu-va-tai-san-giao-dien.md).
 

@@ -58,13 +58,13 @@ Không tiến sang M1.4 khi nút tắt khẩn cấp chưa hoạt động ở m�
 | Đấu ELO | Có cơ chế chống quấy rối, cân bằng câu, bảo vệ trẻ em | Trận ngắn, ghép theo năng lực, hạn chế giao tiếp |
 | iOS | Có thiết bị và người phụ trách thử AlarmKit/phiên bản cũ | Không quảng bá “báo thức giống Android” trước QA |
 
-**Thứ tự thực thi mở rộng:** M3.1 character bible và UI tĩnh → M3.2 iOS Flutter quiz trên máy thật → M3.3 iOS AlarmKit trên iOS 26+ → M3.4 giao hữu 1v1 theo một môn/khối → M3.5 bảng tuần opt-in và nhóm → M3.6 rating có hạng sau khi đủ điều kiện. Có thể làm iOS và character song song nếu đủ người, nhưng không dùng độ trễ lịch thi để bỏ kiểm thử máy thật. Chi tiết ở [iOS](20-ios-demo-va-phat-hanh.md), [đấu trường](21-dau-truong-xep-hang.md), [linh thú](22-nhan-vat-rpg.md).
+**Thứ tự thực thi sau Android P0:** prototype ba nhân vật gốc theo [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) → giao hữu một round hai máy → hoàn thiện combat/cân bằng và chấm → bảng opt-in/ranked sau cổng chất lượng. **iOS là nhánh tương lai độc lập**, chỉ mở khi Android trên máy thật đã đạt P0 và có Mac/Xcode/iPhone, theo [docs/20](20-ios-demo-va-phat-hanh.md). Không đưa iOS vào điều kiện demo cuộc thi.
 
 | ID | Gói mở rộng | Đầu ra kiểm tra được | Cổng phụ thuộc |
 | --- | --- | --- | --- |
-| X01 | Prototype iPhone + xác định mức demo | Ghi rõ A/B/C, đường đi trên iPhone, video dự phòng | Thiết bị và thể lệ DevFest |
-| X02 | iOS build và AlarmKit bridge | Test quyền/lịch/chuông/Dừng/deep link trên iPhone iOS 26+ | Mac, Xcode, signing, X01 |
-| X03 | Nhân vật/asset | 4 nhân vật theo docs/40, state tĩnh, avatar 48 px, metadata/licence | Brief docs/22 và 40, đánh giá với người học |
+| X01 | Demo Android trên máy thật | AD01–AD09, video dự phòng có nhãn, một luồng chuông → câu → phản hồi | App Flutter/Android đã code và máy Android; [docs/47](47-demo-android-va-moi-truong-kiem-thu.md) |
+| X02 | iOS tương lai | Build/AlarmKit và kiểm thử iPhone thật theo docs/20, không nằm trong demo Android | Android P0 đạt, Mac/Xcode/iPhone và người phụ trách |
+| X03 | Nhân vật/asset | 3 nhân vật concept theo docs/46, avatar 48 dp, skill/FX có source và quyền | Brief docs/46, test nhận diện/cân bằng với người học |
 | X04 | Giao hữu online | Hai tài khoản cùng câu, nộp một lần, chốt kết quả idempotent | Bộ câu duyệt, auth, test mạng |
 | X05 | Bảng tuần | Projection theo môn/khối/tuần, opt-in/out, top 20 | X04, quyền riêng tư, ngưỡng người tham gia |
 | X06 | Rating/ELO | Ledger hai phía trong transaction, khiếu nại, anti-farm | X04–X05 và cổng docs/19 |

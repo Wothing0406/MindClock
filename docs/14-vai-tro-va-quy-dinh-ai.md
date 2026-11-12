@@ -2,6 +2,8 @@
 
 **Nguyên tắc:** MindClock là sản phẩm học tập có AI hỗ trợ, không cần một dàn “agent tự trị” để chạy MVP. Chia thành các vai logic giúp kiểm thử và thay thế từng phần; server điều phối theo bước cố định và giữ quyền quyết định nghiệp vụ.
 
+**Trợ lý Không gian học:** theo [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md), chỉ gọi khi người học hỏi hoặc xin tổng kết; không nghe/nhìn liên tục, không suy luận xao nhãng từ việc rời app/khung hình, không giao đáp án hoàn chỉnh khi phiên còn đang tự học. Timer và nhắc cục bộ không phụ thuộc Gemini.
+
 ## 1. Các vai trong sản phẩm
 
 | Vai logic | Giai đoạn | Đầu vào được phép | Đầu ra | Không được làm |

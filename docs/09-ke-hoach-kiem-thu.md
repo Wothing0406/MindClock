@@ -6,6 +6,10 @@
 
 **Mục tiêu:** kiểm chứng sản phẩm hoạt động an toàn, tin cậy và nói đúng khả năng. Kiểm thử theo rủi ro; ưu tiên báo thức, quyền tắt, dữ liệu cá nhân và chấm bài.
 
+**Không gian học:** khi mở tính năng, chạy F01–F10 ở [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md). Đặc biệt test timer khi app nền/reboot, camera/mic tự nguyện, không có điểm/phạt do rời app và không tuyên bố khóa được app khác.
+
+**PvP ba nhân vật mới:** test P01–P09 và cổng mô phỏng/playtest ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) thay ví dụ HP/thẻ cũ ở docs/35/37/40. Không bật ranked chỉ vì test công thức xanh; cần chấm bài có người duyệt và thử hai máy thật.
+
 ## 1. Các mức kiểm thử
 
 | Mức | Nội dung | Chủ trì |

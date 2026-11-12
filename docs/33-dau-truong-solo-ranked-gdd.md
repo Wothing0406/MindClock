@@ -88,7 +88,7 @@ Màn bảng có lọc `Môn`, `Khối`, `Mùa`; Top 20 + vị trí của tôi, n
 
 ## 8. Avatar, khung và động lực
 
-- Chọn một trong ba linh thú gốc [Cú Mực/Cáo Nắng/Rồng Giấy](22-nhan-vat-rpg.md), avatar render tĩnh 48 px. Chọn lại miễn phí, không gắn sức mạnh hay lợi thế thi với nhân vật.
+- Thiết kế avatar cũ đã hủy; xem [trạng thái roster](22-nhan-vat-rpg.md). Bản prototype dùng avatar trung tính 48 px, không gắn sức mạnh hay lợi thế thi với nhân vật.
 - Khung avatar hạng đấu trường có hình theo bậc, chuyển động **một lần** khi đạt mốc; người dùng bật giảm chuyển động sẽ thấy khung tĩnh. Không có hiệu ứng đánh bại thú đối thủ.
 - Phần thưởng sau trận: một nhận xét học tập + XP rõ nguồn; sau 3 trận hợp lệ trong tuần, mở phụ kiện mỹ thuật nhỏ (đề xuất, không gacha). Khi thua: `Bạn đúng 1/3 câu. Xem lại câu 2.` Không dùng câu “thất bại” hay ép đấu tiếp.
 - Chặn lời mời, im lặng thông báo thi đấu, nghỉ mùa không mất XP/nhân vật. Không yêu cầu chơi vào sáng sớm để giữ streak.
@@ -101,7 +101,7 @@ Màn bảng có lọc `Môn`, `Khối`, `Mùa`; Top 20 + vị trí của tôi, n
 
 ```text
 SẢNH: Đấu trường             PHÒNG CHỜ: Toán 9
-Toán 9 · Giao hữu / Có hạng   Cú Mực  vs  Cáo Nắng
+Toán 9 · Giao hữu / Có hạng   Người chơi A  vs  Người chơi B
 Tìm trận  [nút chính]        3 câu · khoảng 5 phút
 Mã mời bạn                   Sẵn sàng [nút chính]
 Bảng mùa / Cách tính hạng     Hủy tìm trận

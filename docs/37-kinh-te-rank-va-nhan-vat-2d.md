@@ -2,6 +2,10 @@
 
 **Trạng thái:** đặc tả để coding và playtest; chưa có ví, cửa hàng, ảnh sprite hoặc rank chạy thật. Tài liệu này là nguồn chuẩn cho **Đồng Mực, RP và sở hữu nhân vật**; kit/FX/map mới nhất ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), bài giải ở [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), đồng bộ ở [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md). Thông số là giả thuyết thử nghiệm, lưu `economy_rule_version`, `combat_rule_version`, `rank_rule_version`.
 
+> **Cập nhật:** roster/kit và giá nhân vật ở bản này đã hủy. Chỉ triển khai ví/cửa hàng/ownership sau khi roster mới, giá, cách mở và cân bằng được duyệt. Phần RP/ledger vẫn là phương án độc lập cần test trước khi mở ranked.
+>
+> **Luật combat thử nghiệm mới:** [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md). Không dùng ví dụ 60 HP/thẻ cũ trong file này. Giá nhân vật/cách mở vẫn chưa chốt.
+
 ## 1. Ba loại điểm không trộn nhau
 
 | Loại | Dùng để | Có thể tiêu? | Nguồn thẩm quyền |
@@ -27,13 +31,13 @@ Ngày nhiệm vụ tính theo múi giờ người dùng đã xác nhận; server
 
 Tổng tối đa 60/ngày. Nếu người dùng không bật đấu trường vẫn có đường kiếm 30/ngày từ học tập; thêm nhiệm vụ học khác sau pilot nếu giá nhân vật quá xa. Trận void/đấu bot/mã mời tạo lại với cùng cặp nhiều lần không thưởng trận; chỉ trận ranked hợp lệ đầu tiên/ngày có thưởng. Không lấy “đúng” làm điều kiện nhận toàn bộ coin học tập để tránh phạt người yếu. Coin cộng **sau** khi sự kiện được xác thực; màn hoàn thành hiện `+10 Đồng Mực · Ôn 1 câu`, không hiện tiền thật.
 
-**Cửa hàng thử nghiệm:** khi tạo tài khoản/chọn nhân vật, chọn **một trong bốn nhân vật miễn phí**; ba nhân vật còn lại mỗi nhân vật 300 Đồng Mực, phụ kiện 100, đổi hiệu ứng cùng kỹ năng 80. Tất cả thẻ chung miễn phí; không bán HP, lượt, sát thương hoặc hồi thêm. Không tính phí đổi nhân vật đã sở hữu. Màn nhân vật cho `Xem thử` bộ kỹ năng trong luyện/giao hữu; trận ranked chỉ dùng nhân vật đã sở hữu và được bật cân bằng. Ví có số dư, lịch sử nhận/chi, giá cố định hiện trước xác nhận; không quảng cáo gây áp lực. Bản demo có thể dùng tài khoản thử đã cấp coin bằng fixture **có nhãn**, không giả là coin người dùng kiếm thật.
+**Cửa hàng:** chưa mở và chưa chốt giá/cách sở hữu cho ba concept mới. Không bán HP, giáp, khí lực, lượt, sát thương hoặc hồi thêm. Đổi nhân vật đã sở hữu sau này không được tính phí nếu không có quyết định sản phẩm mới. Khi mở cửa hàng, giá và số dư phải hiện trước xác nhận; không quảng cáo gây áp lực. Bản demo chỉ dùng các concept có nhãn **Mô phỏng**, không giả là tài khoản đã mua/kiếm coin thật.
 
 Server xử lý mua trong transaction: kiểm tra ID token, tuổi/consent nếu cần, giá catalog version, số dư, unique ownership; khóa ví, ghi `coin_ledger` âm và `character_ownership` cùng transaction. `purchase_idempotency_key` lặp trả cùng kết quả; thiếu coin trả `INSUFFICIENT_COIN` không trừ; nhân vật đã có trả trạng thái `owned` không trừ lần hai. Không tin số dư/giá do client gửi. Không để ví âm. Hoàn coin/thu hồi nội dung bằng ledger bù trừ có audit, không sửa lịch sử.
 
 ## 3. HP và kỹ năng theo nhân vật
 
-**Luật PvP hiện hành** ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md): 60 HP/3 vòng, bốn thẻ chung (tấn công, chặn, hồi, hút), bốn thẻ riêng của Cú Mực/Cáo Nắng/Rồng Giấy/Hiệp Sĩ Bìa Vở, choáng khóa thẻ riêng một vòng nhưng người học vẫn trả lời. Chọn 2 thẻ chung + 1 thẻ riêng trước trận. Hai hành động cùng chốt; không cộng tốc độ trong bài viết/chụp. `correct` cần đáp án **và** trình bày theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Sai/AI không chắc không bị phạt XP; `uncertain` làm void ranked. HP không mang qua trận, không có vật phẩm mua để hồi.
+**Luật PvP cũ đã đóng băng** ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Roster/thẻ riêng cũ bị hủy; không triển khai catalog theo bản này. Quy tắc còn giữ: hai hành động cùng chốt, không thưởng tốc độ viết/chụp; `correct` cần đáp án **và** trình bày theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md); sai/AI không chắc không bị phạt XP; `uncertain` làm void ranked. HP không mang qua trận, không có vật phẩm mua để hồi. HP/giáp/kit mới phải được chốt trong task khác.
 
 Mọi nhân vật phải có cách chơi khác nhưng cùng ngân sách sức mạnh. Trước ranked, thử nhiều cặp người chơi, đo tỷ lệ thắng theo trình độ và lượt đi; nếu mất cân bằng tắt thẻ riêng bằng feature flag, giữ thẻ chung giống nhau. Không bán lợi thế sức mạnh. Version hóa `combat_rule_version`; không đổi thông số giữa trận.
 ## 4. Điểm hạng và 30 bậc
@@ -71,7 +75,7 @@ API dự kiến: `GET /v1/game/wallet`, `GET /v1/game/missions/today`, `POST /v1
 
 | ID | Test bắt buộc |
 | --- | --- |
-| E01 | Mỗi người chọn miễn phí một trong bốn nhân vật; bấm lại/đổi máy không được nhận nhiều lần |
+| E01 | Khi chính sách sở hữu mới được chốt: chọn nhân vật khởi đầu chỉ một lần; bấm lại/đổi máy không được nhận nhiều lần |
 | E02 | Nhiệm vụ lặp hoặc race hai worker: một ledger/claim, tổng ≤60 coin/ngày |
 | E03 | Mua đủ/thiếu coin, retry key, hai mua đồng thời: không âm ví/không trừ hai lần |
 | E04 | Đối thủ gửi skill không thuộc kit/kit không sở hữu: từ chối trước chốt vòng |
@@ -80,4 +84,4 @@ API dự kiến: `GET /v1/game/wallet`, `GET /v1/game/missions/today`, `POST /v1
 | E07 | Match settle retry/concurrent: một result, hai rank ledger và coin/XP đúng một lần |
 | E08 | Giảm chuyển động, asset mất, máy yếu: đề, nút, HP và kết quả vẫn dùng được |
 
-Thứ tự xây: ví + một nhân vật miễn phí → giao hữu hai máy với hai thẻ chung → hồi/hút → bốn kit/asset 2D/choáng → nhiệm vụ/cửa hàng → đo cân bằng và kiểm định chấm trình bày → ranked/RP/bảng. Không quảng cáo cửa hàng trước khi vòng học tập cơ bản dùng được.
+Thứ tự xây mới: prototype ba concept theo docs/46 → giao hữu hai máy một round với Đánh thường → 6 round/giáp/khí/ba kit → đo cân bằng và kiểm định chấm trình bày → mới quyết định ví/nhiệm vụ/cửa hàng → ranked/RP/bảng. Không quảng cáo cửa hàng trước khi vòng học tập cơ bản dùng được.

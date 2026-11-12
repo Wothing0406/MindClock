@@ -16,11 +16,14 @@
 | `game-design` | [sickn33](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/game-development/game-design) | Thiết kế rank, trận, vòng thưởng | Giúp ghi vòng lặp và điều kiện cân bằng có thể test |
 | `game-art` | [sickn33](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/game-development/game-art) | Brief nhân vật, asset và kiểm tra nhất quán | Cần cho character bible và bàn giao họa sĩ |
 | `product-discovery` | [alirezarezvani](https://github.com/alirezarezvani/claude-skills/tree/main/product-team/skills/product-discovery) | Kiểm chứng giả thuyết với người học | Tránh coi điểm hấp dẫn trên pitch là giá trị đã được chứng minh |
-| `generate2dsprite` + `generate2dmedia` | [Agent Sprite Forge](https://github.com/0x0funky/agent-sprite-forge) | Tạo master 2D, frame/FX và kiểm tra tuyến tạo media | Asset gốc cho Cú Mực/Cáo Nắng/Rồng Giấy; không phải runtime Flutter |
+| `generate2dsprite` + `generate2dmedia` | [Agent Sprite Forge](https://github.com/0x0funky/agent-sprite-forge) | Tạo master 2D, frame/FX và kiểm tra tuyến tạo media | Chỉ dùng sau khi roster nhân vật mới được duyệt; không phải runtime Flutter |
 | `video2dsprite` + `codeart2d` | [Agent Sprite Forge](https://github.com/0x0funky/agent-sprite-forge) | Chỉ khi cần thêm frame hoặc vẽ bằng mã theo yêu cầu | Giữ cùng bộ phụ thuộc nội bộ; **không tự chạy video/API trả phí** |
 | `generate2dmap` | [Agent Sprite Forge](https://github.com/0x0funky/agent-sprite-forge) | Để dành nếu sau này có bản đồ 2D | Cài cùng bộ vì script tham chiếu nhau; **không cần cho MVP** |
 | `flutter-apply-architecture-best-practices` | [Flutter team](https://github.com/flutter/agent-plugins/tree/main/skills/flutter-apply-architecture-best-practices) | Tách UI, logic, dữ liệu khi bắt đầu app | Chỉ dùng khi phù hợp kiến trúc MindClock; không thay spec báo thức offline |
 | `flutter-add-widget-test` | [Flutter team](https://github.com/flutter/agent-plugins/tree/main/skills/flutter-add-widget-test) | Test thanh HP, kỹ năng, ví và trạng thái lớn chữ | Bổ sung test theo rủi ro, không viết test chỉ lặp implementation |
+| `mindclock-android-native` | Skill nội bộ MindClock, dựa [Android Developers](https://developer.android.com/develop/background-work/services/alarms/schedule) | Kotlin/Manifest/MethodChannel cho báo thức, quyền OS, focus và camera/mic | Giữ đường chuông và Dừng khẩn cấp local; bắt buộc test máy thật |
+| `testing-setup` | [Android Skills chính thức](https://github.com/android/skills/tree/main/testing/testing-setup) | Chỉ dùng khi cần thiết lập test cho **module Kotlin/Android native** | Kiểm thử receiver, permission, bridge; **không tự thêm Hilt/Compose/Gradle deps cho app Flutter** |
+| `flutter-add-integration-test` | [Flutter team](https://github.com/flutter/agent-plugins/tree/main/skills/flutter-add-integration-test) | Test hành trình Flutter trên emulator/thiết bị | Kiểm luồng UI; trước khi chạy đối chiếu [hướng dẫn Flutter hiện hành](https://docs.flutter.dev/testing/integration-tests); không bật Flutter Driver extension chỉ vì skill mẫu nói vậy |
 
 Các skill đã được cài từ thư mục cụ thể bằng công cụ cài skill vào `.agents/skills/`. Bộ Agent Sprite Forge gồm 5 thư mục cần giữ cùng cấp vì có tham chiếu script; bản skill đã cài **không cài Python packages, ffmpeg, API key hoặc tạo ảnh**. Khi có phiên coding mới, agent có thể đọc skill tương ứng; `AGENTS.md` và đặc tả MindClock vẫn là nguồn quy tắc dự án. Không tự chạy script/CLI phụ thuộc chỉ vì skill có nhắc đến. Asset sinh từ công cụ có điều kiện bản quyền riêng với mã MIT của repo; xem [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md).
 
@@ -51,8 +54,12 @@ Các skill đã được cài từ thư mục cụ thể bằng công cụ cài 
 ## 4. Cách dùng theo vai coding
 
 - **Product/UX:** `product-discovery` để kiểm chứng giả thuyết, `requirements-writing` để chốt acceptance; `frontend-design` cho hướng mỹ thuật. Với iPhone dùng `ios-flows`/`apple-hig-expert` và đối chiếu [iOS spec](20-ios-demo-va-phat-hanh.md).
-- **Mobile Flutter:** `flutter-custom-design-system` khi code UI; dùng [kiến trúc](06-kien-truc-va-du-lieu.md) và [iOS spec](20-ios-demo-va-phat-hanh.md) cho alarm native, không suy từ skill UI ra hành vi OS.
+- **Mobile Flutter:** `flutter-apply-architecture-best-practices` cho cấu trúc, `flutter-custom-design-system` cho UI, `flutter-add-widget-test` cho widget, `flutter-add-integration-test` cho hành trình. Khi chạm báo thức/quyền/vòng đời Android dùng `mindclock-android-native` và [docs/31](31-bao-thuc-thu-thach.md); `testing-setup` chỉ bổ trợ Kotlin native. Với iOS dùng [iOS spec](20-ios-demo-va-phat-hanh.md). Skill UI không chứng minh hành vi OS.
 - **Backend:** `api-design-principles` khi đổi contract; dùng tài liệu chính thức Firebase/Gemini khi triển khai từng SDK.
 - **Game/Art:** `game-design` cho [luật HP/RP/coin](37-kinh-te-rank-va-nhan-vat-2d.md); `game-art` cho [linh thú](22-nhan-vat-rpg.md); `generate2dsprite` cho asset 2D và `codeart2d` khi chủ động chọn vẽ bằng mã. Không dùng `generate2dmap` cho MVP. Luật điểm/quyền riêng tư luôn theo đặc tả dự án.
-- **QA:** test plan của repo là nguồn chuẩn; `find-skills` chỉ khi cần công cụ mới có lý do rõ.
+- **QA:** test plan của repo là nguồn chuẩn; Flutter integration test kiểm màn/luồng, Android native test kiểm cầu nối/permission, máy thật kiểm chuông màn khóa, rung, reboot và pin. `find-skills` chỉ khi cần công cụ mới có lý do rõ.
+
+## 5. Cách cài và giới hạn
+
+Ba skill Android/Flutter mới nằm trong `.agents/skills/` của repo; thành viên clone repo sẽ có file skill, nhưng **không tự có Android Studio, SDK, emulator, Flutter hay thiết bị thật**. Không cần `npx skills add` lần nữa. `testing-setup` và `flutter-add-integration-test` là nguồn ngoài được sao chép ngày 12/11/2026; hướng dẫn có thể rộng/lệch phiên bản, nên docs MindClock và tài liệu Android/Flutter chính thức hiện hành được ưu tiên khi coding. Skill không phải package runtime và chưa được test với app vì repo chưa có app.
 

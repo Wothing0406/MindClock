@@ -2,6 +2,8 @@
 
 Tài liệu này giữ trọn ý tưởng MindClock ban đầu để đội có hướng coding dài hạn. **Không phải phạm vi DevFest/MVP.** Mỗi phần có điều kiện mở, quy tắc tối thiểu và kiểm thử cần có; chi tiết API/data sẽ được version hóa khi bước vào giai đoạn tương ứng.
 
+> **Ghi chú lịch sử:** mô tả linh thú bên dưới là ý tưởng ban đầu, không còn là roster nhân vật để coding. Ba concept PvP và luật thử nghiệm hiện hành ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md). Không gian học ở [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md), demo Android ở [docs/47](47-demo-android-va-moi-truong-kiem-thu.md).
+
 ## 1. Chọn câu thích ứng theo trình độ
 
 **Mục đích:** người học gặp câu vừa sức và ôn lại chỗ hay sai. Không dùng rank làm thước đo năng lực học.

@@ -2,6 +2,8 @@
 
 **Trạng thái:** đặc tả để coding, chưa có trận online chạy thật. Đây là nguồn chuẩn cho **đồng bộ** Solo, thay luật tính điểm ở [docs/33 v1](33-dau-truong-solo-ranked-gdd.md); [docs/21](21-dau-truong-xep-hang.md) chốt hành trình xã hội/bảng. Bài làm/chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), kit PvP/map theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md), kinh tế/RP theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Ngân hàng câu theo [docs/34](34-ngan-hang-cau-hoi-da-mon.md), hồ sơ môn theo [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md), SQL nền theo [docs/28](28-backend-sql.md). HP/sát thương là giả thuyết phải playtest; mọi trận lưu `combat_rule_version`.
 
+> **Cập nhật luật PvP:** [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) thay HP, giáp, qi, kit, action timing, event payload và test combat trong tài liệu này. Phần dưới chỉ giữ nguyên tắc ghép cùng nội dung, không lộ đề, server chốt, idempotency và quyền riêng tư; **không code số 60 HP/3 vòng/thẻ cũ**. Khi code, contract phải theo docs/46 và docs/39.
+
 ## 1. Vòng lặp sản phẩm
 
 `Chọn môn → tìm bạn/chia sẻ mã mời → sẵn sàng → chọn kỹ năng → cùng nhận câu → nộp một lần → xem đòn/HP và cách giải → vòng sau → kết quả và chủ đề cần ôn`. Giao hữu bằng mã mời là bản online đầu tiên. Ghép người lạ, ELO và bảng công khai chỉ mở sau cổng chất lượng §10. Không dùng bot giả người thật; không ép đấu khi chuông reo; không lấy giờ dậy làm điểm.
@@ -49,9 +51,9 @@ Không thể chống giải hộ bằng camera hay đo tốc độ tuyệt đố
 
 ## 6. Avatar, UI và hiệu ứng vui
 
-Roster gồm Cú Mực, Cáo Nắng, Rồng Giấy và Hiệp Sĩ Bìa Vở theo [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md); một nhân vật chọn miễn phí, nhân vật khác mở bằng Đồng Mực sau playtest. Humor đến từ đồ dùng/tình huống, không chế giễu người thua. Không dùng emoji hệ thống, meme có bản quyền, GIF mạng, 3D hoặc tiếng kêu chen vào đề. Asset là sprite 2D gốc WebP/PNG, bản tĩnh luôn có. Không có nhân vật bị thương/ốm. Có tắt âm và giảm chuyển động.
+Roster và kit cũ đã hủy theo [docs/22](22-nhan-vat-rpg.md); **không code nhân vật/thẻ riêng từ bản v2 này**. Humor đến từ tình huống, không chế giễu người thua. Không dùng emoji hệ thống, meme có bản quyền, GIF mạng, 3D hoặc tiếng kêu chen vào đề. Nếu có asset mới, dùng sprite 2D gốc WebP/PNG và bản tĩnh. Có tắt âm và giảm chuyển động.
 
-Màn vòng: `Cú Mực 52/60 HP | Vòng 2/3 | Cáo Nắng 40/60 HP`; ba thẻ trong loadout trước câu; sau đó đề + vùng `Viết cách làm` chiếm phần lớn màn hình, nút `Nộp bài` rõ. Khi đang chấm hiện trạng thái; sau reveal chỉ một hiệu ứng 300–500 ms, số HP và tên kỹ năng vẫn hiện bằng chữ khi animation tắt. Không chờ animation để mở vòng tiếp theo. Khung rank chỉ cosmetic, không đổi hitbox/sức mạnh.
+Màn vòng: tên hai người và HP dạng số/thanh ở trên; đề + vùng `Viết cách làm` chiếm phần lớn, nút `Nộp bài` rõ. Khi đang chấm hiện trạng thái; sau reveal chỉ một hiệu ứng 300–500 ms, số HP và tên kỹ năng vẫn hiện bằng chữ khi animation tắt. Không chờ animation để mở vòng tiếp theo. Khung rank chỉ cosmetic, không đổi hitbox/sức mạnh. **HP/thẻ/kit của bản này chưa dùng để code** tới khi đặc tả mới được duyệt.
 
 ## 7. Hợp đồng API/SQL để lập task
 

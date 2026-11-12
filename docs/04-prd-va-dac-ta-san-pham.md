@@ -4,6 +4,8 @@
 
 > **Giai đoạn sau MVP:** Solo online/HP theo [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md); tiền trong game, nhân vật sprite 2D có kỹ năng riêng và 30 bậc RP theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md); nguồn câu ngoài/ba dạng từ 2025 theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md). Đây là đặc tả/lộ trình, không phải chức năng đã chạy. Không đưa corpus ngoài vào app khi quyền chưa rõ.
 
+> **Thay đổi 12/11/2026:** [Không gian học](45-khong-gian-hoc-va-che-do-tap-trung.md) là nhánh tự học sau báo thức hoặc mở độc lập: timer cục bộ, việc học, nhắc khi quay lại, chatbot Socratic theo yêu cầu. Không hứa khóa app khác/camera giám sát. Roster PvP cũ đã hủy; các mô tả nhân vật/HP cũ trong tài liệu giai đoạn sau không còn là quyết định coding.
+
 **Phiên bản tài liệu:** 1.1 · **Ngày:** 11/11/2026 · **Trạng thái:** đặc tả để coding từng lát cắt; tác động sản phẩm/chấm AI/ranked chưa được kiểm chứng với học sinh.
 
 ## 1. Tóm tắt sản phẩm
@@ -43,6 +45,8 @@ Thay thế đồng hồ báo thức hệ thống trên mọi điện thoại; ch
 | M1 — MVP Android | Khách dùng báo thức local; tài khoản khi đồng bộ; lịch học, báo thức thiết bị, câu duyệt, nhập chữ hoặc chụp, chấm/gợi ý, XP/streak riêng tư, offline fallback | Dùng được liên tục 7 ngày trên thiết bị thật; không buộc camera/tài khoản để chuông hoạt động |
 | M2 — pilot | Mở thêm môn **theo từng bộ câu đã duyệt**, thích ứng độ khó có giới hạn, quản lý bộ câu, phản hồi khi AI chấm sai, quản lý đồng ý/xóa dữ liệu | Mỗi môn mở phải có evaluator/fallback an toàn, đạt tiêu chí kiểm thử |
 | M3 — mở rộng | Linh thú, nhóm lớp, dashboard giáo viên/phụ huynh, thi đấu, iOS | Có nhu cầu xác nhận và thiết kế quyền truy cập riêng |
+
+**Không gian học:** ưu tiên làm timer + việc học + kết thúc cục bộ sau báo thức P0; AI chữ, nhấn để nói và camera theo từng cổng riêng ở [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md). Không coi số phút mở app/camera là bằng chứng học thật.
 
 ## 4. User stories MVP và tiêu chí chấp nhận
 

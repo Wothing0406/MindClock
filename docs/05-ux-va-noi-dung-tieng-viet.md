@@ -4,6 +4,8 @@
 
 **Nguồn quy tắc:** [PRD](04-prd-va-dac-ta-san-pham.md). Thiết kế cho học sinh lớp 9, Android trước, `vi-VN`.
 
+**Không gian học:** màn thiết lập/đang học/trợ lý/kết thúc và nhãn khi rời app ở [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md). Màn báo thức không tự mở camera hoặc tự chuyển sang phiên học; người dùng chọn `Bắt đầu học` sau khi tắt chuông.
+
 ## 1. Nguyên tắc giao diện
 
 1. **Vừa thức dậy vẫn dùng được:** một hành động chính mỗi màn, câu hỏi lớn, không ép đọc nhiều chữ.

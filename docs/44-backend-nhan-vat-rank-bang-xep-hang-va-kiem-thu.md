@@ -1,10 +1,14 @@
 # Backend nhân vật, rank, bảng xếp hạng và kiểm thử
 
+> **Cập nhật 12/11/2026:** roster/kit cũ đã hủy. Phần catalog, starter, mua nhân vật và các ví dụ avatar bên dưới là **khung kỹ thuật chưa được phép triển khai** cho tới khi chốt roster/giá/luật mới. `neutral_a`/`neutral_b` trong fixture chỉ là placeholder prototype, không phải nhân vật đã duyệt. `rank_ledger` và nguyên tắc server chốt điểm vẫn giữ.
+>
+> **Tham chiếu triển khai PvP mới:** [docs/46 §6–7](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) cho bảng `armor/ward/qi`, action/settle/event và cổng cân bằng; nếu mở coding phải cập nhật schema/API/test ở file này cùng task. Catalog/giá cũ không còn hiệu lực.
+
 **Trạng thái:** hợp đồng **đề xuất cho giai đoạn M3**, chưa có API/SQL đang chạy. [07](07-hop-dong-api-va-ai.md) là quy ước `/v1`, auth, lỗi, idempotency; [28](28-backend-sql.md) là SQL nền; [35](35-solo-rpg-dong-bo-va-ky-nang.md) là trận; [37](37-kinh-te-rank-va-nhan-vat-2d.md) là RP/coin; [21](21-dau-truong-xep-hang.md) là quyền bảng; [43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md) là UI. Khi coding, khóa schema/payload trong task và contract tests trước khi mobile/backend tích hợp. **Tên ledger canonical:** `rank_ledger`; không tạo thêm `rating_ledger` cho cùng RP/MMR.
 
 ## 1. Quyền và ranh giới dữ liệu
 
-- Khách local được xem bốn nhân vật/khung mẫu, không có ví, sở hữu, RP hay bảng server. Online yêu cầu Firebase ID token đã xác minh; backend lấy `uid` từ token. Client không được gửi số dư, giá, điểm, HP, `isCorrect`, `rank`, owner hoặc eligibility làm sự thật.
+- Khách local được xem ba concept mới có nhãn mô phỏng, không có ví, sở hữu, RP hay bảng server. Online yêu cầu Firebase ID token đã xác minh; backend lấy `uid` từ token. Client không được gửi số dư, giá, điểm, HP, `isCorrect`, `rank`, owner hoặc eligibility làm sự thật.
 - Bảng xếp hạng và ghép người lạ **tắt mặc định**. Tuổi/đồng ý được rà soát trước pilot với người chưa thành niên. `competition_profiles` giữ alias/`avatar_id` allowlist và `visible`; không trả email, trường, lịch, giờ dậy, ảnh bài, tài khoản ID thô.
 - Server là writer duy nhất của ownership, wallet/coin ledger, `rank_profiles`, `rank_ledger`, match result và bảng. PostgreSQL có FK, unique, transaction; app không truy cập DB trực tiếp. Ảnh bài không nằm trong event, bảng hoặc log.
 - Bản client cache bảng có TTL ngắn và `updatedAt`, không được dùng làm nguồn quyết định điểm. Rời bảng phải ẩn khỏi API ngay cả khi worker projection chưa cập nhật; màn client tự bỏ cache cũ khi rời.
@@ -13,7 +17,7 @@
 
 | Bảng | Khóa/field tối thiểu | Bất biến/ghi chú |
 | --- | --- | --- |
-| `character_catalog` | `character_id PK`, `price_coin`, `kit_version`, `asset_version`, `status` | ID trong allowlist 4 nhân vật; giá/version do server quản; không sửa giá cũ của receipt |
+| `character_catalog` | `character_id PK`, `price_coin`, `kit_version`, `asset_version`, `status` | Chỉ tạo khi ba concept mới được duyệt; giá/version do server quản; không sửa giá cũ của receipt |
 | `character_ownership` | PK `(user_id,character_id)`, `source=starter|purchase`, `acquired_at` | mỗi người chọn starter đúng một lần; không xóa sở hữu vì nghỉ/thua |
 | `character_loadout` | PK `user_id`, `equipped_character_id`, `version` | FK ownership; khi match ready, khóa snapshot `character_id+kit_version` |
 | `wallets`, `coin_ledger` | PK user; ledger unique `(user_id,source_type,source_id,rule_version)` | số dư không âm; claim/mua concurrent có một kết quả; ledger bù trừ khi sửa |
@@ -50,7 +54,7 @@ Mọi endpoint dưới đây ngoài catalog công khai nội bộ đều cần b
 
 | Method/path | Request chính | Response/trạng thái | Quyền/lỗi |
 | --- | --- | --- | --- |
-| `GET /game/characters` | không | `catalogVersion`, 4 nhân vật, `priceCoin`, `kitVersion`, `owned`, `equipped` | chỉ trả metadata công khai, không PII |
+| `GET /game/characters` | không | `catalogVersion`, nhân vật đã duyệt, `priceCoin`, `kitVersion`, `owned`, `equipped` | chỉ trả metadata công khai, không PII; endpoint chưa mở |
 | `POST /game/starter-character` | `characterId` | `ownership`, `equippedCharacterId`, `starterClaimed=true` | `STARTER_ALREADY_CLAIMED`, ID không hợp lệ; idempotent |
 | `GET /game/wallet` | không | `balance`, `version`, `updatedAt` | chỉ chủ tài khoản |
 | `POST /game/characters/{id}/purchase` | `catalogVersion` | `receiptId`, `balanceAfter`, `ownership` | `INSUFFICIENT_COIN`, `ALREADY_OWNED`, `CATALOG_CHANGED`; idempotent |
@@ -69,8 +73,8 @@ Ví dụ **response bảng** (dữ liệu minh họa, không là người thật
   "snapshotVersion": 12,
   "updatedAt": "2026-11-12T08:00:00Z",
   "entries": [
-    {"rank": 1, "alias": "Cú Mực", "avatarId": "cu_muc", "rp": 420, "tier": "vang", "division": 1},
-    {"rank": 1, "alias": "Mây Nhỏ", "avatarId": "rong_giay", "rp": 420, "tier": "vang", "division": 1}
+    {"rank": 1, "alias": "Bạn A", "avatarId": "neutral_a", "rp": 420, "tier": "vang", "division": 1},
+    {"rank": 1, "alias": "Bạn B", "avatarId": "neutral_b", "rp": 420, "tier": "vang", "division": 1}
   ],
   "myPosition": null,
   "nextCursor": null
@@ -104,4 +108,4 @@ Test BR02–BR12 chạy trên PostgreSQL với transaction và hai tài khoản;
 
 ## 6. Thứ tự coding và demo đúng khả năng
 
-M3A: catalog + chọn một nhân vật miễn phí + avatar tĩnh → M3B: giao hữu hai máy, hai thẻ chung, 1 vòng thật rồi 3 vòng → M3C: bốn kit, asset/FX tĩnh và giảm chuyển động → M3D: coin ledger/nhiệm vụ/cửa hàng → M3E: playtest cân bằng, bộ bài chấm độc lập, consent/khiếu nại/anti-abuse → M3F: RP/rank/bảng mùa. Mỗi bước có task folder theo [tasks/README](../tasks/README.md), AC ↔ BR test và bàn giao thiết bị/phiên bản. Demo trước M3F dùng bảng có nhãn `Mô phỏng`; không tô khung RP thật lên tài khoản chưa có trận ranked.
+M3A: ba concept/avatar tĩnh theo docs/46, chưa có cửa hàng → M3B: giao hữu hai máy, Đánh thường, 1 round thật → M3C: 6 round, giáp/khí, ba kit, asset/FX tĩnh và giảm chuyển động → M3D: playtest cân bằng, bộ bài chấm độc lập, consent/khiếu nại/anti-abuse → M3E: chỉ khi cần mới chốt coin ledger/nhiệm vụ/cửa hàng → M3F: RP/rank/bảng mùa. Mỗi bước có task folder theo [tasks/README](../tasks/README.md), AC ↔ BR test và bàn giao thiết bị/phiên bản. Demo trước M3F dùng bảng có nhãn `Mô phỏng`; không tô khung RP thật lên tài khoản chưa có trận ranked.

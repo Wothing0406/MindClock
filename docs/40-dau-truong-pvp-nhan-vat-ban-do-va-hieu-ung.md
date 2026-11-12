@@ -2,6 +2,10 @@
 
 **Trạng thái:** thiết kế v3 để playtest, chưa có PvP hoặc asset chạy thật. Đọc cùng [đồng bộ trận](35-solo-rpg-dong-bo-va-ky-nang.md), [kinh tế/rank](37-kinh-te-rank-va-nhan-vat-2d.md), [bài làm có trình bày](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). V3 mở rộng thẻ/kỹ năng của docs/37 §3; thông số cần mô phỏng và thử với người học trước ranked. `combat_rule_version=pvp-writing-v3`.
 
+> **Đóng băng thiết kế cũ:** chủ dự án đã hủy roster và kit nhân vật cũ. Các công thức 60 HP/3 vòng bên dưới chỉ là lịch sử playtest, **không được dùng để code luật PvP mới**. Bản v0.1 mới ở docs/46; vẫn phải playtest trước ranked. Chỉ giữ nguyên tắc chấm công bằng, server quyết định, không phạt sai và hiệu ứng không che bài.
+>
+> **Nguồn mới:** [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) là đặc tả v0.1 cho ba nhân vật, 100 HP/50 giáp, kit, UI, sprite và networking. Nó thay phần combat trong file này; phần dưới chỉ lưu lịch sử v3 để so sánh, không dùng lập task code.
+
 ## 1. Cảm giác trận và giới hạn học tập
 
 Một trận giao hữu có **3 vòng, 60 HP/người**, hai người nhận cùng một câu/vòng và phải giải thích ngắn. Chọn thẻ **trước** khi lộ câu; đúng rõ mới kích hoạt. Hai bên cùng nộp hoặc hết giờ rồi server chấm, chốt hai hành động **đồng thời**, reveal đáp án và hiệu ứng. Màn đề vẫn là phần chính; game diễn ra ở đầu/cuối vòng. Thời lượng thử 90–120 giây/vòng khi phải viết, cần đo thực tế; không lấy tốc độ viết làm thưởng sát thương. Ranked tắt cho đến khi đủ cổng chấm công bằng và cân bằng kit.
@@ -18,12 +22,7 @@ Mỗi người chọn **2 trong 4 thẻ chung** làm loadout trước khi sẵn 
 | `notebook_guard` | Che Vở | 8 sát thương, chặn 12 sát thương nhận vòng này | ít sát thương |
 | `bandage_note` | Dán Bìa | hồi 12 HP, 0 sát thương | không quá 60 HP; không hồi nếu bài sai |
 | `ink_siphon` | Mượn Mực | 12 sát thương; hồi `min(6, floor(sát thương thực gây ra/2))` | bị chặn hết thì không hút được |
-| `owl_ink_charge` | Nạp Mực (Cú Mực) | 12 sát thương, +10 vào **đòn đúng** vòng kế | không cộng dồn; vô hiệu vòng 3 |
-| `fox_feint` | Lách Trang (Cáo Nắng) | 16 sát thương, chặn 6 nếu đối thủ đánh trúng | kém Bút Chớp khi đối thủ không gây đòn |
-| `dragon_fold` | Gấp Khiên (Rồng Giấy) | 5 sát thương, chặn 16 | ít sát thương |
-| `binder_stun` | Kẹp Nhịp (Hiệp Sĩ Bìa Vở) | 10 sát thương, khóa **thẻ riêng** đối thủ vòng kế | 1 lần/trận, không dùng vòng 3, không gây choáng liên tiếp |
-
-**Nhân vật mở đầu:** Cú Mực (cú mèo hay ghi chú), Cáo Nắng (nhanh nhẹn), Rồng Giấy (bình tĩnh) và **Hiệp Sĩ Bìa Vở** (người mặc giáp giấy/vải, không vũ khí sắc). Chọn **một trong bốn miễn phí**; các nhân vật còn lại mở bằng Đồng Mực sau playtest. Người dùng có thể đổi hình thể người/động vật, tên hiển thị và màu phụ kiện mà không ảnh hưởng chỉ số. Tránh diện mạo trường/lớp cụ thể, giới tính ép buộc, ảnh trẻ em thật hoặc meme bản quyền. Một nhân vật mới chỉ vào ranked khi tỷ lệ thắng/độ chọn kỹ năng được xem xét, không tự “mạnh hơn” vì giá coin.
+**Thẻ riêng và nhân vật:** chưa chốt. Không tạo ID/asset/catalog từ bộ cũ. Luật 100 HP/50 giáp, nội tại và chiêu mới phải được mô phỏng và duyệt cùng người học trước ranked. Tránh diện mạo trường/lớp cụ thể, giới tính ép buộc, ảnh trẻ em thật hoặc meme bản quyền.
 
 ## 3. Thứ tự tính và ví dụ để code
 
@@ -53,7 +52,7 @@ Asset gốc: sprite PNG/WebP 2D, atlas theo nhân vật/map; `idle`, `think`, `a
 
 ## 5. Giọng vui “bựa vừa đủ”
 
-Humor nằm ở **đồ dùng học tập và tình huống**, không nhận xét trí thông minh/người thua. Mẫu có thể dùng sau khi đội nội dung duyệt: `Cục tẩy xin đổi ca.`, `Cú Mực vừa nạp... thêm mực, không thêm drama.`, `Kẹp giấy giữ nhịp một vòng.`, `Bài này hơi xoắn. Vở vẫn mở.`, `Rồng Giấy gấp khiên, không gấp bài.` Lời thoại không chen vào lúc người học đang đọc đề; mỗi vòng tối đa một câu, có tắt hài hước. Cấm câu trêu ngủ nướng, “ngu”, “gà”, hạ nhục trường/lớp, đùa về sức khỏe hoặc nội dung người lớn. Không sao chép meme/nhân vật nổi tiếng. UI thao tác dùng lời ngắn: `Chọn thẻ`, `Viết cách làm`, `Nộp bài`, `Đang chấm`, `Xem lời giải`.
+Humor nằm ở **tình huống**, không nhận xét trí thông minh/người thua. Lời thoại mới cần đội nội dung duyệt; không dùng câu thoại từ roster đã hủy. Không chen lời lúc đọc đề; mỗi vòng tối đa một câu, có tắt hài hước. Cấm câu trêu ngủ nướng, “ngu”, “gà”, hạ nhục trường/lớp, đùa về sức khỏe hoặc nội dung người lớn. Không sao chép meme/nhân vật nổi tiếng. UI thao tác dùng lời ngắn: `Chọn thẻ`, `Viết cách làm`, `Nộp bài`, `Đang chấm`, `Xem lời giải`.
 
 ## 6. API/SQL và cổng phát hành
 

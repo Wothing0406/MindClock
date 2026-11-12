@@ -1,5 +1,7 @@
 # Backend SQL — thiết kế khởi đầu
 
+> **PvP v0.1:** các bảng/field `armor`, `ward`, `qi`, `round_actions`, event sequence và rule version ở [docs/46 §6](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) là thiết kế dự kiến, chưa có migration. Không áp schema combat 60 HP/kit cũ khi mở task PvP.
+
 **Quyết định kiến trúc ngày 11/11/2026:** FastAPI tiếp tục là API; **PostgreSQL là nguồn dữ liệu có thẩm quyền** cho phiên, câu hỏi, XP và thi đấu. SQLite chỉ dùng cho demo/local một máy; không dùng SQLite làm server nhiều người thi trực tuyến. Firebase Authentication dùng cho tài khoản online, backend xác minh ID token rồi ánh xạ `uid` sang `users.auth_subject`; khách local không có tài khoản server. Không dùng Firestore cho dữ liệu nghiệp vụ. Đây là thiết kế, **chưa có backend SQL đang chạy**. [Docs/06](06-kien-truc-va-du-lieu.md) nay đã mô tả kiến trúc SQL; hợp đồng HTTP ở [docs/07](07-hop-dong-api-va-ai.md) là nguồn chuẩn giao tiếp.
 
 **Mở rộng sản phẩm:** [docs/32](32-ho-so-hoc-tap-va-nhieu-mon.md) thêm bảng hồ sơ nhiều môn, mục tiêu thi, task/nhắc lịch và gợi ý giờ dậy; [docs/31](31-bao-thuc-thu-thach.md) thêm mode không Hoãn và số lần sai rõ; [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) thêm grading decisions/reviews; [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md) thêm status/FX trận. Cần đưa các bảng/cột này vào migration khi code, không lưu dưới dạng JSON tùy tiện trong `users`.

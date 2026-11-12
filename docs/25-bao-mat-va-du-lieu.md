@@ -1,5 +1,7 @@
 # Chính sách bảo mật và quản trị dữ liệu — bản đặc tả triển khai
 
+> **Không gian học:** xem [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md). Camera/mic tắt mặc định, không lưu hoặc gửi video/frame liên tục, không suy luận mức tập trung từ mặt/người rời khung, không gửi danh sách app đã mở. Sự kiện rời app chỉ nằm cục bộ tạm thời. Nếu thử nghiệm thu thập media sau này, cần mục đích/đồng ý/thời hạn xóa riêng trước khi coding.
+
 > **Nguồn lưu trữ hiện hành:** PostgreSQL cho dữ liệu nghiệp vụ online theo [docs/28](28-backend-sql.md); Firebase Authentication chỉ quản lý danh tính nếu dùng tài khoản online. Khách local không gửi dữ liệu học tập lên server. Quyền kiểm tại FastAPI/DB, không dựa Firestore Rules.
 
 **Trạng thái:** quy tắc kỹ thuật và bản nháp chính sách; chưa phải văn bản pháp lý đã duyệt hay chính sách công bố. Trước pilot với người chưa thành niên, đội phải xác định đơn vị kiểm soát dữ liệu, người liên hệ, nơi lưu và thời hạn theo thị trường áp dụng. Firebase nêu khách hàng thường là bên kiểm soát dữ liệu; Firebase Authentication xử lý tại [trung tâm dữ liệu Hoa Kỳ](https://firebase.google.com/support/privacy/), cần nói rõ khi công bố.

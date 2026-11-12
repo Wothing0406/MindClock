@@ -2,6 +2,8 @@
 
 > **Nguồn hiện hành:** [Báo thức thử thách](31-bao-thuc-thu-thach.md) không có Hoãn và chỉ gợi ý sau lần sai rõ thứ ba; [hồ sơ nhiều môn](32-ho-so-hoc-tap-va-nhieu-mon.md) chọn câu theo lịch/mục tiêu; [nhu cầu học sinh](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md) định nghĩa những đường thoát và thử khả dụng.
 
+> **Cập nhật 12/11/2026:** onboarding không ép chọn nhân vật; ba concept PvP và action UI ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md), chưa có sở hữu/cửa hàng. Demo Android theo [docs/47](47-demo-android-va-moi-truong-kiem-thu.md); iOS để tương lai. Các đoạn cũ về linh thú/mua nhân vật không dùng để coding.
+
 **Cấu trúc điều hướng đề xuất:** 4 tab chính `Hôm nay`, `Luyện tập`, `Đấu trường`, `Tôi`; báo thức là luồng hệ thống đi vào `Hôm nay/Thử thách`. Chỉ hiển thị `Đấu trường` như lời mời khi tính năng đã mở cho cohort; không đặt bảng xếp hạng ngay trên trang báo thức.
 
 ## 1. Người dùng mới
@@ -15,9 +17,8 @@ flowchart TD
   E --> F{Hệ thống cho phép báo thức?}
   F -->|Có| G[Kiểm tra chuông thử và câu dự phòng]
   F -->|Không| H[Giải thích giới hạn, luyện tập thủ công]
-  G --> I[Chọn linh thú hoặc bỏ qua]
-  H --> I
-  I --> J[Trang Hôm nay]
+  G --> J[Trang Hôm nay]
+  H --> J
 ```
 
 Chỉ xin quyền báo thức khi lưu giờ; quyền camera khi chụp lần đầu; quyền tham gia bảng khi người dùng bấm bật. Không ép đăng nhập để chuông cục bộ hoạt động; đồng bộ/đấu trường yêu cầu tài khoản. Trên iOS cũ hơn 26, UI ghi rõ `Nhắc ôn tập` thay vì `Báo thức hệ thống` theo [iOS spec](20-ios-demo-va-phat-hanh.md).
@@ -28,7 +29,7 @@ Chỉ xin quyền báo thức khi lưu giờ; quyền camera khi chụp lần đ
 2. Bắt đầu thử thách: chọn **Nhập đáp án và cách làm** hoặc **Viết tay và chụp**. `Làm sau` chỉ xuất hiện sau khi đã Dừng chuông, không thay chức năng Dừng khẩn cấp. Với môn không phù hợp chụp, chỉ hiện phương thức thích hợp.
 3. Chụp: hướng dẫn đặt giấy trong khung → xem lại → đồng ý gửi ảnh tạm để chấm. Không upload trước khi người dùng xác nhận.
 4. Kết quả: `Đúng` → bước đã nhận, XP nếu hợp lệ; sai rõ lần 1–2 → thử lại không gợi ý; sai rõ từ lần 3 → một gợi ý phương pháp; `Chưa đọc rõ` → chụp lại/nhập tay, không tăng số lần sai. Nút Dừng khẩn cấp vẫn có trên mọi trạng thái chuông.
-5. Sau hoàn thành: tóm tắt chủ đề và lịch học; linh thú chúc mừng nỗ lực; mời ôn thêm, không tự kéo vào trận đấu.
+5. Sau hoàn thành: tóm tắt chủ đề và lịch học; mời ôn thêm hoặc vào Không gian học khi người dùng chọn, không tự kéo vào trận đấu.
 
 ## 3. Từ luyện tập sang đấu trường
 
@@ -57,9 +58,9 @@ flowchart LR
 
 ## 4. Chọn nhân vật và rank
 
-- `Tôi` → `Nhân vật` → xem **bốn** mẫu sprite 2D, chọn **một nhân vật miễn phí** khi tạo tài khoản; nhân vật chưa sở hữu hiện giá **300 Đồng Mực**, nút `Xem thử` và `Mở bằng Đồng Mực` theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Khách local được xem/chọn hình trên máy nhưng chưa có sở hữu/ví server. Có `Đổi sau` và `Tắt linh thú`; chi tiết màn ở [docs/43](43-thiet-ke-nhan-vat-avatar-khung-rank-va-bang.md).
+- `Đấu trường` → `Nhân vật` → xem ba concept Hà Nhân, Tuyệt Đỉnh, Hàn Bối Tháp theo [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md); trong prototype chỉ `Xem chiêu` và nhãn `Thông số đang thử nghiệm`. Chưa có giá/mua/sở hữu. Chỉ khi backend catalog và cân bằng đạt cổng mới mở chọn nhân vật cho trận thật.
 - `Tôi` → `Thành tích` hiển thị **XP và hạng học tập** trước, kèm mốc kế tiếp; **RP đấu trường** nằm thẻ riêng chỉ khi bật tham gia, có nhãn `Đồng 1–5` theo môn/lớp. Tooltip: `XP ghi nhận quá trình học; RP chỉ tính từ trận có hạng; Đồng Mực dùng để mở nhân vật.`
-- Khi đạt mốc XP, thông báo `Bạn đã mở phụ kiện mới` và cho xem sau; không ép mở màn thưởng lúc sáng sớm.
+- Khi đạt mốc XP, chỉ hiện tiến độ thật đã được server chốt; phụ kiện chưa triển khai không được thông báo đã mở. Không ép mở màn thưởng lúc sáng sớm.
 - `Cài đặt` → `Riêng tư & thi đấu` → bật/tắt hiện trên bảng, đổi biệt danh, rời nhóm, yêu cầu xóa dữ liệu. Tắt tham gia không tắt báo thức/học tập.
 
 ## 5. Bảng trạng thái cần UI chuẩn bị
