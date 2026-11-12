@@ -6,7 +6,10 @@ const Renderer=window.ArenaRenderer;
 assert.equal(Renderer.facingFlip("ha-nhan","left"),false);
 assert.equal(Renderer.facingFlip("ha-nhan","right"),true);
 assert.equal(Renderer.facingFlip("tuyet-dinh","left"),true);
-assert.equal(Renderer.facingFlip("han-boi-phap","right"),false);
+assert.equal(Renderer.facingFlip("tuyet-dinh","right"),false);
+assert.equal(Renderer.facingFlip("han-boi-phap","left"),false);
+assert.equal(Renderer.facingFlip("han-boi-phap","right"),true);
+assert.throws(()=>Renderer.facingFlip("unknown","left"));
 function calls(side,time){
   const list=[];
   const fake={draw:(...args)=>list.push(args),ctx:{fillText(){},save(){},restore(){}}};

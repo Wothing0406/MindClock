@@ -27,4 +27,10 @@
 
 ## Quyết định
 
+**Bổ sung 13/11/2026 — lỗi hướng nhìn:** hai ảnh người dùng cho thấy Hàn Bối Pháp đang quay ra ngoài ở slot trái, trong khi Hà Nhân/Tuyệt Đỉnh đúng. Native facing của Han đã được gán nhầm `left`; phải là `right`. Chỉ đổi metadata/lật sprite của Han, giữ anchor/kích thước/đòn và hai tướng còn lại.
+
+| ID | Điều kiện | Hành vi | Test |
+| --- | --- | --- | --- |
+| AC-09 | Hàn Bối Pháp ở trái hoặc phải | mặt/hướng hành động quay về đối thủ ở cả hai slot; không lật số, map hoặc FX; mọi action cùng quy tắc | TC-09 |
+
 Không thể tạo clip image-to-video thật trong môi trường này (T008 doctor no-route). Sprite nhiều frame hiện là sequence art, cần artist review. Không mô tả nó là motion chuẩn phát hành. Dùng portrait battle plate được crop vào logical stage 360×380 với hai actor đối xứng và anchor theo metadata; sprite vẽ 240×240 nên hình alpha cao khoảng 188 px. Độ lớn được chuẩn hóa theo chiều cao alpha của frame đầu khi build, không theo kích thước PNG nguồn. Tên Hàn Bối Pháp là display name, ID giữ `han_boi_thap` tới khi chốt catalog.

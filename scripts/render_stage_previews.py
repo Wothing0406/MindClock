@@ -5,6 +5,7 @@ from PIL import Image, ImageEnhance
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "demo/assets/game"
 OUT = ROOT / "tasks/T009-arena-doc-va-asset"
+NATIVE_FACING = {"ha-nhan": "right", "han-boi-phap": "right", "tuyet-dinh": "left"}
 source = Image.open(ART / "maps/study-courtyard.webp").convert("RGBA")
 w, h = source.size
 crop_h = round(w * 380 / 360)
@@ -13,7 +14,7 @@ background = ImageEnhance.Brightness(source.crop((0, top, w, top + crop_h)).resi
 
 def sprite(slug: str, side: str) -> Image.Image:
     picture = Image.open(ART / "characters" / slug / "runtime/idle.webp").convert("RGBA")
-    native = "right" if slug == "ha-nhan" else "left"
+    native = NATIVE_FACING[slug]
     wanted = "right" if side == "left" else "left"
     if native != wanted:
         picture = picture.transpose(Image.Transpose.FLIP_LEFT_RIGHT)

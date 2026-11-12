@@ -8,6 +8,7 @@
 | 4 | Sửa web portrait, projectile/target FX, thẻ nhân vật/đề/nút/mute | thao tác mobile đọc rõ; logic số không sai | [x] (tĩnh/logic, chờ máy thật) |
 | 5 | README, docs cấu trúc/asset/runtime và docs nguồn chuẩn | không mô tả mock là đã chạy thật | [x] |
 | 6 | QA: logic, media, orientation/size, audio, responsive, diff, push | kết quả thực và remote commit xác minh | [ ] (chờ push, kiểm trình duyệt thật) |
+| 7 | Sửa riêng facing Hàn Bối Pháp theo phản hồi 13/11; đồng bộ renderer/manifest/builder/preview/docs và push | AC-09/TC-09 đạt | [x] (tĩnh/logic; chờ Android thật) |
 
 ## Rủi ro
 

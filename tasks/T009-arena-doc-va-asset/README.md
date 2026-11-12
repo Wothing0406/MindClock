@@ -6,7 +6,7 @@
 - **Chủ sở hữu/reviewer:** Codex / chủ dự án.
 - **Source refs:** `docs/README.md` §Solo, `docs/43` khung rank, `docs/46` luật/asset, `docs/49` prototype, `tasks/T008-*/handoff.md`, `AGENTS.md`, `tasks/README.md`, `demo/arena.*`. Skills: `generate2dsprite`, `video2dsprite`, `generate2dmap`, `game-art`.
 - **Phạm vi:** `demo/`, `scripts/`, `docs/`, `README.md`, task này.
-- **Điểm tiếp tục:** theo `handoff.md`: kiểm Chrome Android 320/360/390 dp, từng chiêu/âm/avatar; ghi TC-01–05 rồi mới đổi `done`.
+- **Điểm tiếp tục:** kiểm Chrome Android thật hai slot của Hàn Bối Pháp, các action và màn 320/360/390 dp; ghi kết quả TC-01–05 và TC-09 trước khi đánh dấu `done`.
 
 ## Cổng trước coding
 

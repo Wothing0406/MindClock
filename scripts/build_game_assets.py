@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1] / "demo" / "assets" / "game"
 SLUGS = ("ha-nhan", "han-boi-phap", "tuyet-dinh")
+NATIVE_FACING = {"ha-nhan": "right", "han-boi-phap": "right", "tuyet-dinh": "left"}
 ACTIONS = ("basic", "skill1", "skill2", "victory")
 STATES = ("hurt", "stun", "heal")
 POSES = ("idle", "basic", "skill1", "skill2", "hurt", "stun")
@@ -108,7 +109,7 @@ def build_character(slug: str) -> dict:
     master = Image.open(source / "master.png").convert("RGBA")
     idle = register([master])[0]
     idle.save(runtime / "idle.webp", "WEBP", quality=86, method=3)
-    result = {"idle": "idle.webp", "actions": {}, "native_facing": "right" if slug == "ha-nhan" else "left", "display_height_px": 400}
+    result = {"idle": "idle.webp", "actions": {}, "native_facing": NATIVE_FACING[slug], "display_height_px": 400}
     for action in ACTIONS:
         frames = register([matte(t) for t in tiles(Image.open(source / f"{action}.png").convert("RGBA"))])
         result["actions"][action] = save_animation(

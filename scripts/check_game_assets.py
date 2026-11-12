@@ -16,7 +16,7 @@ manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
 assert manifest["logical_stage_px"] == [360, 380]
 assert manifest["display_actor_size_px"] == [240, 240]
 assert manifest["actor_root_px"] == {"left": [92, 350], "right": [268, 350]}
-for slug, facing in (("ha-nhan", "right"), ("han-boi-phap", "left"), ("tuyet-dinh", "left")):
+for slug, facing in (("ha-nhan", "right"), ("han-boi-phap", "right"), ("tuyet-dinh", "left")):
     folder = ROOT / "characters" / slug
     assert manifest["characters"][slug]["native_facing"] == facing
     idle = Image.open(folder / "runtime/idle.webp").convert("RGBA")

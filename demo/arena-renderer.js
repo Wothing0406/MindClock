@@ -2,7 +2,8 @@
 // Visual research demo. The backend must own combat results in a real match.
 window.ArenaRenderer = class ArenaRenderer {
   static facingFlip(slug, side) {
-    const nativeFacing = slug === "ha-nhan" ? "right" : "left";
+    const nativeFacing = {"ha-nhan":"right","han-boi-phap":"right","tuyet-dinh":"left"}[slug];
+    if (!nativeFacing || !["left","right"].includes(side)) throw new Error("Unknown actor facing");
     return (side === "left" && nativeFacing === "left") || (side === "right" && nativeFacing === "right");
   }
   constructor(canvas) {
