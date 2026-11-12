@@ -6,4 +6,4 @@
 - **Chưa chạy:** file picker/hiển thị badge trên Chrome Android; backend ảnh/mức quyền/moderation chưa có nên TC-03–05 là đặc tả cần task coding riêng. Không gọi bản preview là upload thật.
 - **Rủi ro:** chính sách trẻ em/ngưỡng tuổi và quy trình vận hành cần duyệt trước pilot; ảnh của người dùng có thể cần người duyệt và object storage, không bật công khai nếu chưa có năng lực. Badge RP chỉ được server cấp sau cổng ranked.
 - **Điểm tiếp tục:** xem `docs/52–53` trước task backend; tạo task riêng cho `GET/PATCH /v1/me`, avatar upload pending/duyệt/xóa và test A/B/cache; trên Android mở demo T009, chọn ảnh PNG/JPEG/WebP hợp lệ/sai, đổi avatar, xem badge ở profile và thẻ kết thúc, ghi kết quả TC-01–02 tại `tests.md`. Chỉ đổi `done` khi phần được yêu cầu chạy thật đạt.
-- **Push GitHub:** chờ commit/remote SHA ở cuối lượt này.
+- **Push GitHub:** commit asset/docs `1aa6af70f20496ff41f7c6b36c57b15e283fecbc` đã có trên `origin/main`; GitHub API xác nhận cùng SHA. Bản ghi bàn giao cuối được đẩy ở commit tiếp theo.

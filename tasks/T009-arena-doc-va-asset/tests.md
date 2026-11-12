@@ -9,7 +9,7 @@
 | TC-05 | AC-05 | xem mọi tướng, khóa thiếu khí | mô tả đầy đủ, tiếng Việt rõ | DOM/JS | Đạt kiểm ID/field và JS syntax; cần thao tác tay trên Android |
 | TC-06 | AC-06 | kiểm map/avatar/rank/folder/manifest | file tồn tại/ảnh đọc được/size đúng | Python asset QA | Đạt `python scripts/check_game_assets.py`, 12/11/2026 Windows; rebuild lại source/scripts thành công |
 | TC-07 | AC-07 | rà README/docs và link | trạng thái thật/đường dẫn đúng | docs audit | Đạt `python scripts/check_docs_links.py`: 55 file, README đầy đủ các trục; không gọi mock là live |
-| TC-08 | AC-08 | task gate/diff/git push | commit+remote SHA đúng, không lộ ảnh gốc | checker/git | `check_task_records.py`, `git diff --check` đạt; push chờ bước cuối |
+| TC-08 | AC-08 | task gate/diff/git push | commit+remote SHA đúng, không lộ ảnh gốc | checker/git | Đạt: commit asset/docs `1aa6af70f20496ff41f7c6b36c57b15e283fecbc` trên `origin/main`, GitHub API xác nhận cùng SHA; ảnh gốc không nằm trong repo. Handoff bổ sung được đẩy ở commit kế tiếp |
 
 Không coi web demo là test PvP online/Android/iOS.
 

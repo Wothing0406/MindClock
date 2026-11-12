@@ -19,4 +19,4 @@
 - [x] AC/test tự động đạt; giới hạn browser/Android ghi rõ.
 - [x] Docs chuẩn và README cập nhật.
 - [x] Handoff nêu điểm tiếp tục.
-- [ ] GitHub push được xác minh.
+- [x] GitHub push được xác minh (feature commit `1aa6af7`, handoff tiếp theo đang cập nhật).

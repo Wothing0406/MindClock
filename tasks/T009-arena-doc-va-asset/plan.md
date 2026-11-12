@@ -11,4 +11,4 @@
 
 ## Rủi ro
 
-Nhiều asset có thể làm repo lớn, tải chậm trên điện thoại; phải nén và đo. Ảnh nguồn chưa rõ quyền; không public nếu chưa có quyết định an toàn. CUA browser local từng bị chặn, dùng kiểm tra cục bộ không phụ thuộc UI và ghi rõ nếu còn thiếu visual QA.
+Nhiều asset có thể làm repo lớn, tải chậm trên điện thoại; phải nén và đo. Chủ dự án đã xác nhận quyền đăng GitHub; quyền thương mại vẫn cần rà khi phát hành app. CUA browser local từng bị chặn, dùng kiểm tra cục bộ không phụ thuộc UI và ghi rõ nếu còn thiếu visual QA.

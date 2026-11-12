@@ -7,4 +7,4 @@
 - **Chưa chạy:** Chrome/Android thật ở 320/360/390 dp; nghe âm/kiểm file picker, thao tác từng nút, animation lặp; công cụ browser trong phiên không mở được `localhost`/`file:`. Không có APK hoặc PvP server để test.
 - **Rủi ro:** frame sequence còn sai khác chi tiết giữa frame; Hà Nhân thắng chuyển động nhẹ, renderer thêm nhịp nhấc; họa sĩ phải duyệt trước phát hành. Chủ dự án xác nhận quyền đăng GitHub, quyền thương mại cần rà riêng. Số combat chưa playtest.
 - **Điểm tiếp tục:** trên điện thoại Android cùng Wi-Fi mở `http://<IP-máy-tính>:8000/demo/arena.html` sau `python -m http.server 8000`; với từng tướng làm câu mẫu/đánh thường/2 chiêu, kiểm projectile chạm bên kia, passive, choáng/hồi/thắng, âm/mute/skip và không tràn ở 320/360/390 dp. Ghi kết quả TC-01–05 tại `tests.md`; chỉ đổi `done` khi đạt. Nếu sửa luật, cập nhật docs/46 và test cùng task mới.
-- **Push GitHub:** chờ commit/remote SHA ở cuối lượt này.
+- **Push GitHub:** commit asset/docs `1aa6af70f20496ff41f7c6b36c57b15e283fecbc` đã có trên `origin/main`; GitHub API xác nhận cùng SHA. Bản ghi bàn giao cuối được đẩy ở commit tiếp theo.

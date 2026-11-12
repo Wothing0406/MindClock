@@ -32,11 +32,21 @@ window.ArenaRenderer = class ArenaRenderer {
   }
   draw(path, x, y, w, h, flip = false, alpha = 1) {
     const img = this.preload(path);
-    if (!img.complete || !img.naturalWidth) return;
+    if (!img.complete || !img.naturalWidth) {
+      if (path.includes("/runtime/")) this.drawFallbackActor(x, y, w, h);
+      return;
+    }
     const c = this.ctx;
     c.save(); c.globalAlpha = alpha;
     if (flip) { c.translate(x + w, y); c.scale(-1, 1); c.drawImage(img, 0, 0, w, h); }
     else c.drawImage(img, x, y, w, h);
+    c.restore();
+  }
+  drawFallbackActor(x, y, w, h) {
+    const c = this.ctx;
+    c.save(); c.fillStyle = "#334c51"; c.strokeStyle = "#e3d5b7"; c.lineWidth = 3;
+    c.beginPath(); c.arc(x + w * .5, y + h * .34, w * .12, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(x + w * .39, y + h * .44); c.lineTo(x + w * .31, y + h * .86); c.lineTo(x + w * .69, y + h * .86); c.lineTo(x + w * .61, y + h * .44); c.closePath(); c.fill(); c.stroke();
     c.restore();
   }
   setCharacters(left, right) {

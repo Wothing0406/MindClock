@@ -33,7 +33,7 @@ MindClock/
 └─ scripts/                  dựng/check asset, chưa phải build app
 ```
 
-Không đưa file ảnh tham chiếu gốc của người dùng vào repo. `source/` là art phái sinh phục vụ nghiên cứu; trước phát hành/public repo cần duyệt quyền hoặc thay bằng thiết kế gốc được phép. Bộ câu hỏi ngoài chỉ được ghi metadata nguồn theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md).
+Không đưa file ảnh tham chiếu gốc của người dùng vào repo. `source/` là art phái sinh phục vụ nghiên cứu. Chủ dự án đã xác nhận quyền đăng công khai sprite trong repo ngày 12/11/2026; quyền thương mại/nhận diện cần rà trước phát hành ứng dụng. Bộ câu hỏi ngoài chỉ được ghi metadata nguồn theo [docs/38](38-nguon-du-lieu-va-duong-nhap-cau-hoi.md).
 
 ## 2. Hợp đồng sprite và VFX
 
@@ -68,4 +68,4 @@ python -m http.server 8000
 
 ## 5. Quy trình đội và nguồn quyền
 
-Mỗi lần code: mở [docs/README](README.md) và [tasks/README](../tasks/README.md), tạo task từ template, viết AC ↔ test, rồi sửa theo lát cắt. Trước khi merge/push, rà `git diff`, link docs, test asset, test luật và xem trên thiết bị thật. Ghi kết quả thực vào `tests.md`, `worklog.md`, `handoff.md`. Không gọi một storyboard hay clip frame sequence là app đã chạy. Asset tham chiếu chưa xác minh quyền chỉ lưu trong môi trường nghiên cứu; bản public phải dùng art được duyệt quyền và có provenance từng file.
+Mỗi lần code: mở [docs/README](README.md) và [tasks/README](../tasks/README.md), tạo task từ template, viết AC ↔ test, rồi sửa theo lát cắt. Trước khi merge/push, rà `git diff`, link docs, test asset, test luật và xem trên thiết bị thật. Ghi kết quả thực vào `tests.md`, `worklog.md`, `handoff.md`. Không gọi một storyboard hay clip frame sequence là app đã chạy. Quyền đăng repo đã được chủ dự án xác nhận; khi phát hành app phải duyệt quyền thương mại và provenance từng file.
