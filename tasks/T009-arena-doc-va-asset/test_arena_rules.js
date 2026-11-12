@@ -1,0 +1,15 @@
+"use strict";
+const assert = require("node:assert/strict");
+const {applyDamage,clamp} = require("../../demo/arena-rules.js");
+const fresh = () => ({hp:100,armor:50,ward:0,broken:false});
+let x=fresh(); x.ward=12;
+assert.deepEqual(applyDamage(x,28,"ha_nhan"),{w:12,a:16,h:0});
+assert.deepEqual([x.hp,x.armor,x.ward],[100,34,0]);
+x=fresh(); assert.deepEqual(applyDamage(x,75,"ha_nhan"),{w:0,a:50,h:25});
+assert.deepEqual([x.hp,x.armor],[75,0]);
+x=fresh(); assert.deepEqual(applyDamage(x,165,"ha_nhan"),{w:0,a:50,h:100});
+assert.equal(x.hp,0); assert.equal(x.armor,0);
+x=fresh(); applyDamage(x,50,"han_boi_thap"); assert.equal(x.broken,true);
+assert.equal(clamp(58,0,50),50);
+assert.throws(()=>applyDamage(fresh(),-1,"ha_nhan"));
+console.log("PASS damage order, caps and guardian break trigger");

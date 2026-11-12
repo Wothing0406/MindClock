@@ -1,0 +1,608 @@
+{
+  "schema": "mindclock.game-assets.v1",
+  "status": "research_demo_only",
+  "art_source": "host_image",
+  "reference_rights": "owner confirmed public GitHub publication on 2026-11-12; commercial rights not assessed; originals absent",
+  "logical_stage_px": [
+    360,
+    380
+  ],
+  "actor_root_px": {
+    "left": [
+      92,
+      350
+    ],
+    "right": [
+      268,
+      350
+    ]
+  },
+  "display_actor_size_px": [
+    240,
+    240
+  ],
+  "map": "maps/study-courtyard.webp",
+  "characters": {
+    "ha-nhan": {
+      "idle": "idle.webp",
+      "actions": {
+        "basic": {
+          "clip": "basic.webp",
+          "frames": [
+            "frames/basic/f00.webp",
+            "frames/basic/f01.webp",
+            "frames/basic/f02.webp",
+            "frames/basic/f03.webp",
+            "frames/basic/f04.webp",
+            "frames/basic/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill1": {
+          "clip": "skill1.webp",
+          "frames": [
+            "frames/skill1/f00.webp",
+            "frames/skill1/f01.webp",
+            "frames/skill1/f02.webp",
+            "frames/skill1/f03.webp",
+            "frames/skill1/f04.webp",
+            "frames/skill1/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill2": {
+          "clip": "skill2.webp",
+          "frames": [
+            "frames/skill2/f00.webp",
+            "frames/skill2/f01.webp",
+            "frames/skill2/f02.webp",
+            "frames/skill2/f03.webp",
+            "frames/skill2/f04.webp",
+            "frames/skill2/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "victory": {
+          "clip": "victory.webp",
+          "frames": [
+            "frames/victory/f00.webp",
+            "frames/victory/f01.webp",
+            "frames/victory/f02.webp",
+            "frames/victory/f03.webp",
+            "frames/victory/f04.webp",
+            "frames/victory/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "hurt": {
+          "clip": "hurt.webp",
+          "frames": [
+            "frames/hurt/f00.webp",
+            "frames/hurt/f01.webp",
+            "frames/hurt/f02.webp",
+            "frames/hurt/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "stun": {
+          "clip": "stun.webp",
+          "frames": [
+            "frames/stun/f00.webp",
+            "frames/stun/f01.webp",
+            "frames/stun/f02.webp",
+            "frames/stun/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "heal": {
+          "clip": "heal.webp",
+          "frames": [
+            "frames/heal/f00.webp",
+            "frames/heal/f01.webp",
+            "frames/heal/f02.webp",
+            "frames/heal/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        }
+      },
+      "native_facing": "right",
+      "display_height_px": 400
+    },
+    "han-boi-phap": {
+      "idle": "idle.webp",
+      "actions": {
+        "basic": {
+          "clip": "basic.webp",
+          "frames": [
+            "frames/basic/f00.webp",
+            "frames/basic/f01.webp",
+            "frames/basic/f02.webp",
+            "frames/basic/f03.webp",
+            "frames/basic/f04.webp",
+            "frames/basic/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill1": {
+          "clip": "skill1.webp",
+          "frames": [
+            "frames/skill1/f00.webp",
+            "frames/skill1/f01.webp",
+            "frames/skill1/f02.webp",
+            "frames/skill1/f03.webp",
+            "frames/skill1/f04.webp",
+            "frames/skill1/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill2": {
+          "clip": "skill2.webp",
+          "frames": [
+            "frames/skill2/f00.webp",
+            "frames/skill2/f01.webp",
+            "frames/skill2/f02.webp",
+            "frames/skill2/f03.webp",
+            "frames/skill2/f04.webp",
+            "frames/skill2/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "victory": {
+          "clip": "victory.webp",
+          "frames": [
+            "frames/victory/f00.webp",
+            "frames/victory/f01.webp",
+            "frames/victory/f02.webp",
+            "frames/victory/f03.webp",
+            "frames/victory/f04.webp",
+            "frames/victory/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "hurt": {
+          "clip": "hurt.webp",
+          "frames": [
+            "frames/hurt/f00.webp",
+            "frames/hurt/f01.webp",
+            "frames/hurt/f02.webp",
+            "frames/hurt/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "stun": {
+          "clip": "stun.webp",
+          "frames": [
+            "frames/stun/f00.webp",
+            "frames/stun/f01.webp",
+            "frames/stun/f02.webp",
+            "frames/stun/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "heal": {
+          "clip": "heal.webp",
+          "frames": [
+            "frames/heal/f00.webp",
+            "frames/heal/f01.webp",
+            "frames/heal/f02.webp",
+            "frames/heal/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        }
+      },
+      "native_facing": "left",
+      "display_height_px": 400
+    },
+    "tuyet-dinh": {
+      "idle": "idle.webp",
+      "actions": {
+        "basic": {
+          "clip": "basic.webp",
+          "frames": [
+            "frames/basic/f00.webp",
+            "frames/basic/f01.webp",
+            "frames/basic/f02.webp",
+            "frames/basic/f03.webp",
+            "frames/basic/f04.webp",
+            "frames/basic/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill1": {
+          "clip": "skill1.webp",
+          "frames": [
+            "frames/skill1/f00.webp",
+            "frames/skill1/f01.webp",
+            "frames/skill1/f02.webp",
+            "frames/skill1/f03.webp",
+            "frames/skill1/f04.webp",
+            "frames/skill1/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "skill2": {
+          "clip": "skill2.webp",
+          "frames": [
+            "frames/skill2/f00.webp",
+            "frames/skill2/f01.webp",
+            "frames/skill2/f02.webp",
+            "frames/skill2/f03.webp",
+            "frames/skill2/f04.webp",
+            "frames/skill2/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "victory": {
+          "clip": "victory.webp",
+          "frames": [
+            "frames/victory/f00.webp",
+            "frames/victory/f01.webp",
+            "frames/victory/f02.webp",
+            "frames/victory/f03.webp",
+            "frames/victory/f04.webp",
+            "frames/victory/f05.webp"
+          ],
+          "durations_ms": [
+            125,
+            95,
+            95,
+            145,
+            115,
+            165
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "hurt": {
+          "clip": "hurt.webp",
+          "frames": [
+            "frames/hurt/f00.webp",
+            "frames/hurt/f01.webp",
+            "frames/hurt/f02.webp",
+            "frames/hurt/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "stun": {
+          "clip": "stun.webp",
+          "frames": [
+            "frames/stun/f00.webp",
+            "frames/stun/f01.webp",
+            "frames/stun/f02.webp",
+            "frames/stun/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        },
+        "heal": {
+          "clip": "heal.webp",
+          "frames": [
+            "frames/heal/f00.webp",
+            "frames/heal/f01.webp",
+            "frames/heal/f02.webp",
+            "frames/heal/f03.webp"
+          ],
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140
+          ],
+          "root_px": [
+            256,
+            478
+          ],
+          "canvas_px": [
+            512,
+            512
+          ]
+        }
+      },
+      "native_facing": "left",
+      "display_height_px": 400
+    }
+  },
+  "effects": {
+    "impact": "effects/runtime/impact.svg",
+    "healing": "effects/runtime/healing.svg",
+    "stun": "effects/runtime/stun.svg"
+  },
+  "avatars": [
+    "ui/avatars/cao-giay.webp",
+    "ui/avatars/cu-meo.webp",
+    "ui/avatars/rua-xanh.webp",
+    "ui/avatars/tho-so.webp",
+    "ui/avatars/may-nho.webp",
+    "ui/avatars/ca-chep.webp"
+  ],
+  "rank_frames": [
+    "ui/rank/dong.svg",
+    "ui/rank/bac.svg",
+    "ui/rank/vang.svg",
+    "ui/rank/bach-kim.svg",
+    "ui/rank/kim-cuong.svg",
+    "ui/rank/tinh-anh.svg"
+  ],
+  "rank_badges": [
+    "ui/rank/badges/dong.svg",
+    "ui/rank/badges/bac.svg",
+    "ui/rank/badges/vang.svg",
+    "ui/rank/badges/bach-kim.svg",
+    "ui/rank/badges/kim-cuong.svg",
+    "ui/rank/badges/tinh-anh.svg"
+  ]
+}

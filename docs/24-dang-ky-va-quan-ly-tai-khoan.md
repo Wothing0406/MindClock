@@ -19,7 +19,8 @@
 ## 2. Ràng buộc đầu vào và tài khoản
 
 - Email chuẩn hóa chữ thường cho tra cứu, không hiện trên leaderboard. Mật khẩu không lưu trong PostgreSQL/backend/log; Firebase Auth quản lý. Quy tắc độ dài và chống mật khẩu yếu phải dùng chính sách của Auth tại thời điểm coding, không tự cắt hoặc log chuỗi nhập.
-- Biệt danh 3–20 ký tự, chỉ ký tự chữ/số/khoảng trắng đơn giản; lọc tên xúc phạm, thông tin liên hệ và tên thật tự nhận diện; cho sửa và có nút báo cáo. Không lấy biệt danh từ email.
+- Biệt danh 3–20 ký tự hiển thị, chữ/số tiếng Việt, khoảng trắng và `-`/`_` đơn giản theo docs/53; lọc tên xúc phạm, thông tin liên hệ và mạo danh; cho sửa và có nút báo cáo. Không lấy biệt danh từ email.
+- Quy tắc chi tiết về Unicode, ký tự được phép, tên nhóm/ảnh và quyền kháng nghị ở [docs/53](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md). Avatar mặc định hoặc upload/duyệt, hồ sơ và lịch sử ở [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md); không buộc upload ảnh thật.
 - Khối chỉ dùng để chọn nội dung/ghép trận; không công khai trường/lớp cụ thể. Chỉ một tài khoản thi đấu đang hoạt động trên một thiết bị tại một thời điểm là quy tắc chống lạm dụng đề xuất, cần test trải nghiệm đổi máy.
 - Xác minh email trước leaderboard; giới hạn đăng ký từ cùng thiết bị/IP bằng dịch vụ và backend, không chặn hàng loạt học sinh dùng chung Wi-Fi trường.
 - Trẻ chưa đủ điều kiện đồng ý: chỉ dùng chế độ cục bộ/riêng tư. Ngưỡng tuổi, người đồng ý và văn bản cần chuyên gia rà soát trước pilot; app không suy diễn pháp lý từ khối lớp.

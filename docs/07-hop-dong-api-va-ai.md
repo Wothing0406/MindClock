@@ -6,7 +6,9 @@
 
 > **PvP v0.1 mới:** [docs/46 §6](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) thay action/event/payload HP của bản 60 HP cũ; docs/46 là **dự kiến**, chưa có endpoint chạy. Trước code phải chốt schema/contract test hai máy và quyền participant.
 
-> **Hợp đồng bài có trình bày:** `answer_value` + `reasoning_text|handwritten`, ba kết quả và policy chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). PvP heal/hút/choáng ở [docs/40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Endpoint gợi ý giờ dậy chỉ preview theo [docs/32 §5–6](32-ho-so-hoc-tap-va-nhieu-mon.md); không tự tạo alarm. Đây là phần mở rộng chưa triển khai; khi code phải đổi payload/contract tests của `/answers`, `/attempts`, match submission cùng lúc.
+> **Hợp đồng bài có trình bày:** `answer_value` + `reasoning_text|handwritten`, ba kết quả và policy chấm theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Luật PvP hiện hành ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md); bản docs/40 đã lưu trữ. Endpoint gợi ý giờ dậy chỉ preview theo [docs/32 §5–6](32-ho-so-hoc-tap-va-nhieu-mon.md); không tự tạo alarm. Đây là phần mở rộng chưa triển khai; khi code phải đổi payload/contract tests của `/answers`, `/attempts`, match submission cùng lúc.
+
+> **Hồ sơ/ảnh người dùng giai đoạn sau:** [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md) mở rộng `GET/PATCH /v1/me`, lịch sử riêng, ảnh avatar và public projection; [docs/53](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md) là quy tắc nội dung. Chưa có endpoint đang chạy. Khi coding, dùng cùng auth/owner/version/idempotency và contract tests; không tạo API hồ sơ song song.
 
 **Base path:** `/v1` · **Transport:** HTTPS + JSON UTF-8, riêng ảnh dùng `multipart/form-data` · **Auth:** `Authorization: Bearer <Firebase ID token>` cho mọi endpoint trừ `/health`. Backend xác minh token, lấy `uid` từ token. Mọi thời điểm API trả ISO 8601 UTC; `localDate` theo múi giờ IANA của người dùng.
 
@@ -27,7 +29,7 @@
 | --- | --- | --- | --- |
 | `GET /health` | Không auth | `status`, `version` | Không lộ cấu hình |
 | `GET /me` | Token | Hồ sơ và cài đặt | Tự tạo hồ sơ tối thiểu nếu chưa có; không áp dụng khách local |
-| `PATCH /me` | `displayName`, `gradeBand`, `timeZone`, `locale` | Hồ sơ mới | Không nhận field quyền/XP; email/mật khẩu qua Firebase SDK |
+| `PATCH /me` | `alias`, `gradeBand`, `timeZone`, `locale`, avatar/frame/cờ hồ sơ khi feature mở, `profileVersion` | Hồ sơ mới | Alias/ảnh theo docs/52–53; 409 version cũ; không nhận field quyền/XP; email/mật khẩu qua Firebase SDK |
 | `DELETE /me` | Token + xác thực lại trong app + `Idempotency-Key` | `202 {deletionRequestId,status}` | Thu hồi quyền/ẩn bảng ngay, xóa bất đồng bộ; không trả `đã xóa` trước khi hoàn tất |
 | `GET /me/delete-status` | Token hoặc deletion token giới hạn theo flow | `status`, `updatedAt` | `pending|processing|completed|failed`; không lộ dữ liệu sau thu hồi |
 | `POST /me/export` | Token + `Idempotency-Key` | `202 {exportId,status}` | Tạo bản xuất có TTL; không gửi link qua bảng/log |

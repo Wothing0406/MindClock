@@ -1,0 +1,11 @@
+"use strict";
+const assert=require("node:assert/strict");
+const {validateAvatarFile,validateAvatarDimensions}=require("../../demo/profile-rules.js");
+assert.equal(validateAvatarFile({type:"image/png",size:1024}),null);
+assert.equal(validateAvatarFile({type:"image/jpeg",size:2*1024*1024}),null);
+assert.match(validateAvatarFile({type:"text/html",size:100}),/PNG/);
+assert.match(validateAvatarFile({type:"image/webp",size:2*1024*1024+1}),/2 MB/);
+assert.equal(validateAvatarDimensions(256,256),true);
+assert.equal(validateAvatarDimensions(63,256),false);
+assert.equal(validateAvatarDimensions(4097,256),false);
+console.log("PASS local avatar MIME, size and dimension gates");

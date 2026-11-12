@@ -1,6 +1,6 @@
 # Đấu trường và bảng xếp hạng — phạm vi sản phẩm
 
-**Trạng thái:** giai đoạn sau MVP; chưa có trận online/rank đang chạy. Luật trận, HP, kỹ năng và đồng bộ hiện hành ở [35](35-solo-rpg-dong-bo-va-ky-nang.md), kinh tế/RP ở [37](37-kinh-te-rank-va-nhan-vat-2d.md), bài có trình bày ở [39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md), nhân vật/FX ở [40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). Tài liệu này chốt hành trình xã hội, bảng và quyền hiển thị. [Docs/33](33-dau-truong-solo-ranked-gdd.md) là luật cũ lưu trữ, không dùng để coding.
+**Trạng thái:** giai đoạn sau MVP; chưa có trận online/rank đang chạy. [Docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md) là nguồn hiện hành cho luật trận/HP/kỹ năng; [docs/35](35-solo-rpg-dong-bo-va-ky-nang.md) giữ nguyên tắc ghép/cùng nội dung, [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md) là RP, [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md) là bài có trình bày. Hồ sơ/lịch sử ở [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md). File này chốt hành trình xã hội và bảng. Docs/33, 40 là phương án cũ lưu trữ, không dùng số/kit để coding.
 
 ## 1. Học sinh tự chọn tham gia
 

@@ -1,6 +1,6 @@
 # Solo RPG mới — ba nhân vật, giao diện, tài sản và đồng bộ
 
-**Trạng thái:** đặc tả v0.1 để prototype và playtest, **chưa có trận/asset/API chạy thật**. Tài liệu này thay **toàn bộ số HP, giáp, thẻ, kit và ví dụ combat 60 HP** ở docs/35, 37, 40. Docs/35 vẫn là nguồn cho nguyên tắc ghép cùng nội dung, chấm bài và đồng bộ; docs/39 là nguồn chấm; docs/37 là nguồn RP/coin; docs/43 là nguồn khung hạng/bảng. Mọi số ở đây là giả thuyết cần cân bằng trước ranked. `combat_rule_version=solo-three-v0.1`.
+**Trạng thái:** đặc tả v0.1 để prototype và playtest; đã có [asset và web demo nghiên cứu](49-sprite-ba-nhan-vat-va-web-demo.md), **chưa có trận/API chạy thật**. Tài liệu này thay **toàn bộ số HP, giáp, thẻ, kit và ví dụ combat 60 HP** ở docs/35, 37, 40. Docs/35 vẫn là nguồn cho nguyên tắc ghép cùng nội dung, chấm bài và đồng bộ; docs/39 là nguồn chấm; docs/37 là nguồn RP/coin; docs/43 là nguồn khung hạng/bảng. Mọi số ở đây là giả thuyết cần cân bằng trước ranked. `combat_rule_version=solo-three-v0.1`.
 
 ## 1. Trải nghiệm và vai chiến đấu
 
@@ -11,6 +11,8 @@ Trận là **cuộc giải bài có lớp chiến thuật**: hai người cùng 
 | `ha_nhan` | Hà Nhân | Đấu sĩ bền bỉ / sustain | Hồi ít giáp khi giải đều, sống qua đòn dài | Không có burst lớn |
 | `tuyet_dinh` | Tuyệt Đỉnh | Kiếm sĩ sát thương | Dồn damage sau chuỗi đúng, kết trận nhanh | Ít phòng thủ, dễ thua nếu sai liên tiếp |
 | `han_boi_thap` | Hàn Bối Tháp | Hộ pháp tanker / phòng thủ phép | Chắn và hồi giáp, phản công vừa phải | Damage thấp, khó hạ đối thủ sớm |
+
+**Tên hiển thị trong web demo:** theo yêu cầu ngày 12/11/2026, ảnh 2 dùng tên “Hàn Bối Pháp”. ID và luật kit vẫn là `han_boi_thap` cho prototype; tên cuối cùng phải chốt trước catalog/backend. Xem [docs/49](49-sprite-ba-nhan-vat-va-web-demo.md).
 
 “Phép” là ngôn ngữ hình ảnh (vệt mực, vòng tháp), **không là loại sát thương thứ hai** ở v0.1. Chỉ có `damage` chung để người học hiểu một công thức; sau playtest mới cân nhắc physical/magic/resistance. Không có chí mạng, né ngẫu nhiên, may rủi damage, vật phẩm tăng sức mạnh hay pay-to-win.
 
@@ -67,7 +69,7 @@ Phong cách: **sprite 2D gốc**, nét sạch, silhouette rõ 48 dp, ít chi ti�
 | Tuyệt Đỉnh | `Original playful ink swordsman, short asymmetrical cloak, wooden practice sword shaped like a calligraphy stroke, slightly overconfident eyebrows, diagonal dynamic stance, muted violet and apricot palette. No steel blade, blood or flashy magical explosion. Front and three-quarter views.` |
 | Hàn Bối Tháp | `Original quiet guardian carrying a small folded-paper tower on the back, straight cloak, broad stable silhouette, deep blue and pale gold palette. Paper tower opens into geometric shield panels, calm expression. Front and three-quarter views.` |
 
-**Prompt FX riêng:** Hà Nhân `six-frame thin pencil circle forms around character then fades, transparent background, no glow bloom`; Tuyệt Đỉnh `six-frame single ink slash across edge of battle panel, no contact injury, no flashing`; Hàn Bối Tháp `six-frame folded paper tower shield rises then settles, transparent background, no particles over question text`. Xuất riêng PNG/WebP RGBA, sprite sheet 4–8 frame, 8–12 fps, anchor chân cố định; FX 300–500 ms, một FX tại một thời điểm, không chờ FX để mở thao tác kế. `Reduce Motion` dùng frame tĩnh + chữ/số. Không dùng hình ảnh từ nguồn ngoài làm reference nếu chưa có quyền. Đội phải lưu prompt, model/công cụ, tác giả chỉnh sửa, ngày, giấy phép/quyền đầu ra và asset version.
+**Prompt FX riêng:** Hà Nhân `six-frame thin pencil circle forms around character then fades, transparent background, no glow bloom`; Tuyệt Đỉnh `six-frame single ink slash across edge of battle panel, no contact injury, no flashing`; Hàn Bối Tháp `six-frame folded paper tower shield rises then settles, transparent background, no particles over question text`. Xuất riêng PNG/WebP RGBA, sprite sheet 4–8 frame, 8–12 fps, anchor chân cố định; FX 300–500 ms, một FX tại một thời điểm, không chờ FX để mở thao tác kế. `Reduce Motion` dùng frame tĩnh + chữ/số. Không dùng hình ảnh từ nguồn ngoài làm reference cho asset phát hành nếu chưa có quyền; bộ ảnh người dùng cung cấp ở docs/49 chỉ dùng để nghiên cứu/demo và cần kiểm quyền trước phát hành. Đội phải lưu prompt, model/công cụ, tác giả chỉnh sửa, ngày, giấy phép/quyền đầu ra và asset version.
 
 **Asset manifest đề xuất:** `character_id`, `asset_version`, `master_source`, `avatar_48`, `battle_idle`, `basic`, `skill1`, `skill2`, `static_fallback`, `anchor_x/y`, `frame_size`, `fps`, `duration_ms`, `alt_text_vi`, `credit`, `rights_status`. Thiếu một asset → dùng silhouette trung tính, không tải ảnh mạng giữa trận. Không tạo sprite chỉ từ một ảnh rồi tuyên bố các pose đã nhất quán nếu chưa review từng frame.
 

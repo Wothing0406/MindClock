@@ -64,6 +64,8 @@ Kiểu `UUID`, `JSON/JSONB`, timestamp timezone-aware; ứng dụng ghi UTC, `lo
 
 ## 5. Giao hữu và bảng hạng sau MVP
 
+**Hồ sơ/avatar/lịch sử giai đoạn sau:** mở rộng `users` hiện có và thêm `avatar_assets`, `alarm_history_events`, `content_reports`, `moderation_decisions`, `appeals` theo [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md). `competition_profiles` là projection opt-in, không là nguồn sửa profile riêng; huy hiệu từ `rank_profiles`/`rank_ledger`, không từ ảnh khung hay client. Các bảng này chưa có migration.
+
 | Bảng | Khóa và ý nghĩa |
 | --- | --- |
 | `competition_profiles` | PK `user_id`, opt-in, alias công khai, avatar allowlist |

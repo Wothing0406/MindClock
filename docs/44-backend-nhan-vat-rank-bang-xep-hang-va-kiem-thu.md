@@ -41,7 +41,7 @@
 ### Chơi, tính RP và dựng bảng
 
 1. Người dùng chọn `Giao hữu`; ranked chỉ hiển thị khi feature flag, consent, scope nội dung, số trận placement, câu/rubric/QA và điều kiện vận hành đều đạt cổng [35 §10](35-solo-rpg-dong-bo-va-ky-nang.md). Ghép cùng `{subject,gradeBand,curriculumId,contentVersion,questionPoolVersion,locale}`; không tự trộn chương trình.
-2. Hai người chọn thẻ, cùng nhận đề theo giờ server, nộp đáp án + trình bày. Server chấm `correct|incorrect|uncertain`, chốt HP/kỹ năng đồng thời theo [40](40-dau-truong-pvp-nhan-vat-ban-do-va-hieu-ung.md). `uncertain`, câu lỗi hoặc mất kết nối không đủ bằng chứng → `needs_review|voided`; không đổi RP/MMR. Giao hữu không ghi RP.
+2. Hai người chọn thẻ, cùng nhận đề theo giờ server, nộp đáp án + trình bày. Server chấm `correct|incorrect|uncertain`, chốt HP/kỹ năng đồng thời theo [46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md). `uncertain`, câu lỗi hoặc mất kết nối không đủ bằng chứng → `needs_review|voided`; không đổi RP/MMR. Giao hữu không ghi RP.
 3. Ranked hợp lệ: transaction khóa match + hai `rank_profiles` theo thứ tự ổn định, xác nhận `match_results` chưa chốt, tính RP thử `+20/0/−20` với clamp 0–1199 và MMR theo `rank_rule_version`, ghi hai dòng `rank_ledger`, coin/XP đủ điều kiện và result **một lần**. Outbox cập nhật leaderboard sau commit. Retry/worker song song trả cùng result, không có điểm lẻ một bên.
 
    **Công thức MMR thử để code/test:** từ hai MMR **trước trận** `R_A,R_B`, tính `E_A=1/(1+10^((R_B−R_A)/400))`; `S_A=1|0.5|0` cho thắng/hòa/thua; `delta_A=round_half_away_from_zero(24×(S_A−E_A))`, `delta_B=−delta_A`. Không tính tiếp từ MMR vừa cập nhật của A; lưu cả before/delta/after cùng rule version. Hai người cùng 1000: thắng → `+12/−12`, hòa → `0/0`. K=24 và RP ±20 là **tham số playtest**, không mở ranked trước khi mô phỏng/cân bằng. RP hiển thị dùng `tier=floor(RP/200)` và `division=floor((RP%200)/40)+1` theo [37 §4](37-kinh-te-rank-va-nhan-vat-2d.md).
@@ -60,7 +60,7 @@ Mọi endpoint dưới đây ngoài catalog công khai nội bộ đều cần b
 | `POST /game/characters/{id}/purchase` | `catalogVersion` | `receiptId`, `balanceAfter`, `ownership` | `INSUFFICIENT_COIN`, `ALREADY_OWNED`, `CATALOG_CHANGED`; idempotent |
 | `PUT /game/characters/equipped` | `characterId`, `version` | `equippedCharacterId`, `version` | chỉ sở hữu; `409` version cũ |
 | `GET /competition/rank?scopeId=&seasonId=` | scope đã mở | `status=locked|placement|ranked`, `rp`, `tier`, `division`, `nextThreshold`, `matchCount` | RP chỉ của chính mình; không trả MMR |
-| `GET /competition/profile` / `PUT /competition/profile` | `alias`, `avatarId`, `visible`, `consentVersion` | profile + `visibilityVersion` | alias/asset allowlist; consent/tuổi; opt-out trả sau khi ẩn |
+| `GET/PATCH /me` và `PUT /competition/visibility` | `/me`: alias, avatar/frame, profile version; `/visibility`: `visible`, `consentVersion` | hồ sơ + `visibilityVersion` | một nguồn hồ sơ ở `users`; projection thi đấu chỉ theo opt-in, consent/tuổi; opt-out trả sau khi ẩn; xem docs/52 |
 | `GET /competition/boards/{boardId}?limit=20&cursor=` | scope/mùa | `status`, `updatedAt`, `snapshotVersion`, `entries[]`, `myPosition?`, `nextCursor?` | caller phải opt-in/đủ tuổi; chưa đủ 5 trận trả `status=placement`, bảng thiếu người trả `status=not_ready`, cả hai không có entries; mỗi entry chỉ alias/avatar/RP/tier/rank |
 | `GET /game/ledger?limit=&cursor=` | không | coin/XP/RP events của chính mình theo scope | owner; không lộ bài/ảnh đối thủ |
 

@@ -53,6 +53,11 @@
 45. [46 — Solo RPG ba nhân vật mới](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md): nguồn chuẩn **thử nghiệm** cho 100 HP/50 giáp, nội tại/chiêu, action UI, prompt sprite, networking, SQL/API dự kiến và cổng cân bằng. Thay số combat cũ ở docs/35/37/40.
 46. [47 — Demo Android và môi trường kiểm thử](47-demo-android-va-moi-truong-kiem-thu.md): runbook Windows/Android Studio/Flutter, máy thật/emulator, AD01–AD10 và kịch bản sân khấu; hiện chưa có APK.
 47. [48 — Kiểm toán docs](48-kiem-toan-docs-va-dieu-kien-bat-dau-code.md): mức sẵn sàng cho Android P0, bằng chứng đã kiểm, phần chưa đạt và thứ tự đóng các cổng.
+48. [49 — Sprite ba nhân vật và web demo](49-sprite-ba-nhan-vat-va-web-demo.md): nguồn ảnh, trạng thái art, cách xem sân tập và giới hạn quyền.
+49. [50 — Cấu trúc repo và tài sản game](50-cau-truc-du-an-va-asset-game.md): cây thư mục, manifest, anchor, pipeline, quy trình dựng và QA.
+50. [51 — Sân dọc, tướng và hiệu ứng](51-san-dau-doc-mobile-va-hieu-ung.md): bố cục điện thoại, mô tả người chơi, projectile/impact/self FX, âm thanh và tiêu chí xem trên máy.
+51. [52 — Hồ sơ, avatar, huy hiệu và lịch sử](52-ho-so-avatar-huy-hieu-va-lich-su.md): phân biệt avatar/khung/badge/tướng, upload, quyền xem lịch sử đấu và báo thức, uy tín, API/SQL dự kiến.
+52. [53 — Tên, avatar và phát ngôn](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md): chuẩn tiếng Việt, nội dung được phép, báo cáo/duyệt/kháng nghị, bảo vệ người học.
 
 ## Quyết định đã chốt để coding
 
@@ -67,7 +72,7 @@
 | Quyền riêng tư | Hồ sơ học tập cá nhân mặc định; giáo viên/phụ huynh là giai đoạn sau và phải cấp quyền rõ |
 | iOS | Sau demo Android/P0, cần Mac/Xcode/iPhone và task riêng; AlarmKit vẫn có nút Dừng OS; xem docs/20 |
 | Đấu trường | Opt-in, giao hữu trước; ranked/RP/bảng là giai đoạn sau khi đạt cổng chất lượng; xem docs/35 và 37 |
-| Nhân vật | Roster/kit cũ đã hủy; chưa có nhân vật nào được duyệt để coding. Khung rank và backend chỉ là đặc tả giai đoạn sau; xem docs/22, 40, 43–44 |
+| Nhân vật | Ba nhân vật có asset và sân dọc web nghiên cứu, chưa duyệt quyền/phát hành hoặc nối backend. Avatar/khung là cosmetic mẫu, không phải ranked. Xem docs/46, 49–51; khung rank/backend thật ở docs/43–44 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
 | Solo RPG | Giao hữu trước; docs/46 là **luật thử nghiệm mới** 100 HP/50 giáp/6 round với ba working names. Luật 60 HP/kit cũ chỉ lưu trữ, không code. Gemini chỉ đề xuất chấm **sau nộp**; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 46 |

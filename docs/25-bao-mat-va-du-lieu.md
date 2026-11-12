@@ -16,9 +16,13 @@
 | Bản nháp chữ offline | Cho người dùng tự chọn gửi sau | Vùng app local theo profile, tối đa 24 giờ nếu chọn lưu | Không tự upload, không hiện ở tài khoản khác |
 | Ảnh bài viết tay | Chấm phiên hiện tại | Bộ nhớ tạm backend/Gemini; không lưu mặc định | Không trên bảng/log |
 | Biệt danh/avatar/điểm thi | Bảng tự nguyện | PostgreSQL projection | Chỉ khi opt-in, theo môn/khối/tuần |
+| Ảnh avatar tự tải lên | Nhận diện hồ sơ khi người dùng chọn | Object storage riêng, bản đã duyệt mới công khai | Không gửi Gemini, không công khai khi `pending` |
+| Lịch sử báo thức | Cho chủ xem thói quen/điều chỉnh lịch | Trên máy; PostgreSQL nếu bật đồng bộ | Riêng tư, không dùng bảng/rank/uy tín |
 | Dữ liệu lỗi kỹ thuật | Vận hành | Log có giới hạn | Không chứa ảnh, token, đề, giờ ngủ |
 
-**Không thu thập:** vị trí GPS, danh bạ, microphone ở MVP, tên thật/trường bắt buộc, dữ liệu sức khỏe, ảnh khuôn mặt, quảng cáo định danh. Ảnh bài làm có thể vô tình chứa tên/trường: UI nhắc che thông tin trước khi gửi, backend cắt/giới hạn vùng nhận diện khi khả thi. Dữ liệu dùng để chấm không dùng cho huấn luyện nội bộ hay tiếp thị.
+**Không thu thập bắt buộc:** vị trí GPS, danh bạ, microphone ở MVP, tên thật/trường, dữ liệu sức khỏe, ảnh khuôn mặt hoặc quảng cáo định danh. Ảnh bài làm có thể vô tình chứa tên/trường: UI nhắc che thông tin trước khi gửi, backend cắt/giới hạn vùng nhận diện khi khả thi. Dữ liệu dùng để chấm không dùng cho huấn luyện nội bộ hay tiếp thị.
+
+**Avatar và hồ sơ:** ảnh avatar tải lên là lựa chọn giai đoạn sau, tách khỏi ảnh bài làm. Trước khi bật phải có kiểm duyệt, strip EXIF, quyền xóa/cache, đồng ý công khai và test theo [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md)–[docs/53](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md). Ảnh khuôn mặt không phải dữ liệu bắt buộc của sản phẩm; người dùng luôn có avatar mặc định.
 
 ## 2. Quy tắc truy cập và truyền dữ liệu
 
