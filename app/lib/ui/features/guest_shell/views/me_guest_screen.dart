@@ -5,18 +5,22 @@ import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
+import '../../personal_flow/view_models/personal_flow_view_model.dart';
+import '../../personal_flow/views/account_auth_card.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
-/// Tab Tôi cho chế độ khách local (không có Đấu trường, không ép đăng nhập).
+/// Tab Tôi cho chế độ khách local & tùy chọn đăng nhập online (không có Đấu trường).
 class MeGuestScreen extends StatelessWidget {
   const MeGuestScreen({
     super.key,
     required this.viewModel,
     required this.onEditProfileAndTimetable,
     required this.onResetGuestData,
+    this.personalViewModel,
   });
 
   final GuestWorkspaceViewModel viewModel;
+  final PersonalFlowViewModel? personalViewModel;
   final VoidCallback onEditProfileAndTimetable;
   final VoidCallback onResetGuestData;
 
@@ -44,6 +48,10 @@ class MeGuestScreen extends StatelessWidget {
           Text(AppStrings.navMe, style: mc.screenTitleStyle),
           SizedBox(height: mc.space12),
           const MindClockStatusPill(label: AppStrings.guestBadge),
+          if (personalViewModel != null) ...<Widget>[
+            SizedBox(height: mc.space16),
+            AccountAuthCard(viewModel: personalViewModel!),
+          ],
           SizedBox(height: mc.space16),
           MindClockCard(
             child: Column(

@@ -11,6 +11,8 @@ class GuestWorkspaceRepository {
 
   final LocalKeyValueStore _store;
 
+  LocalKeyValueStore get store => _store;
+
   Future<GuestWorkspace> load() async {
     final String? raw = await _store.readString(workspaceKey);
     if (raw == null || raw.trim().isEmpty) {

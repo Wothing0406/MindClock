@@ -1,5 +1,5 @@
 name: mindclock_app
-description: MindClock Android - Luong khach thiet lap hoc tap va cau hinh bao thuc local.
+description: MindClock Android - Luong ca nhan thiet lap hoc tap, bao thuc local va luyen tap.
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -14,6 +14,8 @@ dependencies:
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
 flutter:

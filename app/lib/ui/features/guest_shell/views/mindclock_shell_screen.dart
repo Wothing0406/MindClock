@@ -8,12 +8,13 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
+import '../../personal_flow/view_models/personal_flow_view_model.dart';
+import '../../personal_flow/views/practice_session_screen.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'alarm_config_screen.dart';
 import 'alarm_ring_screen.dart';
 import 'me_guest_screen.dart';
 import 'onboarding_setup_screen.dart';
-import 'practice_placeholder_screen.dart';
 import 'timetable_profile_screen.dart';
 import 'today_screen.dart';
 import 'welcome_screen.dart';
@@ -31,9 +32,11 @@ class MindClockShellScreen extends StatefulWidget {
   const MindClockShellScreen({
     super.key,
     required this.viewModel,
+    required this.personalViewModel,
   });
 
   final GuestWorkspaceViewModel viewModel;
+  final PersonalFlowViewModel personalViewModel;
 
   @override
   State<MindClockShellScreen> createState() => _MindClockShellScreenState();
@@ -54,6 +57,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.viewModel.addListener(_onViewModelChanged);
+    widget.personalViewModel.addListener(_onViewModelChanged);
     _syncFromViewModel();
   }
 
@@ -61,6 +65,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.viewModel.removeListener(_onViewModelChanged);
+    widget.personalViewModel.removeListener(_onViewModelChanged);
     super.dispose();
   }
 
@@ -108,6 +113,11 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           onOpenQuestion: () {
             final String alarmId = activeRing.alarmId;
             widget.viewModel.dismissActiveRingUi();
+            widget.personalViewModel.startSession(
+              alarmId: alarmId,
+              subjectCode: activeRing.subjectCode,
+              challengeMode: activeRing.mode == AlarmMode.challenge,
+            );
             setState(() {
               _activeAlarmPlayingInQuestion = true;
               _activeAlarmIdInQuestion = alarmId;
@@ -234,8 +244,9 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         final Widget body;
         switch (_selectedTabIndex) {
           case 1:
-            body = PracticePlaceholderScreen(
-              viewModel: widget.viewModel,
+            body = PracticeSessionScreen(
+              guestViewModel: widget.viewModel,
+              personalViewModel: widget.personalViewModel,
               onOpenProfileSetup: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },
@@ -243,6 +254,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           case 2:
             body = MeGuestScreen(
               viewModel: widget.viewModel,
+              personalViewModel: widget.personalViewModel,
               onEditProfileAndTimetable: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },

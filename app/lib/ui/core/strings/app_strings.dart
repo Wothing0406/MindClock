@@ -82,6 +82,13 @@ class AppStrings {
   static const String ringNormalHint =
       'Chế độ thường: bạn có thể Hoãn 5 phút hoặc dừng chuông ngay.';
 
+  // T017 Luồng cá nhân online/offline & quyền riêng tư ảnh
+  static const String debugFixtureLabel = 'Fixture debug · Không phải dịch vụ thật';
+  static const String photoPrivacyNotice =
+      'Ảnh bài làm sẽ được gửi đến dịch vụ AI để nhận phản hồi. Không chụp tên hoặc thông tin riêng. Bạn có thể nhập đáp án thay thế.';
+  static const String draftUploadConfirmQuestion =
+      'Gửi bài này để nhận nhận xét?';
+
   // Gợi ý giờ dậy
   static const String wakeSuggestionTitle = 'Gợi ý giờ dậy theo lịch (tùy chọn)';
   static const String useWakeSuggestionButton = 'Dùng giờ này';

@@ -1,5 +1,6 @@
 package com.mindclock.app
 
+import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -7,14 +8,16 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Entrypoint FlutterActivity cho MindClock Android (không dùng Hilt/Compose).
- * Nối `MethodChannel("mindclock/alarm_scheduler")` với phiên bản hợp đồng v1.
+ * Nối `MethodChannel("mindclock/alarm_scheduler")` và `MethodChannel("mindclock/camera_capture")`.
  */
 class MainActivity : FlutterActivity() {
     private lateinit var schedulerBridge: AlarmSchedulerBridgeContract
+    private lateinit var cameraBridge: CameraBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         schedulerBridge = AlarmSchedulerImpl(this)
+        cameraBridge = CameraBridgeHandler(this)
         AlarmRingService.ensureNotificationChannel(this)
 
         MethodChannel(
@@ -23,6 +26,40 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             handleMethodCall(call, result)
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CameraBridgeHandler.CHANNEL_NAME,
+        ).setMethodCallHandler { call, result ->
+            if (call.method == "captureHandwrittenPhoto") {
+                cameraBridge.handleCaptureRequest(result)
+            } else {
+                result.notImplemented()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        if (::cameraBridge.isInitialized &&
+            cameraBridge.onRequestPermissionsResult(requestCode, grantResults)
+        ) {
+            return
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (::cameraBridge.isInitialized &&
+            cameraBridge.onActivityResult(requestCode, resultCode, data)
+        ) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
