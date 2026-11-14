@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MindClock</string>
+    <string name="alarm_channel_name">Báo thức MindClock</string>
+    <string name="alarm_channel_desc">Phát âm thanh và rung báo thức cục bộ ngay cả khi ngoại tuyến</string>
+    <string name="alarm_open_question">Mở câu hỏi</string>
+    <string name="alarm_snooze_5m">Hoãn 5 phút</string>
+    <string name="alarm_emergency_stop">Dừng khẩn cấp</string>
+    <string name="alarm_challenge_note">Chế độ thử thách không hỗ trợ Hoãn. Luôn có Dừng khẩn cấp.</string>
+    <string name="alarm_normal_note">Chế độ thường: bạn có thể Hoãn 5 phút hoặc dừng báo thức.</string>
+</resources>

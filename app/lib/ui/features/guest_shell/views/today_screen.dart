@@ -4,6 +4,7 @@ import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
+import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -54,6 +55,37 @@ class TodayScreen extends StatelessWidget {
           if (lastActionBanner != null) ...<Widget>[
             SizedBox(height: mc.space12),
             MindClockNoticeBanner(message: lastActionBanner!, isWarm: false),
+          ],
+          if (viewModel.needsOsPermissions) ...<Widget>[
+            SizedBox(height: mc.space12),
+            MindClockCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const MindClockNoticeBanner(
+                    message: AppStrings.alarmPermissionMissingExplain,
+                  ),
+                  if (viewModel.missingPermissionActions.isNotEmpty) ...<Widget>[
+                    SizedBox(height: mc.space12),
+                    ...viewModel.missingPermissionActions.map(
+                      (AlarmPermissionAction action) => Padding(
+                        padding: EdgeInsets.only(bottom: mc.space8),
+                        child: MindClockButton(
+                          key: ValueKey<String>(
+                            'today-perm-${action.wireAction}',
+                          ),
+                          label: viewModel.labelForPermissionAction(action),
+                          icon: MindClockIconKind.warning,
+                          variant: MindClockButtonVariant.secondary,
+                          onPressed: () =>
+                              viewModel.openPermissionSettings(action),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
           if (viewModel.scheduleChangedSinceAlarmSave &&
               alarms.isNotEmpty) ...<Widget>[
@@ -123,7 +155,10 @@ class TodayScreen extends StatelessWidget {
                               ),
                               MindClockStatusPill(
                                 label: statusText,
-                                accentWarm: !viewModel.isOsBridgeConnected,
+                                accentWarm: !viewModel.isOsBridgeConnected ||
+                                    alarm.syncStatus !=
+                                        AlarmSyncStatus.scheduledReady ||
+                                    !viewModel.permissionSnapshot.allGranted,
                               ),
                             ],
                           ),

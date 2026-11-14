@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'data/repositories/guest_workspace_repository.dart';
@@ -11,11 +12,11 @@ class MindClockApp extends StatefulWidget {
   const MindClockApp({
     super.key,
     required this.repository,
-    this.alarmScheduler = const UnboundAlarmSchedulerService(),
+    this.alarmScheduler,
   });
 
   final GuestWorkspaceRepository repository;
-  final AlarmSchedulerService alarmScheduler;
+  final AlarmSchedulerService? alarmScheduler;
 
   @override
   State<MindClockApp> createState() => _MindClockAppState();
@@ -29,7 +30,8 @@ class _MindClockAppState extends State<MindClockApp> {
     super.initState();
     _viewModel = GuestWorkspaceViewModel(
       repository: widget.repository,
-      alarmScheduler: widget.alarmScheduler,
+      alarmScheduler:
+          widget.alarmScheduler ?? createDefaultAlarmSchedulerService(),
     )..initialize();
   }
 
@@ -52,4 +54,11 @@ class _MindClockAppState extends State<MindClockApp> {
 
 GuestWorkspaceRepository createDefaultGuestRepository() {
   return GuestWorkspaceRepository(store: SharedPreferencesKeyValueStore());
+}
+
+AlarmSchedulerService createDefaultAlarmSchedulerService() {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    return AndroidMethodChannelAlarmSchedulerService();
+  }
+  return const UnboundAlarmSchedulerService();
 }

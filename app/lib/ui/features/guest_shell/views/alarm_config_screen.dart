@@ -216,6 +216,27 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   isWarm: false,
                 ),
                 SizedBox(height: mc.space16),
+              ] else if (widget.viewModel.needsOsPermissions) ...<Widget>[
+                const MindClockNoticeBanner(
+                  message: AppStrings.alarmPermissionMissingExplain,
+                ),
+                SizedBox(height: mc.space8),
+                ...widget.viewModel.missingPermissionActions.map(
+                  (action) => Padding(
+                    padding: EdgeInsets.only(bottom: mc.space8),
+                    child: MindClockButton(
+                      key: ValueKey<String>(
+                        'config-perm-${action.wireAction}',
+                      ),
+                      label: widget.viewModel.labelForPermissionAction(action),
+                      icon: MindClockIconKind.warning,
+                      variant: MindClockButtonVariant.secondary,
+                      onPressed: () =>
+                          widget.viewModel.openPermissionSettings(action),
+                    ),
+                  ),
+                ),
+                SizedBox(height: mc.space8),
               ],
               Container(
                 width: double.infinity,

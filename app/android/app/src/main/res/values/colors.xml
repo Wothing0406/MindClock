@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mindclock_night_bg">#101A30</color>
+    <color name="mindclock_night_surface">#1A2742</color>
+    <color name="mindclock_night_border">#2B3B5E</color>
+    <color name="mindclock_night_text_primary">#F7FAFF</color>
+    <color name="mindclock_night_text_secondary">#B8C7E0</color>
+    <color name="mindclock_night_accent">#4C8DFF</color>
+    <color name="mindclock_night_accent_text">#FFFFFF</color>
+    <color name="mindclock_night_danger">#FF6B6B</color>
+    <color name="mindclock_night_danger_bg">#3A1D28</color>
+</resources>

@@ -62,10 +62,25 @@ class AppStrings {
       'Môn này chưa có câu ôn được duyệt. Bạn vẫn đặt được báo thức; khi reo hệ thống dùng chế độ thường / Chỉ báo thức để không khóa chuông.';
   static const String saveAlarmButton = 'Lưu cấu hình báo thức';
 
-  // Trạng thái dịch vụ báo thức khi chưa nối OS
+  // Trạng thái dịch vụ báo thức & OS Android
   static const String alarmSavedConfigOnly = 'Đã lưu cấu hình';
+  static const String alarmReadyOs = 'Đã sẵn sàng';
+  static const String alarmPermissionMissingLabel = 'Thiếu quyền báo thức OS';
   static const String alarmOsUnboundExplain =
       'Chưa nối báo thức hệ thống Android ở giai đoạn này. Quyền OS ở trạng thái chưa kiểm tra; hệ thống không báo Đã sẵn sàng giả.';
+  static const String alarmPermissionMissingExplain =
+      'Hệ thống chưa thể báo Đã sẵn sàng vì Android đang thiếu quyền báo thức, thông báo hoặc toàn màn hình khóa.';
+  static const String batteryOptimizationNote =
+      'Trên một số máy Android (Xiaomi/Samsung/Oppo), chế độ tiết kiệm pin nghiêm ngặt có thể làm trễ chuông nếu tắt nền.';
+
+  // S07 Màn chuông đang reo
+  static const String ringOpenQuestion = 'Mở câu hỏi';
+  static const String ringSnooze5m = 'Hoãn 5 phút';
+  static const String ringEmergencyStop = 'Dừng khẩn cấp';
+  static const String ringChallengeHint =
+      'Chế độ thử thách không hỗ trợ Hoãn. Dừng khẩn cấp luôn hoạt động 1 chạm.';
+  static const String ringNormalHint =
+      'Chế độ thường: bạn có thể Hoãn 5 phút hoặc dừng chuông ngay.';
 
   // Gợi ý giờ dậy
   static const String wakeSuggestionTitle = 'Gợi ý giờ dậy theo lịch (tùy chọn)';

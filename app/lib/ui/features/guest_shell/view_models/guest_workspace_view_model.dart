@@ -24,6 +24,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   AlarmServiceCapabilities? _capabilities;
   AlarmPermissionSnapshot _permissionSnapshot =
       const AlarmPermissionSnapshot.unbound();
+  AlarmRingPayload? _activeRingPayload;
   String _lastSchedulerMessage = AppStrings.alarmOsUnboundExplain;
   bool _isLoaded = false;
   bool _scheduleChangedSinceAlarmSave = false;
@@ -36,36 +37,81 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   WakeSuggestionInput get wakePreferences => _workspace.wakePreferences;
   AlarmServiceCapabilities? get capabilities => _capabilities;
   AlarmPermissionSnapshot get permissionSnapshot => _permissionSnapshot;
+  AlarmRingPayload? get activeRingPayload => _activeRingPayload;
   String get lastSchedulerMessage => _lastSchedulerMessage;
   bool get isLoaded => _isLoaded;
   bool get isOsBridgeConnected => _alarmScheduler.isOsBridgeConnected;
   bool get scheduleChangedSinceAlarmSave => _scheduleChangedSinceAlarmSave;
 
+  List<AlarmPermissionAction> get missingPermissionActions =>
+      _permissionSnapshot.missingActions();
+
+  bool get needsOsPermissions =>
+      isOsBridgeConnected && !_permissionSnapshot.allGranted;
+
   Future<void> initialize() async {
     _workspace = await _repository.load();
-    _capabilities = await _alarmScheduler.checkCapabilities();
-    _permissionSnapshot = await _alarmScheduler.getPermissionStatus();
-    if (_capabilities != null) {
-      _lastSchedulerMessage = _capabilities!.statusSummaryVi;
-    }
+    await refreshOsStatus();
     _isLoaded = true;
     notifyListeners();
   }
 
+  /// Đồng bộ lại năng lực bridge, quyền OS và trạng thái chuông vừa mở từ màn khóa.
+  Future<void> refreshOsStatus() async {
+    _capabilities = await _alarmScheduler.checkCapabilities();
+    _permissionSnapshot = await _alarmScheduler.getPermissionStatus();
+    final AlarmRingPayload? pendingRing =
+        await _alarmScheduler.consumePendingRingLaunch();
+    if (pendingRing != null) {
+      _activeRingPayload = pendingRing;
+    }
+
+    if (isOsBridgeConnected && !_permissionSnapshot.allGranted) {
+      _lastSchedulerMessage = AppStrings.alarmPermissionMissingExplain;
+      await _downgradeStaleReadyAlarmsIfMissingPermissions();
+    } else if (_capabilities != null) {
+      _lastSchedulerMessage = _capabilities!.statusSummaryVi;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _downgradeStaleReadyAlarmsIfMissingPermissions() async {
+    bool changed = false;
+    final List<AlarmConfig> updated = _workspace.alarms.map((AlarmConfig a) {
+      if (a.enabled && a.syncStatus == AlarmSyncStatus.scheduledReady) {
+        changed = true;
+        return a.copyWith(syncStatus: AlarmSyncStatus.osPermissionMissing);
+      }
+      return a;
+    }).toList(growable: false);
+
+    if (changed) {
+      _workspace = _workspace.copyWith(alarms: updated);
+      _workspace = await _repository.save(_workspace);
+    }
+  }
+
   /// Trạng thái hiển thị chuẩn cho mỗi báo thức.
   ///
-  /// Khi chưa nối tầng native Android OS, luôn trả `Đã lưu cấu hình`.
+  /// CHỈ báo `Đã sẵn sàng` khi bridge nối thành công, tất cả quyền OS đã cấp,
+  /// và Android OS xác nhận đặt lịch thành công (`scheduledReady`).
   String statusLabelForAlarm(AlarmConfig alarm) {
     if (!isOsBridgeConnected) {
       return AppStrings.alarmSavedConfigOnly;
     }
+    if (!alarm.enabled) {
+      return AppStrings.alarmSavedConfigOnly;
+    }
     switch (alarm.syncStatus) {
       case AlarmSyncStatus.scheduledReady:
-        return 'Đã sẵn sàng';
+        if (!_permissionSnapshot.allGranted) {
+          return AppStrings.alarmPermissionMissingLabel;
+        }
+        return AppStrings.alarmReadyOs;
       case AlarmSyncStatus.pendingOsSync:
         return 'Đang đồng bộ hệ thống';
       case AlarmSyncStatus.osPermissionMissing:
-        return 'Thiếu quyền báo thức OS';
+        return AppStrings.alarmPermissionMissingLabel;
       case AlarmSyncStatus.osFailed:
         return 'Chưa đặt được trên OS';
       case AlarmSyncStatus.savedConfigOnly:
@@ -88,6 +134,77 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       );
     }
     return buffer.toString();
+  }
+
+  String labelForPermissionAction(AlarmPermissionAction action) {
+    switch (action) {
+      case AlarmPermissionAction.exactAlarmSettings:
+        return 'Cấp quyền Báo thức chính xác';
+      case AlarmPermissionAction.notificationSettings:
+        return 'Bật quyền Thông báo';
+      case AlarmPermissionAction.fullScreenIntentSettings:
+        return 'Cho phép hiện trên màn khóa';
+      case AlarmPermissionAction.batteryOptimizationSettings:
+        return 'Kiểm tra Tiết kiệm pin';
+    }
+  }
+
+  Future<bool> openPermissionSettings(AlarmPermissionAction action) {
+    return _alarmScheduler.openPermissionSettings(action);
+  }
+
+  Future<AlarmScheduleResult> triggerEmergencyStop({String? alarmId}) async {
+    final AlarmScheduleResult result =
+        await _alarmScheduler.triggerEmergencyStop(
+      alarmId ?? _activeRingPayload?.alarmId,
+    );
+    _activeRingPayload = null;
+    _permissionSnapshot = result.permissionSnapshot;
+    _lastSchedulerMessage = result.messageVi;
+    notifyListeners();
+    return result;
+  }
+
+  Future<AlarmScheduleResult> snoozeActiveAlarm({int minutes = 5}) async {
+    final AlarmRingPayload? ring = _activeRingPayload;
+    final AlarmConfig target = _findAlarmForRing(ring);
+    final AlarmScheduleResult result =
+        await _alarmScheduler.snoozeAlarm(target, minutes: minutes);
+    _permissionSnapshot = result.permissionSnapshot;
+    _lastSchedulerMessage = result.messageVi;
+    if (result.errorCode == AlarmBridgeErrorCode.ok) {
+      _activeRingPayload = null;
+    }
+    notifyListeners();
+    return result;
+  }
+
+  void dismissActiveRingUi() {
+    _activeRingPayload = null;
+    notifyListeners();
+  }
+
+  AlarmConfig _findAlarmForRing(AlarmRingPayload? ring) {
+    if (ring != null) {
+      for (final AlarmConfig alarm in _workspace.alarms) {
+        if (alarm.id == ring.alarmId) {
+          return alarm;
+        }
+      }
+      final List<String> parts = ring.formattedTime.split(':');
+      final int hour = parts.length == 2 ? (int.tryParse(parts[0]) ?? 6) : 6;
+      final int minute = parts.length == 2 ? (int.tryParse(parts[1]) ?? 0) : 0;
+      return AlarmConfig(
+        id: ring.alarmId,
+        hour: hour,
+        minute: minute,
+        mode: ring.mode,
+        subjectCode: ring.subjectCode,
+        label: ring.label,
+      );
+    }
+    return _workspace.primaryAlarm ??
+        const AlarmConfig(id: 'primary_morning', hour: 6, minute: 0);
   }
 
   Future<void> completeOnboardingAsLater({required bool alarmOnly}) async {
@@ -266,9 +383,8 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   Future<void> resetLocalWorkspace() async {
     await _repository.clear();
     _workspace = GuestWorkspace.initial();
+    _activeRingPayload = null;
     _scheduleChangedSinceAlarmSave = false;
-    _capabilities = await _alarmScheduler.checkCapabilities();
-    _permissionSnapshot = await _alarmScheduler.getPermissionStatus();
-    notifyListeners();
+    await refreshOsStatus();
   }
 }

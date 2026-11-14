@@ -71,10 +71,61 @@ class MeGuestScreen extends StatelessWidget {
                   style: mc.captionStyle,
                 ),
                 SizedBox(height: mc.space12),
-                const MindClockNoticeBanner(
-                  message: AppStrings.alarmOsUnboundExplain,
-                  isWarm: false,
-                ),
+                if (!viewModel.isOsBridgeConnected)
+                  const MindClockNoticeBanner(
+                    message: AppStrings.alarmOsUnboundExplain,
+                    isWarm: false,
+                  )
+                else if (viewModel.needsOsPermissions) ...<Widget>[
+                  const MindClockNoticeBanner(
+                    message: AppStrings.alarmPermissionMissingExplain,
+                  ),
+                  SizedBox(height: mc.space12),
+                  ...viewModel.missingPermissionActions.map(
+                    (AlarmPermissionAction action) => Padding(
+                      padding: EdgeInsets.only(bottom: mc.space8),
+                      child: MindClockButton(
+                        key: ValueKey<String>('me-perm-${action.wireAction}'),
+                        label: viewModel.labelForPermissionAction(action),
+                        icon: MindClockIconKind.warning,
+                        variant: MindClockButtonVariant.secondary,
+                        onPressed: () => viewModel.openPermissionSettings(action),
+                      ),
+                    ),
+                  ),
+                ] else
+                  const MindClockNoticeBanner(
+                    message:
+                        'Android đã cấp đủ quyền cốt lõi (Exact Alarm, Thông báo, Toàn màn hình khóa).',
+                    isWarm: false,
+                  ),
+                if (viewModel.isOsBridgeConnected) ...<Widget>[
+                  SizedBox(height: mc.space8),
+                  Text(
+                    AppStrings.batteryOptimizationNote,
+                    style: mc.captionStyle,
+                  ),
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey<String>('me-perm-battery'),
+                    label: viewModel.labelForPermissionAction(
+                      AlarmPermissionAction.batteryOptimizationSettings,
+                    ),
+                    icon: MindClockIconKind.clock,
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed: () => viewModel.openPermissionSettings(
+                      AlarmPermissionAction.batteryOptimizationSettings,
+                    ),
+                  ),
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey<String>('me-refresh-os-status'),
+                    label: 'Kiểm tra lại quyền báo thức OS',
+                    icon: MindClockIconKind.check,
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed: viewModel.refreshOsStatus,
+                  ),
+                ],
               ],
             ),
           ),

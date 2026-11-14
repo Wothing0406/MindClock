@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/study_profile.dart';
+import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'alarm_config_screen.dart';
+import 'alarm_ring_screen.dart';
 import 'me_guest_screen.dart';
 import 'onboarding_setup_screen.dart';
 import 'practice_placeholder_screen.dart';
@@ -36,24 +39,36 @@ class MindClockShellScreen extends StatefulWidget {
   State<MindClockShellScreen> createState() => _MindClockShellScreenState();
 }
 
-class _MindClockShellScreenState extends State<MindClockShellScreen> {
+class _MindClockShellScreenState extends State<MindClockShellScreen>
+    with WidgetsBindingObserver {
   _GuestFlowStage _stage = _GuestFlowStage.welcome;
   int _selectedTabIndex = 0;
   AlarmConfig? _editingAlarm;
   String? _todayBanner;
   bool _syncedInitialRoute = false;
+  bool _activeAlarmPlayingInQuestion = false;
+  String? _activeAlarmIdInQuestion;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.viewModel.addListener(_onViewModelChanged);
     _syncFromViewModel();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.viewModel.removeListener(_onViewModelChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && widget.viewModel.isLoaded) {
+      widget.viewModel.refreshOsStatus();
+    }
   }
 
   void _onViewModelChanged() {
@@ -80,6 +95,48 @@ class _MindClockShellScreenState extends State<MindClockShellScreen> {
         backgroundColor: mc.paper,
         body: Center(
           child: Text('Đang tải dữ liệu trên máy...', style: mc.bodyStyle),
+        ),
+      );
+    }
+
+    final AlarmRingPayload? activeRing = widget.viewModel.activeRingPayload;
+    if (activeRing != null) {
+      return Scaffold(
+        backgroundColor: mc.night,
+        body: AlarmRingScreen(
+          payload: activeRing,
+          onOpenQuestion: () {
+            final String alarmId = activeRing.alarmId;
+            widget.viewModel.dismissActiveRingUi();
+            setState(() {
+              _activeAlarmPlayingInQuestion = true;
+              _activeAlarmIdInQuestion = alarmId;
+              _stage = _GuestFlowStage.mainTabs;
+              _selectedTabIndex = 1;
+            });
+          },
+          onSnooze5Min: activeRing.mode == AlarmMode.normal
+              ? () async {
+                  await widget.viewModel.snoozeActiveAlarm(minutes: 5);
+                  if (!mounted) return;
+                  setState(() {
+                    _todayBanner = widget.viewModel.lastSchedulerMessage;
+                    _stage = _GuestFlowStage.mainTabs;
+                    _selectedTabIndex = 0;
+                  });
+                }
+              : null,
+          onEmergencyStop: () async {
+            await widget.viewModel.triggerEmergencyStop(alarmId: activeRing.alarmId);
+            if (!mounted) return;
+            setState(() {
+              _activeAlarmPlayingInQuestion = false;
+              _activeAlarmIdInQuestion = null;
+              _todayBanner = 'Đã dừng khẩn cấp báo thức cục bộ.';
+              _stage = _GuestFlowStage.mainTabs;
+              _selectedTabIndex = 0;
+            });
+          },
         ),
       );
     }
@@ -224,7 +281,55 @@ class _MindClockShellScreenState extends State<MindClockShellScreen> {
 
         return Scaffold(
           backgroundColor: mc.paper,
-          body: SafeArea(child: body),
+          body: SafeArea(
+            child: Column(
+              children: <Widget>[
+                if (_activeAlarmPlayingInQuestion)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: mc.space16,
+                      vertical: mc.space8,
+                    ),
+                    color: mc.night,
+                    child: Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Báo thức đang phát nhỏ tiếng.',
+                          style: mc.captionStyle.copyWith(color: mc.nightText),
+                        ),
+                        MindClockButton(
+                          key: const ValueKey<String>(
+                            'shell-emergency-stop-bar',
+                          ),
+                          label: AppStrings.ringEmergencyStop,
+                          icon: MindClockIconKind.warning,
+                          variant: MindClockButtonVariant.secondary,
+                          expand: false,
+                          onPressed: () async {
+                            await widget.viewModel.triggerEmergencyStop(
+                              alarmId: _activeAlarmIdInQuestion,
+                            );
+                            if (!mounted) return;
+                            setState(() {
+                              _activeAlarmPlayingInQuestion = false;
+                              _activeAlarmIdInQuestion = null;
+                              _todayBanner =
+                                  'Đã dừng khẩn cấp báo thức cục bộ.';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(child: body),
+              ],
+            ),
+          ),
           bottomNavigationBar: _MindClockThreeTabBar(
             selectedIndex: _selectedTabIndex,
             onSelect: (int idx) => setState(() => _selectedTabIndex = idx),
