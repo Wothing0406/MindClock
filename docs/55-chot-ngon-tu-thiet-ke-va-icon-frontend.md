@@ -57,10 +57,10 @@
 | Nhóm / Màn | Key gợi ý | Nội dung tiếng Việt chuẩn |
 | --- | --- | --- |
 | **Tab bar** | `navToday`, `navPractice`, `navArena`, `navMe` | `Hôm nay` · `Luyện tập` · `Đấu trường` *(ẩn nếu `!cohortArenaEnabled`)* · `Tôi` |
-| **S01–S02** | `welcomeTitle`, `welcomeDesc`, `tryGuest`, `createAccount`, `signIn`, `later` | `"Dậy đúng giờ. Nghĩ bằng chính mình."` · `"Một câu ôn ngắn theo lịch học, mỗi buổi sáng."` · `Dùng thử không cần tài khoản` · `Tạo tài khoản` · `Đăng nhập` · `Để sau` |
-| **S03–S05** | `setupSkip`, `subjectNoApproved`, `alarmOnlyOption`, `saveTimetable`, `timetableSaved`, `wakeSuggestion` | `Để sau` · `"Môn này chưa có câu ôn sáng."` · `Chỉ báo thức` · `Lưu lịch` · `Đã lưu lịch` · `"Đề xuất {time} · kịp tiết {classTime} theo thời gian bạn nhập"` (`Dùng giờ này` / `Sửa thời gian`) |
-| **S04 Hôm nay** | `nextAlarm`, `todaySubjects`, `todayReviewOne`, `noSubjectToday`, `pickReview`, `unsyncedProgress` | `"Chuông tiếp theo: {time}, {weekday}"` · `Môn/việc hôm nay` · `Một điều cần ôn lại` · `"Hôm nay chưa có môn trong lịch."` · `Chọn câu ôn` · `Chưa đồng bộ` |
-| **S06 Báo thức** | `challengeModeTitle`, `challengeModeNotice`, `saveAlarm`, `alarmSaved`, `testRing`, `alarmReady` | `Báo thức thử thách` · `"Không có Hoãn. Dừng khẩn cấp luôn có."` · `Lưu báo thức` · `Đã lưu báo thức` · `Thử chuông` · `Đã sẵn sàng` |
+| **S01–S02 / A01** | `welcomeTitle`, `welcomeDesc`, `tryGuest`, `createAccount`, `signIn`, `later`, `strongPasswordHint`, `passwordMismatch` | `"Dậy đúng giờ. Nghĩ bằng chính mình."` · `"Một câu ôn ngắn theo lịch học, mỗi buổi sáng."` · `Dùng thử không cần tài khoản` · `Tạo tài khoản` · `Đăng nhập` · `Để sau` · `"Mật khẩu cần tối thiểu 8 ký tự gồm chữ hoa, chữ thường và số hoặc ký tự đặc biệt."` · `"Mật khẩu xác nhận chưa khớp."` |
+| **S03–S05** | `setupSkip`, `selectLevelAndSubjects`, `importTimetable`, `timetablePreviewConfirm`, `pickDefaultAvatar`, `subjectNoApproved`, `alarmOnlyOption`, `saveTimetable`, `timetableSaved`, `wakeSuggestion` | `Để sau` · `Chọn trình độ và môn học` · `Tải TKB có sẵn` · `"Kiểm tra lại các tiết trước khi lưu vào hệ thống."` · `Chọn avatar có sẵn` · `"Môn này chưa có câu ôn sáng."` · `Chỉ báo thức` · `Lưu lịch` · `Đã lưu lịch` · `"Đề xuất {time} · kịp tiết {classTime} theo thời gian bạn nhập"` (`Dùng giờ này` / `Sửa thời gian`) |
+| **S04 Hôm nay** | `nextAlarm`, `addCustomAlarm`, `todaySubjects`, `todayReviewOne`, `noSubjectToday`, `pickReview`, `unsyncedProgress` | `"Chuông tiếp theo: {time}, {weekday}"` · `Thêm báo thức tùy chọn giờ` · `Môn/việc hôm nay` · `Một điều cần ôn lại` · `"Hôm nay chưa có môn trong lịch."` · `Chọn câu ôn` · `Chưa đồng bộ` |
+| **S06 Báo thức & Vòng quay 24h** | `bedtimeLabel`, `wakeTimeLabel`, `tonightLabel`, `tomorrowLabel`, `sleepDuration`, `sleepGoalShortNotice`, `alarmOptionsTitle`, `soundAndHaptics`, `challengeModeTitle`, `challengeModeNotice`, `saveAlarm`, `alarmSaved`, `testRing`, `alarmReady` | `Giờ đi ngủ` · `Giờ thức dậy` · `Đêm nay` · `Ngày mai` · `"{hours} giờ"` · `"Lịch trình này chưa đạt mục tiêu ngủ bạn đặt."` *(không chẩn đoán y tế, không gắn chữ Sức khỏe của hãng khác)* · `Tùy chọn báo thức` · `Âm thanh & Cảm ứng` · `Báo thức thử thách` · `"Không có Hoãn. Dừng khẩn cấp luôn có."` · `Lưu báo thức` · `Đã lưu báo thức` · `Thử chuông` · `Đã sẵn sàng` |
 | **S11 Tôi** | `xpAwarded`, `weekCompleted`, `studyRankLabel`, `arenaRpLabel`, `editProfile`, `alarmHistory` | `"+{xp} điểm kinh nghiệm"` · `"Bạn đã hoàn thành {n} buổi sáng tuần này."` · `Hạng học tập` · `Điểm đấu trường` · `Sửa hồ sơ` · `Lịch sử báo thức` |
 | **S12 Cài đặt** | `reportGrading`, `exportData`, `deleteAccount`, `privacyTitle` | `Báo kết quả chấm chưa đúng` · `Xuất dữ liệu` · `Xóa tài khoản` · `Quyền riêng tư` |
 
@@ -138,4 +138,9 @@
 | Trạng thái Chưa rõ (`S10`) | Dấu hỏi trong vòng tròn | Luôn kèm chữ `Chưa đọc rõ` | `Chưa đủ rõ để chấm` |
 | Ngoại tuyến (`OfflineBanner`) | Đám mây gạch chéo | Luôn kèm chữ `Không có mạng` | `Đang ngoại tuyến` |
 | Thiếu quyền OS (`PermissionStatus`) | Tam giác chú ý dịu (không đỏ gắt) | Luôn kèm hướng dẫn mở cài đặt | `Thiếu quyền báo thức` |
+| Giờ đi ngủ (`SleepWakeDial`) | Giường / Trăng khuyết nét mảnh `24×24` | Active / Drag handle | `Điều chỉnh giờ đi ngủ` |
+| Giờ thức dậy (`SleepWakeDial`) | Chuông báo thức / Mặt trời nét mảnh `24×24` | Active / Drag handle | `Điều chỉnh giờ thức dậy` |
+| Tải TKB có sẵn (`S03`/`S05`) | Tệp tải lên / Lịch tuần nét mảnh | Active / Disabled | `Tải thời khóa biểu có sẵn` |
+| Âm thanh báo thức (`S06`) | Nốt nhạc hoặc loa nét mảnh | Active / Muted | `Chọn âm thanh và cảm ứng báo thức` |
+| Hiện / ẩn mật khẩu (`A01`) | Con mắt mở / gạch chéo | Toggle ≥48×48 dp | `Hiện mật khẩu` / `Ẩn mật khẩu` |
 | Không gian học (`F01–F04`) | Đồng hồ bấm giờ / Tạm dừng / Kết thúc | Active | `Bắt đầu phiên học` / `Tạm nghỉ` / `Kết thúc phiên học` |
