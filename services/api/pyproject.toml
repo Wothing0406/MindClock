@@ -1,0 +1,9 @@
+[project]
+name = "mindclock-api"
+version = "0.1.0"
+description = "MindClock FastAPI backend (SQLAlchemy 2 + PostgreSQL/SQLite + Gemini 3.8 & Live)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

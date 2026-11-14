@@ -103,4 +103,74 @@ class RemoteStudyAiGateway implements StudyAiGateway {
     );
     return StudyHelpResponse.fromJson(json, isDebugFixture: false);
   }
+
+  @override
+  Future<PersonalizedPracticeQuestion> generatePersonalizedQuestion({
+    required String subjectCode,
+    String? gradeLevel,
+    String? topicHint,
+    int difficulty = 1,
+    required String idempotencyKey,
+  }) async {
+    final Map<String, dynamic> json = await _apiClient.postJson(
+      '/questions/personalized',
+      idempotencyKey: idempotencyKey,
+      body: <String, dynamic>{
+        'subjectCode': subjectCode.trim().toUpperCase(),
+        if (gradeLevel != null && gradeLevel.trim().isNotEmpty)
+          'gradeLevel': gradeLevel.trim(),
+        if (topicHint != null && topicHint.trim().isNotEmpty)
+          'topicHint': topicHint.trim(),
+        'difficulty': difficulty.clamp(1, 3),
+        'saveToBank': true,
+      },
+    );
+    return PersonalizedPracticeQuestion.fromJson(json, isDebugFixture: false);
+  }
+
+  @override
+  Future<GeminiLiveSessionToken> requestLiveToken({
+    String? sessionId,
+    required String subjectCode,
+    String? gradeLevel,
+    required String taskTitle,
+    String responseModality = 'AUDIO',
+    required bool consentGranted,
+  }) async {
+    final Map<String, dynamic> json = await _apiClient.postJson(
+      '/study/live-token',
+      idempotencyKey:
+          'live_${sessionId ?? "standalone"}_${DateTime.now().millisecondsSinceEpoch}',
+      body: <String, dynamic>{
+        if (sessionId != null && sessionId.trim().isNotEmpty)
+          'sessionId': sessionId.trim(),
+        'subjectCode': subjectCode.trim().toUpperCase(),
+        if (gradeLevel != null && gradeLevel.trim().isNotEmpty)
+          'gradeLevel': gradeLevel.trim(),
+        'taskTitle': taskTitle.trim().isEmpty ? 'Ôn tập cá nhân' : taskTitle.trim(),
+        'responseModality': responseModality,
+        'consentGranted': consentGranted,
+      },
+    );
+    return GeminiLiveSessionToken.fromJson(json, isDebugFixture: false);
+  }
+
+  @override
+  Future<void> syncLearningProfile({
+    String? alias,
+    String? gradeLevel,
+    List<String>? selectedSubjects,
+    bool? liveConsentGranted,
+  }) async {
+    await _apiClient.patchJson(
+      '/me',
+      body: <String, dynamic>{
+        if (alias != null && alias.trim().isNotEmpty) 'alias': alias.trim(),
+        if (gradeLevel != null && gradeLevel.trim().isNotEmpty)
+          'gradeLevel': gradeLevel.trim(),
+        if (selectedSubjects != null) 'selectedSubjects': selectedSubjects,
+        if (liveConsentGranted != null) 'liveConsentGranted': liveConsentGranted,
+      },
+    );
+  }
 }

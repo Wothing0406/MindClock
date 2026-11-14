@@ -17,6 +17,7 @@ import 'package:mindclock_app/domain/models/auth_session.dart';
 import 'package:mindclock_app/domain/models/personal_flow_models.dart';
 import 'package:mindclock_app/domain/models/study_ai_models.dart';
 import 'package:mindclock_app/domain/models/study_focus_models.dart';
+import 'package:mindclock_app/domain/models/study_profile.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
 import 'package:mindclock_app/domain/services/alarm_sync_gateway.dart';
 import 'package:mindclock_app/domain/services/study_focus_bridge.dart';
@@ -574,6 +575,114 @@ void main() {
       expect(envContent, contains('MINDCLOCK_API_BASE_URL'));
       expect(envContent, contains('MINDCLOCK_FIREBASE_WEB_API_KEY'));
       expect(envContent, isNot(contains('AIza')));
+      expect(envContent, isNot(contains('AQ.Ab8')));
+    });
+
+    testWidgets(
+        'INT-TC-08: Tạo câu hỏi cá nhân hóa theo môn & trình độ qua /v1/questions/personalized (0 XP)',
+        (WidgetTester tester) async {
+      final h = buildHarness();
+      await h.guestVm.initialize();
+      await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
+      await h.authGateway.signInWithEmailPassword(
+        email: 'usera@mindclock.vn',
+        password: 'password123',
+      );
+      await h.guestVm.saveStudyProfile(
+        const StudyProfile(
+          gradeLevel: 'Lớp 11',
+          selectedSubjectCodes: <String>['physics', 'math'],
+          goalLabel: 'Ôn thi Vật lí',
+        ),
+      );
+      await h.studyVm.setAccountAuthenticated(
+        true,
+        gradeLevel: h.guestVm.profile.gradeLevel,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MindClockTheme.buildThemeData(),
+          home: StudySpaceScreen(
+            guestViewModel: h.guestVm,
+            studyViewModel: h.studyVm,
+            onClose: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final Finder genBtn =
+          find.byKey(const ValueKey<String>('study-personalized-generate-button'));
+      await tester.ensureVisible(genBtn);
+      await tester.tap(genBtn);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey<String>('study-personalized-result-card')),
+        findsOneWidget,
+      );
+      expect(h.studyVm.personalizedQuestion, isNotNull);
+      expect(h.studyVm.personalizedQuestion!.gradeBand, 'Lớp 11');
+      expect(h.studyVm.personalizedQuestion!.xpAwarded, 0);
+      expect(h.studyVm.personalizedQuestion!.modelVersion, 'gemini-3.8-flash');
+    });
+
+    testWidgets(
+        'INT-TC-09: Gemini Live (gemini-3.8-live) bắt buộc opt-in consent trước khi cấp ephemeral token',
+        (WidgetTester tester) async {
+      final h = buildHarness();
+      await h.guestVm.initialize();
+      await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
+      await h.authGateway.signInWithEmailPassword(
+        email: 'usera@mindclock.vn',
+        password: 'password123',
+      );
+      await h.studyVm.setAccountAuthenticated(true, gradeLevel: 'Lớp 9');
+
+      // Gọi trực tiếp gateway với consentGranted=false phải bị chặn 403 CONSENT_REQUIRED
+      await expectLater(
+        () => RemoteStudyAiGateway(apiClient: h.apiClient).requestLiveToken(
+          subjectCode: 'math',
+          gradeLevel: 'Lớp 9',
+          taskTitle: 'Ôn phương trình',
+          consentGranted: false,
+        ),
+        throwsA(isA<PersonalApiException>()
+            .having((PersonalApiException e) => e.isForbidden, 'isForbidden', true)),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MindClockTheme.buildThemeData(),
+          home: StudySpaceScreen(
+            guestViewModel: h.guestVm,
+            studyViewModel: h.studyVm,
+            onClose: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final Finder consentToggle =
+          find.byKey(const ValueKey<String>('study-live-consent-toggle'));
+      await tester.ensureVisible(consentToggle);
+      await tester.tap(consentToggle);
+      await tester.pump();
+
+      final Finder tokenBtn =
+          find.byKey(const ValueKey<String>('study-live-token-button'));
+      await tester.ensureVisible(tokenBtn);
+      await tester.tap(tokenBtn);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey<String>('study-live-token-card')),
+        findsOneWidget,
+      );
+      expect(h.studyVm.liveToken, isNotNull);
+      expect(h.studyVm.liveToken!.model, 'gemini-3.8-live');
+      expect(h.studyVm.liveToken!.wsUrl, contains('BidiGenerateContentConstrained'));
     });
   });
 }

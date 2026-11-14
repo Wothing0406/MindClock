@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mindclock}
+      POSTGRES_USER: ${POSTGRES_USER:-mindclock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mindclock_local_dev}
+    volumes:
+      - mindclock_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mindclock} -d ${POSTGRES_DB:-mindclock}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mindclock_internal
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mindclock}:${POSTGRES_PASSWORD:-mindclock_local_dev}@postgres:5432/${POSTGRES_DB:-mindclock}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindclock_internal
+      - mindclock_public
+
+networks:
+  mindclock_internal:
+    driver: bridge
+    internal: true
+  mindclock_public:
+    driver: bridge
+
+volumes:
+  mindclock_pgdata:

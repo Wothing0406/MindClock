@@ -27,4 +27,28 @@ abstract interface class StudyAiGateway {
     required List<StudyHelpTurn> recentTurns,
     required String idempotencyKey,
   });
+
+  Future<PersonalizedPracticeQuestion> generatePersonalizedQuestion({
+    required String subjectCode,
+    String? gradeLevel,
+    String? topicHint,
+    int difficulty = 1,
+    required String idempotencyKey,
+  });
+
+  Future<GeminiLiveSessionToken> requestLiveToken({
+    String? sessionId,
+    required String subjectCode,
+    String? gradeLevel,
+    required String taskTitle,
+    String responseModality = 'AUDIO',
+    required bool consentGranted,
+  });
+
+  Future<void> syncLearningProfile({
+    String? alias,
+    String? gradeLevel,
+    List<String>? selectedSubjects,
+    bool? liveConsentGranted,
+  });
 }

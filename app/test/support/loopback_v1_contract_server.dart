@@ -657,6 +657,77 @@ class LoopbackV1ContractServer {
       return;
     }
 
+    if (path == '/v1/questions/personalized' && request.method == 'POST') {
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      final String subject =
+          (map['subjectCode'] as String? ?? 'TOAN').toUpperCase();
+      final String grade = (map['gradeLevel'] as String? ?? 'Lớp 9').trim();
+      final String topic =
+          (map['topicHint'] as String? ?? 'Kiến thức trọng tâm').trim();
+      await _writeJson(request.response, 200, <String, dynamic>{
+        'questionId': 'ai_q_${subject.toLowerCase()}_01',
+        'subjectCode': subject,
+        'gradeBand': grade,
+        'topicId': '${subject.toLowerCase()}_custom',
+        'difficulty': map['difficulty'] ?? 1,
+        'prompt': '[$subject · $grade] Ôn $topic: Hãy nêu bước đầu tiên để giải bài.',
+        'reasoningPromptVi': 'Viết ngắn gọn 1–2 bước lý giải trước khi chốt đáp án.',
+        'steps': <String>['Xác định dữ kiện đề', 'Áp dụng công thức trọng tâm'],
+        'hintVi': 'Thử liệt kê các đại lượng đã biết.',
+        'status': 'draft',
+        'sourceType': 'ai_personalized_draft',
+        'modelVersion': 'gemini-3.8-flash',
+        'xpAwarded': 0,
+        'fallbackUsed': false,
+      });
+      return;
+    }
+
+    if (path == '/v1/study/live-token' && request.method == 'POST') {
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      if (map['consentGranted'] != true) {
+        await _writeJson(request.response, 403, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'CONSENT_REQUIRED',
+            'message': 'Cần đồng ý rõ ràng trước khi mở Gemini Live.',
+            'retryable': false,
+          },
+        });
+        return;
+      }
+      final String subject = (map['subjectCode'] as String? ?? 'TOAN').trim();
+      final String grade = (map['gradeLevel'] as String? ?? 'Lớp 9').trim();
+      await _writeJson(request.response, 200, <String, dynamic>{
+        'tokenName': 'auth_tokens/loopback_live_01',
+        'wsUrl':
+            'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained?access_token=auth_tokens/loopback_live_01',
+        'model': 'gemini-3.8-live',
+        'expiresAt': '2026-11-14T12:00:00Z',
+        'expiresInSeconds': 600,
+        'responseModalities': <String>[
+          (map['responseModality'] as String? ?? 'AUDIO'),
+        ],
+        'contextSummary': '$subject · $grade',
+        'isMock': true,
+      });
+      return;
+    }
+
+    if (path == '/v1/me' && request.method == 'PATCH') {
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      await _writeJson(request.response, 200, <String, dynamic>{
+        'id': uid,
+        'authSubject': uid,
+        'alias': map['alias'] ?? 'Học sinh',
+        'gradeLevel': map['gradeLevel'] ?? 'Lớp 9',
+        'selectedSubjects': map['selectedSubjects'] ?? <String>['TOAN'],
+      });
+      return;
+    }
+
     await _writeJson(request.response, 404, <String, dynamic>{
       'error': <String, dynamic>{
         'code': 'NOT_FOUND',

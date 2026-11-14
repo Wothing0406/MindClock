@@ -107,3 +107,119 @@ class RemoteStudySessionResult {
     );
   }
 }
+
+/// Câu hỏi luyện tập cá nhân hóa sinh ở backend (`POST /v1/questions/personalized`).
+///
+/// Bản nháp AI cá nhân hóa (`status: draft`, `xpAwarded: 0`) không thay thế ngân hàng
+/// báo thức đã duyệt (`GET /v1/challenges/next`).
+class PersonalizedPracticeQuestion {
+  const PersonalizedPracticeQuestion({
+    required this.questionId,
+    required this.subjectCode,
+    required this.gradeBand,
+    required this.topicId,
+    required this.difficulty,
+    required this.prompt,
+    required this.reasoningPromptVi,
+    required this.steps,
+    this.hintVi,
+    required this.status,
+    required this.sourceType,
+    required this.modelVersion,
+    this.xpAwarded = 0,
+    this.fallbackUsed = false,
+    this.isDebugFixture = false,
+  });
+
+  final String questionId;
+  final String subjectCode;
+  final String gradeBand;
+  final String topicId;
+  final int difficulty;
+  final String prompt;
+  final String reasoningPromptVi;
+  final List<String> steps;
+  final String? hintVi;
+  final String status;
+  final String sourceType;
+  final String modelVersion;
+  final int xpAwarded;
+  final bool fallbackUsed;
+  final bool isDebugFixture;
+
+  factory PersonalizedPracticeQuestion.fromJson(
+    Map<String, dynamic> json, {
+    required bool isDebugFixture,
+  }) {
+    final List<dynamic> rawSteps =
+        (json['steps'] as List<dynamic>?) ?? const <dynamic>[];
+    final String rawHint = (json['hintVi'] ?? '').toString().trim();
+    return PersonalizedPracticeQuestion(
+      questionId: (json['questionId'] ?? '').toString(),
+      subjectCode: (json['subjectCode'] ?? 'TOAN').toString(),
+      gradeBand: (json['gradeBand'] ?? 'Lớp 9').toString(),
+      topicId: (json['topicId'] ?? '').toString(),
+      difficulty: (json['difficulty'] as num?)?.toInt() ?? 1,
+      prompt: (json['prompt'] ?? '').toString(),
+      reasoningPromptVi: (json['reasoningPromptVi'] ?? '').toString(),
+      steps: rawSteps
+          .map((dynamic e) => e.toString().trim())
+          .where((String s) => s.isNotEmpty)
+          .toList(growable: false),
+      hintVi: rawHint.isEmpty ? null : rawHint,
+      status: (json['status'] ?? 'draft').toString(),
+      sourceType: (json['sourceType'] ?? 'ai_personalized_draft').toString(),
+      modelVersion: (json['modelVersion'] ?? 'gemini-3.8-flash').toString(),
+      xpAwarded: (json['xpAwarded'] as num?)?.toInt() ?? 0,
+      fallbackUsed: json['fallbackUsed'] == true,
+      isDebugFixture: isDebugFixture,
+    );
+  }
+}
+
+/// Ephemeral token dùng 1 lần cho phiên Gemini Live opt-in (`POST /v1/study/live-token`).
+class GeminiLiveSessionToken {
+  const GeminiLiveSessionToken({
+    required this.tokenName,
+    required this.wsUrl,
+    required this.model,
+    required this.expiresAt,
+    required this.expiresInSeconds,
+    required this.responseModalities,
+    required this.contextSummary,
+    this.isMock = false,
+    this.isDebugFixture = false,
+  });
+
+  final String tokenName;
+  final String wsUrl;
+  final String model;
+  final String expiresAt;
+  final int expiresInSeconds;
+  final List<String> responseModalities;
+  final String contextSummary;
+  final bool isMock;
+  final bool isDebugFixture;
+
+  factory GeminiLiveSessionToken.fromJson(
+    Map<String, dynamic> json, {
+    required bool isDebugFixture,
+  }) {
+    final List<dynamic> rawModalities =
+        (json['responseModalities'] as List<dynamic>?) ?? const <dynamic>['AUDIO'];
+    return GeminiLiveSessionToken(
+      tokenName: (json['tokenName'] ?? '').toString(),
+      wsUrl: (json['wsUrl'] ?? '').toString(),
+      model: (json['model'] ?? 'gemini-3.8-live').toString(),
+      expiresAt: (json['expiresAt'] ?? '').toString(),
+      expiresInSeconds: (json['expiresInSeconds'] as num?)?.toInt() ?? 600,
+      responseModalities: rawModalities
+          .map((dynamic e) => e.toString().trim())
+          .where((String s) => s.isNotEmpty)
+          .toList(growable: false),
+      contextSummary: (json['contextSummary'] ?? '').toString(),
+      isMock: json['isMock'] == true,
+      isDebugFixture: isDebugFixture,
+    );
+  }
+}

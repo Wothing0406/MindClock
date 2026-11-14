@@ -71,6 +71,15 @@ class StudyFocusViewModel extends ChangeNotifier {
   Future<void>? _pendingRemoteCreate;
   Future<void>? _pendingRemoteFinish;
 
+  // Trạng thái câu hỏi cá nhân hóa & Gemini Live opt-in
+  PersonalizedPracticeQuestion? _personalizedQuestion;
+  StudyAiRequestStatus _personalizedStatus = StudyAiRequestStatus.idle;
+  String? _personalizedErrorVi;
+  bool _liveConsentGranted = false;
+  GeminiLiveSessionToken? _liveToken;
+  StudyAiRequestStatus _liveTokenStatus = StudyAiRequestStatus.idle;
+  String? _liveTokenErrorVi;
+
   String get ownerScopeKey => _ownerScopeKey;
   bool get isAuthenticated => _isAuthenticated;
   String? get gradeLevel => _gradeLevel;
@@ -96,6 +105,13 @@ class StudyFocusViewModel extends ChangeNotifier {
   String? get aiErrorVi => _aiErrorVi;
   String? get pendingHelpQuestion => _pendingHelpQuestion;
   String? get remoteSessionErrorVi => _remoteSessionErrorVi;
+  PersonalizedPracticeQuestion? get personalizedQuestion => _personalizedQuestion;
+  StudyAiRequestStatus get personalizedStatus => _personalizedStatus;
+  String? get personalizedErrorVi => _personalizedErrorVi;
+  bool get liveConsentGranted => _liveConsentGranted;
+  GeminiLiveSessionToken? get liveToken => _liveToken;
+  StudyAiRequestStatus get liveTokenStatus => _liveTokenStatus;
+  String? get liveTokenErrorVi => _liveTokenErrorVi;
 
   Future<void> waitForPendingRemoteWork() async {
     await _pendingRemoteCreate;
@@ -177,6 +193,12 @@ class StudyFocusViewModel extends ChangeNotifier {
     _pendingHelpQuestion = null;
     _pendingHelpIdempotencyKey = null;
     _remoteSessionErrorVi = null;
+    _personalizedQuestion = null;
+    _personalizedStatus = StudyAiRequestStatus.idle;
+    _personalizedErrorVi = null;
+    _liveToken = null;
+    _liveTokenStatus = StudyAiRequestStatus.idle;
+    _liveTokenErrorVi = null;
   }
 
   String _normalizeScope(String scope) {
@@ -527,6 +549,162 @@ class StudyFocusViewModel extends ChangeNotifier {
       return 'Phiên đăng nhập đã hết hạn. Đăng nhập lại ở tab Cá nhân rồi bấm Thử lại.';
     }
     return '${error.messageVi} (${StudyHelpResponse.offlineFallbackMessageVi})';
+  }
+
+  /// Sinh 1 câu hỏi ôn tập cá nhân hóa (`POST /v1/questions/personalized`, 0 XP).
+  Future<PersonalizedPracticeQuestion?> generatePersonalizedQuestion({
+    required String subjectCode,
+    String? gradeLevel,
+    String? topicHint,
+    int difficulty = 1,
+  }) async {
+    final StudyAiGateway? gateway = _aiGateway;
+    if (gateway == null) {
+      _personalizedStatus = StudyAiRequestStatus.offline;
+      _personalizedErrorVi = 'Chưa nối backend AI để tạo câu hỏi cá nhân hóa.';
+      notifyListeners();
+      return null;
+    }
+    if (!_isAuthenticated && !gateway.isDebugFixture) {
+      _personalizedStatus = StudyAiRequestStatus.authExpired;
+      _personalizedErrorVi = 'Đăng nhập ở tab Cá nhân để tạo câu hỏi cá nhân hóa.';
+      notifyListeners();
+      return null;
+    }
+
+    final String scopeAtStart = _ownerScopeKey;
+    _personalizedStatus = StudyAiRequestStatus.loading;
+    _personalizedErrorVi = null;
+    notifyListeners();
+
+    try {
+      final PersonalizedPracticeQuestion q =
+          await gateway.generatePersonalizedQuestion(
+        subjectCode: subjectCode,
+        gradeLevel: gradeLevel ?? _gradeLevel,
+        topicHint: topicHint,
+        difficulty: difficulty,
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+      );
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _personalizedQuestion = q;
+      _personalizedStatus = StudyAiRequestStatus.ready;
+      _personalizedErrorVi = null;
+      notifyListeners();
+      return q;
+    } on PersonalApiException catch (error) {
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _personalizedStatus = _mapApiExceptionToStatus(error);
+      _personalizedErrorVi = error.messageVi;
+      notifyListeners();
+      return null;
+    } catch (_) {
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _personalizedStatus = StudyAiRequestStatus.error;
+      _personalizedErrorVi = 'Không thể tạo câu hỏi cá nhân hóa lúc này.';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  void setLiveConsentGranted(bool granted) {
+    if (_liveConsentGranted == granted) return;
+    _liveConsentGranted = granted;
+    if (!granted) {
+      _liveToken = null;
+      _liveTokenStatus = StudyAiRequestStatus.idle;
+      _liveTokenErrorVi = null;
+    }
+    notifyListeners();
+  }
+
+  /// Xin ephemeral token Gemini Live (`POST /v1/study/live-token`) khi đã đồng ý rõ ràng.
+  Future<GeminiLiveSessionToken?> requestGeminiLiveToken({
+    required String subjectCode,
+    String? gradeLevel,
+    String? taskTitle,
+    String responseModality = 'AUDIO',
+  }) async {
+    if (!_liveConsentGranted) {
+      _liveTokenStatus = StudyAiRequestStatus.error;
+      _liveTokenErrorVi =
+          'Bạn cần bật đồng ý dùng trợ lý giọng nói Gemini Live trước.';
+      notifyListeners();
+      return null;
+    }
+    final StudyAiGateway? gateway = _aiGateway;
+    if (gateway == null) {
+      _liveTokenStatus = StudyAiRequestStatus.offline;
+      _liveTokenErrorVi = 'Chưa nối backend để cấp phiên Gemini Live.';
+      notifyListeners();
+      return null;
+    }
+    if (!_isAuthenticated && !gateway.isDebugFixture) {
+      _liveTokenStatus = StudyAiRequestStatus.authExpired;
+      _liveTokenErrorVi = 'Đăng nhập ở tab Cá nhân trước khi mở Gemini Live.';
+      notifyListeners();
+      return null;
+    }
+
+    final String scopeAtStart = _ownerScopeKey;
+    _liveTokenStatus = StudyAiRequestStatus.loading;
+    _liveTokenErrorVi = null;
+    notifyListeners();
+
+    try {
+      final String? sessionId =
+          _activeSnapshot?.remoteSessionId ?? _activeSnapshot?.sessionId;
+      final String effectiveTask = (taskTitle != null && taskTitle.trim().isNotEmpty)
+          ? taskTitle.trim()
+          : (_activeSnapshot?.taskTitle ??
+              (_draftTaskTitle.trim().isEmpty
+                  ? 'Ôn tập cá nhân'
+                  : _draftTaskTitle.trim()));
+      final GeminiLiveSessionToken tok = await gateway.requestLiveToken(
+        sessionId: sessionId,
+        subjectCode: subjectCode,
+        gradeLevel: gradeLevel ?? _gradeLevel,
+        taskTitle: effectiveTask,
+        responseModality: responseModality,
+        consentGranted: _liveConsentGranted,
+      );
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _liveToken = tok;
+      _liveTokenStatus = StudyAiRequestStatus.ready;
+      _liveTokenErrorVi = null;
+      notifyListeners();
+      return tok;
+    } on PersonalApiException catch (error) {
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _liveTokenStatus = _mapApiExceptionToStatus(error);
+      _liveTokenErrorVi = error.messageVi;
+      notifyListeners();
+      return null;
+    } catch (_) {
+      if (_ownerScopeKey != scopeAtStart) return null;
+      _liveTokenStatus = StudyAiRequestStatus.error;
+      _liveTokenErrorVi = 'Không xin được phiên Gemini Live lúc này.';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<void> syncLearningProfile({
+    String? alias,
+    String? gradeLevel,
+    List<String>? selectedSubjects,
+  }) async {
+    final StudyAiGateway? gateway = _aiGateway;
+    if (gateway == null || !_isAuthenticated) return;
+    try {
+      await gateway.syncLearningProfile(
+        alias: alias,
+        gradeLevel: gradeLevel,
+        selectedSubjects: selectedSubjects,
+      );
+    } catch (_) {
+      // Đồng bộ hồ sơ là best-effort; lỗi mạng không chặn thao tác local.
+    }
   }
 
   Future<void> pauseSession() async {

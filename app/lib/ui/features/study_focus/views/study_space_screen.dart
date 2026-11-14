@@ -39,6 +39,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   final TextEditingController _doneController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
   final TextEditingController _aiInputController = TextEditingController();
+  final TextEditingController _personalizedTopicController =
+      TextEditingController();
+  String? _selectedPersonalizedSubject;
 
   @override
   void initState() {
@@ -55,6 +58,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     _doneController.dispose();
     _stuckController.dispose();
     _aiInputController.dispose();
+    _personalizedTopicController.dispose();
     super.dispose();
   }
 
@@ -354,6 +358,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           ),
         ),
         SizedBox(height: mc.space16),
+        _buildPersonalizedPracticeCard(context, mc, vm),
+        SizedBox(height: mc.space16),
+        _buildGeminiLiveOptInCard(context, mc, vm),
+        SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
         SizedBox(height: mc.space16),
         MindClockNoticeBanner(
@@ -560,6 +568,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         ),
         SizedBox(height: mc.space16),
         _buildAiHelpCard(context, mc, vm, snapshot),
+        SizedBox(height: mc.space16),
+        _buildPersonalizedPracticeCard(context, mc, vm),
+        SizedBox(height: mc.space16),
+        _buildGeminiLiveOptInCard(context, mc, vm),
         SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
       ],
@@ -794,6 +806,253 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
               _doneController.clear();
               _stuckController.clear();
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<String> _availablePersonalSubjects(StudyFocusViewModel vm) {
+    final List<String> profileSubjects =
+        widget.guestViewModel.profile.selectedSubjectCodes;
+    if (profileSubjects.isNotEmpty) return profileSubjects;
+    if (vm.draftSubjectCode != null && vm.draftSubjectCode!.isNotEmpty) {
+      return <String>[vm.draftSubjectCode!];
+    }
+    return const <String>['math', 'literature', 'english'];
+  }
+
+  Widget _buildPersonalizedPracticeCard(
+    BuildContext context,
+    MindClockTheme mc,
+    StudyFocusViewModel vm,
+  ) {
+    final List<String> subjects = _availablePersonalSubjects(vm);
+    final String effectiveSubject =
+        (_selectedPersonalizedSubject != null &&
+                subjects.contains(_selectedPersonalizedSubject))
+            ? _selectedPersonalizedSubject!
+            : subjects.first;
+    final String gradeLabel =
+        widget.guestViewModel.profile.gradeLevel ?? 'Lớp 9';
+    final bool isLoading =
+        vm.personalizedStatus == StudyAiRequestStatus.loading;
+    final PersonalizedPracticeQuestion? question = vm.personalizedQuestion;
+
+    return MindClockCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                'Câu hỏi cá nhân hóa theo môn & lớp',
+                style: mc.sectionTitleStyle,
+              ),
+              MindClockStatusPill(
+                label: gradeLabel,
+                accentWarm: false,
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space8),
+          Text(
+            'Tạo bản nháp luyện tập vừa sức theo trình độ $gradeLabel và môn bạn đã chọn (0 XP, không thay ngân hàng báo thức đã duyệt).',
+            style: mc.captionStyle,
+          ),
+          SizedBox(height: mc.space12),
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            children: subjects.map((String code) {
+              return _SelectableChip(
+                key: ValueKey<String>('study-personalized-subject-$code'),
+                label: SubjectCatalog.nameFor(code),
+                selected: code == effectiveSubject,
+                onTap: () => setState(() => _selectedPersonalizedSubject = code),
+              );
+            }).toList(growable: false),
+          ),
+          SizedBox(height: mc.space12),
+          TextField(
+            key: const ValueKey<String>('study-personalized-topic-input'),
+            controller: _personalizedTopicController,
+            enabled: !isLoading,
+            decoration: InputDecoration(
+              labelText: 'Chủ đề muốn ôn (tùy chọn)',
+              hintText: 'Ví dụ: Phương trình bậc nhất, Thì hiện tại hoàn thành...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(mc.radiusControl),
+              ),
+            ),
+          ),
+          if (vm.personalizedErrorVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockNoticeBanner(
+              key: const ValueKey<String>('study-personalized-error-banner'),
+              message: vm.personalizedErrorVi!,
+              isWarm: true,
+            ),
+          ],
+          if (question != null) ...<Widget>[
+            SizedBox(height: mc.space12),
+            Container(
+              key: const ValueKey<String>('study-personalized-result-card'),
+              width: double.infinity,
+              padding: EdgeInsets.all(mc.space12),
+              decoration: BoxDecoration(
+                color: mc.primarySoft,
+                borderRadius: BorderRadius.circular(mc.radiusChip),
+                border: Border.all(color: mc.outline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    '${SubjectCatalog.nameFor(effectiveSubject)} · ${question.gradeBand} · ${question.modelVersion}',
+                    style: mc.chipLabelStyle,
+                  ),
+                  SizedBox(height: mc.space4),
+                  Text(question.prompt, style: mc.bodyStrongStyle),
+                  if (question.reasoningPromptVi.isNotEmpty) ...<Widget>[
+                    SizedBox(height: mc.space4),
+                    Text(question.reasoningPromptVi, style: mc.captionStyle),
+                  ],
+                  if (question.hintVi != null &&
+                      question.hintVi!.isNotEmpty) ...<Widget>[
+                    SizedBox(height: mc.space4),
+                    Text('Gợi ý: ${question.hintVi!}', style: mc.captionStyle),
+                  ],
+                  SizedBox(height: mc.space4),
+                  Text(
+                    'Bản nháp cá nhân · ${question.xpAwarded} XP',
+                    style: mc.captionStyle,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SizedBox(height: mc.space12),
+          MindClockButton(
+            key: const ValueKey<String>('study-personalized-generate-button'),
+            label: isLoading
+                ? 'Đang tạo câu hỏi cá nhân...'
+                : 'Tạo câu hỏi cá nhân hóa',
+            icon: MindClockIconKind.book,
+            variant: MindClockButtonVariant.secondary,
+            onPressed: isLoading
+                ? null
+                : () => vm.generatePersonalizedQuestion(
+                      subjectCode: effectiveSubject,
+                      gradeLevel: gradeLabel,
+                      topicHint: _personalizedTopicController.text,
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGeminiLiveOptInCard(
+    BuildContext context,
+    MindClockTheme mc,
+    StudyFocusViewModel vm,
+  ) {
+    final List<String> subjects = _availablePersonalSubjects(vm);
+    final String activeSubject =
+        vm.draftSubjectCode ?? _selectedPersonalizedSubject ?? subjects.first;
+    final String gradeLabel =
+        widget.guestViewModel.profile.gradeLevel ?? 'Lớp 9';
+    final bool isLoading =
+        vm.liveTokenStatus == StudyAiRequestStatus.loading;
+    final GeminiLiveSessionToken? token = vm.liveToken;
+
+    return MindClockCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                'Gemini Live thoại (tùy chọn)',
+                style: mc.sectionTitleStyle,
+              ),
+              MindClockStatusPill(
+                label: vm.liveConsentGranted ? 'Đã đồng ý' : 'Đang tắt',
+                accentWarm: !vm.liveConsentGranted,
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space8),
+          Text(
+            'Chỉ mở phiên khi bạn đồng ý rõ ràng. Máy chủ cấp token ngắn hạn 1 lần (gemini-3.8-live), không lưu âm thanh nền và không đặt API key ở ứng dụng.',
+            style: mc.captionStyle,
+          ),
+          SizedBox(height: mc.space12),
+          _ToggleRow(
+            key: const ValueKey<String>('study-live-consent-toggle'),
+            label: 'Đồng ý bật trợ lý giọng nói Gemini Live cho phiên này',
+            value: vm.liveConsentGranted,
+            onToggle: () => vm.setLiveConsentGranted(!vm.liveConsentGranted),
+          ),
+          if (vm.liveTokenErrorVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockNoticeBanner(
+              key: const ValueKey<String>('study-live-error-banner'),
+              message: vm.liveTokenErrorVi!,
+              isWarm: true,
+            ),
+          ],
+          if (token != null) ...<Widget>[
+            SizedBox(height: mc.space12),
+            Container(
+              key: const ValueKey<String>('study-live-token-card'),
+              width: double.infinity,
+              padding: EdgeInsets.all(mc.space12),
+              decoration: BoxDecoration(
+                color: mc.primarySoft,
+                borderRadius: BorderRadius.circular(mc.radiusChip),
+                border: Border.all(color: mc.outline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Đã cấp phiên ${token.model} (${token.isMock ? "mẫu mock" : "ephemeral token"})',
+                    style: mc.bodyStrongStyle,
+                  ),
+                  SizedBox(height: mc.space4),
+                  Text(
+                    'Ngữ cảnh: ${token.contextSummary} · Hiệu lực ${token.expiresInSeconds} giây',
+                    style: mc.captionStyle,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SizedBox(height: mc.space12),
+          MindClockButton(
+            key: const ValueKey<String>('study-live-token-button'),
+            label: isLoading
+                ? 'Đang cấp token Gemini Live...'
+                : 'Xin phiên Gemini Live',
+            icon: MindClockIconKind.play,
+            variant: MindClockButtonVariant.secondary,
+            onPressed: (!vm.liveConsentGranted || isLoading)
+                ? null
+                : () => vm.requestGeminiLiveToken(
+                      subjectCode: activeSubject,
+                      gradeLevel: gradeLabel,
+                      taskTitle: _customTaskController.text,
+                    ),
           ),
         ],
       ),

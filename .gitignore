@@ -10,6 +10,23 @@ __pycache__/
 *.env.local
 app/.env
 app/*.env.local
+services/api/.env
+services/api/*.env.local
 
-# Flutter SDK installed locally for this workstation
+# Python & DB local
+.venv/
+services/api/.venv/
+.pytest_cache/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Flutter SDK installed locally & generated build/machine artifacts
 /.local-sdk/
+app/.dart_tool/
+app/.flutter-plugins-dependencies
+app/android/local.properties
+app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
