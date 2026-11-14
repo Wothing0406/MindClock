@@ -160,5 +160,19 @@ void main() {
         );
       },
     );
+
+    test('Nhạc chuông Bermuda MP3 lưu và khôi phục đúng qua AlarmConfig JSON', () {
+      const AlarmConfig original = AlarmConfig(
+        id: 'alarm_bermuda_1',
+        hour: 6,
+        minute: 20,
+        soundEnabled: true,
+        soundOption: AlarmSoundOption.bermudaAlarm,
+      );
+      final AlarmConfig restored = AlarmConfig.fromJson(original.toJson());
+      expect(restored.soundOption, AlarmSoundOption.bermudaAlarm);
+      expect(restored.soundOption.id, 'bermuda_alarm');
+      expect(restored.soundOption.labelVi, 'Nhạc chuông Bermuda');
+    });
   });
 }

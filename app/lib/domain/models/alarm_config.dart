@@ -6,6 +6,7 @@ enum AlarmMode {
 enum AlarmSoundOption {
   gentleDawn('gentle_dawn', 'Chuông sáng dịu'),
   clearBell('clear_bell', 'Chuông rõ'),
+  bermudaAlarm('bermuda_alarm', 'Nhạc chuông Bermuda'),
   silentVibrateOnly('vibrate_only', 'Chỉ rung (không âm)');
 
   const AlarmSoundOption(this.id, this.labelVi);

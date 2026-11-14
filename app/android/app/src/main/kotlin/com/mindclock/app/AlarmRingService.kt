@@ -95,8 +95,8 @@ class AlarmRingService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
-        if (soundEnabled && soundOption != "vibrate_only") {
-            startAlarmSound()
+        if (resolveSoundTarget(soundEnabled, soundOption) != AlarmSoundTarget.SILENT) {
+            startAlarmSound(soundOption)
         }
         if (vibrateEnabled) {
             startAlarmVibration()
@@ -126,13 +126,33 @@ class AlarmRingService : Service() {
         stopSelf()
     }
 
-    private fun startAlarmSound() {
+    private fun startAlarmSound(soundOption: String) {
         stopSoundOnly()
-        val alarmUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            ?: return
+        val target = resolveSoundTarget(soundEnabled = true, soundOption = soundOption)
+        val primaryUri = resolveSoundUri(target) ?: return
+        val fallbackUri = resolveSoundUri(AlarmSoundTarget.SYSTEM_DEFAULT)
 
-        try {
+        if (!startMediaPlayerLoop(primaryUri) &&
+            fallbackUri != null &&
+            fallbackUri != primaryUri
+        ) {
+            startMediaPlayerLoop(fallbackUri)
+        }
+    }
+
+    private fun resolveSoundUri(target: AlarmSoundTarget): Uri? {
+        return when (target) {
+            AlarmSoundTarget.SILENT -> null
+            AlarmSoundTarget.BUNDLED_BERMUDA ->
+                Uri.parse("android.resource://$packageName/${R.raw.alarm_bermuda}")
+            AlarmSoundTarget.SYSTEM_DEFAULT ->
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        }
+    }
+
+    private fun startMediaPlayerLoop(alarmUri: Uri): Boolean {
+        return try {
             val player = MediaPlayer().apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
@@ -146,8 +166,10 @@ class AlarmRingService : Service() {
                 start()
             }
             mediaPlayer = player
+            true
         } catch (_: Exception) {
             stopSoundOnly()
+            false
         }
     }
 
@@ -209,8 +231,30 @@ class AlarmRingService : Service() {
         }
     }
 
+    enum class AlarmSoundTarget {
+        SILENT,
+        BUNDLED_BERMUDA,
+        SYSTEM_DEFAULT,
+    }
+
     companion object {
+        const val SOUND_OPTION_BERMUDA = "bermuda_alarm"
+        const val SOUND_OPTION_VIBRATE_ONLY = "vibrate_only"
+
         const val CHANNEL_ID = "mindclock_alarm_ring_channel"
+
+        fun resolveSoundTarget(
+            soundEnabled: Boolean,
+            soundOption: String,
+        ): AlarmSoundTarget {
+            if (!soundEnabled || soundOption == SOUND_OPTION_VIBRATE_ONLY) {
+                return AlarmSoundTarget.SILENT
+            }
+            if (soundOption == SOUND_OPTION_BERMUDA) {
+                return AlarmSoundTarget.BUNDLED_BERMUDA
+            }
+            return AlarmSoundTarget.SYSTEM_DEFAULT
+        }
         const val NOTIFICATION_ID = 4109
 
         const val ACTION_START_RING = "com.mindclock.app.action.START_RING"
