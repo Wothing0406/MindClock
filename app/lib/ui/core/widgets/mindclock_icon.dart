@@ -8,12 +8,16 @@ enum MindClockIconKind {
   calendar,
   check,
   info,
+  warning,
   lock,
   plus,
   minus,
   trash,
   edit,
   sunrise,
+  play,
+  pause,
+  stop,
 }
 
 /// Icon vector nét mảnh thống nhất (24×24 dp, nét 2 px bo tròn theo `docs/55 §5`).
@@ -118,6 +122,15 @@ class _MindClockIconPainter extends CustomPainter {
         canvas.drawCircle(Offset(12 * s, 12 * s), 9 * s, paint);
         canvas.drawLine(Offset(12 * s, 11 * s), Offset(12 * s, 16 * s), paint);
         canvas.drawLine(Offset(12 * s, 8 * s), Offset(12 * s, 8.2 * s), paint);
+      case MindClockIconKind.warning:
+        final Path tri = Path()
+          ..moveTo(12 * s, 4 * s)
+          ..lineTo(20.5 * s, 19 * s)
+          ..lineTo(3.5 * s, 19 * s)
+          ..close();
+        canvas.drawPath(tri, paint);
+        canvas.drawLine(Offset(12 * s, 9.5 * s), Offset(12 * s, 14 * s), paint);
+        canvas.drawLine(Offset(12 * s, 16.5 * s), Offset(12 * s, 16.7 * s), paint);
       case MindClockIconKind.lock:
         canvas.drawRRect(
           RRect.fromRectAndRadius(
@@ -166,6 +179,24 @@ class _MindClockIconPainter extends CustomPainter {
           paint,
         );
         canvas.drawLine(Offset(12 * s, 5 * s), Offset(12 * s, 8 * s), paint);
+      case MindClockIconKind.play:
+        final Path playPath = Path()
+          ..moveTo(8 * s, 5.5 * s)
+          ..lineTo(18 * s, 12 * s)
+          ..lineTo(8 * s, 18.5 * s)
+          ..close();
+        canvas.drawPath(playPath, paint);
+      case MindClockIconKind.pause:
+        canvas.drawLine(Offset(9 * s, 6 * s), Offset(9 * s, 18 * s), paint);
+        canvas.drawLine(Offset(15 * s, 6 * s), Offset(15 * s, 18 * s), paint);
+      case MindClockIconKind.stop:
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(6.5 * s, 6.5 * s, 11 * s, 11 * s),
+            Radius.circular(2 * s),
+          ),
+          paint,
+        );
     }
   }
 

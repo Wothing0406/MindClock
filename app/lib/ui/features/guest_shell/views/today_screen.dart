@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
@@ -10,6 +11,7 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
+import '../../study_focus/view_models/study_focus_view_model.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
 /// Màn hình `S04` Hôm nay (khách local, không có Đấu trường).
@@ -20,6 +22,8 @@ class TodayScreen extends StatelessWidget {
     required this.onCreateAlarm,
     required this.onEditAlarm,
     required this.onOpenTimetableAndProfile,
+    this.studyViewModel,
+    this.onOpenStudySpace,
     this.lastActionBanner,
   });
 
@@ -27,6 +31,8 @@ class TodayScreen extends StatelessWidget {
   final VoidCallback onCreateAlarm;
   final ValueChanged<AlarmConfig> onEditAlarm;
   final VoidCallback onOpenTimetableAndProfile;
+  final StudyFocusViewModel? studyViewModel;
+  final VoidCallback? onOpenStudySpace;
   final String? lastActionBanner;
 
   @override
@@ -294,6 +300,53 @@ class TodayScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          if (onOpenStudySpace != null) ...<Widget>[
+            SizedBox(height: mc.space16),
+            _buildStudySpaceEntryCard(context, mc),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudySpaceEntryCard(BuildContext context, MindClockTheme mc) {
+    final StudyFocusSessionSnapshot? active = studyViewModel?.activeSnapshot;
+    final List<StudyTaskChoice> suggestions = StudyTaskChoice.buildSuggestions(
+      profile: viewModel.profile,
+      timetable: viewModel.timetable,
+      now: studyViewModel?.currentTime ?? DateTime.now(),
+    );
+    final String suggestedTitle = suggestions.first.title;
+    final bool hasOngoing = active != null && active.status.isOngoing;
+    final String ctaLabel;
+    if (active != null && active.status == StudyFocusStatus.interrupted) {
+      ctaLabel = 'Mở phiên đã gián đoạn';
+    } else if (hasOngoing) {
+      ctaLabel = 'Quay lại phiên học';
+    } else {
+      ctaLabel = AppStrings.studyStartCta;
+    }
+
+    return MindClockCard(
+      highlighted: hasOngoing,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(AppStrings.studySpaceTitle, style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space8),
+          Text(
+            hasOngoing
+                ? 'Đang mở: ${active.taskTitle} (${formatDurationClock(studyViewModel!.remainingSeconds)})'
+                : 'Gợi ý hôm nay: $suggestedTitle · Timer cục bộ, tự chọn mức tập trung.',
+            style: mc.bodyStyle,
+          ),
+          SizedBox(height: mc.space12),
+          MindClockButton(
+            key: const ValueKey<String>('today-open-study-space'),
+            label: ctaLabel,
+            icon: MindClockIconKind.play,
+            onPressed: onOpenStudySpace,
           ),
         ],
       ),

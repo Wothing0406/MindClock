@@ -10,6 +10,8 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/practice_session_screen.dart';
+import '../../study_focus/view_models/study_focus_view_model.dart';
+import '../../study_focus/views/study_space_screen.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'alarm_config_screen.dart';
 import 'alarm_ring_screen.dart';
@@ -25,6 +27,7 @@ enum _GuestFlowStage {
   mainTabs,
   alarmConfig,
   timetableProfile,
+  studySpace,
 }
 
 /// Khung điều hướng chính 3 tab (Hôm nay, Luyện tập, Tôi) — lược bỏ hoàn toàn Đấu trường.
@@ -33,10 +36,12 @@ class MindClockShellScreen extends StatefulWidget {
     super.key,
     required this.viewModel,
     required this.personalViewModel,
+    this.studyViewModel,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel personalViewModel;
+  final StudyFocusViewModel? studyViewModel;
 
   @override
   State<MindClockShellScreen> createState() => _MindClockShellScreenState();
@@ -58,6 +63,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     WidgetsBinding.instance.addObserver(this);
     widget.viewModel.addListener(_onViewModelChanged);
     widget.personalViewModel.addListener(_onViewModelChanged);
+    widget.studyViewModel?.addListener(_onViewModelChanged);
     _syncFromViewModel();
   }
 
@@ -66,13 +72,19 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     WidgetsBinding.instance.removeObserver(this);
     widget.viewModel.removeListener(_onViewModelChanged);
     widget.personalViewModel.removeListener(_onViewModelChanged);
+    widget.studyViewModel?.removeListener(_onViewModelChanged);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && widget.viewModel.isLoaded) {
-      widget.viewModel.refreshOsStatus();
+    if (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) {
+      widget.studyViewModel?.onAppBackgrounded();
+    } else if (state == AppLifecycleState.resumed) {
+      widget.studyViewModel?.onAppResumed();
+      if (widget.viewModel.isLoaded) {
+        widget.viewModel.refreshOsStatus();
+      }
     }
   }
 
@@ -88,6 +100,11 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
       _stage = widget.viewModel.workspace.onboardingCompleted
           ? _GuestFlowStage.mainTabs
           : _GuestFlowStage.welcome;
+    }
+    final StudyFocusViewModel? studyVm = widget.studyViewModel;
+    final String scope = widget.personalViewModel.authSession.ownerScopeKey;
+    if (studyVm != null && studyVm.isLoaded && studyVm.ownerScopeKey != scope) {
+      studyVm.setOwnerScope(scope);
     }
   }
 
@@ -240,6 +257,27 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           },
         );
 
+      case _GuestFlowStage.studySpace:
+        final StudyFocusViewModel? studyVm = widget.studyViewModel;
+        if (studyVm == null) {
+          return Scaffold(
+            backgroundColor: mc.paper,
+            body: Center(
+              child: Text('Không gian học chưa được khởi tạo.', style: mc.bodyStyle),
+            ),
+          );
+        }
+        return StudySpaceScreen(
+          guestViewModel: widget.viewModel,
+          studyViewModel: studyVm,
+          onClose: () {
+            setState(() {
+              _stage = _GuestFlowStage.mainTabs;
+              _selectedTabIndex = 0;
+            });
+          },
+        );
+
       case _GuestFlowStage.mainTabs:
         final Widget body;
         switch (_selectedTabIndex) {
@@ -250,6 +288,9 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               onOpenProfileSetup: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },
+              onOpenStudySpace: widget.studyViewModel != null
+                  ? () => setState(() => _stage = _GuestFlowStage.studySpace)
+                  : null,
             );
           case 2:
             body = MeGuestScreen(
@@ -272,6 +313,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           default:
             body = TodayScreen(
               viewModel: widget.viewModel,
+              studyViewModel: widget.studyViewModel,
               lastActionBanner: _todayBanner,
               onCreateAlarm: () {
                 setState(() {
@@ -288,6 +330,9 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               onOpenTimetableAndProfile: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },
+              onOpenStudySpace: widget.studyViewModel != null
+                  ? () => setState(() => _stage = _GuestFlowStage.studySpace)
+                  : null,
             );
         }
 

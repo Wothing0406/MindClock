@@ -13,11 +13,13 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private lateinit var schedulerBridge: AlarmSchedulerBridgeContract
     private lateinit var cameraBridge: CameraBridgeHandler
+    private lateinit var studyFocusBridge: StudyFocusBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         schedulerBridge = AlarmSchedulerImpl(this)
         cameraBridge = CameraBridgeHandler(this)
+        studyFocusBridge = StudyFocusBridgeHandler(this)
         AlarmRingService.ensureNotificationChannel(this)
 
         MethodChannel(
@@ -37,6 +39,13 @@ class MainActivity : FlutterActivity() {
                 result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            StudyFocusBridgeHandler.CHANNEL_NAME,
+        ).setMethodCallHandler { call, result ->
+            studyFocusBridge.handleMethodCall(call, result)
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -46,6 +55,11 @@ class MainActivity : FlutterActivity() {
     ) {
         if (::cameraBridge.isInitialized &&
             cameraBridge.onRequestPermissionsResult(requestCode, grantResults)
+        ) {
+            return
+        }
+        if (::studyFocusBridge.isInitialized &&
+            studyFocusBridge.onRequestPermissionsResult(requestCode, grantResults)
         ) {
             return
         }

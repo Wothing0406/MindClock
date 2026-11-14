@@ -19,6 +19,8 @@
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
+        <package android:name="com.google.android.apps.wellbeing" />
+        <package android:name="com.samsung.android.forest" />
     </queries>
 
     <application

@@ -18,11 +18,13 @@ class PracticeSessionScreen extends StatefulWidget {
     required this.guestViewModel,
     required this.personalViewModel,
     required this.onOpenProfileSetup,
+    this.onOpenStudySpace,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final PersonalFlowViewModel personalViewModel;
   final VoidCallback onOpenProfileSetup;
+  final VoidCallback? onOpenStudySpace;
 
   @override
   State<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
@@ -96,6 +98,16 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
           ],
           SizedBox(height: mc.space16),
           AccountAuthCard(viewModel: pvm),
+          if (widget.onOpenStudySpace != null) ...<Widget>[
+            SizedBox(height: mc.space12),
+            MindClockButton(
+              key: const ValueKey<String>('practice-open-study-space'),
+              label: 'Mở Không gian học tập trung (local)',
+              icon: MindClockIconKind.clock,
+              variant: MindClockButtonVariant.secondary,
+              onPressed: widget.onOpenStudySpace,
+            ),
+          ],
           SizedBox(height: mc.space16),
           // Tiến độ riêng tư (XP chỉ lấy từ server hợp lệ)
           MindClockCard(

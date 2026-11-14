@@ -89,6 +89,20 @@ class AppStrings {
   static const String draftUploadConfirmQuestion =
       'Gửi bài này để nhận nhận xét?';
 
+  // T018 Không gian học local (6A · docs/45)
+  static const String studySpaceTitle = 'Không gian học';
+  static const String studyStartCta = 'Bắt đầu học';
+  static const String studyNoAppLockExplain =
+      'MindClock không khóa các app khác trên điện thoại. Khi rời app, hệ thống chỉ ghi nhận thời gian cục bộ trên máy và không suy ra xao nhãng hay chấm phạt.';
+  static const String studyNoCameraAiScopeNotice =
+      'Chế độ phiên học local hiện tắt camera, micro và AI. Không tự cộng XP chỉ vì thời gian ngồi học.';
+  static const String studyPausedLabel = 'Đang tạm nghỉ';
+  static const String studyInterruptedLabel = 'Phiên đã gián đoạn';
+  static const String studyResumeCta = 'Tiếp tục học';
+  static const String studyPauseCta = 'Tạm nghỉ';
+  static const String studyFinishCta = 'Kết thúc';
+  static const String studySaveCta = 'Lưu phiên';
+
   // Gợi ý giờ dậy
   static const String wakeSuggestionTitle = 'Gợi ý giờ dậy theo lịch (tùy chọn)';
   static const String useWakeSuggestionButton = 'Dùng giờ này';
