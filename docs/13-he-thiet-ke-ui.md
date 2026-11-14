@@ -2,7 +2,7 @@
 
 **Mục tiêu thị giác:** một buổi sáng rõ ràng và dễ bắt đầu, kết hợp hình ảnh mặt đồng hồ với nét giấy học tập. Trò chơi hóa là lớp động viên sau khi hoàn thành, không biến báo thức thành màn game chói mắt. Nền tảng chính: Flutter Android; dashboard web tương lai dùng cùng token nhưng bố cục riêng.
 
-Quy tắc cụ thể về icon, thao tác, sprite 2D, khung rank, animation và bàn giao Figma ở [quy chuẩn giao diện v2](27-quy-chuan-giao-dien-va-figma.md). Kỹ năng/asset nhân vật theo [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md). Khi các tài liệu khác nhau về nhân vật/asset, dùng docs/37.
+Quy tắc cụ thể về icon, thao tác, sprite 2D, khung rank, animation và bàn giao Figma ở [quy chuẩn giao diện v2](27-quy-chuan-giao-dien-va-figma.md); bộ nhãn, từ cấm và bảng token/icon chuẩn cho Flutter ở [docs/55](55-chot-ngon-tu-thiet-ke-va-icon-frontend.md). Kỹ năng/asset nhân vật thử nghiệm theo [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md); hồ sơ/khung/huy hiệu theo [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md); [docs/37](37-kinh-te-rank-va-nhan-vat-2d.md) chỉ giữ quy tắc kinh tế/RP. Khi các tài liệu khác nhau về nhân vật/asset PvP, dùng docs/46.
 
 ## 1. Hướng nghệ thuật
 
@@ -43,7 +43,7 @@ Giá trị dưới đây là **bản v1 để thiết kế và coding**, cần �
 | --- | --- | --- |
 | Trang chủ | Vòng đồng hồ phía trên; báo thức kế tiếp; thẻ môn ngày mai; tiến độ ở dưới | Giờ reo kế tiếp rõ nhất |
 | Thiết lập báo thức | Chọn giờ lớn, ngày lặp, quyền; nút lưu cố định cuối màn | Biết đã được OS cho phép hay chưa |
-| Chuông reo | Nền đêm; giờ cực lớn; câu hỏi một đoạn; nút Bắt đầu; Hoãn/Tắt ở vùng cuối | Dễ thấy Tắt khẩn cấp kể cả chữ phóng to |
+| Chuông reo | Nền đêm; giờ cực lớn; câu hỏi một đoạn; nút Mở câu hỏi; Hoãn (chỉ mode thường)/Dừng khẩn cấp ở vùng cuối | Dễ thấy Dừng khẩn cấp kể cả chữ phóng to |
 | Làm bài | Nền sáng dịu; đề trong thẻ giấy; một gợi ý; chụp bài | Câu hỏi, không phải đồng hồ đếm ngược |
 | Xem ảnh | Ảnh chiếm vùng chính, có khung cắt, chỉ dẫn ánh sáng | Xác nhận ảnh trước khi gửi |
 | Phản hồi | Trích bước AI đã đọc, đánh dấu bước cần xem; gợi ý một câu | “Tôi cần sửa gì?” |
@@ -53,7 +53,7 @@ Giá trị dưới đây là **bản v1 để thiết kế và coding**, cần �
 
 `ClockRing`, `NextAlarmCard`, `SubjectChip`, `QuestionPaper`, `HandwritingPreview`, `StepFeedback`, `HintPanel`, `ProgressWeek`, `PrimaryAction`, `SecondaryAction`, `EmergencyDismiss`, `PermissionStatus`, `OfflineBanner`, `PetBadge` (M3). Mỗi component có trạng thái `default/pressed/disabled/loading/error` nếu tương ứng; mọi control có semantic label và key ổn định để test.
 
-**Quy tắc tương tác:** nút hành động chính nằm trong vùng ngón cái, đủ lớn; “Tắt khẩn cấp” luôn có nhãn chữ, không ẩn trong menu ba chấm. `EmergencyDismiss` không dùng màu đỏ trừng phạt, vì đó là hành động an toàn. Camera chỉ bật sau thao tác rõ ràng. Không hỏi quyền thông báo/camera/ảnh cùng lúc khi onboarding.
+**Quy tắc tương tác:** nút hành động chính nằm trong vùng ngón cái, đủ lớn; “Dừng khẩn cấp” luôn có nhãn chữ, không ẩn trong menu ba chấm. `EmergencyDismiss` không dùng màu đỏ trừng phạt, vì đó là hành động an toàn. Camera chỉ bật sau thao tác rõ ràng. Không hỏi quyền thông báo/camera/ảnh cùng lúc khi onboarding.
 
 ## 5. Accessibility và kiểm tra hình ảnh
 

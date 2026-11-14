@@ -190,6 +190,8 @@ Thứ tự ưu tiên bám sát hành trình: **khách → đặt chuông → reo
 
 ## 5. Mâu thuẫn tài liệu và quyết định còn thiếu
 
+> **Cập nhật T012 (14/11/2026):** các mâu thuẫn #2, #3, #5, #9 về nhãn nút (`Mở câu hỏi`, `Dừng khẩn cấp`, `Chụp nháp`, `Hoàn thành không chấm`), thang XP, từ cấm, tokens và quy chuẩn icon đã được chốt thống nhất tại [docs/55](55-chot-ngon-tu-thiet-ke-va-icon-frontend.md).
+
 ### 5.1. Mâu thuẫn giữa các tài liệu và bản xem thử hiện tại
 
 | # | Vấn đề mâu thuẫn | Nguồn A (Thực tế đã đọc) | Nguồn B (Thực tế đã đọc) | Đề xuất chốt trước khi coding |

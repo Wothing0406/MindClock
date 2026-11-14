@@ -59,6 +59,7 @@
 51. [52 — Hồ sơ, avatar, huy hiệu và lịch sử](52-ho-so-avatar-huy-hieu-va-lich-su.md): phân biệt avatar/khung/badge/tướng, upload, quyền xem lịch sử đấu và báo thức, uy tín, API/SQL dự kiến.
 52. [53 — Tên, avatar và phát ngôn](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md): chuẩn tiếng Việt, nội dung được phép, báo cáo/duyệt/kháng nghị, bảo vệ người học.
 53. [54 — Kiểm kê và backlog frontend](54-kiem-ke-va-backlog-frontend.md): bảng màn hình, 3 phạm vi (prototype/MVP/mở rộng), component/asset tái sử dụng, backlog lát cắt dọc với AC ↔ test và mâu thuẫn tài liệu; chưa sửa code.
+54. [55 — Chốt ngôn từ, thiết kế và icon frontend](55-chot-ngon-tu-thiet-ke-va-icon-frontend.md): bảng chuỗi chuẩn `vi-VN`, từ cấm, tách thuật ngữ, design tokens Flutter và danh mục icon + `semanticLabel`.
 
 ## Quyết định đã chốt để coding
 
