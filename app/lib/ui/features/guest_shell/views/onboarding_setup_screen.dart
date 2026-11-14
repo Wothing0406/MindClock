@@ -66,10 +66,15 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
   void _togglePriority(String code) {
     setState(() {
-      if (_priorities.containsKey(code)) {
+      final PriorityLevel? current = _priorities[code];
+      if (current == null) {
+        if (_priorities.length < StudyProfile.maxPrioritySubjects) {
+          _priorities[code] = PriorityLevel.high;
+        }
+      } else if (current == PriorityLevel.high) {
+        _priorities[code] = PriorityLevel.medium;
+      } else {
         _priorities.remove(code);
-      } else if (_priorities.length < StudyProfile.maxPrioritySubjects) {
-        _priorities[code] = PriorityLevel.high;
       }
     });
   }
@@ -252,12 +257,18 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         spacing: mc.space8,
                         runSpacing: mc.space8,
                         children: _selectedSubjects.map((String code) {
-                          final bool isPriority = _priorities.containsKey(code);
+                          final PriorityLevel? level = _priorities[code];
+                          final bool isPriority = level != null;
                           final String name = SubjectCatalog.nameFor(code);
+                          final String levelSuffix = level == PriorityLevel.high
+                              ? ' · Cao'
+                              : level == PriorityLevel.medium
+                                  ? ' · Vừa'
+                                  : '';
                           return MindClockPressable(
                             key: ValueKey<String>('priority-$code'),
                             selected: isPriority,
-                            semanticLabel: 'Ưu tiên $name',
+                            semanticLabel: 'Ưu tiên $name$levelSuffix',
                             onPressed: () => _togglePriority(code),
                             child: Container(
                               padding: EdgeInsets.symmetric(
@@ -285,7 +296,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                                     SizedBox(width: mc.space4),
                                   ],
                                   Text(
-                                    name,
+                                    '$name$levelSuffix',
                                     style: mc.chipLabelStyle,
                                   ),
                                 ],

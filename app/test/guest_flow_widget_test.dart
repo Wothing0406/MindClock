@@ -6,6 +6,13 @@ import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/ui/core/strings/app_strings.dart';
 
 void main() {
+  Future<void> scrollAndTap(WidgetTester tester, Finder finder) async {
+    await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
+    await tester.pumpAndSettle();
+  }
+
   Future<void> pumpApp(
     WidgetTester tester, {
     required InMemoryKeyValueStore store,
@@ -32,7 +39,7 @@ void main() {
   }
 
   testWidgets(
-    'AC-01, AC-04, AC-05, AC-06: luồng khách hoàn chỉnh không Đấu trường, giữ nguyên giờ chuông khi sửa TKB, hiển thị Đã lưu cấu hình',
+    'AC-01..AC-07: luồng khách, sửa lịch giữ nguyên giờ chuông, khôi phục khi mở lại app và hiển thị Đã lưu cấu hình',
     (WidgetTester tester) async {
       final InMemoryKeyValueStore store = InMemoryKeyValueStore();
       await pumpApp(tester, store: store);
@@ -44,19 +51,29 @@ void main() {
       expect(find.text('Đấu trường'), findsNothing);
 
       // Bắt đầu thiết lập học tập khách
-      await tester.tap(find.byKey(const ValueKey<String>('guest-start-setup')));
-      await tester.pumpAndSettle();
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('guest-start-setup')),
+      );
 
-      await tester.tap(find.byKey(const ValueKey<String>('grade-Lớp 9')));
-      await tester.tap(find.byKey(const ValueKey<String>('subject-math')));
-      await tester.tap(find.byKey(const ValueKey<String>('subject-informatics')));
-      await tester.tap(find.byKey(const ValueKey<String>('priority-math')));
+      await scrollAndTap(tester, find.byKey(const ValueKey<String>('grade-Lớp 9')));
+      await scrollAndTap(tester, find.byKey(const ValueKey<String>('subject-math')));
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('subject-informatics')),
+      );
+      await scrollAndTap(tester, find.byKey(const ValueKey<String>('priority-math')));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey<String>('onboarding-goal-input')),
+      );
       await tester.enterText(
         find.byKey(const ValueKey<String>('onboarding-goal-input')),
         'Đạt điểm 9 Toán',
       );
-      await tester.tap(find.byKey(const ValueKey<String>('onboarding-save')));
-      await tester.pumpAndSettle();
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('onboarding-save')),
+      );
 
       // Vào màn Hôm nay: chỉ có 3 tab, không có Đấu trường
       expect(find.text(AppStrings.navToday), findsOneWidget);
@@ -65,10 +82,10 @@ void main() {
       expect(find.text('Đấu trường'), findsNothing);
 
       // Đặt báo thức đầu tiên + xem phép tính gợi ý 07:00 - 25 - 30 - 10 = 05:55
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('today-add-first-alarm')),
       );
-      await tester.pumpAndSettle();
 
       expect(
         find.byKey(const ValueKey<String>('wake-formula-text')),
@@ -80,20 +97,21 @@ void main() {
       expect(find.text('06:00'), findsOneWidget);
 
       // Bấm Dùng giờ này -> giờ chuyển thành 05:55
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('apply-wake-suggestion')),
       );
-      await tester.pumpAndSettle();
       expect(find.text('05:55'), findsWidgets);
 
       // Chọn môn Tin học (chưa có câu duyệt) và bật Thử thách -> thấy rõ giải thích không Hoãn & môn chưa duyệt
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('alarm-subject-informatics')),
       );
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('alarm-mode-challenge')),
       );
-      await tester.pumpAndSettle();
 
       expect(find.textContaining('Không có nút Hoãn'), findsWidgets);
       expect(
@@ -102,37 +120,49 @@ void main() {
       );
 
       // Lưu cấu hình báo thức
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('save-alarm-config')),
       );
-      await tester.pumpAndSettle();
 
       // Ở Hôm nay: thấy giờ 05:55 và badge Đã lưu cấu hình, KHÔNG thấy Đã sẵn sàng
       expect(find.text('05:55'), findsOneWidget);
       expect(find.text(AppStrings.alarmSavedConfigOnly), findsOneWidget);
       expect(find.text('Đã sẵn sàng'), findsNothing);
 
-      // Mở Thời khóa biểu 7 ngày và thêm/sửa tiết -> giờ chuông 05:55 vẫn giữ nguyên
-      await tester.tap(
+      // Mở Thời khóa biểu 7 ngày và thêm tiết -> giờ chuông 05:55 vẫn giữ nguyên
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('today-edit-timetable-profile')),
       );
-      await tester.pumpAndSettle();
-
-      await tester.tap(
+      await scrollAndTap(
+        tester,
         find.byKey(const ValueKey<String>('add-timetable-entry')),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey<String>('save-period-btn')));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const ValueKey<String>('timetable-close')));
-      await tester.pumpAndSettle();
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('save-period-btn')),
+      );
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('timetable-close')),
+      );
 
       expect(find.text('05:55'), findsOneWidget);
       expect(
         find.text(AppStrings.wakeScheduleChangedNotice),
         findsOneWidget,
       );
+
+      // Giả lập đóng và mở lại app với widget tree hoàn toàn mới trên cùng local store
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await pumpApp(tester, store: store);
+
+      expect(find.text(AppStrings.navToday), findsOneWidget);
+      expect(find.text('05:55'), findsOneWidget);
+      expect(find.text(AppStrings.alarmSavedConfigOnly), findsOneWidget);
+      expect(find.textContaining('Đạt điểm 9 Toán'), findsOneWidget);
     },
   );
 
@@ -148,8 +178,10 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byKey(const ValueKey<String>('guest-skip-later')));
-      await tester.pumpAndSettle();
+      await scrollAndTap(
+        tester,
+        find.byKey(const ValueKey<String>('guest-skip-later')),
+      );
       expect(tester.takeException(), isNull);
     },
   );

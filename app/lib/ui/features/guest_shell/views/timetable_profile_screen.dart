@@ -454,12 +454,12 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                                     ),
                                     MindClockPressable(
                                       key: const ValueKey<String>(
-                                          'period-min-minus-15'),
-                                      semanticLabel: 'Giảm 15 phút',
+                                          'period-hour-minus'),
+                                      semanticLabel: 'Giảm 1 giờ',
                                       onPressed: () {
                                         final int next = ((_draftHour * 60 +
                                                         _draftMinute -
-                                                        15) %
+                                                        60) %
                                                     1440 +
                                                 1440) %
                                             1440;
@@ -479,18 +479,18 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                                               mc.radiusChip),
                                           border: Border.all(color: mc.outline),
                                         ),
-                                        child: Text('-15p',
+                                        child: Text('-1h',
                                             style: mc.chipLabelStyle),
                                       ),
                                     ),
                                     MindClockPressable(
                                       key: const ValueKey<String>(
-                                          'period-min-plus-15'),
-                                      semanticLabel: 'Tăng 15 phút',
+                                          'period-hour-plus'),
+                                      semanticLabel: 'Tăng 1 giờ',
                                       onPressed: () {
                                         final int next = (_draftHour * 60 +
                                                 _draftMinute +
-                                                15) %
+                                                60) %
                                             1440;
                                         setState(() {
                                           _draftHour = next ~/ 60;
@@ -508,7 +508,67 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                                               mc.radiusChip),
                                           border: Border.all(color: mc.outline),
                                         ),
-                                        child: Text('+15p',
+                                        child: Text('+1h',
+                                            style: mc.chipLabelStyle),
+                                      ),
+                                    ),
+                                    MindClockPressable(
+                                      key: const ValueKey<String>(
+                                          'period-min-minus-5'),
+                                      semanticLabel: 'Giảm 5 phút',
+                                      onPressed: () {
+                                        final int next = ((_draftHour * 60 +
+                                                        _draftMinute -
+                                                        5) %
+                                                    1440 +
+                                                1440) %
+                                            1440;
+                                        setState(() {
+                                          _draftHour = next ~/ 60;
+                                          _draftMinute = next % 60;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: mc.space8,
+                                          vertical: mc.space4 + 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: mc.surface,
+                                          borderRadius: BorderRadius.circular(
+                                              mc.radiusChip),
+                                          border: Border.all(color: mc.outline),
+                                        ),
+                                        child: Text('-5p',
+                                            style: mc.chipLabelStyle),
+                                      ),
+                                    ),
+                                    MindClockPressable(
+                                      key: const ValueKey<String>(
+                                          'period-min-plus-5'),
+                                      semanticLabel: 'Tăng 5 phút',
+                                      onPressed: () {
+                                        final int next = (_draftHour * 60 +
+                                                _draftMinute +
+                                                5) %
+                                            1440;
+                                        setState(() {
+                                          _draftHour = next ~/ 60;
+                                          _draftMinute = next % 60;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: mc.space8,
+                                          vertical: mc.space4 + 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: mc.surface,
+                                          borderRadius: BorderRadius.circular(
+                                              mc.radiusChip),
+                                          border: Border.all(color: mc.outline),
+                                        ),
+                                        child: Text('+5p',
                                             style: mc.chipLabelStyle),
                                       ),
                                     ),

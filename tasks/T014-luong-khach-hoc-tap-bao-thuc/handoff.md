@@ -23,4 +23,4 @@
 
 1. Cài **Flutter SDK** (và thêm `flutter/bin` vào `PATH` theo `docs/47`), đồng thời sinh phần Android project wrapper còn thiếu bằng `cd app && flutter create . --platforms=android`.
 2. Chạy `flutter pub get && flutter analyze && flutter test` tại `app/` để xác minh biên dịch và toàn bộ `TC-01..TC-08` (sửa nếu có lỗi API/lint cụ thể), rồi cắm điện thoại Android thật (`adb devices`) chạy `flutter run` kiểm tra màn 320/360/390/600 dp & chữ 200%.
-3. Chỉ sau khi `TC-01..TC-08` đạt thật mới chuyển trạng thái `T014` sang `done`, rồi mở task nối Android `MethodChannel` thật (`AlarmManager` + `FullScreenIntent` + phát âm thanh) vào `AlarmSchedulerService`.
+3. Chỉ sau khi `TC-01..TC-08` đạt thật mới chuyển trạng thái `T014` sang `done`, rồi mở task nối Android `MethodChannel` thật (`AlarmManager` + `FullScreenIntent` + phát âm thanh, rà giấy phép file `mp3/jeremayjimenez-bermuda-eas-alarm-2025-my-own-alarm-441470.mp3` hiện đang để trong workspace) vào `AlarmSchedulerService`.

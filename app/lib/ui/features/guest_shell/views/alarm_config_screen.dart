@@ -262,6 +262,16 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                           label: '+5 phút',
                           onPressed: () => _adjustTime(deltaMinutes: 5),
                         ),
+                        _TimeStepChip(
+                          key: const ValueKey<String>('alarm-min-minus-1'),
+                          label: '-1 phút',
+                          onPressed: () => _adjustTime(deltaMinutes: -1),
+                        ),
+                        _TimeStepChip(
+                          key: const ValueKey<String>('alarm-min-plus-1'),
+                          label: '+1 phút',
+                          onPressed: () => _adjustTime(deltaMinutes: 1),
+                        ),
                       ],
                     ),
                   ],
@@ -565,6 +575,16 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                       const MindClockNoticeBanner(
                         message: AppStrings.challengeModeNotice,
                       ),
+                      if (_subjectCode == null) ...<Widget>[
+                        SizedBox(height: mc.space8),
+                        const MindClockNoticeBanner(
+                          message:
+                              'Bạn đang chọn Chỉ báo thức cùng chế độ thử thách: '
+                              'hệ thống sẽ lấy một câu ôn dự phòng nếu môn đã chọn có câu duyệt, '
+                              'hoặc dừng khẩn cấp 1 chạm bất kỳ lúc nào.',
+                          isWarm: false,
+                        ),
+                      ],
                     ],
                   ],
                 ),
