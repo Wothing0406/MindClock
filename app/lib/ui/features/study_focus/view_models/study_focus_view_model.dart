@@ -5,32 +5,41 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/local_study_focus_repository.dart';
 import '../../../../data/services/local_id_generator.dart';
+import '../../../../domain/models/personal_flow_models.dart';
+import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
+import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../../domain/services/study_focus_bridge.dart';
 
-/// ViewModel điều phối Không gian học local (`docs/45 §§1–6`, nhiệm vụ 6A).
+/// ViewModel điều phối Không gian học local & đồng bộ AI qua backend (`docs/45 §§1–6`).
 ///
 /// - Mọi số giây còn lại và tập trung được tính từ mốc thời gian thiết bị (`DateTime`),
 ///   tuyệt đối không cộng thời gian ảo khi kill app hay suy ra xao nhãng khi rời app.
 /// - Tách biệt theo `ownerScopeKey` (`guest` hoặc `user:<uid>`) để không lộ phiên
 ///   khi đăng xuất/đổi tài khoản, đồng thời không chạm vào báo thức local.
+/// - Mọi lỗi mạng/timeout/429/401 của API không bao giờ chặn timer hoặc giữ kẹt màn học.
 class StudyFocusViewModel extends ChangeNotifier {
   StudyFocusViewModel({
     required LocalStudyFocusRepository repository,
     required StudyFocusBridge bridge,
+    StudyAiGateway? aiGateway,
     DateTime Function()? nowProvider,
     bool enablePeriodicTicker = true,
   })  : _repository = repository,
         _bridge = bridge,
+        _aiGateway = aiGateway,
         _nowProvider = nowProvider ?? DateTime.now,
         _enablePeriodicTicker = enablePeriodicTicker;
 
   final LocalStudyFocusRepository _repository;
   final StudyFocusBridge _bridge;
+  final StudyAiGateway? _aiGateway;
   final DateTime Function() _nowProvider;
   final bool _enablePeriodicTicker;
 
   String _ownerScopeKey = 'guest';
+  bool _isAuthenticated = false;
+  String? _gradeLevel;
   bool _isLoaded = false;
   bool _isBackgrounded = false;
   bool _hasPlayedEndCueForSession = false;
@@ -52,7 +61,21 @@ class StudyFocusViewModel extends ChangeNotifier {
   String? _statusBannerVi;
   Timer? _ticker;
 
+  // Trạng thái AI Socratic & đồng bộ `/v1/study/*`
+  List<StudyHelpTurn> _aiTurns = const <StudyHelpTurn>[];
+  StudyAiRequestStatus _aiStatus = StudyAiRequestStatus.idle;
+  String? _aiErrorVi;
+  String? _pendingHelpQuestion;
+  String? _pendingHelpIdempotencyKey;
+  String? _remoteSessionErrorVi;
+  Future<void>? _pendingRemoteCreate;
+  Future<void>? _pendingRemoteFinish;
+
   String get ownerScopeKey => _ownerScopeKey;
+  bool get isAuthenticated => _isAuthenticated;
+  String? get gradeLevel => _gradeLevel;
+  bool get hasAiGateway => _aiGateway != null;
+  bool get isAiDebugFixture => _aiGateway?.isDebugFixture ?? false;
   bool get isLoaded => _isLoaded;
   String get draftTaskTitle => _draftTaskTitle;
   String? get draftSubjectCode => _draftSubjectCode;
@@ -68,6 +91,16 @@ class StudyFocusViewModel extends ChangeNotifier {
       _notificationPermission;
   String? get wellbeingFeedbackVi => _wellbeingFeedbackVi;
   String? get statusBannerVi => _statusBannerVi;
+  List<StudyHelpTurn> get aiTurns => _aiTurns;
+  StudyAiRequestStatus get aiStatus => _aiStatus;
+  String? get aiErrorVi => _aiErrorVi;
+  String? get pendingHelpQuestion => _pendingHelpQuestion;
+  String? get remoteSessionErrorVi => _remoteSessionErrorVi;
+
+  Future<void> waitForPendingRemoteWork() async {
+    await _pendingRemoteCreate;
+    await _pendingRemoteFinish;
+  }
 
   DateTime get currentTime => _nowProvider();
 
@@ -107,6 +140,20 @@ class StudyFocusViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setAccountAuthenticated(
+    bool isAuthenticated, {
+    String? gradeLevel,
+  }) async {
+    final bool changed =
+        isAuthenticated != _isAuthenticated || gradeLevel != _gradeLevel;
+    _isAuthenticated = isAuthenticated;
+    _gradeLevel = gradeLevel;
+    if (changed) {
+      notifyListeners();
+    }
+    // Không tự gửi câu hỏi/bản nháp AI khi chỉ đổi kết nối/trạng thái đăng nhập.
+  }
+
   Future<void> setOwnerScope(String nextOwnerScopeKey) async {
     final String normalized = _normalizeScope(nextOwnerScopeKey);
     if (normalized == _ownerScopeKey && _isLoaded) return;
@@ -115,11 +162,21 @@ class StudyFocusViewModel extends ChangeNotifier {
     _hasPlayedEndCueForSession = false;
     _statusBannerVi = null;
     _wellbeingFeedbackVi = null;
+    _clearAiConversationState();
     await _bridge.cancelStudyReminder();
     _ownerScopeKey = normalized;
     await _reloadScopeState();
     _isLoaded = true;
     notifyListeners();
+  }
+
+  void _clearAiConversationState() {
+    _aiTurns = const <StudyHelpTurn>[];
+    _aiStatus = StudyAiRequestStatus.idle;
+    _aiErrorVi = null;
+    _pendingHelpQuestion = null;
+    _pendingHelpIdempotencyKey = null;
+    _remoteSessionErrorVi = null;
   }
 
   String _normalizeScope(String scope) {
@@ -239,8 +296,9 @@ class StudyFocusViewModel extends ChangeNotifier {
     _hasPlayedEndCueForSession = false;
     _isBackgrounded = false;
     _statusBannerVi = null;
+    _clearAiConversationState();
 
-    _activeSnapshot = StudyFocusSessionSnapshot(
+    final StudyFocusSessionSnapshot snapshot = StudyFocusSessionSnapshot(
       sessionId: LocalIdGenerator.nextUuidV4(),
       ownerScopeKey: _ownerScopeKey,
       taskTitle: resolvedTitle,
@@ -253,11 +311,222 @@ class StudyFocusViewModel extends ChangeNotifier {
       startedAtEpochMs: nowMs,
       plannedEndAtEpochMs: plannedEndMs,
       updatedAtEpochMs: nowMs,
+      createIdempotencyKey: LocalIdGenerator.nextUuidV4(),
+      finishIdempotencyKey: LocalIdGenerator.nextUuidV4(),
     );
+    _activeSnapshot = snapshot;
 
+    // Timer & dữ liệu phiên luôn lưu local trước, không chờ backend.
     await _repository.saveSnapshot(_activeSnapshot!);
     _startTickerIfRunning();
     notifyListeners();
+
+    if (_isAuthenticated && _aiGateway != null) {
+      _pendingRemoteCreate = _syncRemoteSessionCreation(snapshot.sessionId);
+    }
+  }
+
+  Future<bool> retryCreateRemoteSession() async {
+    final StudyFocusSessionSnapshot? current = _activeSnapshot;
+    if (current == null) return false;
+    final Future<bool> work = _syncRemoteSessionCreation(current.sessionId);
+    _pendingRemoteCreate = work;
+    return work;
+  }
+
+  Future<bool> _syncRemoteSessionCreation(String localSessionId) async {
+    final StudyAiGateway? gateway = _aiGateway;
+    final StudyFocusSessionSnapshot? current = _activeSnapshot;
+    if (!_isAuthenticated || gateway == null || current == null) {
+      return false;
+    }
+    if (current.sessionId != localSessionId) return false;
+    if (current.remoteSessionSynced &&
+        current.remoteSessionId != null &&
+        current.remoteSessionId!.isNotEmpty) {
+      return true;
+    }
+
+    final String idempotencyKey = current.createIdempotencyKey.isNotEmpty
+        ? current.createIdempotencyKey
+        : LocalIdGenerator.nextUuidV4();
+    if (current.createIdempotencyKey.isEmpty) {
+      _activeSnapshot = current.copyWith(createIdempotencyKey: idempotencyKey);
+      await _repository.saveSnapshot(_activeSnapshot!);
+    }
+
+    final String scopeAtStart = _ownerScopeKey;
+    try {
+      final RemoteStudySessionResult remote = await gateway.createStudySession(
+        snapshot: _activeSnapshot!,
+        idempotencyKey: idempotencyKey,
+      );
+      final StudyFocusSessionSnapshot? latest = _activeSnapshot;
+      if (_ownerScopeKey != scopeAtStart ||
+          latest == null ||
+          latest.sessionId != localSessionId) {
+        return false;
+      }
+      _activeSnapshot = latest.copyWith(
+        remoteSessionId: remote.remoteSessionId,
+        remoteSessionSynced: true,
+      );
+      _remoteSessionErrorVi = null;
+      await _repository.saveSnapshot(_activeSnapshot!);
+      notifyListeners();
+      return true;
+    } on PersonalApiException catch (error) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      _remoteSessionErrorVi = error.messageVi;
+      notifyListeners();
+      return false;
+    } catch (_) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      _remoteSessionErrorVi =
+          'Chưa tạo được phiên trên server. Bộ đếm local vẫn chạy bình thường.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Hỏi trợ lý học tập Socratic qua backend `POST /v1/study/help` (`docs/45 §5`).
+  ///
+  /// Trả `true` chỉ khi thành công để UI xóa ô nhập; khi lỗi trả `false` và GIỮ NGUYÊN
+  /// câu hỏi người dùng vừa gõ (`_pendingHelpQuestion`) cùng `Idempotency-Key` để bấm Thử lại.
+  Future<bool> requestAiHelp({
+    required String questionText,
+    String? gradeLevel,
+  }) async {
+    final String cleanQuestion = questionText.trim();
+    if (cleanQuestion.isEmpty) return false;
+    final StudyFocusSessionSnapshot? current = _activeSnapshot;
+    if (current == null) return false;
+
+    final bool isSamePendingQuestion = _pendingHelpQuestion == cleanQuestion &&
+        _pendingHelpIdempotencyKey != null;
+    _pendingHelpQuestion = cleanQuestion;
+    if (!isSamePendingQuestion) {
+      _pendingHelpIdempotencyKey = LocalIdGenerator.nextUuidV4();
+    }
+
+    if (!_isAuthenticated) {
+      _aiStatus = StudyAiRequestStatus.authExpired;
+      _aiErrorVi =
+          'Đăng nhập để hỏi AI qua backend. Bạn vẫn giữ câu hỏi vừa nhập và học offline bình thường.';
+      notifyListeners();
+      return false;
+    }
+
+    final StudyAiGateway? gateway = _aiGateway;
+    if (gateway == null) {
+      _aiStatus = StudyAiRequestStatus.offline;
+      _aiErrorVi =
+          'Chưa kết nối backend AI. ${StudyHelpResponse.offlineFallbackMessageVi}';
+      notifyListeners();
+      return false;
+    }
+
+    final String scopeAtStart = _ownerScopeKey;
+    final String sessionIdAtStart = current.sessionId;
+    _aiStatus = StudyAiRequestStatus.loading;
+    _aiErrorVi = null;
+    notifyListeners();
+
+    if (!current.remoteSessionSynced) {
+      await _syncRemoteSessionCreation(current.sessionId);
+    }
+
+    final StudyFocusSessionSnapshot? refreshed = _activeSnapshot;
+    if (_ownerScopeKey != scopeAtStart ||
+        refreshed == null ||
+        refreshed.sessionId != sessionIdAtStart) {
+      return false;
+    }
+
+    final String targetSessionId =
+        (refreshed.remoteSessionId != null && refreshed.remoteSessionId!.isNotEmpty)
+            ? refreshed.remoteSessionId!
+            : refreshed.sessionId;
+
+    try {
+      final List<StudyHelpTurn> clippedTurns = _aiTurns.length <= 3
+          ? List<StudyHelpTurn>.from(_aiTurns)
+          : _aiTurns.sublist(_aiTurns.length - 3);
+      final StudyHelpResponse response = await gateway.requestHelp(
+        sessionId: targetSessionId,
+        taskTitle: refreshed.taskTitle,
+        subjectCode: refreshed.subjectCode,
+        gradeLevel: gradeLevel ?? _gradeLevel,
+        questionText: cleanQuestion,
+        recentTurns: clippedTurns,
+        idempotencyKey: _pendingHelpIdempotencyKey!,
+      );
+      if (_ownerScopeKey != scopeAtStart ||
+          _activeSnapshot?.sessionId != sessionIdAtStart) {
+        return false;
+      }
+
+      _aiTurns = <StudyHelpTurn>[
+        ..._aiTurns,
+        StudyHelpTurn(role: 'user', contentVi: cleanQuestion),
+        StudyHelpTurn(
+          role: 'assistant',
+          contentVi: response.messageVi,
+          nextQuestionVi: response.nextQuestionVi,
+          helpLevel: response.helpLevel,
+          safetyStatus: response.safetyStatus,
+        ),
+      ];
+      _aiStatus = StudyAiRequestStatus.ready;
+      _aiErrorVi = null;
+      _pendingHelpQuestion = null;
+      _pendingHelpIdempotencyKey = null;
+      notifyListeners();
+      return true;
+    } on PersonalApiException catch (error) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      _aiStatus = _mapApiExceptionToStatus(error);
+      _aiErrorVi = _formatAiErrorVi(error);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      _aiStatus = StudyAiRequestStatus.error;
+      _aiErrorVi =
+          'Không gọi được AI lúc này. ${StudyHelpResponse.offlineFallbackMessageVi}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> retryLastAiHelp({String? gradeLevel}) async {
+    final String? pending = _pendingHelpQuestion;
+    if (pending == null || pending.trim().isEmpty) return false;
+    return requestAiHelp(questionText: pending, gradeLevel: gradeLevel);
+  }
+
+  StudyAiRequestStatus _mapApiExceptionToStatus(PersonalApiException error) {
+    if (error.isAuthExpired) return StudyAiRequestStatus.authExpired;
+    if (error.httpStatus == 429) return StudyAiRequestStatus.rateLimited;
+    if (error.isTimeout) return StudyAiRequestStatus.timeout;
+    if (error.isNetworkError) return StudyAiRequestStatus.offline;
+    return StudyAiRequestStatus.error;
+  }
+
+  String _formatAiErrorVi(PersonalApiException error) {
+    if (error.httpStatus == 429) {
+      return 'Bạn đang hỏi hơi nhanh (vượt giới hạn lượt). Chờ một lát rồi bấm Thử lại.';
+    }
+    if (error.isTimeout) {
+      return 'Máy chủ AI phản hồi quá 15 giây. Câu hỏi của bạn vẫn được giữ nguyên để thử lại.';
+    }
+    if (error.isNetworkError) {
+      return 'Mất mạng nên chưa hỏi được AI. ${StudyHelpResponse.offlineFallbackMessageVi}';
+    }
+    if (error.isAuthExpired) {
+      return 'Phiên đăng nhập đã hết hạn. Đăng nhập lại ở tab Cá nhân rồi bấm Thử lại.';
+    }
+    return '${error.messageVi} (${StudyHelpResponse.offlineFallbackMessageVi})';
   }
 
   Future<void> pauseSession() async {
@@ -495,6 +764,9 @@ class StudyFocusViewModel extends ChangeNotifier {
   }
 
   /// Lưu bản ghi phiên đã kết thúc với tính chất idempotent theo `sessionId` (`F07`).
+  ///
+  /// Luôn hoàn tất lưu cục bộ và xóa phiên đang mở TRƯỚC khi gọi `/v1/study/sessions/{id}/finish`
+  /// để API lỗi/timeout tuyệt đối không giữ kẹt người dùng ở màn học.
   Future<StudyFocusRecord?> saveFinishedSession({
     String? notesDone,
     String? notesStuck,
@@ -505,6 +777,9 @@ class StudyFocusViewModel extends ChangeNotifier {
     final DateTime endAt = DateTime.fromMillisecondsSinceEpoch(
       current.endedAtEpochMs ?? _nowProvider().millisecondsSinceEpoch,
     );
+    final String finishKey = current.finishIdempotencyKey.isNotEmpty
+        ? current.finishIdempotencyKey
+        : LocalIdGenerator.nextUuidV4();
     final StudyFocusRecord record = StudyFocusRecord(
       sessionId: current.sessionId,
       ownerScopeKey: current.ownerScopeKey,
@@ -519,14 +794,120 @@ class StudyFocusViewModel extends ChangeNotifier {
       endedAtEpochMs: endAt.millisecondsSinceEpoch,
       notesDone: (notesDone ?? current.notesDone).trim(),
       notesStuck: (notesStuck ?? current.notesStuck).trim(),
+      remoteSessionId: current.remoteSessionId,
+      finishIdempotencyKey: finishKey,
+      remoteFinishSynced: false,
     );
 
     _history = await _repository.saveRecordIdempotent(record);
     await _repository.clearSnapshot(current.ownerScopeKey);
     _activeSnapshot = null;
-    _statusBannerVi = 'Đã lưu phiên học cục bộ trên máy (0 XP từ đồng hồ).';
+    _clearAiConversationState();
+    _statusBannerVi = _isAuthenticated && _aiGateway != null
+        ? 'Đã lưu phiên học cục bộ (0 XP từ đồng hồ) và đang đồng bộ server...'
+        : 'Đã lưu phiên học cục bộ trên máy (0 XP từ đồng hồ).';
     notifyListeners();
+
+    if (_isAuthenticated && _aiGateway != null) {
+      _pendingRemoteFinish = _syncFinishRecord(
+        record,
+        createSnapshot: current,
+      );
+    }
     return record;
+  }
+
+  Future<bool> retryFinishRecordSync(String sessionId) async {
+    final int idx = _history.indexWhere((StudyFocusRecord r) => r.sessionId == sessionId);
+    if (idx < 0) return false;
+    final Future<bool> work = _syncFinishRecord(_history[idx]);
+    _pendingRemoteFinish = work;
+    return work;
+  }
+
+  Future<bool> _syncFinishRecord(
+    StudyFocusRecord record, {
+    StudyFocusSessionSnapshot? createSnapshot,
+  }) async {
+    final StudyAiGateway? gateway = _aiGateway;
+    if (!_isAuthenticated || gateway == null) return false;
+
+    final String scopeAtStart = _ownerScopeKey;
+    StudyFocusRecord working = record;
+    if (working.finishIdempotencyKey.isEmpty) {
+      working = working.copyWith(finishIdempotencyKey: LocalIdGenerator.nextUuidV4());
+      _history = await _repository.saveRecordIdempotent(working);
+    }
+
+    try {
+      // Nếu lúc bắt đầu phiên bị offline nên chưa có remoteSessionId, tạo lại idempotent trước khi finish.
+      if (working.remoteSessionId == null || working.remoteSessionId!.isEmpty) {
+        final StudyFocusSessionSnapshot fallbackSnapshot = createSnapshot ??
+            StudyFocusSessionSnapshot(
+              sessionId: working.sessionId,
+              ownerScopeKey: working.ownerScopeKey,
+              taskTitle: working.taskTitle,
+              subjectCode: working.subjectCode,
+              durationMinutes: working.targetMinutes,
+              level: working.level,
+              status: working.finalStatus,
+              endSoundEnabled: false,
+              notifyOutsideApp: false,
+              startedAtEpochMs: working.startedAtEpochMs,
+              plannedEndAtEpochMs: working.endedAtEpochMs,
+              updatedAtEpochMs: working.endedAtEpochMs,
+            );
+        final String createKey =
+            (createSnapshot != null && createSnapshot.createIdempotencyKey.isNotEmpty)
+                ? createSnapshot.createIdempotencyKey
+                : LocalIdGenerator.nextUuidV4();
+        final RemoteStudySessionResult created = await gateway.createStudySession(
+          snapshot: fallbackSnapshot,
+          idempotencyKey: createKey,
+        );
+        working = working.copyWith(remoteSessionId: created.remoteSessionId);
+        _history = await _repository.saveRecordIdempotent(working);
+      }
+
+      final RemoteStudySessionResult finished = await gateway.finishStudySession(
+        record: working,
+        idempotencyKey: working.finishIdempotencyKey,
+      );
+      if (_ownerScopeKey != scopeAtStart) return false;
+      final StudyFocusRecord synced = working.copyWith(
+        remoteSessionId: finished.remoteSessionId,
+        remoteFinishSynced: true,
+        clearRemoteSyncError: true,
+      );
+      _history = await _repository.saveRecordIdempotent(synced);
+      _statusBannerVi = gateway.isDebugFixture
+          ? 'Đã đồng bộ phiên học kết thúc (mẫu debug, 0 XP).'
+          : 'Đã đồng bộ phiên học kết thúc lên server (0 XP).';
+      notifyListeners();
+      return true;
+    } on PersonalApiException catch (error) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      final StudyFocusRecord failed = working.copyWith(
+        remoteFinishSynced: false,
+        remoteSyncErrorVi: error.messageVi,
+      );
+      _history = await _repository.saveRecordIdempotent(failed);
+      _statusBannerVi =
+          'Phiên đã lưu trên máy; đồng bộ server lỗi (${error.messageVi}).';
+      notifyListeners();
+      return false;
+    } catch (_) {
+      if (_ownerScopeKey != scopeAtStart) return false;
+      final StudyFocusRecord failed = working.copyWith(
+        remoteFinishSynced: false,
+        remoteSyncErrorVi: 'Không thể đồng bộ kết thúc phiên lên server lúc này.',
+      );
+      _history = await _repository.saveRecordIdempotent(failed);
+      _statusBannerVi =
+          'Phiên đã lưu trên máy; chưa đồng bộ được server. Bạn vẫn thoát màn học bình thường.';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> discardActiveSession() async {
@@ -535,6 +916,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     await _repository.clearSnapshot(_ownerScopeKey);
     _activeSnapshot = null;
     _statusBannerVi = null;
+    _clearAiConversationState();
     notifyListeners();
   }
 

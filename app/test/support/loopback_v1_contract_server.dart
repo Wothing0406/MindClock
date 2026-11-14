@@ -24,11 +24,29 @@ class LoopbackV1ContractServer {
   int tokenVersion = 1;
   bool forcePermanentAuthFailure = false;
   Duration artificialGradeDelay = Duration.zero;
+  Duration artificialStudyHelpDelay = Duration.zero;
+  bool failNextAlarmSync = false;
+  bool failNextStudyHelp = false;
+  bool rateLimitNextStudyHelp = false;
+  bool failNextStudyFinish = false;
+
   int answerPostCount = 0;
   int attemptMultipartCount = 0;
+  int alarmCreateCount = 0;
+  int alarmPatchCount = 0;
+  int uniqueStudyFinishCount = 0;
   final List<String> seenIdempotencyKeys = <String>[];
+  final List<String> recordedEmergencyDismissEvents = <String>[];
+  final List<Map<String, dynamic>> studyCreateRequests = <Map<String, dynamic>>[];
+  final List<Map<String, dynamic>> studyHelpRequests = <Map<String, dynamic>>[];
+  final List<Map<String, dynamic>> studyFinishRequests = <Map<String, dynamic>>[];
 
   final Map<String, String> _sessionOwners = <String, String>{};
+  final Map<String, String> _alarmOwners = <String, String>{};
+  final Map<String, Map<String, dynamic>> _alarmsById =
+      <String, Map<String, dynamic>>{};
+  final Map<String, String> _studySessionOwners = <String, String>{};
+  final Map<String, String> _studyRemoteByClient = <String, String>{};
   final Map<String, Map<String, dynamic>> _idempotencyResponses =
       <String, Map<String, dynamic>>{};
   final Map<String, String> _idempotencyPayloadHashes = <String, String>{};
@@ -281,6 +299,9 @@ class LoopbackV1ContractServer {
       final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
       late final Map<String, dynamic> resp;
       if (action == 'events') {
+        if (map['eventType'] == 'dismiss') {
+          recordedEmergencyDismissEvents.add(sessionId);
+        }
         resp = <String, dynamic>{
           'sessionId': sessionId,
           'state': map['eventType'] == 'complete_ungraded'
@@ -352,6 +373,286 @@ class LoopbackV1ContractServer {
         _idempotencyPayloadHashes[namespacedKey] = body;
         _idempotencyResponses[namespacedKey] = resp;
       }
+      await _writeJson(request.response, 200, resp);
+      return;
+    }
+
+    // 2. Routes báo thức `/v1/alarms` & `/v1/alarms/{id}`
+    if (path == '/v1/alarms' && request.method == 'GET') {
+      final List<Map<String, dynamic>> items = _alarmsById.entries
+          .where((MapEntry<String, Map<String, dynamic>> e) =>
+              _alarmOwners[e.key] == uid)
+          .map((MapEntry<String, Map<String, dynamic>> e) => e.value)
+          .toList(growable: false);
+      await _writeJson(request.response, 200, <String, dynamic>{'items': items});
+      return;
+    }
+
+    if (path == '/v1/alarms' && request.method == 'POST') {
+      if (failNextAlarmSync) {
+        failNextAlarmSync = false;
+        await _writeJson(request.response, 503, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'SERVICE_UNAVAILABLE',
+            'message': 'Server báo thức tạm bận.',
+            'retryable': true,
+          },
+        });
+        return;
+      }
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
+      final String namespacedKey = '$uid:alarm_post:$idempKey';
+      if (idempKey.isNotEmpty && _idempotencyResponses.containsKey(namespacedKey)) {
+        await _writeJson(
+          request.response,
+          200,
+          _idempotencyResponses[namespacedKey]!,
+        );
+        return;
+      }
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      alarmCreateCount += 1;
+      final String alarmId = 'srv_alarm_$alarmCreateCount';
+      final Map<String, dynamic> record = <String, dynamic>{
+        'id': alarmId,
+        'localTime': map['localTime'] ?? '06:00',
+        'timeZone': map['timeZone'] ?? 'Asia/Ho_Chi_Minh',
+        'weekdays': map['weekdays'] ?? <int>[],
+        'enabled': map['enabled'] ?? true,
+        'challengeMode': map['challengeMode'] ?? 'short_review',
+        'snoozeMinutes': map['snoozeMinutes'],
+        'revision': 1,
+      };
+      _alarmOwners[alarmId] = uid;
+      _alarmsById[alarmId] = record;
+      if (idempKey.isNotEmpty) {
+        _idempotencyResponses[namespacedKey] = record;
+      }
+      await _writeJson(request.response, 200, record);
+      return;
+    }
+
+    final RegExp alarmItemRoute = RegExp(r'^/v1/alarms/([^/]+)$');
+    final Match? alarmMatch = alarmItemRoute.firstMatch(path);
+    if (alarmMatch != null) {
+      final String alarmId = alarmMatch.group(1)!;
+      final String? owner = _alarmOwners[alarmId];
+      if (owner == null) {
+        await _writeJson(request.response, 404, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'ALARM_NOT_FOUND',
+            'message': 'Không tìm thấy báo thức.',
+            'retryable': false,
+          },
+        });
+        return;
+      }
+      if (owner != uid) {
+        await _writeJson(request.response, 403, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'FORBIDDEN_OWNER',
+            'message': 'Không có quyền sửa/xóa báo thức của tài khoản khác.',
+            'retryable': false,
+          },
+        });
+        return;
+      }
+      if (request.method == 'PATCH') {
+        if (failNextAlarmSync) {
+          failNextAlarmSync = false;
+          await _writeJson(request.response, 503, <String, dynamic>{
+            'error': <String, dynamic>{
+              'code': 'SERVICE_UNAVAILABLE',
+              'message': 'Server báo thức tạm bận.',
+              'retryable': true,
+            },
+          });
+          return;
+        }
+        final String body = await utf8.decodeStream(request);
+        final Map<String, dynamic> map =
+            jsonDecode(body) as Map<String, dynamic>;
+        alarmPatchCount += 1;
+        final Map<String, dynamic> existing = _alarmsById[alarmId]!;
+        final int nextRev = ((existing['revision'] as num?)?.toInt() ?? 1) + 1;
+        final Map<String, dynamic> updated = <String, dynamic>{
+          ...existing,
+          ...map,
+          'id': alarmId,
+          'revision': nextRev,
+        };
+        _alarmsById[alarmId] = updated;
+        await _writeJson(request.response, 200, updated);
+        return;
+      }
+      if (request.method == 'DELETE') {
+        _alarmsById.remove(alarmId);
+        _alarmOwners.remove(alarmId);
+        request.response.statusCode = 204;
+        await request.response.close();
+        return;
+      }
+    }
+
+    // 3. Routes Không gian học & AI `/v1/study/*`
+    if (path == '/v1/study/sessions' && request.method == 'POST') {
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      studyCreateRequests.add(map);
+
+      final String namespacedKey = '$uid:study_create:$idempKey';
+      if (idempKey.isNotEmpty && _idempotencyResponses.containsKey(namespacedKey)) {
+        await _writeJson(
+          request.response,
+          200,
+          _idempotencyResponses[namespacedKey]!,
+        );
+        return;
+      }
+
+      final String clientSessionId =
+          (map['clientSessionId'] as String? ?? 'study_1').trim();
+      final String remoteId = _studyRemoteByClient['$uid:$clientSessionId'] ??
+          'srv_study_$clientSessionId';
+      _studyRemoteByClient['$uid:$clientSessionId'] = remoteId;
+      _studySessionOwners[remoteId] = uid;
+      _studySessionOwners[clientSessionId] = uid;
+
+      final Map<String, dynamic> resp = <String, dynamic>{
+        'sessionId': remoteId,
+        'clientSessionId': clientSessionId,
+        'state': 'active',
+      };
+      if (idempKey.isNotEmpty) {
+        _idempotencyResponses[namespacedKey] = resp;
+      }
+      await _writeJson(request.response, 200, resp);
+      return;
+    }
+
+    final RegExp studyFinishRoute =
+        RegExp(r'^/v1/study/sessions/([^/]+)/finish$');
+    final Match? studyFinishMatch = studyFinishRoute.firstMatch(path);
+    if (studyFinishMatch != null && request.method == 'POST') {
+      if (failNextStudyFinish) {
+        failNextStudyFinish = false;
+        await _writeJson(request.response, 503, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'SERVICE_UNAVAILABLE',
+            'message': 'Máy chủ lưu phiên học tạm thời gián đoạn.',
+            'retryable': true,
+          },
+        });
+        return;
+      }
+      final String sessionId = studyFinishMatch.group(1)!;
+      final String? owner = _studySessionOwners[sessionId];
+      if (owner != null && owner != uid) {
+        await _writeJson(request.response, 403, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'FORBIDDEN_OWNER',
+            'message': 'Không có quyền kết thúc phiên học của người khác.',
+            'retryable': false,
+          },
+        });
+        return;
+      }
+
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      studyFinishRequests.add(map);
+
+      final String namespacedKey = '$uid:study_finish:$idempKey';
+      if (idempKey.isNotEmpty && _idempotencyResponses.containsKey(namespacedKey)) {
+        await _writeJson(
+          request.response,
+          200,
+          _idempotencyResponses[namespacedKey]!,
+        );
+        return;
+      }
+
+      uniqueStudyFinishCount += 1;
+      final Map<String, dynamic> resp = <String, dynamic>{
+        'sessionId': sessionId,
+        'clientSessionId': map['clientSessionId'] ?? sessionId,
+        'state': 'finished',
+        'xpAwarded': 0,
+      };
+      if (idempKey.isNotEmpty) {
+        _idempotencyResponses[namespacedKey] = resp;
+      }
+      await _writeJson(request.response, 200, resp);
+      return;
+    }
+
+    if (path == '/v1/study/help' && request.method == 'POST') {
+      if (artificialStudyHelpDelay > Duration.zero) {
+        await Future<void>.delayed(artificialStudyHelpDelay);
+      }
+      if (rateLimitNextStudyHelp) {
+        rateLimitNextStudyHelp = false;
+        await _writeJson(request.response, 429, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'RATE_LIMITED',
+            'message': 'Bạn hỏi hơi nhanh, thử lại sau ít giây.',
+            'retryable': true,
+          },
+        });
+        return;
+      }
+      if (failNextStudyHelp) {
+        failNextStudyHelp = false;
+        await _writeJson(request.response, 503, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'AI_UPSTREAM_UNAVAILABLE',
+            'message': 'Dịch vụ gợi ý tạm thời gián đoạn.',
+            'retryable': true,
+          },
+        });
+        return;
+      }
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
+      final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
+      studyHelpRequests.add(map);
+
+      final String targetSessionId =
+          (map['clientSessionId'] as String? ?? '').trim();
+      final String? owner = _studySessionOwners[targetSessionId];
+      if (owner != null && owner != uid) {
+        await _writeJson(request.response, 403, <String, dynamic>{
+          'error': <String, dynamic>{
+            'code': 'FORBIDDEN_OWNER',
+            'message': 'Không có quyền hỏi trong phiên của người khác.',
+            'retryable': false,
+          },
+        });
+        return;
+      }
+
+      final Map<String, dynamic> resp = <String, dynamic>{
+        'message_vi':
+            'Thử xác định ẩn x trước, rồi viết một phương trình ngắn cho dữ kiện đầu tiên.',
+        'next_question_vi': 'Nếu gọi ẩn là x, vế trái sẽ biểu diễn thế nào?',
+        'help_level': 'socratic',
+        'safety_status': 'safe',
+      };
       await _writeJson(request.response, 200, resp);
       return;
     }

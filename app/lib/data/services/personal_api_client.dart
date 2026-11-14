@@ -88,6 +88,7 @@ class PersonalApiClient {
   Future<Map<String, dynamic>> putJson(
     String path, {
     required Map<String, dynamic> body,
+    String? idempotencyKey,
   }) {
     return _executeWithSingleAuthRefresh<Map<String, dynamic>>(
       method: 'PUT',
@@ -96,7 +97,38 @@ class PersonalApiClient {
         method: 'PUT',
         uri: _resolvePath(path),
         token: token,
+        idempotencyKey: idempotencyKey,
         body: body,
+      ),
+    );
+  }
+
+  Future<Map<String, dynamic>> patchJson(
+    String path, {
+    required Map<String, dynamic> body,
+    String? idempotencyKey,
+  }) {
+    return _executeWithSingleAuthRefresh<Map<String, dynamic>>(
+      method: 'PATCH',
+      path: path,
+      sender: (String token) => _sendJson(
+        method: 'PATCH',
+        uri: _resolvePath(path),
+        token: token,
+        idempotencyKey: idempotencyKey,
+        body: body,
+      ),
+    );
+  }
+
+  Future<void> deleteNoContent(String path) async {
+    await _executeWithSingleAuthRefresh<Map<String, dynamic>>(
+      method: 'DELETE',
+      path: path,
+      sender: (String token) => _sendJson(
+        method: 'DELETE',
+        uri: _resolvePath(path),
+        token: token,
       ),
     );
   }
@@ -321,6 +353,8 @@ class PersonalApiClient {
       final Object? decoded = jsonDecode(rawBody);
       if (decoded is Map<String, dynamic>) {
         parsed = decoded;
+      } else if (decoded is List<dynamic>) {
+        parsed = <String, dynamic>{'items': decoded};
       }
     }
 

@@ -1,21 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'data/debug/debug_fixture_alarm_sync_gateway.dart';
 import 'data/debug/debug_fixture_auth_gateway.dart';
 import 'data/debug/debug_fixture_personal_flow_repository.dart';
+import 'data/debug/debug_fixture_study_ai_gateway.dart';
 import 'data/repositories/guest_workspace_repository.dart';
 import 'data/repositories/local_study_focus_repository.dart';
+import 'data/repositories/remote_alarm_sync_gateway.dart';
 import 'data/repositories/remote_personal_flow_repository.dart';
+import 'data/repositories/remote_study_ai_gateway.dart';
 import 'data/services/firebase_auth_gateway.dart';
 import 'data/services/local_key_value_store.dart';
 import 'data/services/method_channel_camera_gateway.dart';
 import 'data/services/method_channel_study_focus_bridge.dart';
 import 'data/services/offline_text_draft_store.dart';
+import 'data/services/pending_alarm_event_store.dart';
 import 'data/services/personal_api_client.dart';
 import 'domain/services/alarm_scheduler_service.dart';
+import 'domain/services/alarm_sync_gateway.dart';
 import 'domain/services/auth_session_gateway.dart';
 import 'domain/services/camera_capture_gateway.dart';
 import 'domain/services/personal_flow_repository.dart';
+import 'domain/services/study_ai_gateway.dart';
 import 'domain/services/study_focus_bridge.dart';
 import 'ui/core/theme/mindclock_theme.dart';
 import 'ui/features/guest_shell/view_models/guest_workspace_view_model.dart';
@@ -34,22 +41,28 @@ class MindClockApp extends StatefulWidget {
     super.key,
     required this.repository,
     this.alarmScheduler,
+    this.alarmSyncGateway,
+    this.pendingAlarmEventStore,
     this.authGateway,
     this.personalRepository,
     this.cameraGateway,
     this.draftStore,
     this.studyFocusBridge,
+    this.studyAiGateway,
     this.studyNowProvider,
     this.enableStudyTicker = true,
   });
 
   final GuestWorkspaceRepository repository;
   final AlarmSchedulerService? alarmScheduler;
+  final AlarmSyncGateway? alarmSyncGateway;
+  final PendingAlarmEventStore? pendingAlarmEventStore;
   final AuthSessionGateway? authGateway;
   final PersonalFlowRepository? personalRepository;
   final CameraCaptureGateway? cameraGateway;
   final OfflineTextDraftStore? draftStore;
   final StudyFocusBridge? studyFocusBridge;
+  final StudyAiGateway? studyAiGateway;
   final DateTime Function()? studyNowProvider;
   final bool enableStudyTicker;
 
@@ -65,18 +78,32 @@ class _MindClockAppState extends State<MindClockApp> {
   @override
   void initState() {
     super.initState();
+    final LocalKeyValueStore kvStore = widget.repository.store;
+    final AuthSessionGateway authGateway = widget.authGateway ??
+        createDefaultAuthGateway(store: kvStore);
+    final PersonalApiClient sharedApiClient =
+        createDefaultPersonalApiClient(authGateway: authGateway);
+
+    final AlarmSyncGateway alarmSyncGateway = widget.alarmSyncGateway ??
+        createDefaultAlarmSyncGateway(apiClient: sharedApiClient);
+    final PendingAlarmEventStore pendingEventStore =
+        widget.pendingAlarmEventStore ??
+            PendingAlarmEventStore(store: kvStore);
+
     _viewModel = GuestWorkspaceViewModel(
       repository: widget.repository,
       alarmScheduler:
           widget.alarmScheduler ?? createDefaultAlarmSchedulerService(),
-    )..initialize();
+      alarmSyncGateway: alarmSyncGateway,
+      pendingAlarmEventStore: pendingEventStore,
+    );
 
-    final LocalKeyValueStore kvStore = widget.repository.store;
-    final AuthSessionGateway authGateway = widget.authGateway ??
-        createDefaultAuthGateway(store: kvStore);
     final PersonalFlowRepository personalRepository =
         widget.personalRepository ??
-            createDefaultPersonalRepository(authGateway: authGateway);
+            createDefaultPersonalRepository(
+              authGateway: authGateway,
+              apiClient: sharedApiClient,
+            );
     final CameraCaptureGateway cameraGateway =
         widget.cameraGateway ?? const MethodChannelCameraCaptureGateway();
     final OfflineTextDraftStore draftStore =
@@ -91,16 +118,27 @@ class _MindClockAppState extends State<MindClockApp> {
     _studyFocusViewModel = StudyFocusViewModel(
       repository: LocalStudyFocusRepository(store: kvStore),
       bridge: widget.studyFocusBridge ?? createDefaultStudyFocusBridge(),
+      aiGateway: widget.studyAiGateway ??
+          createDefaultStudyAiGateway(apiClient: sharedApiClient),
       nowProvider: widget.studyNowProvider,
       enablePeriodicTicker: widget.enableStudyTicker,
     );
-    _initializePersonalAndStudy();
+    _initializeAll();
   }
 
-  Future<void> _initializePersonalAndStudy() async {
+  Future<void> _initializeAll() async {
+    await _viewModel.initialize();
     await _personalViewModel.initialize();
+    await _viewModel.setAccountContext(
+      ownerScopeKey: _personalViewModel.authSession.ownerScopeKey,
+      isAuthenticated: _personalViewModel.authSession.isAuthenticated,
+    );
     await _studyFocusViewModel.initialize(
       ownerScopeKey: _personalViewModel.authSession.ownerScopeKey,
+    );
+    await _studyFocusViewModel.setAccountAuthenticated(
+      _personalViewModel.authSession.isAuthenticated,
+      gradeLevel: _viewModel.profile.gradeLevel,
     );
   }
 
@@ -157,19 +195,45 @@ AuthSessionGateway createDefaultAuthGateway({
   );
 }
 
+PersonalApiClient createDefaultPersonalApiClient({
+  required AuthSessionGateway authGateway,
+}) {
+  final Uri? baseUri = _envApiBaseUrl.trim().isNotEmpty
+      ? Uri.tryParse(_envApiBaseUrl.trim())
+      : null;
+  return PersonalApiClient(
+    baseUri: baseUri,
+    authGateway: authGateway,
+  );
+}
+
 PersonalFlowRepository createDefaultPersonalRepository({
   required AuthSessionGateway authGateway,
+  PersonalApiClient? apiClient,
 }) {
   if (kDebugMode && _envUseDebugFixture) {
     return DebugFixturePersonalFlowRepository();
   }
-  final Uri? baseUri = _envApiBaseUrl.trim().isNotEmpty
-      ? Uri.tryParse(_envApiBaseUrl.trim())
-      : null;
   return RemotePersonalFlowRepository(
-    apiClient: PersonalApiClient(
-      baseUri: baseUri,
-      authGateway: authGateway,
-    ),
+    apiClient:
+        apiClient ?? createDefaultPersonalApiClient(authGateway: authGateway),
   );
+}
+
+AlarmSyncGateway createDefaultAlarmSyncGateway({
+  required PersonalApiClient apiClient,
+}) {
+  if (kDebugMode && _envUseDebugFixture) {
+    return const DebugFixtureAlarmSyncGateway();
+  }
+  return RemoteAlarmSyncGateway(apiClient: apiClient);
+}
+
+StudyAiGateway createDefaultStudyAiGateway({
+  required PersonalApiClient apiClient,
+}) {
+  if (kDebugMode && _envUseDebugFixture) {
+    return const DebugFixtureStudyAiGateway();
+  }
+  return RemoteStudyAiGateway(apiClient: apiClient);
 }

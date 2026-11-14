@@ -38,6 +38,23 @@ enum AlarmSyncStatus {
   osFailed,
 }
 
+/// Trạng thái đồng bộ cấu hình báo thức với backend `/v1/alarms` (`docs/07 §§2–3, 8`).
+///
+/// Tách biệt hoàn toàn khỏi [AlarmSyncStatus]: server lỗi không bao giờ hủy chuông local.
+enum AlarmServerSyncStatus {
+  localOnly,
+  syncing,
+  synced,
+  syncFailed;
+
+  static AlarmServerSyncStatus fromWire(String? value) {
+    for (final AlarmServerSyncStatus status in values) {
+      if (status.name == value) return status;
+    }
+    return AlarmServerSyncStatus.localOnly;
+  }
+}
+
 /// Cấu hình một báo thức local do người dùng tự đặt và giữ nguyên cho tới khi người dùng sửa.
 class AlarmConfig {
   const AlarmConfig({
@@ -53,6 +70,11 @@ class AlarmConfig {
     this.subjectCode,
     this.label = 'Báo thức buổi sáng',
     this.syncStatus = AlarmSyncStatus.savedConfigOnly,
+    this.serverSyncStatus = AlarmServerSyncStatus.localOnly,
+    this.serverAlarmId,
+    this.serverRevision,
+    this.serverSyncedOwnerScope,
+    this.lastServerSyncErrorVi,
   });
 
   final String id;
@@ -67,6 +89,11 @@ class AlarmConfig {
   final String? subjectCode;
   final String label;
   final AlarmSyncStatus syncStatus;
+  final AlarmServerSyncStatus serverSyncStatus;
+  final String? serverAlarmId;
+  final int? serverRevision;
+  final String? serverSyncedOwnerScope;
+  final String? lastServerSyncErrorVi;
 
   int get totalMinutes => (hour % 24) * 60 + (minute % 60);
 
@@ -89,6 +116,15 @@ class AlarmConfig {
     bool clearSubjectCode = false,
     String? label,
     AlarmSyncStatus? syncStatus,
+    AlarmServerSyncStatus? serverSyncStatus,
+    String? serverAlarmId,
+    bool clearServerAlarmId = false,
+    int? serverRevision,
+    bool clearServerRevision = false,
+    String? serverSyncedOwnerScope,
+    bool clearServerSyncedOwnerScope = false,
+    String? lastServerSyncErrorVi,
+    bool clearLastServerSyncError = false,
   }) {
     return AlarmConfig(
       id: id ?? this.id,
@@ -103,6 +139,17 @@ class AlarmConfig {
       subjectCode: clearSubjectCode ? null : (subjectCode ?? this.subjectCode),
       label: label ?? this.label,
       syncStatus: syncStatus ?? this.syncStatus,
+      serverSyncStatus: serverSyncStatus ?? this.serverSyncStatus,
+      serverAlarmId:
+          clearServerAlarmId ? null : (serverAlarmId ?? this.serverAlarmId),
+      serverRevision:
+          clearServerRevision ? null : (serverRevision ?? this.serverRevision),
+      serverSyncedOwnerScope: clearServerSyncedOwnerScope
+          ? null
+          : (serverSyncedOwnerScope ?? this.serverSyncedOwnerScope),
+      lastServerSyncErrorVi: clearLastServerSyncError
+          ? null
+          : (lastServerSyncErrorVi ?? this.lastServerSyncErrorVi),
     );
   }
 
@@ -119,6 +166,11 @@ class AlarmConfig {
         'subjectCode': subjectCode,
         'label': label,
         'syncStatus': syncStatus.name,
+        'serverSyncStatus': serverSyncStatus.name,
+        'serverAlarmId': serverAlarmId,
+        'serverRevision': serverRevision,
+        'serverSyncedOwnerScope': serverSyncedOwnerScope,
+        'lastServerSyncErrorVi': lastServerSyncErrorVi,
       };
 
   factory AlarmConfig.fromJson(Map<String, dynamic> json) {
@@ -150,6 +202,12 @@ class AlarmConfig {
         (AlarmSyncStatus s) => s.name == rawSync,
         orElse: () => AlarmSyncStatus.savedConfigOnly,
       ),
+      serverSyncStatus:
+          AlarmServerSyncStatus.fromWire(json['serverSyncStatus'] as String?),
+      serverAlarmId: json['serverAlarmId'] as String?,
+      serverRevision: (json['serverRevision'] as num?)?.toInt(),
+      serverSyncedOwnerScope: json['serverSyncedOwnerScope'] as String?,
+      lastServerSyncErrorVi: json['lastServerSyncErrorVi'] as String?,
     );
   }
 }

@@ -4,3 +4,12 @@
 /data/research/private-reports/
 __pycache__/
 *.pyc
+
+# Biến môi trường cục bộ không đưa lên git (dùng .env.example làm mẫu)
+.env
+*.env.local
+app/.env
+app/*.env.local
+
+# Flutter SDK installed locally for this workstation
+/.local-sdk/

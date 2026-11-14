@@ -159,15 +159,45 @@ class TodayScreen extends StatelessWidget {
                                     'alarm-card-time-${alarm.id}'),
                                 style: mc.alarmHeroStyle,
                               ),
-                              MindClockStatusPill(
-                                label: statusText,
-                                accentWarm: !viewModel.isOsBridgeConnected ||
-                                    alarm.syncStatus !=
-                                        AlarmSyncStatus.scheduledReady ||
-                                    !viewModel.permissionSnapshot.allGranted,
+                              Wrap(
+                                spacing: mc.space8,
+                                runSpacing: mc.space8,
+                                children: <Widget>[
+                                  const MindClockStatusPill(
+                                    label: 'Đã lưu local',
+                                    accentWarm: false,
+                                  ),
+                                  MindClockStatusPill(
+                                    key: ValueKey<String>(
+                                        'alarm-os-status-${alarm.id}'),
+                                    label: 'OS: $statusText',
+                                    accentWarm: !viewModel.isOsBridgeConnected ||
+                                        alarm.syncStatus !=
+                                            AlarmSyncStatus.scheduledReady ||
+                                        !viewModel.permissionSnapshot.allGranted,
+                                  ),
+                                  MindClockStatusPill(
+                                    key: ValueKey<String>(
+                                        'alarm-server-status-${alarm.id}'),
+                                    label:
+                                        'Server: ${viewModel.serverStatusLabelForAlarm(alarm)}',
+                                    accentWarm: alarm.serverSyncStatus !=
+                                        AlarmServerSyncStatus.synced,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
+                          if (alarm.lastServerSyncErrorVi != null) ...<Widget>[
+                            SizedBox(height: mc.space8),
+                            Text(
+                              alarm.lastServerSyncErrorVi!,
+                              key: ValueKey<String>(
+                                  'alarm-server-error-${alarm.id}'),
+                              style:
+                                  mc.captionStyle.copyWith(color: mc.sunrise),
+                            ),
+                          ],
                           SizedBox(height: mc.space8),
                           Text(
                             '$repeatText · ${alarm.soundOption.labelVi} · '
@@ -238,6 +268,34 @@ class TodayScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              if (viewModel.isAuthenticated &&
+                                  alarm.serverSyncStatus !=
+                                      AlarmServerSyncStatus.synced)
+                                MindClockPressable(
+                                  key: ValueKey<String>(
+                                      'alarm-sync-server-${alarm.id}'),
+                                  semanticLabel: 'Đồng bộ báo thức lên server',
+                                  onPressed: () =>
+                                      viewModel.syncAllAlarmsAndEvents(),
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: mc.space12,
+                                      vertical: mc.space8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: mc.nightSurface,
+                                      borderRadius: BorderRadius.circular(
+                                          mc.radiusChip),
+                                      border: Border.all(color: mc.sunrise),
+                                    ),
+                                    child: Text(
+                                      'Đồng bộ server',
+                                      style: mc.chipLabelStyle.copyWith(
+                                        color: mc.sunrise,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ],
@@ -245,6 +303,44 @@ class TodayScreen extends StatelessWidget {
                     ),
                   );
                 }),
+                if (viewModel.pendingEventCount > 0 ||
+                    viewModel.serverSyncMessageVi != null) ...<Widget>[
+                  MindClockCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        if (viewModel.serverSyncMessageVi != null)
+                          Text(
+                            viewModel.serverSyncMessageVi!,
+                            key: const ValueKey<String>('today-sync-message'),
+                            style: mc.bodyStyle,
+                          ),
+                        if (viewModel.pendingEventCount > 0) ...<Widget>[
+                          SizedBox(height: mc.space8),
+                          Text(
+                            'Còn ${viewModel.pendingEventCount} sự kiện dừng chuông chờ đồng bộ server (tối đa 7 ngày, không phát lại chuông).',
+                            key: const ValueKey<String>(
+                                'today-pending-events-count'),
+                            style: mc.captionStyle,
+                          ),
+                          if (viewModel.isAuthenticated) ...<Widget>[
+                            SizedBox(height: mc.space8),
+                            MindClockButton(
+                              key: const ValueKey<String>(
+                                  'today-retry-sync-events'),
+                              label: 'Đồng bộ lại ngay',
+                              icon: MindClockIconKind.info,
+                              variant: MindClockButtonVariant.secondary,
+                              onPressed: () =>
+                                  viewModel.syncAllAlarmsAndEvents(),
+                            ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: mc.space12),
+                ],
                 MindClockButton(
                   key: const ValueKey<String>('today-add-another-alarm'),
                   label: 'Thêm cấu hình báo thức',

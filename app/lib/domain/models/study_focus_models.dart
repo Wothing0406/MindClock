@@ -167,6 +167,10 @@ class StudyFocusSessionSnapshot {
     this.lastReturnNoticeVi,
     this.notesDone = '',
     this.notesStuck = '',
+    this.createIdempotencyKey = '',
+    this.finishIdempotencyKey = '',
+    this.remoteSessionId,
+    this.remoteSessionSynced = false,
   });
 
   static const int minDurationMinutes = 5;
@@ -201,6 +205,10 @@ class StudyFocusSessionSnapshot {
   final String? lastReturnNoticeVi;
   final String notesDone;
   final String notesStuck;
+  final String createIdempotencyKey;
+  final String finishIdempotencyKey;
+  final String? remoteSessionId;
+  final bool remoteSessionSynced;
 
   int get targetDurationSeconds => durationMinutes * 60;
 
@@ -288,6 +296,11 @@ class StudyFocusSessionSnapshot {
     bool clearLastReturnNotice = false,
     String? notesDone,
     String? notesStuck,
+    String? createIdempotencyKey,
+    String? finishIdempotencyKey,
+    String? remoteSessionId,
+    bool clearRemoteSessionId = false,
+    bool? remoteSessionSynced,
   }) {
     return StudyFocusSessionSnapshot(
       sessionId: sessionId ?? this.sessionId,
@@ -320,6 +333,12 @@ class StudyFocusSessionSnapshot {
           : (lastReturnNoticeVi ?? this.lastReturnNoticeVi),
       notesDone: notesDone ?? this.notesDone,
       notesStuck: notesStuck ?? this.notesStuck,
+      createIdempotencyKey: createIdempotencyKey ?? this.createIdempotencyKey,
+      finishIdempotencyKey: finishIdempotencyKey ?? this.finishIdempotencyKey,
+      remoteSessionId: clearRemoteSessionId
+          ? null
+          : (remoteSessionId ?? this.remoteSessionId),
+      remoteSessionSynced: remoteSessionSynced ?? this.remoteSessionSynced,
     );
   }
 
@@ -348,12 +367,17 @@ class StudyFocusSessionSnapshot {
       'lastReturnNoticeVi': lastReturnNoticeVi,
       'notesDone': notesDone,
       'notesStuck': notesStuck,
+      'createIdempotencyKey': createIdempotencyKey,
+      'finishIdempotencyKey': finishIdempotencyKey,
+      'remoteSessionId': remoteSessionId,
+      'remoteSessionSynced': remoteSessionSynced,
     };
   }
 
   factory StudyFocusSessionSnapshot.fromJson(Map<String, dynamic> json) {
+    final String sid = json['sessionId'] as String? ?? '';
     return StudyFocusSessionSnapshot(
-      sessionId: json['sessionId'] as String? ?? '',
+      sessionId: sid,
       ownerScopeKey: json['ownerScopeKey'] as String? ?? 'guest',
       taskTitle: json['taskTitle'] as String? ?? StudyTaskChoice.freeStudy.title,
       subjectCode: json['subjectCode'] as String?,
@@ -379,6 +403,12 @@ class StudyFocusSessionSnapshot {
       lastReturnNoticeVi: json['lastReturnNoticeVi'] as String?,
       notesDone: json['notesDone'] as String? ?? '',
       notesStuck: json['notesStuck'] as String? ?? '',
+      createIdempotencyKey:
+          json['createIdempotencyKey'] as String? ?? 'study_create_$sid',
+      finishIdempotencyKey:
+          json['finishIdempotencyKey'] as String? ?? 'study_finish_$sid',
+      remoteSessionId: json['remoteSessionId'] as String?,
+      remoteSessionSynced: json['remoteSessionSynced'] as bool? ?? false,
     );
   }
 }
@@ -399,6 +429,10 @@ class StudyFocusRecord {
     this.subjectCode,
     this.notesDone = '',
     this.notesStuck = '',
+    this.remoteSessionId,
+    this.finishIdempotencyKey = '',
+    this.remoteFinishSynced = false,
+    this.remoteSyncErrorVi,
   });
 
   final String sessionId;
@@ -414,9 +448,43 @@ class StudyFocusRecord {
   final int endedAtEpochMs;
   final String notesDone;
   final String notesStuck;
+  final String? remoteSessionId;
+  final String finishIdempotencyKey;
+  final bool remoteFinishSynced;
+  final String? remoteSyncErrorVi;
 
   /// Theo `docs/45 §§1, 5`: không tự cấp XP chỉ vì thời gian hay camera.
   int get xpAwardedByTimer => 0;
+
+  StudyFocusRecord copyWith({
+    String? remoteSessionId,
+    String? finishIdempotencyKey,
+    bool? remoteFinishSynced,
+    String? remoteSyncErrorVi,
+    bool clearRemoteSyncError = false,
+  }) {
+    return StudyFocusRecord(
+      sessionId: sessionId,
+      ownerScopeKey: ownerScopeKey,
+      taskTitle: taskTitle,
+      subjectCode: subjectCode,
+      targetMinutes: targetMinutes,
+      level: level,
+      finalStatus: finalStatus,
+      elapsedWallSeconds: elapsedWallSeconds,
+      inAppFocusSeconds: inAppFocusSeconds,
+      startedAtEpochMs: startedAtEpochMs,
+      endedAtEpochMs: endedAtEpochMs,
+      notesDone: notesDone,
+      notesStuck: notesStuck,
+      remoteSessionId: remoteSessionId ?? this.remoteSessionId,
+      finishIdempotencyKey: finishIdempotencyKey ?? this.finishIdempotencyKey,
+      remoteFinishSynced: remoteFinishSynced ?? this.remoteFinishSynced,
+      remoteSyncErrorVi: clearRemoteSyncError
+          ? null
+          : (remoteSyncErrorVi ?? this.remoteSyncErrorVi),
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -433,12 +501,17 @@ class StudyFocusRecord {
       'endedAtEpochMs': endedAtEpochMs,
       'notesDone': notesDone,
       'notesStuck': notesStuck,
+      'remoteSessionId': remoteSessionId,
+      'finishIdempotencyKey': finishIdempotencyKey,
+      'remoteFinishSynced': remoteFinishSynced,
+      'remoteSyncErrorVi': remoteSyncErrorVi,
     };
   }
 
   factory StudyFocusRecord.fromJson(Map<String, dynamic> json) {
+    final String sid = json['sessionId'] as String? ?? '';
     return StudyFocusRecord(
-      sessionId: json['sessionId'] as String? ?? '',
+      sessionId: sid,
       ownerScopeKey: json['ownerScopeKey'] as String? ?? 'guest',
       taskTitle: json['taskTitle'] as String? ?? StudyTaskChoice.freeStudy.title,
       subjectCode: json['subjectCode'] as String?,
@@ -451,6 +524,11 @@ class StudyFocusRecord {
       endedAtEpochMs: (json['endedAtEpochMs'] as num?)?.toInt() ?? 0,
       notesDone: json['notesDone'] as String? ?? '',
       notesStuck: json['notesStuck'] as String? ?? '',
+      remoteSessionId: json['remoteSessionId'] as String?,
+      finishIdempotencyKey:
+          json['finishIdempotencyKey'] as String? ?? 'study_finish_$sid',
+      remoteFinishSynced: json['remoteFinishSynced'] as bool? ?? false,
+      remoteSyncErrorVi: json['remoteSyncErrorVi'] as String?,
     );
   }
 }

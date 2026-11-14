@@ -101,10 +101,30 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           ? _GuestFlowStage.mainTabs
           : _GuestFlowStage.welcome;
     }
-    final StudyFocusViewModel? studyVm = widget.studyViewModel;
     final String scope = widget.personalViewModel.authSession.ownerScopeKey;
-    if (studyVm != null && studyVm.isLoaded && studyVm.ownerScopeKey != scope) {
-      studyVm.setOwnerScope(scope);
+    final bool isAuth = widget.personalViewModel.authSession.isAuthenticated;
+
+    if (widget.viewModel.isLoaded &&
+        (widget.viewModel.ownerScopeKey != scope ||
+            widget.viewModel.isAuthenticated != isAuth)) {
+      widget.viewModel.setAccountContext(
+        ownerScopeKey: scope,
+        isAuthenticated: isAuth,
+      );
+    }
+
+    final StudyFocusViewModel? studyVm = widget.studyViewModel;
+    if (studyVm != null && studyVm.isLoaded) {
+      if (studyVm.ownerScopeKey != scope) {
+        studyVm.setOwnerScope(scope);
+      }
+      if (studyVm.isAuthenticated != isAuth ||
+          studyVm.gradeLevel != widget.viewModel.profile.gradeLevel) {
+        studyVm.setAccountAuthenticated(
+          isAuth,
+          gradeLevel: widget.viewModel.profile.gradeLevel,
+        );
+      }
     }
   }
 
@@ -154,7 +174,10 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 }
               : null,
           onEmergencyStop: () async {
-            await widget.viewModel.triggerEmergencyStop(alarmId: activeRing.alarmId);
+            await widget.viewModel.triggerEmergencyStop(
+              alarmId: activeRing.alarmId,
+              activeSessionId: widget.personalViewModel.activeSession?.sessionId,
+            );
             if (!mounted) return;
             setState(() {
               _activeAlarmPlayingInQuestion = false;
@@ -370,6 +393,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                           onPressed: () async {
                             await widget.viewModel.triggerEmergencyStop(
                               alarmId: _activeAlarmIdInQuestion,
+                              activeSessionId:
+                                  widget.personalViewModel.activeSession?.sessionId,
                             );
                             if (!mounted) return;
                             setState(() {

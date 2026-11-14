@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/services/study_focus_bridge.dart';
@@ -11,12 +12,12 @@ import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/study_focus_view_model.dart';
 
-/// Màn hình Không gian học local (`docs/45 §§1–6`, nhiệm vụ 6A).
+/// Màn hình Không gian học local & AI qua backend (`docs/45 §§1–6`).
 ///
 /// Tuân thủ:
 /// - Chọn việc (hoặc `Học tự do`), thời lượng `5–120` phút, mức `Linh hoạt`/`Tập trung thường`/`Cam kết`.
 /// - Không khóa app khác, không suy ra xao nhãng, không cấp XP/coin cho thời gian hay camera.
-/// - Camera/micro/AI tắt hoàn toàn trong giai đoạn 6A.
+/// - Camera/mic luôn tắt; trợ lý AI chỉ đi qua backend `POST /v1/study/help` khi người dùng bấm gửi.
 class StudySpaceScreen extends StatefulWidget {
   const StudySpaceScreen({
     super.key,
@@ -37,11 +38,15 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   final TextEditingController _customTaskController = TextEditingController();
   final TextEditingController _doneController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
+  final TextEditingController _aiInputController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _customTaskController.text = widget.studyViewModel.draftTaskTitle;
+    if (widget.studyViewModel.pendingHelpQuestion != null) {
+      _aiInputController.text = widget.studyViewModel.pendingHelpQuestion!;
+    }
   }
 
   @override
@@ -49,7 +54,44 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     _customTaskController.dispose();
     _doneController.dispose();
     _stuckController.dispose();
+    _aiInputController.dispose();
     super.dispose();
+  }
+
+  String _headerScopeLabel(StudyFocusViewModel vm) {
+    if (!vm.hasAiGateway) {
+      return 'Lưu cục bộ · Camera & AI đang tắt';
+    }
+    if (vm.isAiDebugFixture) {
+      return 'Lưu cục bộ · Camera tắt · AI mẫu (debug)';
+    }
+    if (vm.isAuthenticated) {
+      return 'Lưu cục bộ · Camera tắt · AI qua backend';
+    }
+    return 'Lưu cục bộ · Camera tắt · Đăng nhập để hỏi AI';
+  }
+
+  Future<void> _submitAiHelp(StudyFocusViewModel vm) async {
+    final bool ok = await vm.requestAiHelp(
+      questionText: _aiInputController.text,
+      gradeLevel: widget.guestViewModel.profile.gradeLevel,
+    );
+    if (ok && mounted) {
+      _aiInputController.clear();
+    }
+  }
+
+  Future<void> _retryAiHelp(StudyFocusViewModel vm) async {
+    final String textToSend = _aiInputController.text.trim().isNotEmpty
+        ? _aiInputController.text
+        : (vm.pendingHelpQuestion ?? '');
+    final bool ok = await vm.requestAiHelp(
+      questionText: textToSend,
+      gradeLevel: widget.guestViewModel.profile.gradeLevel,
+    );
+    if (ok && mounted) {
+      _aiInputController.clear();
+    }
   }
 
   @override
@@ -85,8 +127,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 ],
               ),
               SizedBox(height: mc.space8),
-              const MindClockStatusPill(
-                label: 'Lưu cục bộ · Camera & AI đang tắt',
+              MindClockStatusPill(
+                key: const ValueKey<String>('study-scope-pill'),
+                label: _headerScopeLabel(vm),
               ),
               if (vm.statusBannerVi != null) ...<Widget>[
                 SizedBox(height: mc.space12),
@@ -313,8 +356,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
         SizedBox(height: mc.space16),
-        const MindClockNoticeBanner(
-          message: AppStrings.studyNoCameraAiScopeNotice,
+        MindClockNoticeBanner(
+          message: vm.hasAiGateway
+              ? 'Camera và micro luôn tắt ở màn này. Khi đăng nhập và bấm gửi, phần Hỏi MindClock đi qua máy chủ backend (tối đa 3 lượt gần nhất); bộ đếm vẫn chạy local.'
+              : AppStrings.studyNoCameraAiScopeNotice,
           isWarm: false,
         ),
         SizedBox(height: mc.space12),
@@ -328,7 +373,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         ),
         if (vm.history.isNotEmpty) ...<Widget>[
           SizedBox(height: mc.space20),
-          _buildHistoryCard(context, mc, vm.history),
+          _buildHistoryCard(context, mc, vm, vm.history),
         ],
       ],
     );
@@ -374,6 +419,22 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           ),
           SizedBox(height: mc.space12),
         ],
+        if (vm.remoteSessionErrorVi != null) ...<Widget>[
+          MindClockNoticeBanner(
+            key: const ValueKey<String>('study-remote-session-error'),
+            message: vm.remoteSessionErrorVi!,
+            isWarm: true,
+          ),
+          SizedBox(height: mc.space8),
+          MindClockButton(
+            key: const ValueKey<String>('study-retry-remote-session'),
+            label: 'Thử tạo phiên server lại',
+            icon: MindClockIconKind.info,
+            variant: MindClockButtonVariant.secondary,
+            onPressed: vm.retryCreateRemoteSession,
+          ),
+          SizedBox(height: mc.space12),
+        ],
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(mc.space20),
@@ -395,6 +456,15 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                   ),
                   if (subjectName != null)
                     MindClockStatusPill(label: subjectName),
+                  MindClockStatusPill(
+                    key: const ValueKey<String>('study-remote-session-pill'),
+                    label: snapshot.remoteSessionSynced
+                        ? (vm.isAiDebugFixture
+                            ? 'Phiên mẫu (debug)'
+                            : 'Server: Đã tạo phiên')
+                        : 'Phiên local',
+                    accentWarm: !snapshot.remoteSessionSynced,
+                  ),
                 ],
               ),
               SizedBox(height: mc.space12),
@@ -489,8 +559,146 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           },
         ),
         SizedBox(height: mc.space16),
+        _buildAiHelpCard(context, mc, vm, snapshot),
+        SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
       ],
+    );
+  }
+
+  Widget _buildAiHelpCard(
+    BuildContext context,
+    MindClockTheme mc,
+    StudyFocusViewModel vm,
+    StudyFocusSessionSnapshot snapshot,
+  ) {
+    final bool isLoading = vm.aiStatus == StudyAiRequestStatus.loading;
+    final bool hasRetryableError = vm.aiStatus == StudyAiRequestStatus.timeout ||
+        vm.aiStatus == StudyAiRequestStatus.rateLimited ||
+        vm.aiStatus == StudyAiRequestStatus.offline ||
+        vm.aiStatus == StudyAiRequestStatus.authExpired ||
+        vm.aiStatus == StudyAiRequestStatus.error;
+
+    return MindClockCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text('Hỏi MindClock (AI qua backend)', style: mc.sectionTitleStyle),
+              MindClockStatusPill(
+                key: const ValueKey<String>('study-ai-status-pill'),
+                label: !vm.hasAiGateway
+                    ? 'Chưa nối backend'
+                    : vm.isAiDebugFixture
+                        ? 'Mẫu debug'
+                        : (vm.isAuthenticated ? 'Sẵn sàng' : 'Cần đăng nhập'),
+                accentWarm: !vm.hasAiGateway || !vm.isAuthenticated,
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space8),
+          Text(
+            vm.isAiDebugFixture
+                ? 'Đang dùng dữ liệu mẫu debug. Ở bản nối thật, câu hỏi đi qua POST /v1/study/help (tối đa 3 lượt gần nhất), không gửi key ở máy.'
+                : 'Hỏi qua máy chủ backend MindClock (tối đa 3 lượt gần nhất). Câu hỏi bạn đang gõ được giữ nguyên nếu lỗi mạng/timeout/hết lượt.',
+            style: mc.captionStyle,
+          ),
+          if (vm.aiTurns.isNotEmpty) ...<Widget>[
+            SizedBox(height: mc.space12),
+            ...vm.aiTurns.asMap().entries.map((MapEntry<int, StudyHelpTurn> e) {
+              final StudyHelpTurn turn = e.value;
+              final bool isAssistant = turn.role == 'assistant';
+              return Padding(
+                padding: EdgeInsets.only(bottom: mc.space8),
+                child: Container(
+                  key: ValueKey<String>('study-ai-turn-${e.key}'),
+                  width: double.infinity,
+                  padding: EdgeInsets.all(mc.space12),
+                  decoration: BoxDecoration(
+                    color: isAssistant ? mc.primarySoft : mc.paper,
+                    borderRadius: BorderRadius.circular(mc.radiusChip),
+                    border: Border.all(color: mc.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        isAssistant ? 'MindClock AI' : 'Bạn',
+                        style: mc.chipLabelStyle,
+                      ),
+                      SizedBox(height: mc.space4),
+                      Text(turn.contentVi, style: mc.bodyStyle),
+                      if (turn.nextQuestionVi != null &&
+                          turn.nextQuestionVi!.isNotEmpty) ...<Widget>[
+                        SizedBox(height: mc.space4),
+                        Text(
+                          'Gợi ý tiếp: ${turn.nextQuestionVi!}',
+                          style: mc.captionStyle,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+          if (isLoading) ...<Widget>[
+            SizedBox(height: mc.space8),
+            const MindClockNoticeBanner(
+              key: ValueKey<String>('study-ai-loading-banner'),
+              message: 'Đang gửi câu hỏi tới MindClock qua backend (/v1/study/help)...',
+              isWarm: false,
+            ),
+          ] else if (hasRetryableError && vm.aiErrorVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockNoticeBanner(
+              key: const ValueKey<String>('study-ai-error-banner'),
+              message: vm.aiErrorVi!,
+              isWarm: true,
+            ),
+          ],
+          SizedBox(height: mc.space12),
+          TextField(
+            key: const ValueKey<String>('study-ai-question-input'),
+            controller: _aiInputController,
+            enabled: !isLoading,
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Đang vướng ở bước nào?',
+              hintText: 'Ví dụ: Mình chưa rõ cách đặt ẩn cho bài này...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(mc.radiusControl),
+              ),
+            ),
+          ),
+          SizedBox(height: mc.space12),
+          MindClockButton(
+            key: const ValueKey<String>('study-ai-send-button'),
+            label: isLoading ? 'Đang chờ AI...' : 'Gửi câu hỏi',
+            icon: MindClockIconKind.info,
+            onPressed: isLoading ? null : () => _submitAiHelp(vm),
+          ),
+          if (hasRetryableError &&
+              (_aiInputController.text.trim().isNotEmpty ||
+                  (vm.pendingHelpQuestion != null &&
+                      vm.pendingHelpQuestion!.isNotEmpty))) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockButton(
+              key: const ValueKey<String>('study-ai-retry-button'),
+              label: 'Thử lại câu hỏi',
+              icon: MindClockIconKind.play,
+              variant: MindClockButtonVariant.secondary,
+              onPressed: isLoading ? null : () => _retryAiHelp(vm),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -627,6 +835,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   Widget _buildHistoryCard(
     BuildContext context,
     MindClockTheme mc,
+    StudyFocusViewModel vm,
     List<StudyFocusRecord> history,
   ) {
     return MindClockCard(
@@ -660,6 +869,35 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                       'Trong app ${formatDurationClock(item.inAppFocusSeconds)} · ${item.xpAwardedByTimer} XP',
                       style: mc.captionStyle,
                     ),
+                    SizedBox(height: mc.space4),
+                    Text(
+                      item.remoteFinishSynced
+                          ? (vm.isAiDebugFixture
+                              ? 'Đồng bộ mẫu (debug)'
+                              : 'Đã đồng bộ kết thúc lên server')
+                          : (item.remoteSyncErrorVi ??
+                              'Chưa đồng bộ kết thúc lên server (lưu an toàn trên máy)'),
+                      key: ValueKey<String>(
+                          'study-history-sync-${item.sessionId}'),
+                      style: mc.captionStyle.copyWith(
+                        color: item.remoteFinishSynced ? mc.primary : mc.inkMuted,
+                      ),
+                    ),
+                    if (!item.remoteFinishSynced &&
+                        vm.isAuthenticated &&
+                        vm.hasAiGateway) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      MindClockButton(
+                        key: ValueKey<String>(
+                            'study-history-retry-${item.sessionId}'),
+                        label: 'Đồng bộ lại kết thúc phiên',
+                        icon: MindClockIconKind.info,
+                        variant: MindClockButtonVariant.secondary,
+                        expand: false,
+                        onPressed: () =>
+                            vm.retryFinishRecordSync(item.sessionId),
+                      ),
+                    ],
                     if (item.notesDone.isNotEmpty) ...<Widget>[
                       SizedBox(height: mc.space4),
                       Text('Đã làm: ${item.notesDone}', style: mc.captionStyle),
