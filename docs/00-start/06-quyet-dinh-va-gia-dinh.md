@@ -14,5 +14,10 @@
 | D-08 | Cần xác nhận | Thiết bị/API level/OEM mục tiêu, kênh phân phối APK/store, mức hỗ trợ và ngân sách hạ tầng. | Kiểm máy thực, bảo mật, vận hành, rollback. |
 | D-09 | Cần xác nhận | Canonical ID/tên Hàn Bối Pháp (`han_boi_thap` là ID cũ), số combat v0.1, hình/phần thưởng/rank. | Catalog migration + playtest; không dùng số v0.1 như luật cố định. |
 | D-10 | Cần xác nhận | Chính sách giữ nháp chữ, metadata phiên học, ảnh upload avatar và thời hạn xóa ở môi trường phát hành. | Đồng bộ privacy notice, SQL purge job, test rút consent/xóa. |
+| D-11 | Đã chốt | Đây là sản phẩm lâu dài, không scope DevFest; cohort đầu THPT 10–12, happy path đăng ký email → lớp/môn/avatar → plan xác nhận → dashboard. | ON-01–06, catalog/reviewer; báo thức local là fallback khi Auth lỗi. |
+| D-12 | Đã chốt | Quyền giải thích lúc mở app nhưng OS prompt đúng lúc dùng. Màn khóa mặc định ẩn môn/TKB, DND chỉ khi quyền/OS cho phép. | SLEEP-01–05/AD, máy thật nhiều API level. |
+| D-13 | Đã chốt | Phòng học có solo/AI/bạn; avatar 2D có nhãn AI; mức nhắc nghiêm không xúc phạm/phạt; mic/cam tắt mặc định. | ROOM-01–06, privacy/abuse/Live quota gates. |
+| D-14 | Cần xác nhận | Catalog THPT theo phiên bản chương trình hiện hành, trường hợp môn địa phương/chuyên đề, reviewer và số câu tối thiểu từng môn. | Review nguồn Bộ GD&ĐT, seed có provenance, không mở scored nếu thiếu. |
+| D-15 | Cần xác nhận | Nhà cung cấp media phòng bạn, Live model/quota/giá, giới hạn phút miễn phí và quy trình tuổi/consent. | Spike hai máy, đo chi phí/độ trễ, review chính sách nhà cung cấp trước mở flag. |
 
 Khi task phụ thuộc một dòng `cần xác nhận`, vẫn triển khai phần độc lập. Ghi rõ blocker trong `tasks/TNNN-.../handoff.md`; không lấp bằng mock rồi đánh dấu xong. [Quy trình](03-quy-trinh-vibe-code.md).

@@ -18,9 +18,9 @@ CI phải chạy lint/type/test Flutter, Kotlin unit, Python API/DB, Alembic mig
 ## 3. Release checklist
 
 1. Khóa scope/feature flags; số build/version/commit, env, DB migration, model/prompt/content revision được ghi.
-2. Test AD01–AD09 trên thiết bị mục tiêu; API PostgreSQL/Auth/AI eval theo [test plan](01-ke-hoach-kiem-thu.md); chữ lớn/TalkBack/màn hẹp; quyền bị từ chối/offline.
+2. Test AD01–AD09 và SLEEP-01–05 trên thiết bị mục tiêu; ON-01–06/Firebase/catalog/plan, API PostgreSQL/Auth/AI eval theo [test plan](01-ke-hoach-kiem-thu.md); chữ lớn/TalkBack/màn hẹp; quyền bị từ chối/offline. ROOM/GAME chỉ khi feature flag mở.
 3. Xác minh signing, HTTPS, `debug`/local bearer fallback off, CORS chặt, `/demo` và `/product` không mount production, Gemini key chỉ server; không bundle corpus/asset không có quyền.
-4. Xác minh privacy/consent/xóa/export/retention, thông báo người dùng, hỗ trợ/sự cố và chính sách độ tuổi với người phụ trách. Kiểm quyền art/audio, bản quyền câu.
+4. Xác minh privacy/consent/xóa/export/retention, thông báo người dùng, hỗ trợ/sự cố và chính sách độ tuổi với người phụ trách. Kiểm quyền art/audio, bản quyền câu. Nếu mở phòng bạn/Live, kiểm thêm invite/block/report, media không lưu, phút/token budget và khả năng tắt server.
 5. Tạo backup trước migration, chạy migration trên staging rồi production có kế hoạch rollback; smoke `/v1/health`, đăng nhập test, alarm local độc lập. Phát hành giới hạn trước, theo dõi metrics, có nút tắt AI/PvP từ server.
 6. Ghi release notes ngắn, Known Issues trung thực, người trực và điều kiện rollback.
 

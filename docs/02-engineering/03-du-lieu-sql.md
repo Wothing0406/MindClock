@@ -20,7 +20,7 @@
 
 `rank_ledger` chỉ được thêm khi mở ranked; không tạo `rating_ledger` song song. Avatar/upload/moderation/content pipeline chi tiết chưa nằm đủ trong migration hiện tại; task riêng phải chốt schema và retention trước code.
 
-**Khi mở P-11/P-12:** timetable slot hiện có cần revision/bản ngoại lệ theo ngày, task ngày có owner/due local date/timezone/source/confirmation và notification preference + scheduled-event key để hủy/lập lại không trùng. Public profile phải là projection opt-in chỉ từ trường đã duyệt, tách private progress/alarm history; avatar cần upload metadata/status/reviewer/expiry và object key an toàn. Không tạo bảng trống hàng loạt trước task/migration/retention được duyệt. [Lịch/nhắc](../01-product/05-lich-hoc-nhac-viec.md), [hồ sơ](../01-product/06-ho-so-tien-do-xa-hoi.md).
+**Khi mở P-01/P-11/P-12/P-13/P-14:** user profile cần `onboarding_state`, lớp THPT, `curriculum_version`, môn/tổ hợp/mức tự đánh giá riêng từng môn, avatar default/pending; không lưu mật khẩu. Catalog chương trình có source/reviewer/version bất biến. Timetable slot hiện có cần revision/bản ngoại lệ theo ngày, task ngày có owner/due local date/timezone/source/confirmation và notification preference + scheduled-event key để hủy/lập lại không trùng. `SleepSchedule` và alarm OS authority vẫn local; server chỉ giữ bản cấu hình nếu user đồng bộ rõ. Public profile phải là projection opt-in chỉ từ trường đã duyệt, tách private progress/alarm history; avatar cần upload metadata/status/reviewer/expiry và object key an toàn. Room/invite/friend/block/report cần owner/membership/TTL/status/audit, không lưu media mặc định. Không tạo bảng trống hàng loạt trước task/migration/retention được duyệt. [Onboarding](../01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [catalog](10-catalog-chuong-trinh-va-ke-hoach.md), [lịch/nhắc](../01-product/05-lich-hoc-nhac-viec.md), [hồ sơ](../01-product/06-ho-so-tien-do-xa-hoi.md), [room](09-phong-hoc-realtime.md).
 
 ## 2. Bất biến transaction
 
@@ -32,7 +32,7 @@
 
 ## 3. Vòng đời dữ liệu
 
-Guest local → đăng nhập/consent → chọn dữ liệu để sync → server xác thực, kiểm revision → học/attempt → tiến độ/ledger → export/xóa. Ảnh bài xử lý tạm trong request, xóa trên mọi nhánh; không vào DB, object storage, log hoặc backup mặc định. Nháp chữ local nếu chọn lưu có TTL 24h, cách ly theo local profile. Retention online/backup cụ thể phải chốt trong [chính sách](../01-product/04-tai-khoan-quyen-rieng-tu.md) trước pilot.
+Giải thích quyền → đăng ký/đăng nhập (local alarm nếu offline) → hồ sơ học/avatar → plan nháp/xác nhận → chọn dữ liệu để sync → server xác thực, kiểm revision → học/attempt/room khi có quyền → tiến độ/ledger → export/xóa. Ảnh bài/frame AI xử lý tạm trong request, xóa trên mọi nhánh; không vào DB, object storage, log hoặc backup mặc định. Nháp chữ local nếu chọn lưu có TTL 24h, cách ly theo local profile. Retention online/backup cụ thể phải chốt trong [chính sách](../01-product/04-tai-khoan-quyen-rieng-tu.md) trước mở cho người dùng thật.
 
 ## 4. Migration và môi trường
 

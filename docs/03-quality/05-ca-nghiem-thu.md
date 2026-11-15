@@ -4,8 +4,8 @@
 
 | ID | Liên kết PRD | Kịch bản và expected | Tầng |
 | --- | --- | --- | --- |
-| UX-01 | P-01 | Cài mới, chọn `Dùng thử`, bỏ qua khối/môn; đặt chuông được, không yêu cầu Auth | Flutter widget + Android manual |
-| AUTH-01 | P-01 | Guest local không gọi `/v1/me`; sau đăng nhập token hợp lệ tạo profile, token sai/hết hạn 401 | Flutter/API contract |
+| UX-01 | P-01 | Cài mới thấy giải thích quyền/đăng ký; thiếu mạng có `Chỉ dùng báo thức trên máy`, không gọi Auth để dừng chuông | Flutter widget + Android manual |
+| AUTH-01 | P-01 | Đăng ký/verify token hợp lệ tạo profile đúng owner; token sai/hết hạn 401; local alarm không gọi `/v1/me` | Flutter/API contract |
 | AL-01 | P-02 | Thêm/sửa/xóa alarm, occurrence tuần/timezone/reboot đúng | Kotlin unit + AD01/07 |
 | AL-02 | P-02 | Quyền OS chưa cấp: UI `saved_local/needs_permission`, không ghi `scheduled_os` | bridge + AD04 |
 | AL-03 | P-02 | API lưu alarm thành công nhưng OS schedule thất bại: UI không báo đã sẵn sàng | integration |
@@ -30,6 +30,9 @@
 | FOCUS-03 | P-09 | Finish retry idempotent, API lỗi vẫn thoát được | Flutter/API contract |
 | FOCUS-04 | P-09 | Camera/mic opt-in, từ chối vẫn học được | permission/manual |
 | FOCUS-05 | P-09 | Rời app không khóa app khác hoặc trừ điểm | Android manual |
+| FOCUS-06 | P-09 | AI gợi một bước, không tự bật camera/mic hay đưa đáp án cuối trước nỗ lực | prompt/API review |
+| FOCUS-07 | P-09 | Room timer/các nút chính đọc/chạm được với 320dp, chữ 200%, TalkBack/Reduce Motion | Flutter/Android manual |
+| FOCUS-08 | P-09 | Không thu app list, mặt/video hoặc nhãn cảm xúc/lơ là mặc định | inspection/network/log review |
 | AUTH-04 | P-10 | Xóa yêu cầu lặp idempotent, ẩn bảng ngay, trạng thái và xóa local chọn riêng | API/SQL/manual |
 | PRIV-01 | P-10 | Rút consent dừng upload/Live/bảng, xóa ảnh tạm/log/caches theo policy | API/security/manual |
 | PLAN-01 | P-11 | Nhập/sửa TKB nhiều môn, lịch lặp và ngoại lệ/nghỉ cho đúng ngày theo timezone | domain/widget/API |
@@ -41,5 +44,27 @@
 | PROFILE-02 | P-12 | Share mặc định tắt; rút share/xóa account ẩn public profile/bảng ngay | API/cache/security |
 | PROFILE-03 | P-12 | Tên/avatar pending/reject/appeal, upload sai MIME/EXIF/size, không lộ trước duyệt | API/moderation |
 | PROFILE-04 | P-12 | Người khác không thấy giờ dậy/TKB/bài/ảnh/email; đổi account dọn cache hiển thị | API A/B/Flutter |
+| ON-01 | P-01 | Cài mới giải thích quyền, chỉ xin khi dùng; Auth lỗi vẫn đặt/dừng alarm local | Flutter/Android manual |
+| ON-02 | P-01 | Form email/biệt danh/mật khẩu/xác nhận: sai khớp, yếu, trùng, lỗi mạng có thông báo; không log mật khẩu | widget/Firebase emulator/API |
+| ON-03 | P-01 | Email chưa xác minh/draft giữa chừng/restart: đúng bước, công khai bị khóa | Flutter/API integration |
+| ON-04 | P-01 | Lớp 10–12 chỉ thấy môn catalog đúng version; môn riêng không có câu scored giả | catalog contract/content review |
+| ON-05 | P-01 | AI plan lỗi/không xác nhận: bản cơ bản hoặc empty state, không đổi alarm/task | planner/widget/API |
+| ON-06 | P-01 | Logout/đổi account không lộ TKB/draft/avatar người trước, alarm local vẫn sửa/xóa được | Android/API A/B |
+| SLEEP-01 | P-13 | Nhiều alarm độc lập, vòng 24h và nhập số giống nhau; lời nhắc thời lượng ngủ không ép | Dart/Kotlin/widget |
+| SLEEP-02 | P-13 | OS từ chối DND: chỉ quiet hours thông báo của app, trạng thái UI trung thực | Android thật API/OEM |
+| SLEEP-03 | P-13 | Màn khóa mặc định ẩn môn/TKB, full-screen hoặc notification fallback và Dừng local | AD01/04/09 máy thật |
+| SLEEP-04 | P-13 | Sai/ảnh mờ/offline/AI timeout: thử lại/Ôn sau/Dừng; không kéo dài chuông tới đúng | Android E2E/API |
+| SLEEP-05 | P-13 | MP3 lỗi/không đọc được: fallback âm OS, chuông không mất | Android thật |
+| ROOM-01 | P-14 | Chọn solo/AI/bạn, sâu/ngắt quãng, mức nhắc; mic/cam off mặc định | widget/Android |
+| ROOM-02 | P-14 | Từ chối/tắt mic/cam giữa phiên: timer/text tiếp tục, indicator tắt thật | Android permission/media |
+| ROOM-03 | P-14 | AI Live hết quota/rớt mạng: hạ cấp text/timer, không phát avatar/audio giả | integration/2 mạng |
+| ROOM-04 | P-14 | Rời app/tạm nghỉ/rời phòng: không chửi/phạt/giữ app, nhắc chỉ khi opt-in | lifecycle/copy review |
+| ROOM-05 | P-14 | Invite TTL, hai account, block/report: người lạ không vào, việc riêng không lộ | API/room security/2 máy |
+| ROOM-06 | P-14 | Hỏi ngoài chủ đề/đáp án: AI chuyển nhẹ về mục tiêu, gợi một bước; dừng/nghỉ vẫn được | prompt eval/human review |
+| GAME-01 | P-15 | Hai bên cùng câu/rubric/deadline, cần đáp án và lý do; khoanh lụi không kích hoạt skill | server contract/content eval |
+| GAME-02 | P-15 | Ảnh mờ/AI uncertain/network fault → void/review, không đổi RP, không tự xử thua | 2 máy/API transaction |
+| GAME-03 | P-15 | Submit/action kép/reconnect → HP/event/result/ledger một lần từ server | API PostgreSQL/2 máy |
+| GAME-04 | P-15 | Không có câu/rubric đủ chuẩn cùng lớp/môn thì không ghép ranked | catalog/content/matchmaker |
+| GAME-05 | P-15 | Tướng/FX/balance/reduced motion/asset quyền được kiểm trước mở game | playtest/art/performance review |
 
 Một TC có thể chưa triển khai vì feature chưa mở; task phải ghi `không áp dụng giai đoạn này` hoặc `chưa chạy`, không xóa dòng để có vẻ pass. Ngưỡng AI/pilot được chốt trước thử người dùng tại [release](02-van-hanh-phat-hanh.md).

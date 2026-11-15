@@ -1,10 +1,12 @@
 # Đấu trường 1v1 — GDD và networking v0.1
 
-**Trạng thái:** đặc tả thử nghiệm **chưa có PvP Flutter/API live**. Mở giao hữu sau khi câu/chấm/consent đạt [cổng R7](../00-start/02-lo-trinh.md); ranked/rank/coin sau playtest và quyền. Không biến game thành cách tắt báo thức hoặc lấy giờ dậy xếp hạng. [PRD](../01-product/01-prd.md), [content](../02-engineering/05-ngan-hang-cau-hoi.md), [AI/chấm](../02-engineering/06-ai-va-cham-bai.md).
+**Trạng thái:** đặc tả thử nghiệm **chưa có PvP Flutter/API live**. Mở giao hữu sau khi câu/chấm/consent đạt [cổng R8](../00-start/02-lo-trinh.md); ranked/rank/coin sau playtest và quyền. Không biến game thành cách tắt báo thức hoặc lấy giờ dậy xếp hạng. [PRD](../01-product/01-prd.md), [content](../02-engineering/05-ngan-hang-cau-hoi.md), [AI/chấm](../02-engineering/06-ai-va-cham-bai.md).
 
 ## 1. Vòng chơi và ghép trận
 
-Người chơi opt-in, chọn môn/khối/chương trình/nhân vật. Server ghép **một môn chung** cùng khối/curriculum/content pool version và độ khó đã duyệt; không cần trùng toàn bộ tổ hợp. Hai bên nhận **cùng question ID + revision + rubric + deadline** mỗi round. Viết đáp án và một bước trình bày; server chấm cả hai trước khi cho chọn action. Không phát câu bằng Gemini lúc ghép/trong round. Bài, lựa chọn và grade của đối thủ không lộ trước reveal.
+Người chơi opt-in, chọn môn/khối/chương trình/nhân vật. Server ghép **một môn chung** cùng khối/curriculum/content pool version và độ khó đã duyệt; không cần trùng toàn bộ tổ hợp. Hai bên nhận **cùng question ID + revision + rubric + deadline** mỗi round, loại câu tự luận ngắn đã duyệt/chuyển thể và nộp đáp án cùng một bước trình bày bằng chữ hoặc ảnh mới tùy mode. Server chấm cả hai trước khi cho chọn action. Không phát câu bằng Gemini lúc ghép/trong round. Bài, lựa chọn và grade của đối thủ không lộ trước reveal.
+
+Chỉ khoanh A/B/C/D không đủ kích hoạt skill; trắc nghiệm nếu có phải kèm lý do hợp lệ và rubric. Giới hạn thời gian đủ để viết một bước, không thưởng sát thương vì nộp sớm. Ảnh thư viện không dùng trong ranked; camera/permission lỗi vẫn có đường chữ nếu luật mùa cho phép, nếu không thì round void chứ không tự xử thua. Anti-abuse gồm pool đa dạng, câu cùng phiên bản, duplicate detection, rate/idempotency, review trường hợp bất thường; **không thể ngăn điện thoại thứ hai hay người khác giúp tuyệt đối**. AI không gắn nhãn gian lận dựa trên nét chữ/tốc độ một mình.
 
 ```text
 opt-in → queue → match_found → round_question → submit → grading_both
@@ -42,4 +44,4 @@ Giao hữu không đổi RP. Ranked chỉ mở theo môn/khối/pool khi chấm 
 
 ## 6. Cổng playtest
 
-Ít nhất hai thiết bị/tài khoản, cùng câu/rubric/deadline, đúng/sai/uncertain, duplicate submit/action, disconnect/reconnect, simultaneous KO, qi/ward/heal, round 6, secret, rule version, ledger/idempotency/appeal. Theo dõi win rate từng tướng theo cùng trình độ và thứ tự đi; chỉnh kit bằng rule version sau playtest, không cân bằng chỉ bằng cảm giác. Quyền tên/hình/sprite/audio và độ trễ trên máy yếu phải được duyệt trước phát hành. [Test plan](../03-quality/01-ke-hoach-kiem-thu.md).
+Ít nhất hai thiết bị/tài khoản, cùng câu/rubric/deadline, đáp án đúng nhưng bước sai, bước đúng nhưng kết quả sai, ảnh mờ/permission từ chối, `uncertain`, duplicate submit/action, disconnect/reconnect, simultaneous KO, qi/ward/heal, round 6, secret, rule version, ledger/idempotency/appeal. Theo dõi win rate từng tướng theo cùng trình độ và thứ tự đi; chỉnh kit bằng rule version sau playtest, không cân bằng chỉ bằng cảm giác. Quyền tên/hình/sprite/audio và độ trễ trên máy yếu phải được duyệt trước phát hành. [Test plan](../03-quality/01-ke-hoach-kiem-thu.md).

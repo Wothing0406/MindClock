@@ -1,35 +1,34 @@
 # PRD — MindClock Android
 
-**Phiên bản:** 1.0 tài liệu, ngày 15/11/2026. **Owner:** nhóm sản phẩm; thay đổi hành vi cần cập nhật tài liệu này, [journey](02-hanh-trinh-ux.md), contract và test trong cùng task. **Trạng thái:** mục tiêu triển khai, không xác nhận đã phát hành. [Hiện trạng mã](../00-start/01-hien-trang.md).
+**Phiên bản:** 1.1 tài liệu, ngày 15/11/2026. **Owner:** nhóm sản phẩm; thay đổi hành vi cần cập nhật tài liệu này, [journey](02-hanh-trinh-ux.md), contract và test trong cùng task. **Trạng thái:** mục tiêu triển khai sản phẩm lâu dài, không xác nhận đã phát hành. [Hiện trạng mã](../00-start/01-hien-trang.md).
 
 ## 1. Vấn đề và giá trị cần kiểm chứng
 
-Học sinh THCS/THPT và sinh viên năm đầu có thể tắt báo thức rồi ngủ tiếp, ôn tập buổi sáng không sát lịch, và thấy “đã hiểu” khi đọc lời giải AI mà chưa tự làm. MindClock đặt một câu truy hồi ngắn **sau khi chuông reo**, gắn với môn đã chọn/lịch học, yêu cầu đáp án cùng bước trình bày. Ứng dụng phải giúp bắt đầu học mà vẫn an toàn: người dùng luôn dừng được chuông, sai bài không bị phạt, không khóa điện thoại.
+Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát môn học và thấy “đã hiểu” khi đọc lời giải AI mà chưa tự làm. MindClock nối **lịch học cá nhân → lịch ngủ/báo thức → một câu truy hồi có trình bày → kế hoạch ngày → phòng tự học**. Người học có thể học một mình, cùng AI hoặc mời bạn; PvP là hoạt động tự nguyện sau khi luồng học đủ tin cậy. Chuông phải luôn dừng được; sai bài không bị phạt hay khóa điện thoại.
 
-**Giả thuyết:** 7 ngày dùng thử có thể cải thiện tỷ lệ dậy đúng giờ tự báo và mức nhớ bài/cảm nhận hữu ích. Chưa có bằng chứng hiệu quả giáo dục; [pilot](../03-quality/02-van-hanh-phat-hanh.md) phải đo và cho phép bác bỏ ý tưởng.
+**Giả thuyết cần kiểm chứng:** người dùng có thể đặt chuông/lịch mà hiểu cách hoạt động, tự làm một câu ngắn sau khi thức, và quay lại phòng học vì cảm thấy được đồng hành. Chưa có bằng chứng cải thiện giấc ngủ hoặc kết quả học; thử người dùng nhiều vòng phải đo cả mức khó chịu và cho phép bỏ tính năng gây hại. Đây là sản phẩm độc lập, không còn scope cuộc thi/hackathon.
 
 ## 2. Đối tượng và việc cần làm
 
 | Persona | Việc cần làm | Ràng buộc |
 | --- | --- | --- |
-| Học sinh 9/12 | Dậy đúng giờ, biết môn hôm nay, ôn 1 câu vừa sức, xem chỗ sai | Thời gian ít, mạng/thiết bị không ổn định, có thể chưa đủ tuổi tạo tài khoản online. |
-| Học sinh THCS/THPT khác | Hình thành thói quen và chọn môn/tổ hợp riêng | Không ép thi hay học mọi môn; camera không bắt buộc. |
-| Sinh viên năm đầu | Nhập lịch học riêng, phiên tự học ngắn | Lịch khác trường phổ thông, môn tùy biến nhưng ngân hàng câu cần duyệt. |
+| Học sinh THPT 10–12 | Chọn môn theo chương trình, lên lịch, dậy và ôn đúng môn, có bạn học | Có môn lựa chọn khác nhau, tuổi/consent khác nhau, mạng/thiết bị không ổn định. |
+| Học sinh THCS, sinh viên | Nhu cầu tương tự nhưng catalog/chương trình khác | Giai đoạn sau; không hiển thị như đã có câu mọi lớp/môn. |
 | Giáo viên/phụ huynh | Xem tiến độ khi được cấp quyền | Giai đoạn sau; không mặc định xem giờ dậy/ảnh/bài cá nhân. |
 
 ## 3. Phạm vi theo release
 
 | Mức | Có | Chưa có/điều kiện |
 | --- | --- | --- |
-| **MVP Android P0** | Khách local, onboarding có thể bỏ qua, lịch/môn, báo thức thường/thử thách, Dừng khẩn cấp offline, câu đã duyệt, nhập chữ, hoàn thành không chấm offline, timer học local | Camera/AI online tùy chọn sau khi đánh giá; không cần PvP, rank, pet, giáo viên, phụ huynh hoặc iOS để phát hành nội bộ. |
-| **Online cá nhân** | Email Auth, đồng bộ TKB/phiên, chấm 3 trạng thái, XP server, tiến độ, xóa tài khoản | PostgreSQL/Firebase/test quyền/idempotency và consent đạt. |
-| **Mở rộng** | AI gợi mở, camera, đa môn sâu hơn, không gian học, giao hữu 1v1 | Qua cổng content, quyền, chất lượng chấm và hai máy. Ranked/cửa hàng tiếp sau giao hữu. |
+| **P0 — lõi Android** | Happy path đăng ký email, hồ sơ lớp/môn/avatar, dashboard có kế hoạch cơ bản; nhiều alarm local, lịch ngủ, Dừng khẩn cấp, câu duyệt và nhập chữ, timer học một mình. Nếu Auth/mạng lỗi vẫn có `Chỉ dùng báo thức trên máy`. | Không cần Gemini Live, phòng bạn, PvP hoặc iOS để người dùng kiểm báo thức; đăng ký online chỉ mở khi Auth/privacy/backend đạt. |
+| **P1 — cá nhân hóa online** | Đồng bộ TKB, gợi kế hoạch có xác nhận, camera bài làm tùy chọn, chấm ba trạng thái được đánh giá, hồ sơ tiến độ, AI gợi ý theo lượt, voice push-to-talk. | PostgreSQL/Firebase/consent, quyền nội dung và bộ chấm đạt. |
+| **P2 — đồng hành và xã hội** | Phòng học với AI Live/avatar nói, phòng mời bạn, hồ sơ công khai opt-in, giao hữu PvP. | Chi phí Live, privacy trẻ em, moderation, realtime/reconnect, câu chấm công bằng và hai máy. Ranked/coin sau playtest riêng. |
 
 ## 4. Yêu cầu nghiệp vụ có thể test
 
 | ID | Người dùng làm gì | Hành vi bắt buộc | Test nguồn |
 | --- | --- | --- | --- |
-| P-01 | Mở app lần đầu | Chọn dùng khách hoặc đăng nhập; có thể bỏ qua khối/môn để chỉ báo thức | UX-01, AUTH-01 |
+| P-01 | Mở app lần đầu | Giải thích quyền; đường chính đăng ký/đăng nhập email; chọn lớp 10–12/môn/trình độ/avatar, xác nhận kế hoạch rồi vào dashboard; nếu Auth không dùng được vẫn đặt alarm local | UX-01, AUTH-01, ON-01–06 |
 | P-02 | Thêm/sửa/xóa giờ báo | Lưu local, xác minh OS schedule, hiện lần reo tiếp theo/quyền thật; đề xuất AI chỉ có hiệu lực sau xác nhận | AL-01–04 |
 | P-03 | Chuông thử thách reo | Âm/rung và Dừng khẩn cấp chạy cục bộ; không Hoãn; câu cache đã duyệt nếu có | AL-05–09 |
 | P-04 | Chuông thường reo | Có thể Hoãn theo cấu hình cục bộ và Dừng; không phụ thuộc login/API | AL-10 |
@@ -41,6 +40,9 @@ Học sinh THCS/THPT và sinh viên năm đầu có thể tắt báo thức rồ
 | P-10 | Xóa tài khoản/rút đồng ý | API/UX có trạng thái xử lý rõ, ẩn khỏi bảng ngay, dọn dữ liệu theo chính sách; chuông local tách biệt | AUTH-04, PRIV-01 |
 | P-11 | Lập lịch học và việc hôm nay | Nhập/sửa TKB nhiều môn, nhắc opt-in, gợi giờ/câu/việc có lý do và chỉ áp dụng sau xác nhận | PLAN-01–05 |
 | P-12 | Xem hồ sơ và chia sẻ | Lịch sử/tiến độ có nguồn rõ; avatar/tên được duyệt; profile công khai mặc định ẩn, không lộ giờ dậy/TKB/bài | PROFILE-01–04 |
+| P-13 | Đặt lịch ngủ và nhiều chuông | Vòng 24 giờ/nhập số tương đương, âm tùy chọn, lời nhắc thời lượng ngủ; DND chỉ khi OS/quyền cho phép, fallback rõ | SLEEP-01–05 |
+| P-14 | Học cùng AI hoặc bạn | Chọn môn/việc/nhịp/mức nhắc và loại phòng; mic/cam tắt mặc định; timer local; lời nhắc nghiêm nhưng không xúc phạm; rời được | ROOM-01–06 |
+| P-15 | Thi đấu | Giao hữu dùng cùng câu/rubric, người chơi nộp đáp án và lý do; server chốt kết quả, sai/uncertain không xử thua do AI lỗi; ranked là cổng sau | GAME-01–05 |
 
 ## 5. Quy tắc bất biến
 
@@ -49,13 +51,15 @@ Học sinh THCS/THPT và sinh viên năm đầu có thể tắt báo thức rồ
 - **Tự nguyện:** thi đấu, camera, mic, AI Live, chia sẻ hồ sơ và nhắc lịch đều tách consent. Không dùng giờ dậy làm bảng hạng. Không bán lợi thế chiến đấu.
 - **Dữ liệu:** ảnh bài làm không lưu mặc định; không log ảnh/token/nội dung cá nhân; tài khoản server theo chính sách tuổi và quyền. [Chính sách](04-tai-khoan-quyen-rieng-tu.md).
 - **Ngôn ngữ:** `vi-VN`, ngắn gọn, đúng chức năng, không emoji hệ thống/phóng đại hay mắng người dùng. [Design](03-he-thiet-ke.md).
+- **Quyền và OS:** giải thích quyền lúc mở app nhưng xin đúng lúc cần; không hứa tự bật DND, tự mở khóa hoặc giám sát app khác trên mọi thiết bị.
+- **AI đồng hành:** avatar luôn gắn nhãn AI; không suy cảm xúc/lười học từ hình ảnh, không chửi hoặc phạt vì rời phòng, Live có giới hạn chi phí và phương án text/timer.
 
 ## 6. Chỉ số và ngưỡng quyết định
 
-Trong pilot ghi: chuông dự kiến/chuông thực, tỷ lệ dừng an toàn, số buổi làm câu, thời gian tới câu đầu, `uncertain`, phản hồi chấm sai, crash/ANR, thời gian chấm, chi phí AI/người, tỷ lệ xóa hoặc bỏ dùng, tự báo chất lượng ngủ/cảm nhận hữu ích. **Ngưỡng mở pilot phải được chủ dự án chốt trước thu thập**; không tự đặt “thành công” sau khi xem số liệu. Báo thức bỏ lỡ hoặc không thể dừng là lỗi chặn release. [Test/release](../03-quality/01-ke-hoach-kiem-thu.md).
+Trong thử người dùng ghi: hoàn tất onboarding, quyền bị từ chối, số alarm đặt/thực reo và dừng an toàn, số buổi làm câu, `uncertain`/kháng nghị, thời gian tới việc đầu, sử dụng phòng một mình/AI/bạn, mức khó chịu bởi lời nhắc, crash/ANR, độ trễ/chi phí AI, tỷ lệ rút consent/xóa/bỏ dùng. **Ngưỡng mở từng tính năng phải chốt trước thu thập**; không tự đặt “thành công” sau khi xem số liệu. Báo thức bỏ lỡ hoặc không thể dừng là lỗi chặn release. [Test/release](../03-quality/01-ke-hoach-kiem-thu.md).
 
 ## 7. Ngoài phạm vi hiện tại và câu hỏi mở
 
-Giáo viên/phụ huynh, pet, ranked/cửa hàng, AI giám sát camera liên tục, iOS không thuộc P0. Cần quyết định trước pilot: tuổi/đồng ý, chương trình học và số câu tối thiểu, quyền nội dung/art, ngưỡng chấm AI, ngân sách, thiết bị Android mục tiêu và hình thức phân phối. Không giải quyết các quyết định này bằng một màn mock.
+Giáo viên/phụ huynh, pet, ranked/cửa hàng, AI giám sát camera liên tục, iOS không thuộc P0. Cần quyết định trước mở người dùng thật: tuổi/đồng ý, catalog chương trình và số câu tối thiểu theo môn, quyền nội dung/art, ngưỡng chấm AI, ngân sách Live, thiết bị Android mục tiêu và hình thức phân phối. Không giải quyết bằng một màn mock.
 
-[Lịch học và nhắc việc](05-lich-hoc-nhac-viec.md), [hồ sơ và xã hội](06-ho-so-tien-do-xa-hoi.md) là đặc tả chi tiết cho P-11/P-12; phần online/xã hội chỉ mở theo release và consent tương ứng. [Quyết định còn mở](../00-start/06-quyet-dinh-va-gia-dinh.md).
+[Onboarding](07-dang-ky-va-khoi-tao-lo-trinh.md), [lịch và kế hoạch](05-lich-hoc-nhac-viec.md), [hồ sơ](06-ho-so-tien-do-xa-hoi.md), [giấc ngủ/báo thức](09-giac-ngu-va-bao-thuc.md), [phòng học](08-phong-hoc-ai-va-ban-be.md) là đặc tả chi tiết. [Quyết định còn mở](../00-start/06-quyet-dinh-va-gia-dinh.md).

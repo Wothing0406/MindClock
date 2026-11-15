@@ -5,7 +5,7 @@ description: Implement or review MindClock Android platform code for local alarm
 
 # MindClock Android native
 
-Use for Flutter-to-Android system behavior. Read [Android alarm](../../../docs/02-engineering/02-bao-thuc-android.md) for alarms, [study space](../../../docs/02-engineering/07-khong-gian-hoc.md) for study focus, [test plan](../../../docs/03-quality/01-ke-hoach-kiem-thu.md) for tests, and [AGENTS.md](../../../AGENTS.md). Before changing code/configuration, follow `tasks/README.md`.
+Use for Flutter-to-Android system behavior. Read [Android alarm](../../../docs/02-engineering/02-bao-thuc-android.md) and [sleep UX](../../../docs/01-product/09-giac-ngu-va-bao-thuc.md) for alarms/DND, [study space](../../../docs/02-engineering/07-khong-gian-hoc.md) for focus/media, [test plan](../../../docs/03-quality/01-ke-hoach-kiem-thu.md) for tests, and [AGENTS.md](../../../AGENTS.md). Before changing code/configuration, follow `tasks/README.md`.
 
 ## Workflow
 
@@ -16,6 +16,7 @@ Use for Flutter-to-Android system behavior. Read [Android alarm](../../../docs/0
 5. For study focus, lifecycle can show MindClock left foreground. It cannot establish which app was used or whether the learner was distracted. Keep interruption events local. Digital Wellbeing Focus mode is user-controlled; a personal app cannot impose kiosk lock task. Avoid Accessibility, overlay, device-admin, or VPN workarounds.
 6. Camera/mic are opt-in with visible state and immediate stop. Do not start them silently from background or stream/store frames by default. Keep the text/no-camera path.
 7. Verify OS behavior on a physical device as well as an emulator. Emulator/widget tests do not prove locked-screen sound/vibration, OEM battery behavior, or reboot delivery. Record device and Android version; mark any missing gate unverified.
+8. Sleep reminders may silence MindClock's own notifications. Changing device-wide Do Not Disturb requires user-granted policy access and compatible OS behavior; Android 15 changes global DND control. Check actual OS state, offer Settings fallback, never report DND enabled from a local toggle alone. Lock-screen content defaults to a private/publicVersion with no timetable details.
 
 ## Delivery checks
 
@@ -32,5 +33,7 @@ Use for Flutter-to-Android system behavior. Read [Android alarm](../../../docs/0
 - [Foreground-service restrictions](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start)
 - [Lock task mode](https://developer.android.com/work/dpc/dedicated-devices/lock-task-mode)
 - [Digital Wellbeing Focus mode](https://support.google.com/android/answer/9346420)
+- [Notification policy access](https://developer.android.com/reference/kotlin/android/provider/Settings#ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+- [Android 15 DND behavior](https://developer.android.com/about/versions/15/behavior-changes-15)
 
 Check current official guidance when coding; these links are starting points.

@@ -1,6 +1,6 @@
 # Quy trình AI coding có thể quay lại và kiểm chứng
 
-Tài liệu này là **hợp đồng làm việc** cho AI và thành viên. [AGENTS.md](../../AGENTS.md) có ưu tiên cao hơn khi thao tác trong repo; [tasks/README.md](../../tasks/README.md) định nghĩa trạng thái và tên folder. Không bắt AI đọc toàn bộ docs mỗi lượt: dùng [index](../README.md) tìm đúng nguồn chuẩn, đọc code/test/task liên quan rồi làm lát cắt nhỏ.
+Tài liệu này là **hợp đồng làm việc** cho AI và thành viên. [AGENTS.md](../../AGENTS.md) có ưu tiên cao hơn khi thao tác trong repo; [tasks/README.md](../../tasks/README.md) định nghĩa trạng thái và tên folder; [skill routing](07-quy-tac-skills-va-ai-agent.md) định hướng công cụ đúng việc. Không bắt AI đọc toàn bộ docs mỗi lượt: dùng [index](../README.md) tìm đúng nguồn chuẩn, đọc code/test/task liên quan rồi làm lát cắt nhỏ. Không tạo mục tiêu “demo cuộc thi” thay sản phẩm lâu dài.
 
 ## Vòng làm một task
 

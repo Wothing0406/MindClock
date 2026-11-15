@@ -11,6 +11,8 @@
 | Tải câu | Cache published revision phù hợp TKB trước giờ reo → chọn local | `/challenges/next` chỉ trả prompt/metadata | Không có câu → `Ôn sau`, không khóa chuông. |
 | Nộp chữ/ảnh | User xác nhận → tạo `clientAttemptId` → giữ UI loading/draft → gọi API | Auth/owner/rubric/validator/AI/transaction | 401 hướng đăng nhập, 409 sync conflict, 429/503/504 uncertain/retry; không tự cấp XP. |
 | Không gian học | Timer local start/finish không chờ mạng; AI chỉ khi hỏi | `/study/sessions`, `/finish`, `/help` idempotent/limit | Offline vẫn học/kết thúc; không lưu ảnh/video mặc định. |
+| Onboarding/plan | Firebase Email/Password + verify → catalog lớp/môn → draft profile/plan → user confirm | `/me` hiện có cần mở payload/version; catalog/plan đề xuất chưa code | Auth lỗi vẫn chỉ dùng alarm local; AI lỗi tạo plan rule-based, không tự áp dụng. |
+| Phòng bạn/AI Live | Chỉ sau user bật mic/cam hoặc nhận lời mời; timer vẫn local | Room membership/event/ephemeral token/quota ở server theo task riêng | Rớt Live/media hạ cấp text/timer; không giả phòng đã kết nối. |
 
 ## 2. Auth, môi trường, secret
 

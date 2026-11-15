@@ -1,6 +1,6 @@
 # Gemini, Socratic và chấm bài công bằng
 
-**Vai AI:** gợi ý nội dung nháp, đọc ảnh/lời giải, đề xuất feedback, hỏi gợi mở. **Vai backend:** xác minh câu/rubric/quyền, quyết định `correct|incorrect|uncertain`, XP/tiến độ, giới hạn chi phí và audit. AI không gán gian lận, HP/RP/rank/streak hoặc tự phát câu scored. Không gửi API key tới app. [Question bank](05-ngan-hang-cau-hoi.md), [API](04-hop-dong-api.md).
+**Vai AI:** gợi ý nội dung nháp, đọc ảnh/lời giải, đề xuất feedback, hỏi gợi mở, diễn đạt kế hoạch và đối thoại trong phòng học. **Vai backend:** xác minh catalog/câu/rubric/quyền, quyết định `correct|incorrect|uncertain`, XP/tiến độ, giới hạn chi phí và audit. AI không gán gian lận, HP/RP/rank/streak hoặc tự phát câu scored. Không gửi API key tới app. [Question bank](05-ngan-hang-cau-hoi.md), [planner](10-catalog-chuong-trinh-va-ke-hoach.md), [phòng học](09-phong-hoc-realtime.md), [API](04-hop-dong-api.md).
 
 ## 1. Quy trình nộp và chấm
 
@@ -23,7 +23,7 @@ Chế độ thử thách chỉ trả gợi ý công khai từ lần **incorrect 
 
 ## 3. Model, quota, consent
 
-Model ID/prompt/schema/validator/grading policy đặt ở cấu hình server và log phiên bản. Không hardcode tên model giả định còn hiệu lực; trước task tích hợp cần kiểm docs nhà cung cấp, quota, region, giá và quyền dữ liệu tại thời điểm triển khai. Có timeout ngắn hơn client, circuit breaker/fallback, cache nội dung đã duyệt, hạn lượt theo user/route và budget ngày. Realtime audio/camera chỉ opt-in, giới hạn phiên/lượt, có nút dừng rõ và phương án text. Không quan sát camera liên tục để chấm “sao nhãng”.
+Model ID/prompt/schema/validator/grading policy đặt ở cấu hình server và log phiên bản. Không hardcode tên model giả định còn hiệu lực; trước task tích hợp cần kiểm docs nhà cung cấp, quota, region, giá và quyền dữ liệu tại thời điểm triển khai. Có timeout ngắn hơn client, circuit breaker/fallback, cache nội dung đã duyệt, hạn lượt theo user/route và budget ngày. Realtime audio/camera chỉ opt-in, giới hạn phiên/lượt, có nút dừng rõ và phương án text. Không quan sát camera liên tục để chấm “sao nhãng”. Phòng học dùng giọng `quiet|gentle|firm` nhưng cùng chính sách: không nhục mạ, đe dọa, thao túng cảm xúc; user có thể tắt nhắc. AI không được nói mình là người thật. Camera frame bài chỉ sau user chọn/xem lại, không lấy stream để suy lười học.
 
 ## 4. Bộ đánh giá trước pilot
 

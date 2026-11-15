@@ -1,6 +1,6 @@
 # Hợp đồng HTTP `/v1` và tích hợp Flutter
 
-**Mục tiêu:** một contract duy nhất cho Android và FastAPI. **Trạng thái:** các route nêu ở bảng A có mã trong [`routes/v1.py`](../../services/api/app/routes/v1.py); payload/permission vẫn phải khóa bằng OpenAPI + contract test trước pilot. Bảng B là **đề xuất chưa triển khai**. Không coi danh sách docs là bằng chứng API đang chạy. [Dữ liệu](03-du-lieu-sql.md), [AI](06-ai-va-cham-bai.md), [auth](../01-product/04-tai-khoan-quyen-rieng-tu.md).
+**Mục tiêu:** một contract duy nhất cho Android và FastAPI. **Trạng thái:** các route nêu ở bảng A có mã trong [`routes/v1.py`](../../services/api/app/routes/v1.py); payload/permission vẫn phải khóa bằng OpenAPI + contract test trước khi mở người dùng thật. Bảng B là **đề xuất chưa triển khai**. Không coi danh sách docs là bằng chứng API đang chạy. [Dữ liệu](03-du-lieu-sql.md), [AI](06-ai-va-cham-bai.md), [auth](../01-product/04-tai-khoan-quyen-rieng-tu.md).
 
 ## 1. Quy ước chung
 
@@ -14,7 +14,7 @@
 
 | Nhóm | Route | Trách nhiệm và điểm cần kiểm |
 | --- | --- | --- |
-| Health/hồ sơ | `GET /health`, `GET/PATCH/DELETE /me`, `POST /me/consent` | Owner token, alias/grade/môn/consent, xóa `202`; test không lộ secret/không cross owner. |
+| Health/hồ sơ | `GET /health`, `GET/PATCH/DELETE /me`, `POST /me/consent` | Owner token, alias/grade/môn/consent, xóa `202`; test không lộ secret/không cross owner. Onboarding state/catalog version/plan draft **chưa mặc định có** trong payload hiện tại. |
 | Lịch/báo thức | `GET/PUT /timetable`, `GET/POST /alarms`, `PATCH/DELETE /alarms/{id}` | Revision và idempotency; **API lưu cấu hình, Android mới lập lịch OS**. |
 | Câu | `GET /challenges/next`, `POST/GET /questions/personalized` | Câu published theo môn/khối; AI personalized là draft luyện, không mặc định XP. |
 | Phiên/attempt | `GET/POST /sessions`, `POST /sessions/{id}/events`, `/answers`, `/attempts`, `/feedback` | Session owner, câu/rubric revision, retry không nhân XP; ảnh chỉ tạm thời. |
@@ -35,7 +35,7 @@ Ví dụ là contract mục tiêu; task B01/B03/B04 phải so với Pydantic sch
 
 ## 4. B — đề xuất chưa triển khai
 
-`POST /me/export`, `GET /me/exports/{id}`, `GET /me/delete-status`; task ngày/ngoại lệ lịch và notification preferences nếu cần sync (âm/OS schedule vẫn local); admin content review/import; avatar upload/moderation/public profile projection; PvP matchmaking/action/events/settle, rank/ledger/bảng; teacher/parent scopes. Chỉ mở endpoint sau PRD, quyền, SQL migration, contract tests và cổng release tương ứng. Không gắn route mock vào `/v1` production để UI trông hoàn thiện. [P-11](../01-product/05-lich-hoc-nhac-viec.md), [P-12](../01-product/06-ho-so-tien-do-xa-hoi.md).
+Onboarding draft/commit và catalog `GET /catalog?grade=10|11|12&version=...`; plan draft/confirm có `planVersion`/`source`/`requiresConfirmation`; `POST /me/export`, `GET /me/exports/{id}`, `GET /me/delete-status`; task ngày/ngoại lệ lịch và notification preferences nếu cần sync (âm/OS schedule vẫn local); admin content review/import; avatar upload/moderation/public profile projection; friend request/accept/block, private study room/invite/join/leave/snapshot/event stream; PvP matchmaking/action/events/settle, rank/ledger/bảng; teacher/parent scopes. Chỉ mở endpoint sau PRD, quyền, SQL migration, contract tests và cổng release tương ứng. Không gắn route mock vào `/v1` production để UI trông hoàn thiện. [Onboarding](../01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [room](09-phong-hoc-realtime.md), [P-11](../01-product/05-lich-hoc-nhac-viec.md), [P-12](../01-product/06-ho-so-tien-do-xa-hoi.md).
 
 ## 5. Offline/retry và bảo vệ server
 

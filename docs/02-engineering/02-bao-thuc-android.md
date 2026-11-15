@@ -4,7 +4,7 @@
 
 ## 1. Cấu hình và trạng thái
 
-`AlarmConfig`: local ID, giờ theo múi IANA, ngày lặp, enabled, mode `normal|challenge`, snooze chỉ mode thường, âm thanh/rung, môn/câu dự phòng (nếu có), revision local. Gợi ý giờ dậy lấy tiết đầu − chuẩn bị − di chuyển − đệm, hiển thị phép tính và **không tự lưu**. Không yêu cầu login.
+`AlarmConfig`: local ID, giờ theo múi IANA, ngày lặp, enabled, mode `normal|challenge`, snooze chỉ mode thường, âm thanh/rung, môn/câu dự phòng (nếu có), revision local. Nhiều alarm độc lập; sửa/xóa một alarm không làm mất alarm khác. `SleepSchedule` local có giờ ngủ/giờ dậy/lời nhắc/quiet hours, không âm thầm sửa alarm. Gợi ý giờ dậy lấy tiết đầu − chuẩn bị − di chuyển − đệm, hiển thị phép tính và **không tự lưu**. Không yêu cầu login. [UX vòng ngủ](../01-product/09-giac-ngu-va-bao-thuc.md).
 
 | Trạng thái | Có nghĩa | UI |
 | --- | --- | --- |
@@ -23,7 +23,9 @@ draft → saved_local → scheduled_os → ringing → dismissed
                     ↘ needs_permission      ↘ snoozed (normal only) → scheduled_os
 ```
 
-Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, tính occurrence theo timezone/ngày lặp, không đặt trùng sau boot/time change/update. Receiver chỉ khởi động phần tối thiểu cần cho âm/rung/notification; full-screen UI theo quyền OS, có fallback notification và đường thao tác Dừng. Không tải câu/Gemini trước khi cho người dùng dừng chuông. Âm MP3 tích hợp phải có quyền sử dụng, chuẩn mức âm lượng, và fallback âm OS khi lỗi; tắt âm/rung không phụ thuộc codec/network.
+Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, tính occurrence theo timezone/ngày lặp, không đặt trùng sau boot/time change/update. Receiver chỉ khởi động phần tối thiểu cần cho âm/rung/notification; full-screen UI theo quyền OS, có fallback notification và đường thao tác Dừng. Màn khóa mặc định hiện nội dung trung tính, môn/TKB chi tiết chỉ khi user chọn công khai; không tự mở khóa. Không tải câu/Gemini trước khi cho người dùng dừng chuông. Câu published nên cache trước giờ reo; nếu không có, `Ôn sau`. Âm MP3 tích hợp/tệp user phải có quyền đọc/sử dụng, chuẩn mức âm lượng, và fallback âm OS khi lỗi; tắt âm/rung không phụ thuộc codec/network. [Android exact alarm](https://developer.android.com/develop/background-work/services/alarms), [full-screen intent và lock-screen visibility](https://developer.android.com/develop/ui/compose/notifications/create-notification#full-screen_intent).
+
+Đến giờ ngủ, app chỉ tự im lặng **thông báo của chính mình** theo quiet hours. Nếu user muốn DND toàn máy, mở flow xin Notification Policy access/thiết lập quy tắc được OS cho phép, rồi kiểm trạng thái thật. Android 15+ thay đổi hành vi DND với app target API 35; không code `setInterruptionFilter` rồi mặc định toàn máy đã tắt thông báo. Quyền từ chối → hướng dẫn người dùng mở Settings, không ảnh hưởng alarm. [Android DND permission](https://developer.android.com/reference/kotlin/android/provider/Settings#ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS), [thay đổi Android 15](https://developer.android.com/about/versions/15/behavior-changes-15).
 
 ## 3. Mode thường và thử thách
 
@@ -37,7 +39,7 @@ Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, 
 | `uncertain`/ảnh mờ/AI timeout | Không tính sai | Không tăng wrong count, nhập chữ/thử lại/hoàn thành không chấm |
 | Mất mạng/không có câu | Dừng như thường | Vẫn dừng được; không “khóa” vào câu chưa chấm |
 
-Ảnh viết tay và câu hỏi tăng khả năng tỉnh táo, **không chống gian lận tuyệt đối**: điện thoại thứ hai/AI ngoài app vẫn có thể giải hộ. Không chụp màn hình ngoài quyền hoặc theo dõi app khác. Học sinh không bị phạt vì nghỉ, sai, dừng khẩn cấp hoặc quyền bị từ chối.
+Ảnh viết tay và câu hỏi có thể tạo một bước học chủ động, **không chứng minh đã tỉnh táo và không chống gian lận tuyệt đối**: điện thoại thứ hai/AI ngoài app vẫn có thể giải hộ. Không chụp màn hình ngoài quyền hoặc theo dõi app khác. Khi sai rõ, cho làm lại và từ lần thứ 3 gợi bước đầu; nếu lặp nhiều lần, user có `Ôn sau`/Dừng. Âm báo không kéo dài đến khi đáp đúng. Học sinh không bị phạt vì nghỉ, sai, dừng khẩn cấp hoặc quyền bị từ chối.
 
 ## 4. Test thiết bị bắt buộc
 
