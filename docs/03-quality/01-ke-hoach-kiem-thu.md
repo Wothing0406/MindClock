@@ -35,17 +35,17 @@ AD01/02/07 phải chạy **ít nhất hai máy Android thật** có phiên bản
 | --- | --- |
 | AUTH | Guest chuông local; token sai/hết hạn 401; A/B 403/404 hợp lý; chưa consent không gửi ảnh/Live/bảng; logout máy chung không lộ cache; xóa/export idempotent. |
 | DATA | PostgreSQL migration trống/có dữ liệu/rollback; duplicate session/attempt/XP; transaction fail; draft/retired question không scored; backup/restore/TTL; no key/ảnh/log. |
-| CONTENT | Reviewer/rights/rubric/revision; câu nhiều dạng, trùng/câu mơ hồ/đơn vị/LaTeX/ảnh; import `dry_run`, quarantine và không publish nhầm. |
-| AI | `correct/incorrect/uncertain`, ảnh mờ/cắt, cách giải tương đương, prompt injection, AI-validator bất đồng, timeout/rate/quota, không cấp XP/rank; đánh giá độc lập theo môn/khối. |
+| CONTENT | Reviewer/rights/rubric/revision; câu nhiều dạng, trùng/câu mơ hồ/đơn vị/LaTeX/ảnh; import `dry_run`, quarantine và không publish nhầm; `MORNING-01`, `EDU-01` bảo đảm hook cùng kiến thức với câu, có fallback chữ. |
+| AI | `correct/incorrect/uncertain`, ảnh mờ/cắt, cách giải tương đương, prompt injection, AI-validator bất đồng, timeout/rate/quota, không cấp XP/rank; `EDU-02–04` kiểm prompt theo mode và bài viết tay; đánh giá độc lập theo môn/khối. |
 | FOCUS | FOCUS-01–08: timer offline/background/restart, finish retry, camera/mic opt-in, trợ lý Socratic, quyền riêng tư và hỗ trợ tiếp cận; không khóa app khác. |
 | PLAN/PROFILE | PLAN-01–05: TKB/ngoại lệ/nhắc/quyền/xác nhận; PROFILE-01–04: owner, opt-in, avatar moderation, cache khi đổi account. |
-| ON/SLEEP | ON-01–06: email/verify/catalog/plan/resume/offline; SLEEP-01–05: nhiều alarm, DND OS, lock screen riêng tư, MP3 fallback. |
+| ON/SLEEP | ON-01–06: email/verify/catalog/plan/resume/offline; SLEEP-01–05: nhiều alarm, DND OS, lock screen riêng tư, MP3 fallback; MORNING-01–03: mở màn→câu bắt buộc để thưởng, sai 3/5, bỏ lượt/chuỗi. |
 | ROOM | ROOM-01–06: solo/AI/bạn, media permission, quota/reconnect, lời nhắc, invite/block/report, prompt eval. |
 | GAME (sau) | GAME-01–05: cùng câu/rubric/deadline và lý do, server HP/event/ledger, reconnect/duplicate/void uncertain, cân bằng tướng/FX/âm trên hai máy. |
 
 ## 4. Cổng trước pilot/release
 
-P0: build sạch CI; ON-01–06, AUTH-01/04, SLEEP-01–05, PLAN-01/03/05, FOCUS-01–05 và AD01–09 đạt ở các phần đã mở; 0 lỗi không dừng được chuông; schema/API test, quyền A/B, catalog từng lớp/môn có reviewer, nội dung đã duyệt và privacy review. ON/PLAN dùng Firebase emulator, PostgreSQL và máy thật theo tầng phù hợp; không lấy một màn mock làm bằng chứng. AI chấm chỉ bật cho dạng câu có bộ đánh giá độc lập và ngưỡng false-correct/false-incorrect/uncertain/latency/cost được định **trước khi đo**; nếu không đạt, dùng đáp án có validator hoặc `uncertain`. Phòng Live/bạn và PvP/ranked tắt tới cổng riêng. Pilot 7 ngày ghi số chuông dự kiến/thực, lỗi, hữu ích, khó chịu, opt-out, chi phí và sự cố; không dùng dữ liệu học sinh thật khi chưa đồng ý phù hợp.
+P0: build sạch CI; ON-01–06, AUTH-01/04, SLEEP-01–05, MORNING-01–03, PLAN-01/03/05, FOCUS-01–05 và AD01–09 đạt ở các phần đã mở; 0 lỗi không dừng được chuông; schema/API test, quyền A/B, catalog từng lớp/môn có reviewer, nội dung đã duyệt và privacy review. ON/PLAN dùng Firebase emulator, PostgreSQL và máy thật theo tầng phù hợp; không lấy một màn mock làm bằng chứng. AI chấm chỉ bật cho dạng câu có bộ đánh giá độc lập và ngưỡng false-correct/false-incorrect/uncertain/latency/cost được định **trước khi đo**; nếu không đạt, dùng đáp án có validator hoặc `uncertain`. Phòng Live/bạn và PvP/ranked tắt tới cổng riêng. Pilot 7 ngày ghi số chuông dự kiến/thực, lỗi, hữu ích, khó chịu, opt-out, chi phí và sự cố; không dùng dữ liệu học sinh thật khi chưa đồng ý phù hợp.
 
 ## 5. Command gợi ý, chỉ tính pass khi chạy
 

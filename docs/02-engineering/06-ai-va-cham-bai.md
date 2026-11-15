@@ -1,6 +1,6 @@
 # Gemini, Socratic và chấm bài công bằng
 
-**Vai AI:** gợi ý nội dung nháp, đọc ảnh/lời giải, đề xuất feedback, hỏi gợi mở, diễn đạt kế hoạch và đối thoại trong phòng học. **Vai backend:** xác minh catalog/câu/rubric/quyền, quyết định `correct|incorrect|uncertain`, XP/tiến độ, giới hạn chi phí và audit. AI không gán gian lận, HP/RP/rank/streak hoặc tự phát câu scored. Không gửi API key tới app. [Question bank](05-ngan-hang-cau-hoi.md), [planner](10-catalog-chuong-trinh-va-ke-hoach.md), [phòng học](09-phong-hoc-realtime.md), [API](04-hop-dong-api.md).
+**Vai AI:** gợi ý nội dung nháp, đọc ảnh/lời giải, đề xuất feedback, hỏi gợi mở, diễn đạt kế hoạch và đối thoại trong phòng học. **Vai EduSkills-VN:** quy tắc bộ môn để biên tập câu/rubric và hướng dẫn chấm phiên bản nhỏ theo từng tác vụ; không phải model chấm hoặc nguồn điểm. **Vai backend:** xác minh catalog/câu/rubric/quyền, quyết định `correct|incorrect|uncertain`, XP/tiến độ và audit. AI không gán gian lận, HP/RP/rank/streak hoặc tự phát câu scored. Không gửi API key tới app. [Question bank](05-ngan-hang-cau-hoi.md), [EduSkills](11-eduskills-vn-tich-hop.md), [planner](10-catalog-chuong-trinh-va-ke-hoach.md), [phòng học](09-phong-hoc-realtime.md), [API](04-hop-dong-api.md).
 
 ## 1. Quy trình nộp và chấm
 
@@ -19,7 +19,7 @@
 | Ảnh mờ, bước thiếu, nhiều cách hiểu, AI/validator bất đồng, rubric lỗi, timeout | `uncertain` | Không tính sai, không tăng wrong count; nhập chữ/chụp lại/ôn sau. |
 | Câu AI tự sinh chưa duyệt | Feedback luyện không scored | Không XP/ranked; label rõ. |
 
-Chế độ thử thách chỉ trả gợi ý công khai từ lần **incorrect rõ thứ 3**; trước đó không lộ qua response field, analytics hoặc khác biệt lỗi. Socratic đưa một câu hỏi/công thức/bước kế tiếp, không lời giải cuối trước nỗ lực. Sau khi kết thúc, có thể xem lời giải đã duyệt.
+Chế độ thử thách chỉ trả gợi ý công khai từ lần **incorrect rõ thứ 3**; trước đó không lộ qua response field, analytics hoặc khác biệt lỗi. Từ lần `incorrect` rõ thứ 5 mở `Bỏ lượt`; backend đếm theo attempt ID duy nhất, `uncertain`/lỗi hệ thống không tăng. Socratic đưa một câu hỏi/công thức/bước kế tiếp, không lời giải cuối trước nỗ lực. Sau khi kết thúc, có thể xem lời giải và đoạn kết mở màn đã duyệt. `Bỏ lượt` không có EXP/ngày chuỗi mới; không trừ EXP/RP đã có. Dừng âm khẩn cấp không chờ AI.
 
 ## 3. Model, quota, consent
 

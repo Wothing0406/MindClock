@@ -22,8 +22,15 @@
 | LEARN-04 | P-06 | Câu có cách giải tương đương được duyệt không bị chấm sai | human rubric + AI eval |
 | LEARN-05 | P-06 | Submit kép/cùng key trả cùng kết quả và XP một lần; khác payload 409 | PostgreSQL transaction |
 | LEARN-06 | P-07 | Sai rõ lần 1–2 không hint; lần 3 mở hint một bước; uncertain không tăng sai | API + UI contract |
+| MORNING-01 | P-03 | Mở từ alarm vào cảnh ngắn rồi cùng câu; bỏ cảnh không bỏ câu; asset lỗi/Reduce Motion dùng chữ tĩnh | Flutter/Android E2E |
+| MORNING-02 | P-07 | Đếm 3/5 lần `incorrect` duy nhất; lần 5 mới có Bỏ lượt; retry/uncertain/lỗi không tăng; Dừng âm luôn dùng được | API/PostgreSQL + Android |
+| MORNING-03 | P-08 | Chỉ câu đúng đủ bước cấp EXP/ngày chuỗi một lần; bỏ lượt/dừng/đóng app hết ngày không cấp; planned rest và system grace không làm đứt chuỗi oan | API/PostgreSQL A/B + ngày/timezone |
 | AI-01 | P-06 | Gemini/validator bất đồng, ảnh mờ, timeout → uncertain, không phạt/không cấp XP sai | AI eval/API |
 | AI-02 | P-07 | Socratic không trả đáp án cuối trước nỗ lực, không lộ rubric qua field/lỗi | prompt injection + contract |
+| EDU-01 | P-06 | EduSkills tạo nháp câu/rubric/hook; không reviewer/quyền hoặc lệch outcome thì không publish/scored | content pipeline/contract |
+| EDU-02 | P-07 | `HINT_ONE_STEP` và response trước kết thúc không lộ đáp án/đoạn kết; post-attempt mới giải thích | prompt eval/API |
+| EDU-03 | P-06 | Bộ môn/khối đúng catalog, cách giải tương đương, đơn vị và thuật ngữ cho kết quả công bằng | human-labeled eval đa môn |
+| EDU-04 | P-06 | OCR Tesseract không được dùng chấm chữ viết tay; ảnh không đọc rõ trả uncertain và có đường nhập chữ | pipeline/security/AI eval |
 | DATA-01 | P-08 | XP/streak do server, dữ liệu tiến độ riêng, giờ dậy không vào rating | SQL/API A/B |
 | FOCUS-01 | P-09 | Timer chạy offline, pause/resume/finish | Dart unit/widget |
 | FOCUS-02 | P-09 | Background/kill/restart không tạo phạt hoặc kẹt phiên | Android lifecycle |

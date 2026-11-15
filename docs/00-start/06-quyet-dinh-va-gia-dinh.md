@@ -19,5 +19,8 @@
 | D-13 | Đã chốt | Phòng học có solo/AI/bạn; avatar 2D có nhãn AI; mức nhắc nghiêm không xúc phạm/phạt; mic/cam tắt mặc định. | ROOM-01–06, privacy/abuse/Live quota gates. |
 | D-14 | Cần xác nhận | Catalog THPT theo phiên bản chương trình hiện hành, trường hợp môn địa phương/chuyên đề, reviewer và số câu tối thiểu từng môn. | Review nguồn Bộ GD&ĐT, seed có provenance, không mở scored nếu thiếu. |
 | D-15 | Cần xác nhận | Nhà cung cấp media phòng bạn, Live model/quota/giá, giới hạn phút miễn phí và quy trình tuổi/consent. | Spike hai máy, đo chi phí/độ trễ, review chính sách nhà cung cấp trước mở flag. |
+| D-16 | Đã chốt | Lượt sáng vào mở màn gắn câu ngay, không màn hỏi bắt đầu; câu có lý do bắt buộc để tính hoàn thành/EXP/chuỗi. Hook bỏ qua được, câu không. | MORNING-01–03; asset/reviewer/rights, Android offline/Reduce Motion. |
+| D-17 | Đã chốt | Hint sau sai rõ lần 3, Bỏ lượt từ lần 5 không thưởng; Dừng âm khẩn cấp bất kỳ lúc nào; uncertain/lỗi hệ thống không bị tính sai/đứt chuỗi oan. | Backend đếm attempt idempotent, streak policy/SQL migration và test thời gian/ngày. |
+| D-18 | Đã chốt | EduSkills-VN là nguồn quy tắc sư phạm/authoring/grading guidance theo môn; không là model hay ngân hàng câu tự publish. | Adapter versioned, reviewer, prompt modes, eval đa môn; [hợp đồng](../02-engineering/11-eduskills-vn-tich-hop.md). |
 
 Khi task phụ thuộc một dòng `cần xác nhận`, vẫn triển khai phần độc lập. Ghi rõ blocker trong `tasks/TNNN-.../handoff.md`; không lấp bằng mock rồi đánh dấu xong. [Quy trình](03-quy-trinh-vibe-code.md).

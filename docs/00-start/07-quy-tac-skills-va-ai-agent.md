@@ -17,7 +17,7 @@
 | Flutter kiến trúc/UI | `flutter-apply-architecture-best-practices`, `flutter-custom-design-system`, `flutter-add-widget-test` | Design/UX, cấu trúc `app/`; không thêm web/React cho Android. |
 | Kotlin alarm/quyền/DND | `.agents/skills/mindclock-android-native/SKILL.md`, `testing-setup` nếu cần native harness | Android official docs hiện hành, AD01–AD09 máy thật; không hứa khóa máy/DND toàn hệ thống. |
 | API/SQL | `api-design-principles`, `requirements-writing` | API/SQL canonical, migration PostgreSQL, Auth A/B/idempotency. |
-| AI/câu/chương trình | `tao-quiz-bgd`, skill môn phù hợp và `requirements-writing` | Bộ GD&ĐT/reviewer, rubric/rights/eval; skill môn không được tự publish corpus. |
+| AI/câu/chương trình | EduSkills-VN: `tao-quiz-bgd`, skill môn phù hợp, `giai-chi-tiet` chỉ sau lượt; `requirements-writing` | [Adapter EduSkills](../02-engineering/11-eduskills-vn-tich-hop.md), Bộ GD&ĐT/reviewer, rubric/rights/eval; không đưa nguyên prompt giải trọn bài vào hint/chấm trước reveal. Skill môn không tự publish corpus. |
 | PvP/art/sprite | `game-design`, `game-art`, `generate2dsprite` khi task đã mở | GDD v0.1, asset provenance, balance/playtest; không lấy sprite web làm arena Flutter. |
 | iOS sau này | `apple-hig-expert`, `ios-flows` | iOS riêng, Mac/Xcode/iPhone; không bê giới hạn Android sang iOS. |
 
@@ -37,3 +37,5 @@ Bàn giao: trạng thái, diff, AC/TC, rủi ro, điểm tiếp tục. Không g�
 ```
 
 Nếu AI gặp câu “đánh thức bằng cách không thể tắt”, “khóa app khác”, “AI chửi học sinh”, “chống gian lận tuyệt đối”, phải quay lại [PRD](../01-product/01-prd.md), [alarm](../02-engineering/02-bao-thuc-android.md) và [phòng học](../01-product/08-phong-hoc-ai-va-ban-be.md), ghi quyết định an toàn trong task, không thực hiện hành vi trái quy tắc.
+
+Đối với EduSkills-VN, đọc skill môn **để trích quy tắc chuyên ngành**, rồi xuất prompt nhỏ theo `AUTHOR_DRAFT|GRADE_CANDIDATE|HINT_ONE_STEP|POST_ATTEMPT_EXPLAIN`. Không dán nguyên `giai-chi-tiet` hoặc prompt bốn tầng vào trợ lý trước khi học sinh nộp; nó có thể tiết lộ lời giải. Nội dung generated phải có nguồn, revision, người duyệt và test trước khi vào ngân hàng scored. Bộ OCR của EduSkills dùng để gợi đọc chữ in/TKB, không dùng Tesseract làm trọng tài chữ viết tay. [Hợp đồng](../02-engineering/11-eduskills-vn-tich-hop.md).

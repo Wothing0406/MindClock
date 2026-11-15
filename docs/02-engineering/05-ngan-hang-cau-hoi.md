@@ -1,6 +1,6 @@
 # Ngân hàng câu hỏi nhiều môn và quyền nguồn
 
-**Quy tắc P0:** câu chấm/cho XP đến từ ngân hàng **đã được đội và người có chuyên môn duyệt**, không sinh trực tiếp khi chuông reo/ghép trận. Gemini có thể đề xuất bản nháp hoặc gợi ý, không tự publish. `data/sources/registry.json` là metadata; corpus nghiên cứu local không phải ngân hàng đã tích hợp. [AI/chấm](06-ai-va-cham-bai.md), [SQL](03-du-lieu-sql.md).
+**Quy tắc P0:** câu chấm/cho XP đến từ ngân hàng **đã được đội và người có chuyên môn duyệt**, không sinh trực tiếp khi chuông reo/ghép trận. EduSkills-VN + Gemini có thể đề xuất câu, rubric, gợi ý và mở màn dưới dạng bản nháp; không tự publish. `data/sources/registry.json` là metadata; corpus nghiên cứu local không phải ngân hàng đã tích hợp. [AI/chấm](06-ai-va-cham-bai.md), [SQL](03-du-lieu-sql.md), [EduSkills adapter](11-eduskills-vn-tich-hop.md).
 
 ## 1. Một item xuất bản cần gì
 
@@ -34,11 +34,13 @@ Ví dụ **chỉ là bản nháp minh họa**, không tự được coi đã có
 
 Trong alarm và PvP, ngân hàng xuất bản phải có phiên bản **tự luận ngắn đã được người duyệt chuyển thể**: prompt, đáp án, checkpoint trình bày, cách giải tương đương, thời gian ước lượng và rubric. Gemini có thể tạo bản nháp chuyển trắc nghiệm thành tự luận để biên tập viên xem, nhưng không publish/chấm điểm tự động từ câu chuyển thể chưa duyệt. Điều này giảm gọi model đúng giây reo/ghép trận và tránh câu mơ hồ. Ảnh chụp mới từ camera có thể yêu cầu trong mode cụ thể, song vẫn có đường nhập chữ và không chống điện thoại thứ hai; tốc độ/ảnh không tự là nhãn gian lận.
 
+Lượt sáng có thêm `MorningCard` published gắn `hook` 6–12 giây, `questionRevision` và `reveal` như [hợp đồng EduSkills](11-eduskills-vn-tich-hop.md). Hook có thể bỏ qua, **câu không thể bỏ qua để nhận EXP/chuỗi**. Kiểm `MorningCard.learningOutcome == question.learningOutcome` và reviewer xác nhận cảnh minh họa đúng outcome; fallback chữ/Reduce Motion, asset quyền và độ dài; đoạn kết xem sau lượt dù người dùng bỏ lượt. Không dùng sự tò mò để che đáp án, kéo dài chuông hoặc yêu cầu xem quảng cáo.
+
 Mỗi môn có trạng thái `not_available`, `practice_only`, `friendly_enabled`, `ranked_enabled` theo chất lượng nội dung/chấm, không theo nhu cầu marketing. Tổ hợp thi là tập môn người học chọn, không ép toàn bộ; trong PvP chỉ ghép khi có **một môn chung cùng khối/chương trình/pool**. Không có câu đã duyệt: UI nói rõ, cho chọn môn khác/ôn sau/chỉ chuông.
 
 ## 3. Chọn câu và adaptive
 
-Ưu tiên môn trong TKB hôm nay đã được người dùng xác nhận, sau đó môn ưu tiên/chủ đề yếu/câu chưa lặp. Ba **phiên có bài chấm hợp lệ** đầu của mỗi người ở band 1, không phải ba ngày liên tục. Từ phiên 4, xét 5 phiên cùng môn/chủ đề: ≥4 đúng và ít uncertain → đề xuất +1 band; ≤1 đúng → −1; còn lại giữ. Tối đa +1 band sau 7 phiên hợp lệ; không vượt trần Dễ/Vừa/Thử thách do người dùng chọn. Thiếu câu đủ chất lượng thì giữ band/chọn môn khác, không phát AI draft cho XP. Rank không quyết định độ khó báo thức. PvP dùng cùng bộ/rubric cho hai bên, không áp adaptive riêng trong trận.
+Ưu tiên môn trong TKB hôm nay đã được người dùng xác nhận, sau đó môn ưu tiên/chủ đề yếu/câu chưa lặp. Ba **phiên có bài chấm hợp lệ** đầu của mỗi người ở band 1, không phải ba ngày liên tục. Từ phiên 4, xét 5 phiên cùng môn/chủ đề: ≥4 đúng và ít uncertain → đề xuất +1 band; ≤1 đúng → −1; còn lại giữ. Tối đa +1 band sau 7 phiên hợp lệ; không vượt trần Dễ/Vừa/Thử thách do người dùng chọn. Bài sáng đầu tiên ưu tiên câu ước lượng 1–3 phút, không mặc định tăng khó vì người dùng dậy đúng giờ. Thiếu câu đủ chất lượng thì giữ band/chọn môn khác, không phát AI draft cho XP. Rank không quyết định độ khó báo thức. PvP dùng cùng bộ/rubric cho hai bên, không áp adaptive riêng trong trận.
 
 ## 4. Pipeline nội dung và dữ liệu ngoài
 
