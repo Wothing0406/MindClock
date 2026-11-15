@@ -4,7 +4,7 @@
 
 Trước khi mở các task coding Flutter Android đầu tiên (chưa có `pubspec.yaml`, mã Kotlin hay APK), đội ngũ cần một bản kiểm kê trung thực toàn bộ màn hình, phạm vi prototype vs MVP vs sau MVP, component/asset tái sử dụng từ `demo/`, danh sách lát cắt dọc frontend kèm tiêu chí nghiệm thu (`AC ↔ test`), và danh sách các mâu thuẫn tài liệu/quyết định còn thiếu.
 
-Sau task này, chủ dự án và coding agent có tài liệu chuẩn [docs/54-kiem-ke-va-backlog-frontend.md](../../docs/54-kiem-ke-va-backlog-frontend.md) để mở lần lượt các task `T012+` mà không lẫn prototype vào sản phẩm chạy thật, không đưa roster/kit cũ vào kế hoạch, và luôn đặt hành trình `khách → đặt chuông → reo → câu hỏi → nhập bài → phản hồi → Hôm nay` làm ưu tiên P0.
+Sau task này, chủ dự án và coding agent có tài liệu chuẩn [docs/54-kiem-ke-va-backlog-frontend.md](../../docs/archive/2026-11/54-kiem-ke-va-backlog-frontend.md) để mở lần lượt các task `T012+` mà không lẫn prototype vào sản phẩm chạy thật, không đưa roster/kit cũ vào kế hoạch, và luôn đặt hành trình `khách → đặt chuông → reo → câu hỏi → nhập bài → phản hồi → Hôm nay` làm ưu tiên P0.
 
 ## Phạm vi
 

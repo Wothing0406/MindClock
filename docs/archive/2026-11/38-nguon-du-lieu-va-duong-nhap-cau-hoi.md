@@ -1,6 +1,6 @@
 # Nguồn dữ liệu câu hỏi và đường nhập an toàn
 
-**Trạng thái:** đã tải VNHSGE và một mirror VMLU vào **khu nghiên cứu local bị Git bỏ qua**, chưa nạp câu nào vào ngân hàng MindClock hay app. [Manifest](../data/research/research-manifest.json) ghi commit, hash, số item thực đọc; [hướng dẫn khu nghiên cứu](../data/research/README.md) nêu ranh giới. Chỉ `published` sau khi có quyền tái sử dụng, đối chiếu chương trình, rubric trình bày, người duyệt nội dung và test đáp án. Mốc kiểm tra nguồn: 11/11/2026.
+**Trạng thái:** đã tải VNHSGE và một mirror VMLU vào **khu nghiên cứu local bị Git bỏ qua**, chưa nạp câu nào vào ngân hàng MindClock hay app. [Manifest](../../../data/research/research-manifest.json) ghi commit, hash, số item thực đọc; [hướng dẫn khu nghiên cứu](../../../data/research/README.md) nêu ranh giới. Chỉ `published` sau khi có quyền tái sử dụng, đối chiếu chương trình, rubric trình bày, người duyệt nội dung và test đáp án. Mốc kiểm tra nguồn: 11/11/2026.
 
 ## 1. Đánh giá ba nguồn người dùng đề xuất
 

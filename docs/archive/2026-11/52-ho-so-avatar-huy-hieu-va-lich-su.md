@@ -11,7 +11,7 @@
 | **Huy hiệu hạng** | Thẻ rank trong hồ sơ, kết quả trận ranked, bảng | Server tính từ RP theo môn/khối/mùa; biểu trưng riêng với khung; có nhãn chữ+bậc số | `rank_profile`/`rank_ledger` |
 | **Nhân vật đấu** | Màn chọn tướng và sân trận | ID/kit được khóa cho trận, không thay avatar hồ sơ | `equipped_character_id` và snapshot trận |
 
-Sáu huy hiệu SVG độc lập: Đồng (dấu ấn một đỉnh), Bạc (hai nét), Vàng (vương miện), Bạch Kim (la bàn), Kim Cương (ngọc nhiều mặt), Tinh Anh (sao 8 hướng). Có thêm **Thường** dưới dạng chữ/trạng thái, không giả một huy hiệu hạng. Mỗi tier có 5 bậc số `1–5` theo docs/37; luật mapping RP phải chốt server trước coding. Badge có alt như `Huy hiệu Vàng, bậc 3`, kèm RP/scope/mùa; không dùng màu duy nhất. [Asset badge](../assets/game/ui/rank/badges) khác [asset khung](../assets/game/ui/rank).
+Sáu huy hiệu SVG độc lập: Đồng (dấu ấn một đỉnh), Bạc (hai nét), Vàng (vương miện), Bạch Kim (la bàn), Kim Cương (ngọc nhiều mặt), Tinh Anh (sao 8 hướng). Có thêm **Thường** dưới dạng chữ/trạng thái, không giả một huy hiệu hạng. Mỗi tier có 5 bậc số `1–5` theo docs/37; luật mapping RP phải chốt server trước coding. Badge có alt như `Huy hiệu Vàng, bậc 3`, kèm RP/scope/mùa; không dùng màu duy nhất. [Asset badge](../../../assets/game/ui/rank/badges) khác [asset khung](../../../assets/game/ui/rank).
 
 ## 2. Luồng “Tôi → Sửa hồ sơ”
 

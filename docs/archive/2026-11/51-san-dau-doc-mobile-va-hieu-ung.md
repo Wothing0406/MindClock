@@ -36,7 +36,7 @@ Trên màn sản phẩm thật, **đề và vùng trình bày lớn hơn trận 
 
 Canvas asset 512², vùng hình cao 400 px; vẽ 240² trên stage 360×380 tạo nhân vật xấp xỉ `400/512×240 = 187,5 px` cao. Hai chân cùng root y=350, cách biên dưới 30 px; root x=92/268 cách nhau 176 px. Bbox action phải không chạm mép canvas; projectile/impact là lớp riêng nên không làm đổi kích thước tướng. Draw dùng `requestAnimationFrame` nhưng giới hạn khoảng 35 fps khi có motion, ~7 fps khi đứng; tải frame bằng cache, không gọi AI/mạng giữa trận. Thiết bị thật phải đo thêm frame time/memory, tránh hứa 60 fps.
 
-Một file map gốc portrait được crop giữ tỉ lệ để vừa stage; không ép 9:16 thành 360:380. Khung rank 7 SVG gồm Thường + 6 tier mỹ thuật; **huy hiệu rank riêng 6 SVG** cho kết quả/hồ sơ; avatar mặc định 6 WebP; không dùng emoji hệ thống. Asset có thể bị thay bằng fallback tĩnh khi thiếu ảnh. Các vị trí và nội dung là một phần của [manifest](../assets/game/manifest.json), [cấu trúc](50-cau-truc-du-an-va-asset-game.md) và [hồ sơ](52-ho-so-avatar-huy-hieu-va-lich-su.md).
+Một file map gốc portrait được crop giữ tỉ lệ để vừa stage; không ép 9:16 thành 360:380. Khung rank 7 SVG gồm Thường + 6 tier mỹ thuật; **huy hiệu rank riêng 6 SVG** cho kết quả/hồ sơ; avatar mặc định 6 WebP; không dùng emoji hệ thống. Asset có thể bị thay bằng fallback tĩnh khi thiếu ảnh. Các vị trí và nội dung là một phần của [manifest](../../../assets/game/manifest.json), [cấu trúc](50-cau-truc-du-an-va-asset-game.md) và [hồ sơ](52-ho-so-avatar-huy-hieu-va-lich-su.md).
 
 ## 5. Điều phải kiểm trên máy trước buổi thi
 

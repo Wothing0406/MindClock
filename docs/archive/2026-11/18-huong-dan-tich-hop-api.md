@@ -44,4 +44,4 @@ Contract tests: owner A/B và token thiếu/hết hạn; idempotency cùng/khác
 
 ## 5. Quan sát lỗi và bàn giao
 
-Log `requestId`, route, mã lỗi, thời gian, model/rubric revision và trạng thái đã ẩn danh; không log ảnh, token, lời giải hoặc SQL params có dữ liệu cá nhân. Metric tối thiểu: alarm lập lịch thành công trên thiết bị, AI timeout/uncertain, chấm bị người dùng báo sai, XP retry/trùng, lỗi quyền và chi phí mỗi attempt. Từng task code cập nhật [plan/test/handoff](../tasks/README.md) và docs07 khi đổi hợp đồng.
+Log `requestId`, route, mã lỗi, thời gian, model/rubric revision và trạng thái đã ẩn danh; không log ảnh, token, lời giải hoặc SQL params có dữ liệu cá nhân. Metric tối thiểu: alarm lập lịch thành công trên thiết bị, AI timeout/uncertain, chấm bị người dùng báo sai, XP retry/trùng, lỗi quyền và chi phí mỗi attempt. Từng task code cập nhật [plan/test/handoff](../../../tasks/README.md) và docs07 khi đổi hợp đồng.

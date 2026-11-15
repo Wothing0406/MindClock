@@ -1,34 +1,46 @@
 # MindClock
 
-MindClock là ứng dụng học tập tiếng Việt cho Android: đặt báo thức, bắt đầu buổi sáng bằng câu hỏi phù hợp thời khóa biểu, tự trình bày cách làm và xem lại phần chưa chắc. Không gian học có đồng hồ tập trung và trợ lý gợi mở. Đấu trường nhân vật là nhánh phát triển sau, không quyết định tính năng báo thức.
+MindClock là dự án ứng dụng Android tiếng Việt kết hợp **báo thức an toàn**, một câu ôn tập chủ động theo thời khóa biểu và Không gian học có timer/trợ lý gợi mở. Đấu trường RPG 2D là nhánh tự nguyện sau khi luồng học tập và chấm bài đủ tin cậy.
 
-## Trạng thái hiện tại — 15/11/2026
+## Trạng thái trung thực
 
-Repo **đã có mã Flutter/Android native và FastAPI/Alembic**. Backend có API `/v1`, SQLAlchemy và tích hợp Gemini từ server; app có luồng khách, lịch học, báo thức local, luyện tập và không gian học. Điều này **chưa đồng nghĩa sản phẩm sẵn sàng phát hành**: các task T014–T021 còn thiếu bằng chứng build Flutter trên máy hiện tại, vòng báo thức trên Android thật, PostgreSQL/Firebase production, kiểm định chấm AI và thử nghiệm người dùng. Đọc [baseline và cổng release](docs/56-baseline-san-pham-android.md) trước khi giao task coding.
+Repo đã có mã **Flutter/Android Kotlin** trong [`app/`](app/), **FastAPI/SQLAlchemy/Alembic** trong [`services/api/`](services/api/) và art nghiên cứu ở [`assets/game/`](assets/game/). Chưa có bằng chứng hoàn tất build/release Android trên máy thật, PostgreSQL/Firebase production, đánh giá AI đa môn hoặc PvP online. Một số task còn `blocked`/`verifying`; web `/demo`, `/product` trong API là WIP nội bộ, không là client sản phẩm. Xem [hiện trạng có bằng chứng](docs/00-start/01-hien-trang.md).
 
-Hai thư mục web tĩnh `demo/` và `demo_video/` đã được loại bỏ. Mã web thử nghiệm `/demo` và `/product` còn trong FastAPI do T022/T023 đang làm dở; đó **không phải client sản phẩm**. Các màn mới phải được xây trong Flutter `app/`. Tài sản game nghiên cứu được giữ ở `assets/game/`, chưa đóng gói vào APK.
+## Chức năng theo sản phẩm đích
 
-## Chức năng và thứ tự triển khai
-
-| Phần | Hành vi cần đạt | Tình trạng |
+| Phần | Người dùng làm gì | Trạng thái |
 | --- | --- | --- |
-| Đồng hồ & báo thức | Đặt nhiều giờ/ngày lặp/âm/rung; chế độ thường hoặc thử thách; Dừng khẩn cấp một chạm kể cả offline; không Hoãn trong thử thách | Có mã Flutter/Kotlin; cần kiểm AD01–AD09 trên máy Android thật |
-| Thời khóa biểu & câu sáng | Chọn lớp, môn/tổ hợp, lịch học; câu từ ngân hàng duyệt; nhập đáp án và trình bày chữ, camera tùy chọn | Có mã luồng cá nhân/API; cần xác nhận end-to-end và chất lượng nội dung |
-| Chấm & trợ lý AI | Đọc bài/gợi ý theo Socratic; `correct`, `incorrect`, `uncertain`; backend chốt XP | Có gateway/API; cần bộ đánh giá chấm, consent, timeout và kiểm bảo mật |
-| Không gian học | Timer local, việc đang học, hỏi gợi ý; rời app không bị phạt hoặc khóa điện thoại | Có mã Flutter/API; cần test lifecycle và máy thật |
-| Hồ sơ & tài khoản | Khách dùng offline; đăng nhập để đồng bộ và xem tiến độ; quyền xóa dữ liệu | Có mã; cần Firebase/PostgreSQL thực và test truy cập chéo |
-| Sân đấu/rank | Giao hữu hai máy cùng câu/rubric trước; rank sau khi chất lượng/cân bằng đạt | Chỉ có luật/asset nghiên cứu, chưa có PvP online |
+| Đồng hồ và báo thức | Đặt giờ/ngày/âm, chế độ thường hoặc câu sáng; Dừng khẩn cấp kể cả offline | Có mã, cần kiểm OS trên Android thật |
+| Lịch học cá nhân | Chọn môn/tổ hợp, nhập TKB, xem việc hôm nay, nhắc opt-in và gợi giờ dậy có xác nhận | Có phần mã, cần test dọc và mở rộng |
+| Ôn tập và AI | Tự viết đáp án/bước làm; ảnh tùy chọn; chấm đúng/sai/chưa chắc và gợi mở | Có API/luồng, cần content và AI eval |
+| Không gian học | Timer cục bộ, việc đang học, hỏi trợ lý khi cần | Có mã, cần test vòng đời máy thật |
+| Hồ sơ và dữ liệu | Xem tiến độ/lịch sử riêng, đăng nhập đồng bộ, quyền chia sẻ và xóa | Có phần mã; public profile/avatar cần task sau |
+| Đấu trường RPG | Giao hữu cùng câu, tướng 2D, ranked theo môn/mùa khi đủ điều kiện | Đặc tả/art nghiên cứu; chưa có PvP live |
 
-Sản phẩm không khóa điện thoại hoặc ngăn gỡ app. AI không tự cấp điểm, trừ uy tín vì sai, hay kết luận gian lận. Bài không chắc được xem lại; ảnh bài làm không lưu mặc định. [PRD](docs/04-prd-va-dac-ta-san-pham.md) và [quy định dữ liệu](docs/25-bao-mat-va-du-lieu.md) là nguồn chi tiết.
+**Điểm sản phẩm cần kiểm chứng:** một câu ngắn theo môn hôm nay nối báo thức với học chủ động, người học trình bày cách làm trước khi nhận phản hồi, và vẫn dừng chuông được trong mọi trường hợp. Đây là giả thuyết cần pilot, không phải tuyên bố hiệu quả đã chứng minh.
 
-## Cấu trúc và bắt đầu phát triển
+## Tài liệu để bắt đầu coding
 
-- [`app/`](app/): Flutter Android; phần báo thức native ở `app/android/`.
-- [`services/api/`](services/api/): FastAPI, auth, SQLAlchemy, Alembic và test.
-- [`assets/game/`](assets/game/): art/FX/audio/map nghiên cứu, chưa vào app release.
-- [`docs/`](docs/README.md): tài liệu chuẩn và lịch sử thiết kế; [cấu trúc repo](docs/57-cau-truc-repo-production.md) giải thích chỗ đặt file.
-- [`tasks/`](tasks/README.md): task có spec, plan, test, worklog, handoff trước/sau code.
+1. [Chỉ mục nguồn chuẩn](docs/README.md): đọc theo task, không đọc archive để tự chọn luật.
+2. [PRD](docs/01-product/01-prd.md): hành vi người dùng và ranh giới MVP.
+3. [Lộ trình](docs/00-start/02-lo-trinh.md) và [gói task đầu tiên](docs/00-start/05-goi-task-dau-tien.md): build/test → báo thức thật → câu/AI → đồng bộ → pilot → giao hữu.
+4. [Quy trình vibe coding](docs/00-start/03-quy-trinh-vibe-code.md) và [AGENTS.md](AGENTS.md): task có spec, plan, test, worklog, handoff trước/sau sửa mã.
+5. [Kiến trúc](docs/02-engineering/01-kien-truc.md), [API](docs/02-engineering/04-hop-dong-api.md), [SQL](docs/02-engineering/03-du-lieu-sql.md), [test/release](docs/03-quality/01-ke-hoach-kiem-thu.md).
 
-Để chạy phát triển, cần Flutter/Android SDK hợp lệ và Python 3.11+; cấu hình từ `app/.env.example` và `services/api/.env.example`, giữ `.env` local ngoài Git. Chạy `flutter pub get`, `flutter analyze`, `flutter test` trong `app/`; chạy `python -m pytest` trong `services/api/` với virtualenv/requirements. PostgreSQL dùng cho staging/production, SQLite chỉ cho local một máy. Các lệnh là **cách kiểm**, không phải bằng chứng đã pass trên máy của bạn. Xem [runbook Android](docs/47-demo-android-va-moi-truong-kiem-thu.md) và [baseline](docs/56-baseline-san-pham-android.md) để biết cổng thiết bị thật.
+Tài liệu đánh số cũ được giữ ở [archive](docs/archive/README.md) để truy nguồn, **không là hướng dẫn coding hiện hành**.
 
-AI coding phải đọc [AGENTS.md](AGENTS.md), [chỉ mục docs](docs/README.md) và task liên quan; tạo hoặc tiếp tục `tasks/TNNN-*` trước mọi sửa code/UI/config. Không biến yêu cầu app Android thành một trang web mô phỏng. Thứ tự ưu tiên hiện tại: build/test lặp lại được → báo thức an toàn trên máy thật → câu hỏi và chấm có kiểm định → tài khoản/đồng bộ → không gian học → giao hữu/rank.
+## Cấu trúc và chạy phát triển
+
+```text
+app/              Flutter Android + Kotlin alarm/camera bridge
+services/api/     FastAPI /v1 + PostgreSQL target + Alembic + tests
+assets/game/      sprite/FX/audio/map nghiên cứu, chưa đóng gói release
+docs/             nguồn chuẩn theo product/engineering/quality/game
+tasks/            AC ↔ test và bàn giao từng thay đổi
+```
+
+Trên máy có Flutter/Android SDK hợp lệ: từ `app/` chạy `flutter pub get`, `flutter analyze`, `flutter test`; chạy trên thiết bị bằng `flutter run -d <deviceId>` sau khi cấu hình URL/Auth theo `app/.env.example`. Backend: tạo venv trong `services/api/`, cài `requirements.txt`, cấu hình từ `.env.example` (không commit `.env`), chạy `python -m pytest` và Alembic trên PostgreSQL test. Các lệnh là **cách kiểm**, không phải kết quả pass; ghi môi trường/lỗi thực vào task. [Runbook môi trường](docs/03-quality/04-moi-truong-chay-thu.md) và [cổng release](docs/03-quality/02-van-hanh-phat-hanh.md).
+
+## Quy tắc quan trọng
+
+Dừng khẩn cấp dừng âm/rung cục bộ dù mất mạng; thử thách không có Hoãn. AI không tự cấp XP/rank hoặc gán gian lận; `uncertain` không phạt. Câu hỏi scored phải được duyệt và có quyền. Ảnh bài làm không lưu mặc định; người dùng có đường nhập chữ không cần camera. PvP/ranked không dùng giờ dậy xếp hạng. Không gọi web prototype, storyboard hoặc art là app đã chạy. Chi tiết ở [PRD](docs/01-product/01-prd.md), [quyền riêng tư](docs/01-product/04-tai-khoan-quyen-rieng-tu.md) và [AGENTS.md](AGENTS.md).

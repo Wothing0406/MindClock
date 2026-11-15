@@ -3,7 +3,7 @@
 - **Trạng thái cuối:** `done` (hoàn thành kiểm kê & backlog frontend mức tài liệu; **chưa sửa code, chưa có app Flutter/APK chạy thật**).
 - **Đã làm:**
   - Đọc đầy đủ `AGENTS.md`, `docs/README.md`, `tasks/README.md`, `docs/04, 05, 07, 08, 09, 13, 16, 22, 23, 24, 27, 29, 30, 31, 32, 39, 41, 42, 45, 46, 47, 48, 49, 51, 52, 53`, handoff `T009` và `T010`, `demo/index.html`, `demo/arena*`, `demo/profile-rules.js`, `demo/assets/game/manifest.json` và `audio/manifest.json`.
-  - Xuất bản kiểm kê & backlog frontend tại [docs/54-kiem-ke-va-backlog-frontend.md](../../docs/54-kiem-ke-va-backlog-frontend.md) gồm 5 mục: (1) bảng màn hình đầy đủ, (2) 3 phạm vi tách bạch, (3) component Flutter dùng chung & kiểm kê tái sử dụng asset `demo/assets/game/`, (4) backlog 9 lát cắt dọc `FE-S01..FE-S09` với AC (EARS) ↔ test, (5) 9 mâu thuẫn tài liệu/prototype và 3 nhóm quyết định còn thiếu.
+  - Xuất bản kiểm kê & backlog frontend tại [docs/54-kiem-ke-va-backlog-frontend.md](../../docs/archive/2026-11/54-kiem-ke-va-backlog-frontend.md) gồm 5 mục: (1) bảng màn hình đầy đủ, (2) 3 phạm vi tách bạch, (3) component Flutter dùng chung & kiểm kê tái sử dụng asset `demo/assets/game/`, (4) backlog 9 lát cắt dọc `FE-S01..FE-S09` với AC (EARS) ↔ test, (5) 9 mâu thuẫn tài liệu/prototype và 3 nhóm quyết định còn thiếu.
   - Cập nhật chỉ mục [docs/README.md](../../docs/README.md) để liên kết `docs/54`.
 - **File/docs thay đổi:** `docs/54-kiem-ke-va-backlog-frontend.md`, `docs/README.md`, `tasks/T011-kiem-ke-va-backlog-frontend/*`. Không chỉnh sửa `demo/` hay tạo code ứng dụng.
 - **Test đã chạy:** xem [tests.md](tests.md); `python scripts/check_docs_links.py`, `python scripts/check_task_records.py`, `git diff --check` đều exit 0 trên Windows 11 (Python 3.11.0rc2) ngày 14/11/2026.

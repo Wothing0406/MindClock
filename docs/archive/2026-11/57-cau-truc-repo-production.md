@@ -1,6 +1,6 @@
 # Cấu trúc repo production và quy tắc đặt file
 
-**Nguồn chuẩn cho task mới từ 15/11/2026.** [Baseline sản phẩm](56-baseline-san-pham-android.md) quyết định ưu tiên, [AGENTS](../AGENTS.md) quyết định quy trình agent. Tài liệu [50](50-cau-truc-du-an-va-asset-game.md) chỉ còn hợp đồng art/sprite lịch sử; không dùng cây thư mục web cũ.
+**Nguồn chuẩn cho task mới từ 15/11/2026.** [Baseline sản phẩm](56-baseline-san-pham-android.md) quyết định ưu tiên, [AGENTS](../../../AGENTS.md) quyết định quy trình agent. Tài liệu [50](50-cau-truc-du-an-va-asset-game.md) chỉ còn hợp đồng art/sprite lịch sử; không dùng cây thư mục web cũ.
 
 ```text
 MindClock/

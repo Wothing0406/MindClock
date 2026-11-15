@@ -53,4 +53,4 @@ python scripts/render_stage_previews.py
 
 ## 5. Quy trình đội và nguồn quyền
 
-Mỗi lần code: mở [docs/README](README.md) và [tasks/README](../tasks/README.md), tạo task từ template, viết AC ↔ test, rồi sửa theo lát cắt. Trước khi merge/push, rà `git diff`, link docs, test asset, test luật và xem trên thiết bị thật. Ghi kết quả thực vào `tests.md`, `worklog.md`, `handoff.md`. Không gọi một storyboard hay clip frame sequence là app đã chạy. Quyền đăng repo đã được chủ dự án xác nhận; khi phát hành app phải duyệt quyền thương mại và provenance từng file.
+Mỗi lần code: mở [docs/README](../../README.md) và [tasks/README](../../../tasks/README.md), tạo task từ template, viết AC ↔ test, rồi sửa theo lát cắt. Trước khi merge/push, rà `git diff`, link docs, test asset, test luật và xem trên thiết bị thật. Ghi kết quả thực vào `tests.md`, `worklog.md`, `handoff.md`. Không gọi một storyboard hay clip frame sequence là app đã chạy. Quyền đăng repo đã được chủ dự án xác nhận; khi phát hành app phải duyệt quyền thương mại và provenance từng file.

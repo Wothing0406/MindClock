@@ -1,7 +1,7 @@
 # T016 — Backend FastAPI & PostgreSQL cho luồng cá nhân (`/v1`)
 
 - **Trạng thái:** `planned`
-- **Mục tiêu:** xây dựng dịch vụ FastAPI + PostgreSQL + Alembic cho toàn bộ luồng cá nhân theo đúng hợp đồng [docs/07](../../docs/07-hop-dong-api-va-ai.md) và [docs/28](../../docs/28-backend-sql.md) để app Flutter (`T017`) kết nối thật, thay thế hoàn toàn fixture local.
+- **Mục tiêu:** xây dựng dịch vụ FastAPI + PostgreSQL + Alembic cho toàn bộ luồng cá nhân theo đúng hợp đồng [docs/07](../../docs/archive/2026-11/07-hop-dong-api-va-ai.md) và [docs/28](../../docs/archive/2026-11/28-backend-sql.md) để app Flutter (`T017`) kết nối thật, thay thế hoàn toàn fixture local.
 - **Nguồn yêu cầu:** kiểm tra repo ngày 14/11/2026 xác nhận chưa có mã backend (`services/api/` chưa tồn tại); mở task backend riêng theo hợp đồng chuẩn `docs/06, 07, 17, 18, 24, 25, 28, 39`.
 - **Chủ sở hữu/reviewer:** backend agent / chủ dự án duyệt.
 - **Phạm vi file dự kiến:** `services/api/app/**`, `services/api/alembic/**`, `services/api/tests/**`, `services/api/pyproject.toml`.

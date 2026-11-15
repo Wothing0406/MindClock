@@ -4,7 +4,7 @@
 
 Qua kiểm kê `T011` (`docs/54 §5`), tài liệu thiết kế và ngôn từ đang rải rác ở `docs/05, 13, 27, 30, 31, 45, 46, 52, 53` và còn vài điểm lệch tên nút (`Mở câu hỏi` vs `Bắt đầu`, `Dừng khẩn cấp` vs `Tắt khẩn cấp` / `Tắt chuông`, `Chụp nháp` vs `Chụp bài`), tham chiếu cũ (`docs/13` trỏ `docs/37`), thông số demo HTML (`+15 XP mẫu`, `44 px`, in hoa toàn bộ), và chưa chốt bộ icon vector duy nhất để coder Flutter dùng ngay.
 
-Sau task này, đội có tài liệu chuẩn [docs/55-chot-ngon-tu-thiet-ke-va-icon-frontend.md](../../docs/55-chot-ngon-tu-thiet-ke-va-icon-frontend.md) làm bảng tra duy nhất cho chuỗi tiếng Việt (`AppStrings`), từ cấm, thuật ngữ tách bạch, design tokens, và danh mục icon + `semanticLabel` cho từng màn P0/P1/M3.
+Sau task này, đội có tài liệu chuẩn [docs/55-chot-ngon-tu-thiet-ke-va-icon-frontend.md](../../docs/archive/2026-11/55-chot-ngon-tu-thiet-ke-va-icon-frontend.md) làm bảng tra duy nhất cho chuỗi tiếng Việt (`AppStrings`), từ cấm, thuật ngữ tách bạch, design tokens, và danh mục icon + `semanticLabel` cho từng màn P0/P1/M3.
 
 ## Phạm vi
 

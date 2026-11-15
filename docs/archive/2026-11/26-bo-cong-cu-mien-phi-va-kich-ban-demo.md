@@ -23,7 +23,7 @@
 | Thành phần | Chọn cho demo | Giới hạn cần nói rõ |
 | --- | --- | --- |
 | GitHub | Repo hiện có để chia docs và code | Đội tự quản lý quyền ghi |
-| [Ứng dụng Flutter Android](../app/lib/main.dart) và [runbook](47-demo-android-va-moi-truong-kiem-thu.md) | Chạy trên Android thật sau khi build | Kiểm AD01–AD09; không dùng trang web thay báo thức OS |
+| [Ứng dụng Flutter Android](../../../app/lib/main.dart) và [runbook](47-demo-android-va-moi-truong-kiem-thu.md) | Chạy trên Android thật sau khi build | Kiểm AD01–AD09; không dùng trang web thay báo thức OS |
 | Firebase Auth Emulator | Thử đăng nhập offline trên máy dev nếu làm tài khoản | Không có Firestore nghiệp vụ; giả lập auth không là production |
 | Firebase Spark | Nếu cần xác thực hai máy online thật | Theo quota miễn phí; vẫn cần nơi chạy FastAPI/PostgreSQL mà hai máy truy cập; kiểm tra quota hiện hành |
 | Gemini free tier | Một vài ảnh **do đội tự tạo** để demo live | Rate limit; nội dung free tier có điều kiện sử dụng dữ liệu; có fixture fallback |
@@ -34,7 +34,7 @@ Không chọn TestFlight hoặc build iOS cho demo này. Khi mở nhánh iOS sau
 
 ## 3. Demo cho giám khảo trong một buổi sáng
 
-1. Mở [app Flutter](../app/lib/main.dart) trên thiết bị Android sau khi build và chạy theo [runbook](47-demo-android-va-moi-truong-kiem-thu.md). Kịch bản HTML cũ đã bỏ ngày 15/11/2026; không dùng trang web để chứng minh luật báo thức/chấm thật. Nếu chưa build/kiểm được máy thật, trình bày rõ giới hạn và dùng video dự phòng có nhãn.
+1. Mở [app Flutter](../../../app/lib/main.dart) trên thiết bị Android sau khi build và chạy theo [runbook](47-demo-android-va-moi-truong-kiem-thu.md). Kịch bản HTML cũ đã bỏ ngày 15/11/2026; không dùng trang web để chứng minh luật báo thức/chấm thật. Nếu chưa build/kiểm được máy thật, trình bày rõ giới hạn và dùng video dự phòng có nhãn.
 2. Trên Android thật cho xem lát cắt có code nếu đội đã hoàn thành: đặt chuông, câu đã duyệt, chụp bài, phản hồi. Nếu chưa có, ghi rõ `Prototype` trên màn và lời nói.
 3. Hai tài khoản thử/thiết bị thực hiện giao hữu nếu backend đã chạy; nếu chưa, dùng bảng mẫu có nhãn `Dữ liệu mô phỏng`. Không gọi dữ liệu mẫu là live.
 4. Trình bày ba trạng thái chấm: đúng, cần xem lại, chưa đủ rõ; nhập đáp án + một bước giải là đường chính, ảnh tự viết của đội là tùy chọn. Khi mạng lỗi, phát video dự phòng có nhãn; không gọi fixture là AI live.

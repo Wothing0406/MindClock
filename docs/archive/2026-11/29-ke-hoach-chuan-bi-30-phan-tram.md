@@ -29,7 +29,7 @@ Lý do để lại: các phần này cần máy thật, kiểm thử quyền/d�
 
 ## 3. Thứ tự giao AI để xây 30%
 
-Tạo một task folder cho từng lát cắt theo [quy trình tasks](../tasks/README.md). Ưu tiên: khung Flutter và design tokens → câu Toán/fixture với lời giải ngắn → FastAPI + SQLite local → nối app/API và demo lỗi. **Không lấy mã T003/T005 trong kế hoạch cũ làm ID mới; kiểm tra thư mục `tasks/` và lấy số kế tiếp.** Mỗi task có spec, plan, tests, worklog, handoff; không báo xong nếu mới có ảnh chụp màn hình.
+Tạo một task folder cho từng lát cắt theo [quy trình tasks](../../../tasks/README.md). Ưu tiên: khung Flutter và design tokens → câu Toán/fixture với lời giải ngắn → FastAPI + SQLite local → nối app/API và demo lỗi. **Không lấy mã T003/T005 trong kế hoạch cũ làm ID mới; kiểm tra thư mục `tasks/` và lấy số kế tiếp.** Mỗi task có spec, plan, tests, worklog, handoff; không báo xong nếu mới có ảnh chụp màn hình.
 
 ### Prompt giao AI chuẩn bị 30% sản phẩm
 

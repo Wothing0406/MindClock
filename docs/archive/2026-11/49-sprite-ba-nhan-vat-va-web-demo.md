@@ -1,6 +1,6 @@
 # Sprite ba nhân vật và sân luyện web
 
-**Trạng thái:** lưu trữ art/UX prototype ngày 12/11/2026; trang web cũ đã bỏ ngày 15/11/2026. [Asset hiện tại](../assets/game/manifest.json). Không có PvP online, chấm trình bày hay điểm rank. Luật thử nghiệm ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md); tọa độ và motion ở [docs/51](51-san-dau-doc-mobile-va-hieu-ung.md); cấu trúc file ở [docs/50](50-cau-truc-du-an-va-asset-game.md).
+**Trạng thái:** lưu trữ art/UX prototype ngày 12/11/2026; trang web cũ đã bỏ ngày 15/11/2026. [Asset hiện tại](../../../assets/game/manifest.json). Không có PvP online, chấm trình bày hay điểm rank. Luật thử nghiệm ở [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md); tọa độ và motion ở [docs/51](51-san-dau-doc-mobile-va-hieu-ung.md); cấu trúc file ở [docs/50](50-cau-truc-du-an-va-asset-game.md).
 
 ## Tham chiếu và quyền
 
@@ -8,7 +8,7 @@ Người dùng gửi ba ảnh: ảnh 1 Hà Nhân (mặt trắng, nón rơm, áo 
 
 ## Bộ file và cách dựng
 
-Mỗi tướng có folder riêng trong [`assets/game/characters`](../assets/game/characters): `source/` chứa master và sheet; `runtime/` chứa idle, 7 action WebP và frame riêng; `poses/` chứa 6 ảnh kiểm tư thế; `fx/` có 3 projectile SVG + passive SVG riêng; `audio/` có 5 âm riêng. Map, avatar mặc định, khung rank và FX chung nằm dưới [`assets/game`](../assets/game). [Manifest](../assets/game/manifest.json) giữ anchor, facing, logical stage và thời lượng frame.
+Mỗi tướng có folder riêng trong [`assets/game/characters`](../../../assets/game/characters): `source/` chứa master và sheet; `runtime/` chứa idle, 7 action WebP và frame riêng; `poses/` chứa 6 ảnh kiểm tư thế; `fx/` có 3 projectile SVG + passive SVG riêng; `audio/` có 5 âm riêng. Map, avatar mặc định, khung rank và FX chung nằm dưới [`assets/game`](../../../assets/game). [Manifest](../../../assets/game/manifest.json) giữ anchor, facing, logical stage và thời lượng frame.
 
 Ảnh 3×2 tạo bằng mô hình ảnh theo từng nhân vật và tách nền/đăng ký vào canvas 512×512. **Không có image-to-video route** ở môi trường này: Animated WebP là chuỗi 6 frame được ghép, trạng thái 2 tư thế lặp thành 4 frame; còn sai khác mặt/tay/đạo cụ và cần họa sĩ duyệt trước sản phẩm thật. Riêng thắng có 6 frame; Hà Nhân chuyển động tay/mặt khá nhẹ nên runtime thêm một nhịp nhấc nhỏ. Đừng gọi đây là animation hoàn thiện hay video sinh tự động.
 
@@ -22,4 +22,4 @@ Chạy pipeline và QA theo [docs/50 §3](50-cau-truc-du-an-va-asset-game.md). L
 - Artist duyệt từng frame khi lặp nhiều lần; so trên Android thật, giảm chuyển động và tắt âm.
 - Ghi provenance từng nguồn/ảnh và xác minh quyền trước khi công khai/tái sử dụng thương mại.
 
-Phần kiểm thử lịch sử và giới hạn còn lại nằm tại [task T009](../tasks/T009-arena-doc-va-asset/tests.md). Không suy diễn rằng giao hữu/ranked đã hoạt động.
+Phần kiểm thử lịch sử và giới hạn còn lại nằm tại [task T009](../../../tasks/T009-arena-doc-va-asset/tests.md). Không suy diễn rằng giao hữu/ranked đã hoạt động.

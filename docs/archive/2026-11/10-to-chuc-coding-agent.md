@@ -1,8 +1,8 @@
 # Tổ chức coding agent và cách bàn giao
 
-Tài liệu này dùng khi đội chia việc cho người hoặc coding agent. Không giả định có tác vụ chạy song song ngay lúc viết tài liệu. [AGENTS.md](../AGENTS.md) là chỉ dẫn chung cho mọi agent trong repo; tài liệu này mô tả vai và hợp đồng bàn giao.
+Tài liệu này dùng khi đội chia việc cho người hoặc coding agent. Không giả định có tác vụ chạy song song ngay lúc viết tài liệu. [AGENTS.md](../../../AGENTS.md) là chỉ dẫn chung cho mọi agent trong repo; tài liệu này mô tả vai và hợp đồng bàn giao.
 
-**Quy trình bắt buộc cho mỗi lần coding:** xem [tasks/README.md](../tasks/README.md). Task card ở §2 là bản tóm tắt giao việc; thư mục `tasks/TNNN-ten-ngan/` mới là hồ sơ thực thi gồm spec, plan, tests, worklog và handoff. Một yêu cầu tiếp diễn giữ cùng ID để người/AI mới biết quay lại ở bước nào.
+**Quy trình bắt buộc cho mỗi lần coding:** xem [tasks/README.md](../../../tasks/README.md). Task card ở §2 là bản tóm tắt giao việc; thư mục `tasks/TNNN-ten-ngan/` mới là hồ sơ thực thi gồm spec, plan, tests, worklog và handoff. Một yêu cầu tiếp diễn giữ cùng ID để người/AI mới biết quay lại ở bước nào.
 
 ## 1. Vai và vùng sở hữu
 
@@ -71,7 +71,7 @@ Không ghi “hoàn thành” khi mới có giao diện không nối backend ho�
 
 ## 6. Gợi ý prompt giao việc cho agent
 
-> “Thực hiện task Txx trong [kế hoạch triển khai](08-ke-hoach-trien-khai.md). Đọc [AGENTS.md](../AGENTS.md), PRD, kiến trúc, API và test case liên quan. Chỉ sửa vùng sở hữu hoặc báo rõ khi cần thay đổi liên vùng. Triển khai đến tiêu chí chấp nhận, chạy kiểm thử phù hợp, cập nhật tài liệu thay đổi và bàn giao theo mẫu §4. Không tự thêm tính năng tương lai.”
+> “Thực hiện task Txx trong [kế hoạch triển khai](08-ke-hoach-trien-khai.md). Đọc [AGENTS.md](../../../AGENTS.md), PRD, kiến trúc, API và test case liên quan. Chỉ sửa vùng sở hữu hoặc báo rõ khi cần thay đổi liên vùng. Triển khai đến tiêu chí chấp nhận, chạy kiểm thử phù hợp, cập nhật tài liệu thay đổi và bàn giao theo mẫu §4. Không tự thêm tính năng tương lai.”
 
 Prompt này là mẫu cho coding; không buộc dùng một công cụ AI cụ thể. Nếu một agent phải dừng vì thiếu quyết định sản phẩm, hãy hoàn tất phần độc lập và nêu lựa chọn, hệ quả, đề xuất mặc định.
 

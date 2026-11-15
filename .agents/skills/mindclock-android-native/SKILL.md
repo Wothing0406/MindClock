@@ -5,7 +5,7 @@ description: Implement or review MindClock Android platform code for local alarm
 
 # MindClock Android native
 
-Use for Flutter-to-Android system behavior. Read [docs/31](../../../docs/31-bao-thuc-thu-thach.md) for alarms, [docs/45](../../../docs/45-khong-gian-hoc-va-che-do-tap-trung.md) for study focus, [docs/09](../../../docs/09-ke-hoach-kiem-thu.md) for tests, and [AGENTS.md](../../../AGENTS.md). Before changing code/configuration, follow `tasks/README.md`.
+Use for Flutter-to-Android system behavior. Read [Android alarm](../../../docs/02-engineering/02-bao-thuc-android.md) for alarms, [study space](../../../docs/02-engineering/07-khong-gian-hoc.md) for study focus, [test plan](../../../docs/03-quality/01-ke-hoach-kiem-thu.md) for tests, and [AGENTS.md](../../../AGENTS.md). Before changing code/configuration, follow `tasks/README.md`.
 
 ## Workflow
 
