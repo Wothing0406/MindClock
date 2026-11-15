@@ -12,18 +12,20 @@
 | `scheduled_os` | Kotlin đã lập lịch và trả occurrence kế tiếp | `Báo thức tiếp theo...`; vẫn kiểm sau reboot/quyền đổi. |
 | `needs_permission` | OS từ chối hoặc mất quyền | Hướng mở Settings, thử lại, fallback rõ. |
 | `ringing` | Service phát âm/rung, notification/Activity theo quyền | Dừng khẩn cấp luôn thao tác trực tiếp native. |
-| `dismissed`/`snoozed` | Local đã dừng hoặc hoãn thường | Ghi local trước; sync server sau nếu được phép. |
+| `sound_stopped_review_active` | Người dùng bấm `Mở câu`, âm/rung dừng cục bộ, lượt học chưa hoàn thành | Flutter mở cảnh/câu đã cache; không cấp EXP chỉ vì tắt âm. |
+| `dismissed`/`snoozed` | Local đã dừng khẩn cấp hoặc hoãn thường | Ghi local trước; sync server sau nếu được phép. |
 
 Không hiện `Đã sẵn sàng` chỉ vì DB/API lưu thành công. Flutter bridge có version, mã lỗi ổn định và callback khi lifecycle thay đổi; native là nguồn trạng thái OS.
 
 ## 2. Máy trạng thái và luồng reo
 
 ```text
-draft → saved_local → scheduled_os → ringing → dismissed
-                    ↘ needs_permission      ↘ snoozed (normal only) → scheduled_os
+draft → saved_local → scheduled_os → ringing → sound_stopped_review_active → câu/feedback
+                    ↘ needs_permission      ↘ dismissed (Dừng khẩn cấp)
+                                           ↘ snoozed (normal only) → scheduled_os
 ```
 
-Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, tính occurrence theo timezone/ngày lặp, không đặt trùng sau boot/time change/update. Receiver chỉ khởi động phần tối thiểu cần cho âm/rung/notification; full-screen UI theo quyền OS, có fallback notification và đường thao tác Dừng. Màn khóa mặc định hiện nội dung trung tính, môn/TKB chi tiết chỉ khi user chọn công khai; không tự mở khóa. Không tải câu/Gemini trước khi cho người dùng dừng chuông. Câu published nên cache trước giờ reo; nếu không có, `Ôn sau`. Âm MP3 tích hợp/tệp user phải có quyền đọc/sử dụng, chuẩn mức âm lượng, và fallback âm OS khi lỗi; tắt âm/rung không phụ thuộc codec/network. [Android exact alarm](https://developer.android.com/develop/background-work/services/alarms), [full-screen intent và lock-screen visibility](https://developer.android.com/develop/ui/compose/notifications/create-notification#full-screen_intent).
+Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, tính occurrence theo timezone/ngày lặp, không đặt trùng sau boot/time change/update. Receiver chỉ khởi động phần tối thiểu cần cho âm/rung/notification; full-screen UI theo quyền OS, có fallback notification và đường thao tác Dừng. Màn khóa mặc định hiện nội dung trung tính, môn/TKB chi tiết chỉ khi user chọn công khai; không tự mở khóa. `Mở câu` phải dừng native âm/rung **trước** khi phát cảnh mở màn trong Flutter; nhánh Dừng khẩn cấp không chờ Flutter. Không tải câu/media/Gemini trước khi cho người dùng dừng chuông. Câu và cảnh published nên cache trước giờ reo; nếu không có, fallback chữ hoặc `Ôn sau` khi thiếu câu. Âm MP3 tích hợp/tệp user phải có quyền đọc/sử dụng, chuẩn mức âm lượng, và fallback âm OS khi lỗi; tắt âm/rung không phụ thuộc codec/network. [Android exact alarm](https://developer.android.com/develop/background-work/services/alarms), [full-screen intent và lock-screen visibility](https://developer.android.com/develop/ui/compose/notifications/create-notification#full-screen_intent).
 
 Đến giờ ngủ, app chỉ tự im lặng **thông báo của chính mình** theo quiet hours. Nếu user muốn DND toàn máy, mở flow xin Notification Policy access/thiết lập quy tắc được OS cho phép, rồi kiểm trạng thái thật. Android 15+ thay đổi hành vi DND với app target API 35; không code `setInterruptionFilter` rồi mặc định toàn máy đã tắt thông báo. Quyền từ chối → hướng dẫn người dùng mở Settings, không ảnh hưởng alarm. [Android DND permission](https://developer.android.com/reference/kotlin/android/provider/Settings#ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS), [thay đổi Android 15](https://developer.android.com/about/versions/15/behavior-changes-15).
 
@@ -36,10 +38,11 @@ Kotlin dùng khả năng OS phù hợp với phiên bản/quyền thiết bị, 
 | Câu hỏi | Có thể ôn sau | Câu ngắn đã duyệt/cache, chọn theo môn hôm nay |
 | Sai rõ 1–2 lần | Thử lại | Thử lại, không lộ hint/đáp án qua UI/API |
 | Sai rõ từ lần 3 | Gợi ý theo luồng học | Có gợi ý bước đầu, không đáp án cuối |
+| Sai rõ từ lần 5 | Có thể kết thúc ôn | `Bỏ lượt` hoặc `Thử tiếp`; bỏ không EXP/ngày chuỗi mới |
 | `uncertain`/ảnh mờ/AI timeout | Không tính sai | Không tăng wrong count, nhập chữ/thử lại/hoàn thành không chấm |
 | Mất mạng/không có câu | Dừng như thường | Vẫn dừng được; không “khóa” vào câu chưa chấm |
 
-Ảnh viết tay và câu hỏi có thể tạo một bước học chủ động, **không chứng minh đã tỉnh táo và không chống gian lận tuyệt đối**: điện thoại thứ hai/AI ngoài app vẫn có thể giải hộ. Không chụp màn hình ngoài quyền hoặc theo dõi app khác. Khi sai rõ, cho làm lại và từ lần thứ 3 gợi bước đầu; nếu lặp nhiều lần, user có `Ôn sau`/Dừng. Âm báo không kéo dài đến khi đáp đúng. Học sinh không bị phạt vì nghỉ, sai, dừng khẩn cấp hoặc quyền bị từ chối.
+Ảnh viết tay và câu hỏi có thể tạo một bước học chủ động, **không chứng minh đã tỉnh táo và không chống gian lận tuyệt đối**: điện thoại thứ hai/AI ngoài app vẫn có thể giải hộ. Không chụp màn hình ngoài quyền hoặc theo dõi app khác. Khi sai rõ, cho làm lại và từ lần thứ 3 gợi bước đầu; từ lần thứ 5 có `Bỏ lượt`, còn Dừng khẩn cấp luôn có. Âm báo không kéo dài đến khi đáp đúng; cảnh video không phát khi âm chuông còn chạy. Bỏ lượt/dừng không được EXP/chuỗi mới nhưng không trừ điểm cũ; lỗi hệ thống không làm mất chuỗi oan. [Nguồn cảnh](../01-product/11-canh-mo-man-va-nguon-video.md).
 
 ## 4. Test thiết bị bắt buộc
 

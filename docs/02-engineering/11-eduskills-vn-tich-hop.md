@@ -42,7 +42,7 @@ Skill môn là tài liệu cho agent và pipeline server, **không phải code m
 }
 ```
 
-Đây là **ví dụ cấu trúc**, chưa phải câu đã duyệt. `MorningCard.learningOutcome` phải trùng outcome đã duyệt của `questionId + revision`; hook phải minh họa đúng outcome đó, không chứa đáp án hoặc quảng cáo. `reveal` xem được khi phiên kết thúc dù đúng hay bỏ lượt. Asset nhẹ, tải/cached trước, có fallback chữ và Reduce Motion. Bỏ qua hook không bỏ qua câu. Câu chỉ mở scored khi question/rubric/hook có trạng thái published, reviewer và quyền. Không gọi Gemini để dựng video/câu ngay lúc chuông reo.
+Đây là **ví dụ cấu trúc**, chưa phải câu đã duyệt. `MorningCard.learningOutcome` phải trùng outcome đã duyệt của `questionId + revision`; hook phải minh họa đúng outcome đó, không chứa đáp án hoặc quảng cáo. `reveal` xem được khi phiên kết thúc dù đúng hay bỏ lượt. Asset nhẹ, tải/cached trước, có fallback chữ và Reduce Motion; [sổ nguồn từng clip](../01-product/11-canh-mo-man-va-nguon-video.md) quyết định quyền đóng gói. Bỏ qua hook không bỏ qua câu. Câu chỉ mở scored khi question/rubric/hook có trạng thái published, reviewer và quyền. Không gọi Gemini để dựng video/câu ngay lúc chuông reo.
 
 ## 3. Pipeline biên tập và runtime
 

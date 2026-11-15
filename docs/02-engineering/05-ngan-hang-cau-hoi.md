@@ -36,6 +36,8 @@ Trong alarm và PvP, ngân hàng xuất bản phải có phiên bản **tự lu�
 
 Lượt sáng có thêm `MorningCard` published gắn `hook` 6–12 giây, `questionRevision` và `reveal` như [hợp đồng EduSkills](11-eduskills-vn-tich-hop.md). Hook có thể bỏ qua, **câu không thể bỏ qua để nhận EXP/chuỗi**. Kiểm `MorningCard.learningOutcome == question.learningOutcome` và reviewer xác nhận cảnh minh họa đúng outcome; fallback chữ/Reduce Motion, asset quyền và độ dài; đoạn kết xem sau lượt dù người dùng bỏ lượt. Không dùng sự tò mò để che đáp án, kéo dài chuông hoặc yêu cầu xem quảng cáo.
 
+Mỗi asset video/ảnh/âm của hook phải qua [sổ nguồn và đường duyệt](../01-product/11-canh-mo-man-va-nguon-video.md). Link stock là **ứng viên**, không tự thành `published` vì có chữ “free”; asset retire không được làm mất câu hoặc làm chậm chuông.
+
 Mỗi môn có trạng thái `not_available`, `practice_only`, `friendly_enabled`, `ranked_enabled` theo chất lượng nội dung/chấm, không theo nhu cầu marketing. Tổ hợp thi là tập môn người học chọn, không ép toàn bộ; trong PvP chỉ ghép khi có **một môn chung cùng khối/chương trình/pool**. Không có câu đã duyệt: UI nói rõ, cho chọn môn khác/ôn sau/chỉ chuông.
 
 ## 3. Chọn câu và adaptive

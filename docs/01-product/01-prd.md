@@ -30,7 +30,7 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | --- | --- | --- | --- |
 | P-01 | Mở app lần đầu | Giải thích quyền; đường chính đăng ký/đăng nhập email; chọn lớp 10–12/môn/trình độ/avatar, xác nhận kế hoạch rồi vào dashboard; nếu Auth không dùng được vẫn đặt alarm local | UX-01, AUTH-01, ON-01–06 |
 | P-02 | Thêm/sửa/xóa giờ báo | Lưu local, xác minh OS schedule, hiện lần reo tiếp theo/quyền thật; đề xuất AI chỉ có hiệu lực sau xác nhận | AL-01–04 |
-| P-03 | Chuông thử thách reo | Âm/rung và Dừng khẩn cấp chạy cục bộ; không Hoãn; sau khi mở app vào thẳng mẩu mở màn rồi câu đã duyệt, không hỏi có muốn bắt đầu | AL-05–09, MORNING-01 |
+| P-03 | Chuông thử thách reo | Âm/rung và Dừng khẩn cấp chạy cục bộ; không Hoãn; `Mở câu` dừng âm rồi vào cảnh mở màn/câu đã duyệt, không hỏi có muốn bắt đầu; asset có nguồn và fallback chữ | AL-05–09, MORNING-01, MEDIA-01–03 |
 | P-04 | Chuông thường reo | Có thể Hoãn theo cấu hình cục bộ và Dừng; không phụ thuộc login/API | AL-10 |
 | P-05 | Người học chưa có câu/mất mạng | Vẫn dừng chuông, chọn `Ôn sau`/hoàn thành không chấm; không tự tạo điểm | LEARN-01 |
 | P-06 | Nộp đáp án và bước giải | Có đường nhập chữ; ảnh chỉ sau quyền/chụp/xem lại/xác nhận; backend chấm `correct/incorrect/uncertain` | LEARN-02–05, AI-01 |

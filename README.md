@@ -23,7 +23,7 @@ Repo đã có mã **Flutter/Android Kotlin** trong [`app/`](app/), **FastAPI/SQL
 ## Tài liệu để bắt đầu coding
 
 1. [Chỉ mục nguồn chuẩn](docs/README.md): đọc theo task, không đọc archive để tự chọn luật.
-2. [PRD](docs/01-product/01-prd.md), [onboarding](docs/01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [phòng học](docs/01-product/08-phong-hoc-ai-va-ban-be.md), [lịch ngủ](docs/01-product/09-giac-ngu-va-bao-thuc.md): hành vi người dùng và ranh giới từng giai đoạn.
+2. [PRD](docs/01-product/01-prd.md), [onboarding](docs/01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [phòng học](docs/01-product/08-phong-hoc-ai-va-ban-be.md), [lịch ngủ](docs/01-product/09-giac-ngu-va-bao-thuc.md), [nguồn cảnh mở màn](docs/01-product/11-canh-mo-man-va-nguon-video.md): hành vi người dùng và ranh giới từng giai đoạn.
 3. [Lộ trình](docs/00-start/02-lo-trinh.md) và [gói task đầu tiên](docs/00-start/05-goi-task-dau-tien.md): build/test → báo thức thật → câu/AI → đồng bộ → pilot → giao hữu.
 4. [Quy trình vibe coding](docs/00-start/03-quy-trinh-vibe-code.md), [quy tắc skill](docs/00-start/07-quy-tac-skills-va-ai-agent.md) và [AGENTS.md](AGENTS.md): task có spec, plan, test, worklog, handoff trước/sau sửa mã.
 5. [Kiến trúc](docs/02-engineering/01-kien-truc.md), [EduSkills-VN](docs/02-engineering/11-eduskills-vn-tich-hop.md), [API](docs/02-engineering/04-hop-dong-api.md), [SQL](docs/02-engineering/03-du-lieu-sql.md), [test/release](docs/03-quality/01-ke-hoach-kiem-thu.md).

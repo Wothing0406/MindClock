@@ -15,7 +15,7 @@
 | Khi làm | Nguồn hành vi/thiết kế | Contract/kỹ thuật | Test/cổng |
 | --- | --- | --- | --- |
 | Onboarding → dashboard | [PRD](01-product/01-prd.md), [journey/UX](01-product/02-hanh-trinh-ux.md), [đăng ký/lộ trình](01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [design](01-product/03-he-thiet-ke.md) | [Catalog/planner](02-engineering/10-catalog-chuong-trinh-va-ke-hoach.md), [API](02-engineering/04-hop-dong-api.md) | ON/UX/AUTH ở [ca nghiệm thu](03-quality/05-ca-nghiem-thu.md) |
-| Giấc ngủ, alarm, câu | [Lịch ngủ/báo thức](01-product/09-giac-ngu-va-bao-thuc.md), [UX](01-product/02-hanh-trinh-ux.md) | [Alarm Android](02-engineering/02-bao-thuc-android.md), [câu](02-engineering/05-ngan-hang-cau-hoi.md) | AD/SLEEP/MORNING/LEARN ở [test plan](03-quality/01-ke-hoach-kiem-thu.md) |
+| Giấc ngủ, alarm, câu | [Lịch ngủ/báo thức](01-product/09-giac-ngu-va-bao-thuc.md), [cảnh và nguồn video](01-product/11-canh-mo-man-va-nguon-video.md), [UX](01-product/02-hanh-trinh-ux.md) | [Alarm Android](02-engineering/02-bao-thuc-android.md), [câu](02-engineering/05-ngan-hang-cau-hoi.md) | AD/SLEEP/MORNING/MEDIA/LEARN ở [test plan](03-quality/01-ke-hoach-kiem-thu.md) |
 | Lịch học, nhắc việc, hồ sơ | [Kế hoạch ngày](01-product/05-lich-hoc-nhac-viec.md), [hồ sơ/xã hội](01-product/06-ho-so-tien-do-xa-hoi.md) | [SQL](02-engineering/03-du-lieu-sql.md), [mobile↔API](02-engineering/08-tich-hop-mobile-api.md) | PLAN/PROFILE ở [ca nghiệm thu](03-quality/05-ca-nghiem-thu.md) |
 | Tài khoản/riêng tư | [Account/consent](01-product/04-tai-khoan-quyen-rieng-tu.md) | [SQL](02-engineering/03-du-lieu-sql.md), [API](02-engineering/04-hop-dong-api.md) | AUTH/DATA + [release](03-quality/02-van-hanh-phat-hanh.md) |
 | Backend/tích hợp | [PRD](01-product/01-prd.md) | [Kiến trúc](02-engineering/01-kien-truc.md), [repo](00-start/04-cau-truc-repo.md), [SQL](02-engineering/03-du-lieu-sql.md), [API](02-engineering/04-hop-dong-api.md), [mobile↔API](02-engineering/08-tich-hop-mobile-api.md) | Contract/DB/CI ở [quality](03-quality/01-ke-hoach-kiem-thu.md), [runbook](03-quality/04-moi-truong-chay-thu.md) |
@@ -31,7 +31,7 @@
 docs/
 ├─ README.md                  điều hướng và quyền ưu tiên
 ├─ 00-start/                 hiện trạng, roadmap, workflow, task đầu, quyết định, skill
-├─ 01-product/               PRD, UX, design, tài khoản, lịch, hồ sơ, phòng học, ngủ
+├─ 01-product/               PRD, UX, design, tài khoản, lịch, hồ sơ, phòng học, ngủ, cảnh mở màn
 ├─ 02-engineering/           kiến trúc, alarm, SQL, API, câu, AI, học, realtime, catalog, EduSkills
 ├─ 03-quality/               test, nghiệm thu, môi trường, release, truy vết
 ├─ 04-game/                  PvP v0.1, art/asset, rank/mùa/coin thử nghiệm

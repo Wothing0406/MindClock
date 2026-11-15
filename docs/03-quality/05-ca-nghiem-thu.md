@@ -25,6 +25,9 @@
 | MORNING-01 | P-03 | Mở từ alarm vào cảnh ngắn rồi cùng câu; bỏ cảnh không bỏ câu; asset lỗi/Reduce Motion dùng chữ tĩnh | Flutter/Android E2E |
 | MORNING-02 | P-07 | Đếm 3/5 lần `incorrect` duy nhất; lần 5 mới có Bỏ lượt; retry/uncertain/lỗi không tăng; Dừng âm luôn dùng được | API/PostgreSQL + Android |
 | MORNING-03 | P-08 | Chỉ câu đúng đủ bước cấp EXP/ngày chuỗi một lần; bỏ lượt/dừng/đóng app hết ngày không cấp; planned rest và system grace không làm đứt chuỗi oan | API/PostgreSQL A/B + ngày/timezone |
+| MEDIA-01 | P-03 | Cảnh 6–12 giây gắn cùng outcome/câu, không lộ đáp án; bấm Mở câu dừng âm trước phát cảnh, bỏ cảnh vẫn vào câu | content review + Android E2E |
+| MEDIA-02 | P-03 | Mỗi clip/ảnh/âm có source/license/reviewer/rights; clip bị retire hoặc sai quyền không được đóng gói/phát | asset registry/release review |
+| MEDIA-03 | P-03 | Offline, máy yếu, Reduce Motion, mất asset, không nghe audio: bản chữ/poster vẫn hiểu và không chặn câu/Dừng | Android thật + accessibility |
 | AI-01 | P-06 | Gemini/validator bất đồng, ảnh mờ, timeout → uncertain, không phạt/không cấp XP sai | AI eval/API |
 | AI-02 | P-07 | Socratic không trả đáp án cuối trước nỗ lực, không lộ rubric qua field/lỗi | prompt injection + contract |
 | EDU-01 | P-06 | EduSkills tạo nháp câu/rubric/hook; không reviewer/quyền hoặc lệch outcome thì không publish/scored | content pipeline/contract |
