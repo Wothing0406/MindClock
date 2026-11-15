@@ -1,5 +1,7 @@
 # Làm trước 30% sản phẩm MindClock
 
+> **Lưu trữ phạm vi chuẩn bị trước cuộc thi.** Repo đã có mã Flutter/API; để làm sản phẩm thật, dùng [baseline Android](56-baseline-san-pham-android.md) và [cấu trúc repo](57-cau-truc-repo-production.md).
+
 **Cách hiểu:** 30% là một **lát cắt sản phẩm chạy được**, không phải 30% số màn hình hoặc 30% bộ docs. Làm trước những phần có thể kiểm tra và tái dùng trong ngày thi. Chưa thấy quy chế chính thức nêu rõ được mang bao nhiêu code làm trước trên [trang sự kiện GDG Miền Trung](https://gdg.community.dev/events/details/google-gdg-mientrung-presents-hackathon_gdg-devfest-mientrung-2026/); đội phải xác nhận với ban tổ chức. Nếu quy chế yêu cầu code được tạo trong thời gian thi, phần chạy sẵn chỉ dùng nội bộ để tập, không trình bày như tác phẩm làm tại cuộc thi.
 
 ## 1. 30% nên bao gồm gì?

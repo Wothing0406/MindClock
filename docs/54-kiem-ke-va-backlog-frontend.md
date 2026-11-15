@@ -1,6 +1,6 @@
 # Kiểm kê và backlog frontend MindClock
 
-**Trạng thái ngày 14/11/2026 (cập nhật `T013`):** tài liệu kiểm kê và lập kế hoạch coding frontend (`chưa sửa code`). Repo hiện chỉ có tài liệu (`docs/`), kịch bản tạo/kiểm tra asset (`scripts/`), bản xem thử HTML/JS (`demo/index.html`, `demo/arena.html`) và tài sản game thử nghiệm (`demo/assets/game/`). **Chưa có `pubspec.yaml`, ứng dụng Flutter, mã native Android Kotlin, APK hay backend FastAPI/PostgreSQL đang chạy.** Trên máy kiểm hiện có Python 3.11 và Node.js, **chưa có lệnh `flutter` hoặc `adb` trong `PATH`** (khớp `docs/48 §2`). Bản cập nhật `T013` bổ sung luồng đăng ký/onboarding cá nhân hóa AI (mật khẩu mạnh → trình độ & môn học → tải/nhập TKB có sẵn → chọn avatar mặc định), vòng quay 24h giờ ngủ/giờ dậy (`SleepWakeDial`) cùng báo thức tùy chọn giờ và âm thanh báo thức Android do đội cung cấp — **nhưng vẫn giữ nguyên đường dùng thử khách local, chế độ báo thức thử thách/Dừng khẩn cấp và thứ tự ưu tiên P0**.
+> **Lưu trữ kiểm kê frontend 14/11/2026.** Phần bảng dưới ghi prototype `demo/` đã xóa và trạng thái trước khi có mã Flutter/API. Không dùng làm backlog hiện hành. Bắt đầu task mới tại [baseline production](56-baseline-san-pham-android.md) và [cấu trúc repo](57-cau-truc-repo-production.md). Nội dung luồng/ngôn từ còn hữu ích phải đối chiếu PRD và code hiện tại.
 
 > **Lưu ý:** Kiểm kê tài liệu và bản xem thử **không phải** kiểm thử sản phẩm. Mọi hành vi Android thật, báo thức màn khóa, chấm AI và PvP chỉ được gọi là đã chạy sau khi có APK/backend và ghi kết quả thật trên thiết bị.
 

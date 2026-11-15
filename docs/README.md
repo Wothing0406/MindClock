@@ -1,10 +1,14 @@
 # MindClock — bộ tài liệu triển khai
 
-**Trạng thái:** đặc tả để bắt đầu coding, chưa có sản phẩm chạy. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có kế hoạch triển khai riêng. **Mốc tài liệu:** 12/11/2026.
+**Bắt đầu sản phẩm thật:** đọc [56 — Baseline Android](56-baseline-san-pham-android.md) và [57 — Cấu trúc repo production](57-cau-truc-repo-production.md). Web `/product` còn là nghiên cứu giao diện T023, không phải app phát hành.
+
+**Trạng thái 15/11/2026:** repo đã có mã Flutter/Android native và FastAPI/Alembic, nhưng chưa có bằng chứng hoàn tất kiểm thử báo thức trên máy Android thật, build release, PostgreSQL/Firebase production hoặc pilot. **Ngôn ngữ giao diện:** tiếng Việt. **Nền tảng đầu tiên:** Android; iOS và đấu trường có cổng riêng.
 
 **Quy trình khi bắt đầu coding:** đọc [AGENTS.md](../AGENTS.md) và [tasks/README.md](../tasks/README.md); mỗi yêu cầu code có thư mục task riêng với spec, plan, test và điểm tiếp tục.
 
 ## Thứ tự đọc
+
+0. [56 — Baseline sản phẩm Android](56-baseline-san-pham-android.md) và [57 — Cấu trúc repo production](57-cau-truc-repo-production.md): trạng thái mã thật, hướng làm tiếp và ranh giới app/API/art. Hai tài liệu này thay các câu trạng thái “chưa có app/backend” trong docs cũ.
 
 1. [01 — Tầm nhìn và ý tưởng ban đầu](01-dinh-huong-san-pham.md): bối cảnh DevFest, giả thuyết và phạm vi demo.
 2. [04 — PRD và đặc tả sản phẩm](04-prd-va-dac-ta-san-pham.md): mục tiêu, persona, user stories, quy tắc nghiệp vụ, MVP và lộ trình đầy đủ.
@@ -53,19 +57,21 @@
 45. [46 — Solo RPG ba nhân vật mới](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md): nguồn chuẩn **thử nghiệm** cho 100 HP/50 giáp, nội tại/chiêu, action UI, prompt sprite, networking, SQL/API dự kiến và cổng cân bằng. Thay số combat cũ ở docs/35/37/40.
 46. [47 — Demo Android và môi trường kiểm thử](47-demo-android-va-moi-truong-kiem-thu.md): runbook Windows/Android Studio/Flutter, máy thật/emulator, AD01–AD10 và kịch bản sân khấu; hiện chưa có APK.
 47. [48 — Kiểm toán docs](48-kiem-toan-docs-va-dieu-kien-bat-dau-code.md): mức sẵn sàng cho Android P0, bằng chứng đã kiểm, phần chưa đạt và thứ tự đóng các cổng.
-48. [49 — Sprite ba nhân vật và web demo](49-sprite-ba-nhan-vat-va-web-demo.md): nguồn ảnh, trạng thái art, cách xem sân tập và giới hạn quyền.
-49. [50 — Cấu trúc repo và tài sản game](50-cau-truc-du-an-va-asset-game.md): cây thư mục, manifest, anchor, pipeline, quy trình dựng và QA.
+48. [49 — Sprite ba nhân vật, lưu trữ prototype](49-sprite-ba-nhan-vat-va-web-demo.md): nguồn ảnh, trạng thái art và giới hạn quyền; trang web demo đã bỏ.
+49. [50 — Tài sản game](50-cau-truc-du-an-va-asset-game.md): manifest, anchor, pipeline và QA; cây repo production ở docs/57.
 50. [51 — Sân dọc, tướng và hiệu ứng](51-san-dau-doc-mobile-va-hieu-ung.md): bố cục điện thoại, mô tả người chơi, projectile/impact/self FX, âm thanh và tiêu chí xem trên máy.
 51. [52 — Hồ sơ, avatar, huy hiệu và lịch sử](52-ho-so-avatar-huy-hieu-va-lich-su.md): phân biệt avatar/khung/badge/tướng, upload, quyền xem lịch sử đấu và báo thức, uy tín, API/SQL dự kiến.
 52. [53 — Tên, avatar và phát ngôn](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md): chuẩn tiếng Việt, nội dung được phép, báo cáo/duyệt/kháng nghị, bảo vệ người học.
 53. [54 — Kiểm kê và backlog frontend](54-kiem-ke-va-backlog-frontend.md): bảng màn hình, 3 phạm vi (prototype/MVP/mở rộng), component/asset tái sử dụng, backlog lát cắt dọc với AC ↔ test và mâu thuẫn tài liệu; chưa sửa code.
 54. [55 — Chốt ngôn từ, thiết kế và icon frontend](55-chot-ngon-tu-thiet-ke-va-icon-frontend.md): bảng chuỗi chuẩn `vi-VN`, từ cấm, tách thuật ngữ, design tokens Flutter và danh mục icon + `semanticLabel`.
+55. [56 — Baseline sản phẩm Android](56-baseline-san-pham-android.md): trạng thái mã có thật, lát cắt P0–P3, điều kiện test và phát hành.
+56. [57 — Cấu trúc repo production](57-cau-truc-repo-production.md): chỗ đặt Flutter/Kotlin/API/art/docs/task và quy tắc không tạo web client song song.
 
 ## Quyết định đã chốt để coding
 
 | Chủ đề | Quyết định |
 | --- | --- |
-| Bản đầu | Flutter cho Android, FastAPI backend, SQLite chỉ cho demo một máy/PostgreSQL đích; Firebase Authentication cho tài khoản online; Gemini chỉ được gọi từ backend. Xem docs/06 và 28 |
+| Bản đầu | Flutter cho Android, FastAPI backend, PostgreSQL đích; SQLite chỉ cho local một máy. Repo đã có mã hai phần nhưng cổng thiết bị/PostgreSQL/release chưa đạt. Firebase Authentication cho tài khoản online; Gemini chỉ được gọi từ backend. Xem docs/06, 28 và 56 |
 | Báo thức | Lập lịch/phát/dừng tại thiết bị; khách không cần đăng nhập; có câu dự phòng offline nhưng bài tự do offline không tự chấm; không phụ thuộc API lúc chuông reo |
 | Câu hỏi | Ngân hàng câu đã duyệt cho MVP; mọi câu có chấm cần đáp án + cách làm ngắn/rubric; AI hỗ trợ đọc/chấm/gợi ý, xem docs/39 |
 | Ảnh | Gửi qua backend, xử lý tạm thời, không lưu ảnh mặc định |
@@ -74,12 +80,12 @@
 | Quyền riêng tư | Hồ sơ học tập cá nhân mặc định; giáo viên/phụ huynh là giai đoạn sau và phải cấp quyền rõ |
 | iOS | Sau demo Android/P0, cần Mac/Xcode/iPhone và task riêng; AlarmKit vẫn có nút Dừng OS; xem docs/20 |
 | Đấu trường | Opt-in, giao hữu trước; ranked/RP/bảng là giai đoạn sau khi đạt cổng chất lượng; xem docs/35 và 37 |
-| Nhân vật | Ba nhân vật có asset và sân dọc web nghiên cứu, chưa duyệt quyền/phát hành hoặc nối backend. Avatar/khung là cosmetic mẫu, không phải ranked. Xem docs/46, 49–51; khung rank/backend thật ở docs/43–44 |
+| Nhân vật | Asset nghiên cứu đã chuyển sang `assets/game/`, chưa duyệt quyền phát hành hoặc nối Flutter/backend. Avatar/khung là mỹ thuật mẫu, không phải ranked. Xem docs/46, 49–51, 57; khung rank/backend thật ở docs/43–44 |
 | Báo thức thử thách | Tự chọn; không Hoãn, chỉ gợi ý sau sai rõ lần 3, luôn Dừng khẩn cấp; xem docs/31 |
 | Cá nhân hóa môn | Chọn nhiều môn và mục tiêu thi, câu từ bộ đã duyệt phù hợp từng môn; xem docs/32 |
 | Solo RPG | Giao hữu trước; docs/46 là **luật thử nghiệm mới** 100 HP/50 giáp/6 round với ba working names. Luật 60 HP/kit cũ chỉ lưu trữ, không code. Gemini chỉ đề xuất chấm **sau nộp**; ranked tắt đến khi chấm/cân bằng đạt cổng. Xem docs/35, 39, 46 |
 | Không gian học | Timer cục bộ và nhắc khi quay lại; camera/giọng nói tự chọn, AI chỉ gọi khi được hỏi. App cá nhân không khóa người dùng khỏi ứng dụng khác; xem docs/45 |
-| Demo Android | Mức A hiện có là HTML prototype; các bước Android thật ở docs/47 chỉ được gọi đã chạy sau khi có APK và AD01–AD09. iOS để tương lai; xem docs/20 và 48 |
+| Android | Có mã Flutter/Kotlin và backend; cần build/kiểm thiết bị theo AD01–AD09 trước khi nói báo thức hoạt động thật. Web thử nghiệm không thay app. Xem docs/47 và 56 |
 | Dữ liệu câu ngoài | VNHSGE và mirror VMLU đã tải **chỉ ở khu nghiên cứu local gitignored**, không có câu nào vào app; ViMMRC chỉ metadata. Câu demo do đội biên soạn/duyệt; xem docs/38 và [manifest](../data/research/research-manifest.json) |
 
 ## Các điểm còn mở phải quyết định trước khi triển khai rộng

@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 
-ROOT = Path(__file__).resolve().parents[1] / "demo" / "assets" / "game"
+ROOT = Path(__file__).resolve().parents[1] / "assets" / "game"
 SLUGS = ("ha-nhan", "han-boi-phap", "tuyet-dinh")
 NATIVE_FACING = {"ha-nhan": "right", "han-boi-phap": "right", "tuyet-dinh": "left"}
 ACTIONS = ("basic", "skill1", "skill2", "victory")

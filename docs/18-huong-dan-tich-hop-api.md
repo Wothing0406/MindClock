@@ -1,6 +1,6 @@
 # Hướng dẫn tích hợp mobile, API, SQL và Gemini
 
-Tài liệu này chỉ cách ghép các phần theo [hợp đồng `/v1`](07-hop-dong-api-va-ai.md); endpoint/payload chuẩn nằm ở đó. Đây là hướng dẫn triển khai, **repo chưa có backend/mobile hoạt động**. [Kiến trúc](06-kien-truc-va-du-lieu.md), [workflow](17-workflow-va-vong-doi-du-lieu.md) và [SQL](28-backend-sql.md) là nguồn liên quan.
+Tài liệu này chỉ cách ghép các phần theo [hợp đồng `/v1`](07-hop-dong-api-va-ai.md); endpoint/payload chuẩn nằm ở đó. Repo đã có mã backend/mobile, nhưng các cổng tích hợp trên Android thật, PostgreSQL và Firebase ở [baseline](56-baseline-san-pham-android.md) chưa được xác nhận. [Kiến trúc](06-kien-truc-va-du-lieu.md), [workflow](17-workflow-va-vong-doi-du-lieu.md) và [SQL](28-backend-sql.md) là nguồn liên quan.
 
 ## 1. Môi trường
 

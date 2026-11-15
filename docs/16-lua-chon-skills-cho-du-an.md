@@ -61,5 +61,5 @@ Các skill đã được cài từ thư mục cụ thể bằng công cụ cài 
 
 ## 5. Cách cài và giới hạn
 
-Ba skill Android/Flutter mới nằm trong `.agents/skills/` của repo; thành viên clone repo sẽ có file skill, nhưng **không tự có Android Studio, SDK, emulator, Flutter hay thiết bị thật**. Không cần `npx skills add` lần nữa. `testing-setup` và `flutter-add-integration-test` là nguồn ngoài được sao chép ngày 12/11/2026; hướng dẫn có thể rộng/lệch phiên bản, nên docs MindClock và tài liệu Android/Flutter chính thức hiện hành được ưu tiên khi coding. Skill không phải package runtime và chưa được test với app vì repo chưa có app.
+Ba skill Android/Flutter nằm trong `.agents/skills/` của repo; thành viên clone repo sẽ có file skill, nhưng **không tự có Android Studio, SDK, emulator, Flutter hay thiết bị thật**. Không cần `npx skills add` lần nữa. `testing-setup` và `flutter-add-integration-test` là nguồn ngoài được sao chép ngày 12/11/2026; hướng dẫn có thể rộng/lệch phiên bản, nên docs MindClock và tài liệu Android/Flutter chính thức hiện hành được ưu tiên khi coding. Skill không phải package runtime; repo đã có app nhưng kiểm thử thực tế vẫn theo [baseline](56-baseline-san-pham-android.md).
 

@@ -1,6 +1,6 @@
 # Không gian học và chế độ tập trung — đặc tả để coding
 
-**Trạng thái:** thiết kế mới, chưa có chức năng chạy. **Nền tảng đầu:** Android. **Ưu tiên:** sau lát cắt báo thức P0; bản demo có thể dùng đồng hồ học cục bộ trước AI/camera. Tài liệu này là nguồn chuẩn cho phiên tự học, rời app, camera và trợ lý học. Không gian học không thay thế báo thức; có thể vào từ màn `Hôm nay` sau khi chuông kết thúc hoặc tự mở bất cứ lúc nào.
+**Trạng thái 15/11/2026:** đã có mã Flutter timer/bridge và API học tập, nhưng chưa kiểm lifecycle/Android thật theo [baseline](56-baseline-san-pham-android.md). **Nền tảng đầu:** Android. **Ưu tiên:** sau khi báo thức P0 đạt. Tài liệu này là nguồn chuẩn cho phiên tự học, rời app, camera và trợ lý học. Không gian học không thay thế báo thức; có thể vào từ màn `Hôm nay` sau khi chuông kết thúc hoặc tự mở bất cứ lúc nào.
 
 ## 1. Mục đích và ranh giới
 

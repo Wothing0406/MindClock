@@ -1,5 +1,7 @@
 # Kế hoạch triển khai từ tài liệu đến sản phẩm
 
+> **Cập nhật 15/11/2026:** bảng D0/M1 bên dưới là kế hoạch gốc trước khi repo có Flutter/API. Dùng [baseline Android](56-baseline-san-pham-android.md) cho thứ tự task và cổng release hiện hành; giữ tài liệu này để hiểu các phụ thuộc/ý định ban đầu.
+
 > **Cập nhật 11/11/2026:** gói `30% sản phẩm` tại [docs/29](29-ke-hoach-chuan-bi-30-phan-tram.md); nhu cầu người học và cổng kiểm chứng tại [docs/41](41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md). Backend dùng PostgreSQL theo [docs/28](28-backend-sql.md), SQLite chỉ cho demo một máy.
 
 **Nguyên tắc:** bản DevFest là lát cắt trình diễn; MVP là ứng dụng Android có báo thức thật, dữ liệu thật và thử 7 ngày; sản phẩm đầy đủ chỉ mở rộng sau khi đo nhu cầu. Các mốc dưới đây là **ước lượng công việc**, không phải cam kết lịch khi chưa biết số người và năng lực đội.

@@ -1,7 +1,7 @@
 """Original vector rank emblems. These are separate from avatar border frames."""
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[1] / "demo/assets/game/ui/rank/badges"
+OUT = Path(__file__).resolve().parents[1] / "assets/game/ui/rank/badges"
 OUT.mkdir(parents=True, exist_ok=True)
 BADGES = {
     "dong": ("#b97645", "#f2d0a4", '<circle cx="64" cy="64" r="38" fill="none" stroke="currentColor" stroke-width="8"/><path d="M43 79 V50 L64 38 L85 50 V79 L64 91 Z" fill="currentColor" opacity=".8"/><path d="M52 75 L64 55 L76 75" fill="none" stroke="#fff3dd" stroke-width="7"/>'),

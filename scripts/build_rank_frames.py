@@ -1,7 +1,7 @@
 """Create clean transparent SVG rank/avatar frames inspired by the approved atlas concept."""
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / "demo/assets/game"
+ROOT = Path(__file__).resolve().parents[1] / "assets/game"
 TARGET = ROOT / "ui/rank"
 TARGET.mkdir(parents=True, exist_ok=True)
 

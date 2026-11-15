@@ -2,6 +2,8 @@
 
 ## Đọc tài liệu theo việc đang làm
 
+**Baseline production 15/11/2026:** bắt đầu ở `docs/56-baseline-san-pham-android.md` và `docs/57-cau-truc-repo-production.md`. Sản phẩm là `app/` Flutter Android + `services/api/` FastAPI; `assets/game/` là art nghiên cứu. Hai thư mục web `demo/`, `demo_video/` đã bỏ. Không tạo web UI thay cho màn Android, không gọi `/demo` hay `/product` là product. Các câu trạng thái “chưa có app/backend” trong docs cũ là lịch sử; kiểm mã, test và task hiện hành trước khi tuyên bố đã chạy.
+
 Đọc `docs/README.md` để tìm nguồn chuẩn, rồi chỉ đọc tài liệu liên quan đến task. Hành vi sản phẩm: `docs/04-prd-va-dac-ta-san-pham.md`, nhu cầu học sinh `docs/41-nhu-cau-hoc-sinh-va-kiem-chung-san-pham.md`; UI: `docs/05-ux-va-noi-dung-tieng-viet.md`, `docs/13-he-thiet-ke-ui.md`, `docs/23-hanh-trinh-san-pham.md`, `docs/27-quy-chuan-giao-dien-va-figma.md`; dữ liệu/API: `docs/06-kien-truc-va-du-lieu.md`, `docs/07-hop-dong-api-va-ai.md`, `docs/17-workflow-va-vong-doi-du-lieu.md`, `docs/18-huong-dan-tich-hop-api.md`, `docs/28-backend-sql.md`; iOS: `docs/20-ios-demo-va-phat-hanh.md`; đấu trường: `docs/21-dau-truong-xep-hang.md`, luật ở `docs/35–40`; nhân vật: `docs/22-nhan-vat-rpg.md`; AI: `docs/14-vai-tro-va-quy-dinh-ai.md`; kiểm thử: `docs/09-ke-hoach-kiem-thu.md`, ma trận giao việc `docs/42-ma-tran-yeu-cau-va-giao-viec.md`; bàn giao: `docs/10-to-chuc-coding-agent.md`; skill: `docs/16-lua-chon-skills-cho-du-an.md`. Một sửa lỗi nhỏ không cần đọc toàn bộ bộ docs.
 
 **Tài liệu ưu tiên khi bắt đầu coding:** [docs/06](docs/06-kien-truc-va-du-lieu.md) và [docs/28](docs/28-backend-sql.md) chốt PostgreSQL cho nghiệp vụ; [docs/29](docs/29-ke-hoach-chuan-bi-30-phan-tram.md) định nghĩa lát cắt 30%; [docs/30](docs/30-ngon-ngu-va-tai-san-giao-dien.md) chốt ngôn ngữ và asset không emoji. Không xây nghiệp vụ Firestore.
@@ -16,7 +18,7 @@
 
 **Skill Android/Flutter:** khi code Kotlin/Manifest/MethodChannel hoặc quyền, báo thức, vòng đời Android, đọc `.agents/skills/mindclock-android-native/SKILL.md`; khi thiết lập test module Kotlin native có thể dùng `testing-setup`, còn UI/hành trình Flutter dùng `flutter-add-widget-test`/`flutter-add-integration-test`. Xem [docs/16](docs/16-lua-chon-skills-cho-du-an.md). Không để skill chung tự thêm Hilt/Compose hoặc Flutter Driver extension vào app Flutter khi chưa có lý do và đối chiếu tài liệu hiện hành.
 
-**Demo nền tảng:** [docs/47](docs/47-demo-android-va-moi-truong-kiem-thu.md) là runbook Android duy nhất cho cuộc thi; [docs/20](docs/20-ios-demo-va-phat-hanh.md) là lộ trình iOS tương lai, không thuộc demo. Repo chưa có Flutter app/APK; không nói `flutter run`, alarm, Gemini hoặc PvP đã chạy chỉ vì docs có lệnh/kịch bản.
+**Demo nền tảng:** [docs/47](docs/47-demo-android-va-moi-truong-kiem-thu.md) là runbook Android; [docs/20](docs/20-ios-demo-va-phat-hanh.md) là lộ trình iOS tương lai. Repo đã có mã Flutter/Android và API, nhưng chưa có bằng chứng release/AD01–AD09 trên máy thật; không nói alarm, Gemini hoặc PvP đạt production chỉ vì có mã hay script.
 **Kiểm toán docs:** [docs/48](docs/48-kiem-toan-docs-va-dieu-kien-bat-dau-code.md) ghi rõ vùng đủ để mở task Android P0 và các cổng chưa đạt. Không gắn `done` sản phẩm từ checklist tài liệu.
 
 ## Quy tắc không được phá
@@ -48,5 +50,5 @@
 
 ## Trạng thái repo
 
-Tại thời điểm tạo hướng dẫn, repo mới có tài liệu. Các đường dẫn code trong kế hoạch là dự kiến; không suy ra code đã tồn tại.
+Đã có `app/` Flutter/Kotlin, `services/api/` FastAPI/Alembic, và `assets/game/`. Mã web `/demo`, `/product` còn trong API do task T022/T023 đang làm dở; chỉ là nội bộ và phải được tắt/bỏ trước production. Trạng thái từng phần và cổng kiểm chứng ở `docs/56-baseline-san-pham-android.md`.
 

@@ -1,5 +1,7 @@
 # Kiểm toán bộ docs MindClock — 12/11/2026
 
+> **Lưu trữ kiểm toán ngày 12/11:** bảng hiện trạng bên dưới ghi thời điểm repo chưa có source app/API. Từ 15/11 đã có Flutter/Kotlin/FastAPI; dùng [baseline mới](56-baseline-san-pham-android.md) để quyết định task và cổng release. Không dùng các dòng “chưa có app” bên dưới như trạng thái hiện tại.
+
 **Kết luận:** bộ docs **đủ để mở task coding Android P0 có kiểm soát**, **chưa đủ để tuyên bố sản phẩm/demo Android đã chạy hoặc mở ranked/iOS**. Đây là kiểm toán tài liệu và repo, không phải QA sản phẩm. Nguồn chuẩn để tìm tài liệu là [README](README.md); cách giao việc ở [AGENTS](../AGENTS.md) và [tasks](../tasks/README.md).
 
 ## 1. Đã kiểm tra

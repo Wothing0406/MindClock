@@ -1,6 +1,6 @@
 # Demo Android trên Windows — môi trường, chạy thử và bàn giao
 
-**Trạng thái 12/11/2026:** runbook cho **lúc app Flutter Android được tạo**. Repo hiện có docs và `demo/index.html`, **chưa có `pubspec.yaml`, APK, backend chạy hay báo thức native**. Các lệnh Flutter/API bên dưới là lệnh điều kiện, không phải bằng chứng đã chạy. iOS để giai đoạn sau theo [docs/20](20-ios-demo-va-phat-hanh.md).
+**Cập nhật trạng thái 15/11/2026:** repo đã có `app/pubspec.yaml`, Flutter/Kotlin alarm và `services/api/`; **chưa có bằng chứng AD01–AD09 trên Android thật hoặc build release**. Lệnh bên dưới phải chạy và ghi kết quả trên máy đích, không suy ra đạt từ sự tồn tại mã. [Baseline production](56-baseline-san-pham-android.md); iOS theo [docs/20](20-ios-demo-va-phat-hanh.md).
 
 ## 1. Mục tiêu demo và phạm vi
 
@@ -8,7 +8,7 @@
 
 | Mức demo | Có gì thật | Cách nói với giám khảo |
 | --- | --- | --- |
-| A — hiện tại | `demo/index.html`, dữ liệu mẫu, chuyển màn | `Đây là bản xem giao diện, chưa có báo thức Android hoặc AI chạy.` |
+| A — kiểm mã | Flutter/Kotlin và API có trong repo; trạng thái máy thật chưa xác minh | `Có mã Android; cần chạy trên thiết bị để xác nhận báo thức.` |
 | B — app local | Flutter APK trên Android, timer/chuông local, câu đóng gói | `Báo thức chạy trên thiết bị; phản hồi nào là mẫu phải ghi Mô phỏng.` |
 | C — app + backend | B + FastAPI, PostgreSQL, Auth, câu/chấm đã duyệt | Chỉ nói `AI live` nếu request thật và fallback được phân biệt; không hứa PvP/ranked nếu chưa có |
 
@@ -27,12 +27,12 @@ Android Studio **không có bản “Lite” chính thức**; Android Emulator n
 ## 3. Chuẩn bị một lần trên máy dev
 
 1. Cài Flutter SDK và thêm `flutter/bin` vào PATH theo [Flutter setup Android](https://docs.flutter.dev/platform-integration/android/setup); cài Android Studio stable cùng Android SDK/Platform Tools; chấp nhận Android SDK licences theo hướng dẫn Flutter.
-2. Mở terminal mới, chạy `flutter doctor -v`; sửa mục Android toolchain. Chạy `flutter devices` để thấy emulator hoặc điện thoại. **Hiện tại chưa có app để `flutter run`.**
+2. Mở terminal mới, chạy `flutter doctor -v`; sửa mục Android toolchain. Chạy `flutter devices` để thấy emulator hoặc điện thoại. App nguồn nằm ở `app/`; nếu SDK bị Windows Application Control chặn thì ghi lỗi và chuyển sang máy/CI được phép chạy.
 3. Điện thoại: bật Developer options và USB debugging; cắm USB, chấp nhận RSA fingerprint. Chạy `adb devices`; trạng thái phải là `device`, không phải `unauthorized`. Khi trình chiếu, bật chế độ không hiện thông báo cá nhân và giữ sạc.
 4. Nếu dùng emulator: trong Android Studio Device Manager tạo một AVD điện thoại phổ biến với image Google APIs; bật virtualization. Chỉ mở một AVD trên máy RAM hạn chế. Emulator dùng địa chỉ `10.0.2.2` để gọi server chạy ở `localhost` máy Windows; điện thoại thật dùng IP LAN của laptop cùng mạng, **không dùng `localhost` của điện thoại**. Backend production dùng HTTPS; cấu hình HTTP dev cục bộ nếu cần phải giới hạn build debug, không mang sang release.
-5. Khi app được tạo: chạy `flutter pub get`, `flutter analyze`, `flutter test`; chạy `flutter run -d <deviceId>` hoặc `flutter build apk --debug` từ **thư mục app chứa `pubspec.yaml`**, ghi đường dẫn build thực tế khi code có. Không đoán rằng `demo/index.html` là app Flutter.
+5. Từ `app/`, chạy `flutter pub get`, `flutter analyze`, `flutter test`, rồi `flutter run -d <deviceId>` hoặc `flutter build apk --debug`; ghi mã build, log và thiết bị. Cấu hình từ `.env.example` theo môi trường; không đưa secret vào build/repo.
 
-**Nếu chưa có app:** mở `demo/index.html` trên laptop, bấm qua bốn màn và nói rõ là prototype. Có thể chiếu trình duyệt điện thoại bằng local server khi cùng mạng; file HTML hiện không có Android alarm, camera, AI hoặc PvP thật. Không cài plugin IDE để giả rằng code đã tồn tại.
+**Nếu build bị chặn:** dừng tuyên bố chức năng đã chạy trên Android, ghi nguyên nhân và điểm tiếp tục theo `tasks/README.md`. Không thay bằng trang web rồi gọi đó là sản phẩm.
 
 ## 4. Ma trận Android phải chạy khi có APK
 

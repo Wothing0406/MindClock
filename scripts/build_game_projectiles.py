@@ -1,7 +1,7 @@
 """Create nine original, transparent, character-specific combat FX vectors."""
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / "demo/assets/game/characters"
+ROOT = Path(__file__).resolve().parents[1] / "assets/game/characters"
 FX = {
     "ha-nhan": {
         "basic": ("#e8d6ad", '<path d="M14 78 Q58 17 116 34 Q66 44 26 105" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><path d="M23 95 L40 100 L35 113" fill="none" stroke="currentColor" stroke-width="5"/>'),

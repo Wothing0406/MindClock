@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image, ImageEnhance
 
 ROOT = Path(__file__).resolve().parents[1]
-ART = ROOT / "demo/assets/game"
+ART = ROOT / "assets/game"
 OUT = ROOT / "tasks/T009-arena-doc-va-asset"
 NATIVE_FACING = {"ha-nhan": "right", "han-boi-phap": "right", "tuyet-dinh": "left"}
 source = Image.open(ART / "maps/study-courtyard.webp").convert("RGBA")

@@ -1,6 +1,6 @@
 # Sân đấu dọc trên điện thoại: tướng, thao tác và hiệu ứng
 
-**Phạm vi:** đặc tả UX/runtime cho sân luyện web cục bộ. Luật trận online phải theo [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md), chấm bài theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Demo có câu mẫu và đối thủ kịch bản, không chấm phần trình bày bằng AI, không xếp hạng.
+**Phạm vi:** tham chiếu UX/runtime từ prototype web đã xóa ngày 15/11/2026; khi làm sân Flutter phải có task implementation riêng. Luật trận online theo [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md), chấm bài theo [docs/39](39-bai-lam-co-trinh-bay-va-cham-cong-bang.md). Prototype cũ có câu mẫu/đối thủ kịch bản, không chấm phần trình bày bằng AI, không xếp hạng.
 
 ## 1. Màn dọc và thứ tự đọc
 
@@ -36,12 +36,12 @@ Trên màn sản phẩm thật, **đề và vùng trình bày lớn hơn trận 
 
 Canvas asset 512², vùng hình cao 400 px; vẽ 240² trên stage 360×380 tạo nhân vật xấp xỉ `400/512×240 = 187,5 px` cao. Hai chân cùng root y=350, cách biên dưới 30 px; root x=92/268 cách nhau 176 px. Bbox action phải không chạm mép canvas; projectile/impact là lớp riêng nên không làm đổi kích thước tướng. Draw dùng `requestAnimationFrame` nhưng giới hạn khoảng 35 fps khi có motion, ~7 fps khi đứng; tải frame bằng cache, không gọi AI/mạng giữa trận. Thiết bị thật phải đo thêm frame time/memory, tránh hứa 60 fps.
 
-Một file map gốc portrait được crop giữ tỉ lệ để vừa stage; không ép 9:16 thành 360:380. Khung rank 7 SVG gồm Thường + 6 tier mỹ thuật; **huy hiệu rank riêng 6 SVG** cho kết quả/hồ sơ; avatar mặc định 6 WebP, có preview ảnh tải lên cục bộ; không dùng emoji hệ thống. Asset có thể bị thay bằng fallback tĩnh khi thiếu ảnh. Các vị trí và nội dung là một phần của [manifest](../demo/assets/game/manifest.json), [cấu trúc](50-cau-truc-du-an-va-asset-game.md) và [hồ sơ](52-ho-so-avatar-huy-hieu-va-lich-su.md).
+Một file map gốc portrait được crop giữ tỉ lệ để vừa stage; không ép 9:16 thành 360:380. Khung rank 7 SVG gồm Thường + 6 tier mỹ thuật; **huy hiệu rank riêng 6 SVG** cho kết quả/hồ sơ; avatar mặc định 6 WebP; không dùng emoji hệ thống. Asset có thể bị thay bằng fallback tĩnh khi thiếu ảnh. Các vị trí và nội dung là một phần của [manifest](../assets/game/manifest.json), [cấu trúc](50-cau-truc-du-an-va-asset-game.md) và [hồ sơ](52-ho-so-avatar-huy-hieu-va-lich-su.md).
 
 ## 5. Điều phải kiểm trên máy trước buổi thi
 
-1. Mở `demo/arena.html` qua máy chủ cục bộ, xem ở 320/360/390 dp; nhân vật nhìn nhau, chân không cắt, đề và nút không tràn khi bàn phím mở.
+1. Sau khi có màn Flutter PvP, xem trên Android thật ở 320/360/390 dp; nhân vật nhìn nhau, chân không cắt, đề và nút không tràn khi bàn phím mở.
 2. Với cả 3 tướng, làm câu đúng, dùng Đánh thường/2 chiêu; xem vệt xuất phát từ người đánh, bay vào bên còn lại, hit FX và số đặt trên người nhận. Khi đổi tướng, FX và tiếng đổi theo.
 3. Gây giáp vỡ cho Hàn Bối Pháp, làm hai bài đúng với Hà Nhân/Tuyệt Đỉnh, kiểm passive bật đúng người và đúng giới hạn.
 4. Xem Choáng, Trúng đòn, Hồi phục, Thắng; kiểm âm bật/tắt, bỏ qua, Reduce Motion; không cộng điểm hạng.
-5. Dùng Android Chrome trên máy thật. Bản web không thay cho APK báo thức; theo [runbook Android](47-demo-android-va-moi-truong-kiem-thu.md) để làm app sau.
+5. Dùng APK Android trên máy thật. Các bước trên là tiêu chí cho task PvP tương lai, chưa có màn Flutter để chạy; theo [runbook Android](47-demo-android-va-moi-truong-kiem-thu.md).

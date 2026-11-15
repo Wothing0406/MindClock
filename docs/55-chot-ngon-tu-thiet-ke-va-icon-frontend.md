@@ -1,6 +1,6 @@
 # Chốt ngôn từ, thiết kế và quy chuẩn icon frontend MindClock
 
-**Trạng thái ngày 14/11/2026:** đặc tả chuẩn hóa ngôn từ, design tokens và icon cho Flutter Android trước khi mở code `FE-S01` (`chưa có app Flutter/APK`). Tài liệu này tổng hợp và chốt một nguồn tra duy nhất từ [docs/05](05-ux-va-noi-dung-tieng-viet.md), [docs/13](13-he-thiet-ke-ui.md), [docs/27](27-quy-chuan-giao-dien-va-figma.md), [docs/30](30-ngon-ngu-va-tai-san-giao-dien.md), [docs/31](31-bao-thuc-thu-thach.md), [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md), [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md), [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md) và [docs/53](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md).
+**Trạng thái:** đặc tả chuẩn hóa ngôn từ, design tokens và icon cho Flutter Android. Repo hiện đã có app source; mức kiểm chứng ở [baseline](56-baseline-san-pham-android.md), chưa xác nhận APK/release. Tài liệu này tổng hợp từ [docs/05](05-ux-va-noi-dung-tieng-viet.md), [docs/13](13-he-thiet-ke-ui.md), [docs/27](27-quy-chuan-giao-dien-va-figma.md), [docs/30](30-ngon-ngu-va-tai-san-giao-dien.md), [docs/31](31-bao-thuc-thu-thach.md), [docs/45](45-khong-gian-hoc-va-che-do-tap-trung.md), [docs/46](46-pvp-ba-nhan-vat-luat-ui-asset-networking.md), [docs/52](52-ho-so-avatar-huy-hieu-va-lich-su.md) và [docs/53](53-quy-dinh-ten-avatar-va-noi-dung-nguoi-dung.md).
 
 ---
 

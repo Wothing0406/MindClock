@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[1] / "demo/assets/game"
+ROOT = Path(__file__).resolve().parents[1] / "assets/game"
 RATE = 22050
 RNG = np.random.default_rng(20261112)
 CHARACTERS = {"ha-nhan": 250, "han-boi-phap": 315, "tuyet-dinh": 390}

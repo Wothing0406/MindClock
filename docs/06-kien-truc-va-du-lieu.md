@@ -1,6 +1,6 @@
 # Kiến trúc và dữ liệu MindClock
 
-**Trạng thái:** thiết kế để coding, chưa có hệ thống chạy. [PRD](04-prd-va-dac-ta-san-pham.md) quyết định hành vi; [API](07-hop-dong-api-va-ai.md) quyết định giao tiếp; [Backend SQL](28-backend-sql.md) quyết định bảng và transaction. Tài liệu này mô tả ranh giới thành phần và quyền ghi, thay cho phương án Firestore cũ.
+**Trạng thái 15/11/2026:** kiến trúc đích; repo đã có Flutter/Kotlin và FastAPI/Alembic nhưng chưa vượt cổng release/Android thật ở [baseline](56-baseline-san-pham-android.md). [PRD](04-prd-va-dac-ta-san-pham.md) quyết định hành vi; [API](07-hop-dong-api-va-ai.md) quyết định giao tiếp; [Backend SQL](28-backend-sql.md) quyết định bảng và transaction. Tài liệu này mô tả ranh giới thành phần và quyền ghi, thay cho phương án Firestore cũ.
 
 ## 1. Thành phần và nguồn sự thật
 

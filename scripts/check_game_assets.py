@@ -1,9 +1,8 @@
-"""Mechanical QA for T009. Human animation review remains required."""
+"""Mechanical QA for reusable game art. Human animation review remains required."""
 from __future__ import annotations
 
 import hashlib
 import json
-import re
 import struct
 import wave
 import xml.etree.ElementTree as ET
@@ -11,7 +10,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[1] / "demo/assets/game"
+ROOT = Path(__file__).resolve().parents[1] / "assets/game"
 manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
 assert manifest["logical_stage_px"] == [360, 380]
 assert manifest["display_actor_size_px"] == [240, 240]
@@ -66,14 +65,4 @@ for item in manifest["avatars"]:
     avatar = Image.open(ROOT / item).convert("RGBA")
     assert avatar.size == (256, 256) and avatar.getpixel((0, 0))[3] == 0
 assert Image.open(ROOT / manifest["map"]).height > Image.open(ROOT / manifest["map"]).width
-html = (ROOT.parents[1] / "arena.html").read_text(encoding="utf-8")
-js = (ROOT.parents[1] / "arena.js").read_text(encoding="utf-8")
-used_ids = set(re.findall(r'\$\("([^"]+)"\)', js))
-dom_ids = set(re.findall(r'id="([^"]+)"', html))
-assert len(dom_ids) == len(re.findall(r'id="([^"]+)"', html)), "Duplicate HTML id"
-assert not (used_ids - dom_ids), f"Missing DOM ids: {used_ids - dom_ids}"
-for url in ("arena-rules.js", "profile-rules.js", "arena-renderer.js", "arena.js"):
-    assert f'src="./{url}"' in html
-for local in re.findall(r'(?:src|href)="(\./assets/game/[^"]+)"', html):
-    assert (ROOT.parents[1] / local).exists(), f"Missing HTML asset: {local}"
 print("PASS 3 characters, 21 clips, 9 projectile FX, 17 cues, map, 6 avatars, 7 frames, 6 badges")
