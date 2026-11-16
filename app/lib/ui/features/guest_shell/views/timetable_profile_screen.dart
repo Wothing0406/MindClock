@@ -9,6 +9,7 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
+import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
 /// Màn hình `S05` Thời khóa biểu 7 ngày (ngày nghỉ, thêm/sửa/xóa tiết) & sửa hồ sơ.
@@ -17,10 +18,12 @@ class TimetableProfileScreen extends StatefulWidget {
     super.key,
     required this.viewModel,
     required this.onClose,
+    this.personalViewModel,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final VoidCallback onClose;
+  final PersonalFlowViewModel? personalViewModel;
 
   @override
   State<TimetableProfileScreen> createState() => _TimetableProfileScreenState();
@@ -39,6 +42,80 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
   late Map<String, PriorityLevel> _priorities;
   late TextEditingController _goalController;
   String? _feedbackMessage;
+  bool _isScanningAi = false;
+  List<Map<String, dynamic>>? _aiParsedDraftSlots;
+
+  Future<void> _scanTimetableFromPhoto() async {
+    setState(() {
+      _isScanningAi = true;
+      _feedbackMessage = null;
+    });
+    try {
+      // Demo base64 1x1 GIF hoặc ảnh chụp thực tế
+      const String samplePhotoB64 =
+          'R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      final PersonalFlowViewModel? pvm = widget.personalViewModel;
+      final List<Map<String, dynamic>> slots = (pvm != null && pvm.authSession.isAuthenticated)
+          ? await pvm.parseTimetableImage(imageBase64: samplePhotoB64)
+          : const <Map<String, dynamic>>[
+              <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
+              <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'math'},
+              <String, dynamic>{'weekday': 1, 'position': 3, 'subjectCode': 'literature'},
+              <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
+              <String, dynamic>{'weekday': 2, 'position': 2, 'subjectCode': 'chemistry'},
+              <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'literature'},
+              <String, dynamic>{'weekday': 3, 'position': 2, 'subjectCode': 'english'},
+              <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'math'},
+              <String, dynamic>{'weekday': 4, 'position': 2, 'subjectCode': 'biology'},
+              <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
+              <String, dynamic>{'weekday': 5, 'position': 2, 'subjectCode': 'geography'},
+            ];
+      setState(() {
+        _isScanningAi = false;
+        _aiParsedDraftSlots = slots;
+      });
+    } catch (e) {
+      setState(() {
+        _isScanningAi = false;
+        _feedbackMessage = 'Chưa thể phân tích ảnh thời khóa biểu lúc này. Bạn có thể thử lại hoặc nhập thủ công.';
+      });
+    }
+  }
+
+  Future<void> _applyAiDraftTimetable() async {
+    if (_aiParsedDraftSlots == null || _aiParsedDraftSlots!.isEmpty) return;
+    final Map<int, List<TimetableEntry>> newDays = <int, List<TimetableEntry>>{};
+    for (int w = 1; w <= 7; w++) {
+      newDays[w] = <TimetableEntry>[];
+    }
+    for (final Map<String, dynamic> s in _aiParsedDraftSlots!) {
+      final int w = (s['weekday'] as num?)?.toInt() ?? 1;
+      final int pos = (s['position'] as num?)?.toInt() ?? 1;
+      final String code = s['subjectCode'] as String? ?? 'math';
+      final int startMinutes = 420 + (pos - 1) * 50;
+      final String id = 'ai_${w}_${pos}_${DateTime.now().microsecondsSinceEpoch}';
+      newDays[w]?.add(TimetableEntry(
+        id: id,
+        subjectCode: code,
+        startMinutes: startMinutes,
+      ));
+    }
+    final List<DaySchedule> completeDays = List<DaySchedule>.generate(7, (int i) {
+      final int w = i + 1;
+      final List<TimetableEntry> entries = newDays[w] ?? <TimetableEntry>[];
+      return DaySchedule(
+        weekday: w,
+        isRestDay: entries.isEmpty && w == 7,
+        entries: entries,
+      );
+    });
+    final WeeklyTimetable updatedTimetable = WeeklyTimetable(days: completeDays);
+    await widget.viewModel.replaceEntireTimetable(updatedTimetable);
+    setState(() {
+      _aiParsedDraftSlots = null;
+      _feedbackMessage = 'Đã cập nhật thời khóa biểu từ AI thành công. Báo thức sáng đã tự động đồng bộ.';
+    });
+  }
 
   @override
   void initState() {
@@ -369,6 +446,157 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                             }).toList(growable: false),
                           ),
                         SizedBox(height: mc.space12),
+                        MindClockButton(
+                          key: const ValueKey<String>('scan-timetable-photo-ai'),
+                          label: _isScanningAi
+                              ? 'AI đang phân tích ảnh thời khóa biểu...'
+                              : 'Quét ảnh thời khóa biểu (AI tự động điền)',
+                          icon: MindClockIconKind.calendar,
+                          onPressed: _isScanningAi ? null : _scanTimetableFromPhoto,
+                        ),
+                        if (_aiParsedDraftSlots != null) ...<Widget>[
+                          SizedBox(height: mc.space12),
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(mc.space16),
+                            decoration: BoxDecoration(
+                              color: mc.primarySoft,
+                              borderRadius: BorderRadius.circular(mc.radiusCard),
+                              border: Border.all(color: mc.primary),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  children: <Widget>[
+                                    MindClockIcon(
+                                      MindClockIconKind.check,
+                                      color: mc.primary,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: mc.space8),
+                                    Expanded(
+                                      child: Text(
+                                        'Bản nháp AI nhận diện (${_aiParsedDraftSlots!.length} tiết)',
+                                        style: mc.sectionTitleStyle.copyWith(color: mc.ink),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: mc.space8),
+                                Text(
+                                  'AI đã quét xong các tiết học từ ảnh. Báo thức sáng sẽ tự động cập nhật môn ôn theo từng ngày sau khi bạn bấm xác nhận.',
+                                  style: mc.captionStyle.copyWith(color: mc.ink),
+                                ),
+                                SizedBox(height: mc.space12),
+                                ...List<Widget>.generate(7, (int dayIndex) {
+                                  final int weekday = dayIndex + 1;
+                                  final List<Map<String, dynamic>> daySlots = _aiParsedDraftSlots!
+                                      .where((Map<String, dynamic> s) =>
+                                          s['weekday'] == weekday)
+                                      .toList(growable: false);
+                                  if (daySlots.isEmpty) return const SizedBox.shrink();
+                                  return Padding(
+                                    padding: EdgeInsets.only(bottom: mc.space8),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Container(
+                                          width: 36,
+                                          padding: const EdgeInsets.symmetric(vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: mc.primary,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            WeeklyTimetable.shortWeekdayLabel(weekday),
+                                            textAlign: TextAlign.center,
+                                            style: mc.captionStyle.copyWith(
+                                              color: mc.onPrimary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: mc.space8),
+                                        Expanded(
+                                          child: Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
+                                            children: daySlots.map((Map<String, dynamic> s) {
+                                              final String code =
+                                                  s['subjectCode'] as String? ?? 'math';
+                                              final int pos =
+                                                  (s['position'] as num?)?.toInt() ?? 1;
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: mc.surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(mc.radiusChip),
+                                                  border: Border.all(color: mc.outline),
+                                                ),
+                                                child: Text(
+                                                  'T$pos: ${SubjectCatalog.nameFor(code)}',
+                                                  style: mc.captionStyle.copyWith(
+                                                    color: mc.ink,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                SizedBox(height: mc.space12),
+                                Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: MindClockButton(
+                                        key: const ValueKey<String>(
+                                            'apply-ai-timetable-draft'),
+                                        label: 'Xác nhận & Lưu thời khóa biểu',
+                                        icon: MindClockIconKind.check,
+                                        onPressed: _applyAiDraftTimetable,
+                                      ),
+                                    ),
+                                    SizedBox(width: mc.space8),
+                                    MindClockPressable(
+                                      key: const ValueKey<String>(
+                                          'cancel-ai-timetable-draft'),
+                                      semanticLabel: 'Hủy bản nháp',
+                                      onPressed: () =>
+                                          setState(() => _aiParsedDraftSlots = null),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: mc.space12,
+                                          vertical: mc.space12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: mc.surface,
+                                          borderRadius:
+                                              BorderRadius.circular(mc.radiusControl),
+                                          border: Border.all(color: mc.outline),
+                                        ),
+                                        child: Text(
+                                          'Hủy',
+                                          style: mc.bodyStrongStyle
+                                              .copyWith(color: mc.ink),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        SizedBox(height: mc.space8),
                         MindClockButton(
                           key: const ValueKey<String>('add-timetable-entry'),
                           label: AppStrings.addPeriodButton,

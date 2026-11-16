@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/app.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
+import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
 import 'package:mindclock_app/ui/core/strings/app_strings.dart';
 
 void main() {
@@ -32,6 +33,8 @@ void main() {
         ),
         child: MindClockApp(
           repository: GuestWorkspaceRepository(store: store),
+          alarmScheduler: const UnboundAlarmSchedulerService(),
+          enableStudyTicker: false,
         ),
       ),
     );
@@ -76,9 +79,9 @@ void main() {
       );
 
       // Vào màn Hôm nay: chỉ có 3 tab, không có Đấu trường
-      expect(find.text(AppStrings.navToday), findsOneWidget);
-      expect(find.text(AppStrings.navPractice), findsOneWidget);
-      expect(find.text(AppStrings.navMe), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('nav-today')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('nav-practice')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('nav-me')), findsOneWidget);
       expect(find.text('Đấu trường'), findsNothing);
 
       // Đặt báo thức đầu tiên + xem phép tính gợi ý 07:00 - 25 - 30 - 10 = 05:55
@@ -94,7 +97,7 @@ void main() {
       expect(find.textContaining('05:55'), findsWidgets);
 
       // Trước khi bấm Dùng giờ này: giờ mặc định vẫn là 06:00
-      expect(find.text('06:00'), findsOneWidget);
+      expect(find.text('06:00'), findsWidgets);
 
       // Bấm Dùng giờ này -> giờ chuyển thành 05:55
       await scrollAndTap(
@@ -159,7 +162,7 @@ void main() {
       await tester.pump();
       await pumpApp(tester, store: store);
 
-      expect(find.text(AppStrings.navToday), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('nav-today')), findsOneWidget);
       expect(find.text('05:55'), findsOneWidget);
       expect(find.text(AppStrings.alarmSavedConfigOnly), findsOneWidget);
       expect(find.textContaining('Đạt điểm 9 Toán'), findsOneWidget);

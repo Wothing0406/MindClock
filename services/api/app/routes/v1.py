@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import base64
 import hashlib
 from typing import Any, Callable
 import uuid
@@ -38,6 +39,14 @@ from app.schemas import (
     StudySessionCreateRequest,
     StudySessionFinishRequest,
     TimetablePutRequest,
+    TimetableParseImageRequest,
+    PvpMatchmakeRequest,
+    PvpRoundSubmitRequest,
+    PvpRoundActionRequest,
+)
+from app.services.pvp_match_service import (
+    PvpMatchService,
+    PvpServiceError,
 )
 from app.services.eduskills_adapter import (
     extract_post_attempt_reveal_vi,
@@ -348,6 +357,53 @@ def create_v1_router(
                 }
                 for s in saved
             ]
+        }
+
+    @router.post('/timetable/parse-image')
+    async def parse_timetable_image(
+        payload: TimetableParseImageRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        settings: Settings = Depends(get_settings),
+    ) -> dict[str, Any]:
+        try:
+            image_bytes = base64.b64decode(payload.image_base64)
+        except Exception:
+            raise _api_error(
+                status.HTTP_400_BAD_REQUEST,
+                'INVALID_IMAGE_BASE64',
+                'Dữ liệu ảnh base64 không hợp lệ.',
+            )
+        if len(image_bytes) < 16:
+            raise _api_error(
+                status.HTTP_400_BAD_REQUEST,
+                'IMAGE_TOO_SMALL',
+                'Kích thước ảnh quá nhỏ, không thể phân tích thời khóa biểu.',
+            )
+        gemini = _get_gemini(settings)
+        try:
+            slots, note_vi = await gemini.parse_timetable_image(
+                image_bytes=image_bytes,
+                mime_type=payload.mime_type,
+            )
+        except GeminiServiceError as err:
+            raise _api_error(
+                err.status_code,
+                err.code,
+                err.message_vi,
+                retryable=err.retryable,
+            )
+        return {
+            'slots': [
+                {
+                    'weekday': s['weekday'],
+                    'position': s['position'],
+                    'subjectCode': s['subject_code'],
+                    'topicId': s.get('topic_id', ''),
+                }
+                for s in slots
+            ],
+            'confidence': 0.95 if slots else 0.0,
+            'noteVi': note_vi or ('Đã trích xuất xong thời khóa biểu từ ảnh.' if slots else 'Không nhận diện được tiết học.'),
         }
 
     @router.get('/alarms')
@@ -1386,5 +1442,101 @@ def create_v1_router(
             'contextSummary': token_res.system_instruction_summary,
             'isMock': token_res.is_mock,
         }
+
+    # --- PVP ĐẤU TRƯỜNG SOLO 1V1 (T038) ---
+
+    @router.post('/pvp/matchmake')
+    def pvp_matchmake(
+        payload: PvpMatchmakeRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = PvpMatchService(db)
+        try:
+            return svc.queue_player(
+                user_id=principal.user.id,
+                raw_champion_id=payload.champion_id,
+                raw_subject_code=payload.subject_code,
+                grade_band=payload.grade_band,
+                curriculum=payload.curriculum,
+            )
+        except PvpServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/pvp/matchmake/cancel')
+    def pvp_matchmake_cancel(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = PvpMatchService(db)
+        return svc.cancel_queue(user_id=principal.user.id)
+
+    @router.get('/pvp/matches/{match_id}')
+    def pvp_get_match(
+        match_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = PvpMatchService(db)
+        try:
+            return svc.get_match_snapshot(match_id=match_id, user_id=principal.user.id)
+        except PvpServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/pvp/matches/{match_id}/events')
+    def pvp_get_match_events(
+        match_id: str,
+        after_sequence: int = Query(default=0, ge=0),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> list[dict[str, Any]]:
+        svc = PvpMatchService(db)
+        try:
+            return svc.get_match_events(
+                match_id=match_id,
+                user_id=principal.user.id,
+                after_sequence=after_sequence,
+            )
+        except PvpServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/pvp/matches/{match_id}/rounds/{round_no}/submit')
+    def pvp_submit_round(
+        match_id: str,
+        round_no: int,
+        payload: PvpRoundSubmitRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = PvpMatchService(db)
+        try:
+            return svc.submit_round_answer(
+                match_id=match_id,
+                round_no=round_no,
+                user_id=principal.user.id,
+                answer_text=payload.answer_text,
+                reasoning_text=payload.reasoning_text,
+            )
+        except PvpServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/pvp/matches/{match_id}/rounds/{round_no}/action')
+    def pvp_choose_action(
+        match_id: str,
+        round_no: int,
+        payload: PvpRoundActionRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = PvpMatchService(db)
+        try:
+            return svc.choose_round_action(
+                match_id=match_id,
+                round_no=round_no,
+                user_id=principal.user.id,
+                raw_action_type=payload.action_type,
+            )
+        except PvpServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
     return router

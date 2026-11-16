@@ -231,12 +231,26 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     } else {
       buffer.write('${AppStrings.normalModeTitle}: ${AppStrings.normalModeDesc}');
     }
-    final String? subjectCode = alarm.subjectCode;
-    if (subjectCode != null && !SubjectCatalog.isApproved(subjectCode)) {
-      buffer.write(
-        ' ${SubjectCatalog.nameFor(subjectCode)}: chưa có câu ôn được duyệt; '
-        'báo thức vẫn được lưu và hoạt động bình thường.',
-      );
+    buffer.write(' · ');
+    switch (alarm.subjectRule) {
+      case AlarmSubjectRule.todaySchedule:
+        buffer.write('Môn ôn: Theo lịch học hôm nay');
+        break;
+      case AlarmSubjectRule.priorityWeak:
+        buffer.write('Môn ôn: Ưu tiên môn yếu / thi');
+        break;
+      case AlarmSubjectRule.fixedSubject:
+        final String name = alarm.subjectCode != null
+            ? SubjectCatalog.nameFor(alarm.subjectCode!)
+            : 'Toán';
+        buffer.write('Môn cố định: $name');
+        if (alarm.subjectCode != null && !SubjectCatalog.isApproved(alarm.subjectCode!)) {
+          buffer.write(' (chưa có câu duyệt)');
+        }
+        break;
+      case AlarmSubjectRule.none:
+        buffer.write('Chỉ báo thức');
+        break;
     }
     return buffer.toString();
   }
@@ -285,7 +299,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
         occurredAtUtcIso: now.toUtc().toIso8601String(),
         createdAtEpochMs: now.millisecondsSinceEpoch,
       );
-      _trackSync(_dispatchOrQueueEmergencyEvent(event));
+      await _dispatchOrQueueEmergencyEvent(event);
     }
     return result;
   }
@@ -451,6 +465,10 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     final WeeklyTimetable nextTimetable = _workspace.timetable.updateDay(
       day.copyWith(entries: nextEntries),
     );
+    await _commitTimetable(nextTimetable);
+  }
+
+  Future<void> replaceEntireTimetable(WeeklyTimetable nextTimetable) async {
     await _commitTimetable(nextTimetable);
   }
 

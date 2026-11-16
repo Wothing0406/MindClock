@@ -604,3 +604,129 @@ class GeminiService:
                 model_version='offline-fallback',
                 is_fallback=True,
             )
+
+    async def parse_timetable_image(
+        self,
+        *,
+        image_bytes: bytes,
+        mime_type: str = 'image/jpeg',
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """Trích xuất thời khóa biểu học sinh THPT từ hình ảnh thời khóa biểu giấy/bản in bằng Gemini Vision."""
+        if self._settings.gemini_mock_mode or not self._settings.has_gemini_key:
+            mock_slots = [
+                {'weekday': 1, 'position': 1, 'subject_code': 'math', 'topic_id': ''},
+                {'weekday': 1, 'position': 2, 'subject_code': 'math', 'topic_id': ''},
+                {'weekday': 1, 'position': 3, 'subject_code': 'literature', 'topic_id': ''},
+                {'weekday': 1, 'position': 4, 'subject_code': 'english', 'topic_id': ''},
+                {'weekday': 2, 'position': 1, 'subject_code': 'physics', 'topic_id': ''},
+                {'weekday': 2, 'position': 2, 'subject_code': 'chemistry', 'topic_id': ''},
+                {'weekday': 2, 'position': 3, 'subject_code': 'biology', 'topic_id': ''},
+                {'weekday': 3, 'position': 1, 'subject_code': 'literature', 'topic_id': ''},
+                {'weekday': 3, 'position': 2, 'subject_code': 'history', 'topic_id': ''},
+                {'weekday': 3, 'position': 3, 'subject_code': 'geography', 'topic_id': ''},
+                {'weekday': 4, 'position': 1, 'subject_code': 'math', 'topic_id': ''},
+                {'weekday': 4, 'position': 2, 'subject_code': 'english', 'topic_id': ''},
+                {'weekday': 5, 'position': 1, 'subject_code': 'physics', 'topic_id': ''},
+                {'weekday': 5, 'position': 2, 'subject_code': 'civics', 'topic_id': ''},
+            ]
+            return mock_slots, 'Chế độ mẫu: Đã nhận diện thời khóa biểu tuần chuẩn THPT.'
+
+        b64_image = base64.b64encode(image_bytes).decode('ascii')
+        system_prompt = (
+            'Bạn là chuyên gia số hóa thời khóa biểu học sinh THPT Việt Nam.\n'
+            'Hãy trích xuất thời khóa biểu từ ảnh và chuẩn hóa thành danh sách tiết học JSON.\n'
+            'QUY TẮC:\n'
+            '1. weekday: số nguyên 1 đến 7 (1: Thứ Hai, 2: Thứ Ba, 3: Thứ Tư, 4: Thứ Năm, 5: Thứ Sáu, 6: Thứ Bảy, 7: Chủ Nhật).\n'
+            '2. position: số nguyên tiết học (1 đến 5 buổi sáng, 6 đến 10 nếu buổi chiều).\n'
+            '3. subject_code: Chuẩn hóa về các mã sau:\n'
+            '   - Toán / Đại / Hình -> "math"\n'
+            '   - Văn / Ngữ văn -> "literature"\n'
+            '   - Anh / Tiếng Anh / Ngoại ngữ -> "english"\n'
+            '   - Lý / Vật lý -> "physics"\n'
+            '   - Hóa / Hóa học -> "chemistry"\n'
+            '   - Sinh / Sinh học -> "biology"\n'
+            '   - Sử / Lịch sử -> "history"\n'
+            '   - Địa / Địa lý -> "geography"\n'
+            '   - Tin / Tin học -> "informatics"\n'
+            '   - GDCD / KTPL -> "civics"\n'
+            '   - Công nghệ -> "technology"\n'
+            '4. Trả về DUY NHẤT 1 JSON object có dạng: {"slots": [{"weekday": int, "position": int, "subject_code": str}], "note_vi": str}.\n'
+            '5. Nếu ảnh mờ không đọc được gì, trả {"slots": [], "note_vi": "Ảnh mờ hoặc không nhận diện được thời khóa biểu, vui lòng chụp lại rõ nét hơn."}.'
+        )
+        body = {
+            'systemInstruction': {'parts': [{'text': system_prompt}]},
+            'contents': [
+                {
+                    'role': 'user',
+                    'parts': [
+                        {'text': 'Trích xuất thời khóa biểu từ ảnh này.'},
+                        {'inlineData': {'mimeType': mime_type, 'data': b64_image}},
+                    ],
+                }
+            ],
+            'generationConfig': {
+                'temperature': 0.1,
+                'maxOutputTokens': 1500,
+                'responseMimeType': 'application/json',
+            },
+        }
+        try:
+            raw, _ = await self._generate_with_fast_fallback(body)
+            parsed = _parse_json_object(_extract_candidate_text(raw) or '{}')
+            raw_slots = parsed.get('slots') or []
+            valid_slots = []
+            valid_subjects = {
+                'math', 'literature', 'english', 'physics', 'chemistry', 'biology',
+                'history', 'geography', 'informatics', 'civics', 'technology',
+            }
+            subject_alias_map = {
+                'toan': 'math',
+                'dai': 'math',
+                'hinh': 'math',
+                'van': 'literature',
+                'ngu_van': 'literature',
+                'anh': 'english',
+                'tieng_anh': 'english',
+                'ly': 'physics',
+                'vat_ly': 'physics',
+                'hoa': 'chemistry',
+                'hoa_hoc': 'chemistry',
+                'sinh': 'biology',
+                'sinh_hoc': 'biology',
+                'su': 'history',
+                'lich_su': 'history',
+                'dia': 'geography',
+                'dia_ly': 'geography',
+                'tin': 'informatics',
+                'tin_hoc': 'informatics',
+                'gdcd': 'civics',
+                'ktpl': 'civics',
+                'cong_nghe': 'technology',
+            }
+            for item in raw_slots:
+                if not isinstance(item, dict):
+                    continue
+                w = item.get('weekday')
+                p = item.get('position')
+                s = str(item.get('subject_code', '')).strip().lower()
+                if not (isinstance(w, int) and 1 <= w <= 7):
+                    continue
+                if not (isinstance(p, int) and 1 <= p <= 10):
+                    continue
+                normalized_s = subject_alias_map.get(s, s)
+                if normalized_s in valid_subjects:
+                    valid_slots.append({
+                        'weekday': w,
+                        'position': p,
+                        'subject_code': normalized_s,
+                        'topic_id': '',
+                    })
+            note = str(parsed.get('note_vi', '')).strip() or None
+            return valid_slots, note
+        except Exception:
+            raise GeminiServiceError(
+                code='OCR_PARSE_FAILED',
+                message_vi='Không thể đọc ảnh thời khóa biểu lúc này. Bạn có thể thử lại với ảnh rõ nét hơn.',
+                status_code=502,
+                retryable=True,
+            )

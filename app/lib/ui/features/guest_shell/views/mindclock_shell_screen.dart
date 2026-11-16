@@ -15,6 +15,7 @@ import '../../study_focus/views/study_space_screen.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'alarm_config_screen.dart';
 import 'alarm_ring_screen.dart';
+import 'auth_screen.dart';
 import 'me_guest_screen.dart';
 import 'onboarding_setup_screen.dart';
 import 'timetable_profile_screen.dart';
@@ -23,6 +24,7 @@ import 'welcome_screen.dart';
 
 enum _GuestFlowStage {
   welcome,
+  auth,
   onboardingSetup,
   mainTabs,
   alarmConfig,
@@ -196,6 +198,17 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return Scaffold(
           backgroundColor: mc.paper,
           body: WelcomeScreen(
+            onStartAuth: () {
+              setState(() => _stage = _GuestFlowStage.auth);
+            },
+            onAlarmOnly: () async {
+              await widget.viewModel.completeOnboardingAsLater(alarmOnly: true);
+              if (!mounted) return;
+              setState(() {
+                _editingAlarm = null;
+                _stage = _GuestFlowStage.alarmConfig;
+              });
+            },
             onStartGuestSetup: () {
               setState(() => _stage = _GuestFlowStage.onboardingSetup);
             },
@@ -207,13 +220,35 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 _selectedTabIndex = 0;
               });
             },
-            onAlarmOnly: () async {
+          ),
+        );
+
+      case _GuestFlowStage.auth:
+        return Scaffold(
+          backgroundColor: mc.paper,
+          body: AuthScreen(
+            personalViewModel: widget.personalViewModel,
+            onAuthenticated: (String? alias) async {
+              if (alias != null && alias.isNotEmpty) {
+                await widget.viewModel.saveStudyProfile(
+                  widget.viewModel.profile.copyWith(alias: alias),
+                );
+              }
+              if (!mounted) return;
+              setState(() {
+                _stage = _GuestFlowStage.onboardingSetup;
+              });
+            },
+            onUseAlarmOnly: () async {
               await widget.viewModel.completeOnboardingAsLater(alarmOnly: true);
               if (!mounted) return;
               setState(() {
                 _editingAlarm = null;
                 _stage = _GuestFlowStage.alarmConfig;
               });
+            },
+            onBackToWelcome: () {
+              setState(() => _stage = _GuestFlowStage.welcome);
             },
           ),
         );
@@ -228,7 +263,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               if (!mounted) return;
               setState(() {
                 _todayBanner =
-                    'Đã lưu thiết lập học tập cục bộ trên máy.';
+                    'Chào mừng ${nextProfile.alias.isNotEmpty ? nextProfile.alias : 'bạn'}! Kế hoạch học tập đã được thiết lập.';
                 _stage = _GuestFlowStage.mainTabs;
                 _selectedTabIndex = 0;
               });
@@ -275,6 +310,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
       case _GuestFlowStage.timetableProfile:
         return TimetableProfileScreen(
           viewModel: widget.viewModel,
+          personalViewModel: widget.personalViewModel,
           onClose: () {
             setState(() => _stage = _GuestFlowStage.mainTabs);
           },

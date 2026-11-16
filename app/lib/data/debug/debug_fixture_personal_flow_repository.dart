@@ -218,4 +218,19 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   }) async {
     return const <SessionHistoryItem>[];
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> parseTimetableImage({
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+  }) async {
+    return const <Map<String, dynamic>>[
+      <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
+      <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'literature'},
+      <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
+      <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'chemistry'},
+      <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'english'},
+      <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
+    ];
+  }
 }

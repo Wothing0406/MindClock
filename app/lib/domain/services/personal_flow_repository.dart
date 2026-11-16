@@ -66,4 +66,9 @@ abstract interface class PersonalFlowRepository {
     int limit = 20,
     String? cursor,
   });
+
+  Future<List<Map<String, dynamic>>> parseTimetableImage({
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+  });
 }

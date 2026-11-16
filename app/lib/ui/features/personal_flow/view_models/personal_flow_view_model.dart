@@ -754,6 +754,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
+  Future<List<Map<String, dynamic>>> parseTimetableImage({
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+  }) {
+    return _repository.parseTimetableImage(
+      imageBase64: imageBase64,
+      mimeType: mimeType,
+    );
+  }
+
   static String _formatYmd(DateTime dt) {
     final String y = dt.year.toString().padLeft(4, '0');
     final String m = dt.month.toString().padLeft(2, '0');

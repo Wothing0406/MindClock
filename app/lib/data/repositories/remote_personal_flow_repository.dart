@@ -190,4 +190,18 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
         .map(SessionHistoryItem.fromJson)
         .toList(growable: false);
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> parseTimetableImage({
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+  }) async {
+    final Map<String, dynamic> res = await _apiClient.parseTimetableImage(
+      imageBase64: imageBase64,
+      mimeType: mimeType,
+    );
+    final List<dynamic> rawSlots =
+        res['slots'] as List<dynamic>? ?? <dynamic>[];
+    return rawSlots.whereType<Map<String, dynamic>>().toList(growable: false);
+  }
 }

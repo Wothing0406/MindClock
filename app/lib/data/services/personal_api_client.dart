@@ -85,6 +85,22 @@ class PersonalApiClient {
     );
   }
 
+  Future<Map<String, dynamic>> parseTimetableImage({
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+    String? idempotencyKey,
+  }) {
+    return postJson(
+      '/v1/timetable/parse-image',
+      idempotencyKey:
+          idempotencyKey ?? 'ocr_${DateTime.now().microsecondsSinceEpoch}',
+      body: <String, dynamic>{
+        'imageBase64': imageBase64,
+        'mimeType': mimeType,
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> putJson(
     String path, {
     required Map<String, dynamic> body,
@@ -173,14 +189,28 @@ class PersonalApiClient {
     Map<String, String>? queryParameters,
     required Future<T> Function(String token) sender,
   }) async {
-    final AuthSession current = await _authGateway.loadSavedSession();
+    AuthSession current = await _authGateway.loadSavedSession();
     if (!current.isAuthenticated) {
-      throw const PersonalApiException(
-        code: 'AUTH_REQUIRED',
-        messageVi:
-            'Cần đăng nhập để đồng bộ hoặc chấm online. Báo thức trên máy vẫn hoạt động bình thường.',
-        httpStatus: 401,
-      );
+      if (current.refreshToken != null && current.refreshToken!.isNotEmpty) {
+        final AuthSession refreshed = await _authGateway.refreshIdToken();
+        if (refreshed.isAuthenticated && refreshed.idToken != null) {
+          current = refreshed;
+        } else {
+          throw const PersonalApiException(
+            code: 'AUTH_REQUIRED',
+            messageVi:
+                'Cần đăng nhập để đồng bộ hoặc chấm online. Báo thức trên máy vẫn hoạt động bình thường.',
+            httpStatus: 401,
+          );
+        }
+      } else {
+        throw const PersonalApiException(
+          code: 'AUTH_REQUIRED',
+          messageVi:
+              'Cần đăng nhập để đồng bộ hoặc chấm online. Báo thức trên máy vẫn hoạt động bình thường.',
+          httpStatus: 401,
+        );
+      }
     }
 
     try {

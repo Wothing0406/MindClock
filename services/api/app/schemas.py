@@ -62,6 +62,24 @@ class TimetablePutRequest(ApiModel):
     slots: list[TimetableSlotIn] = Field(default_factory=list, max_length=56)
 
 
+class TimetableParseImageRequest(ApiModel):
+    image_base64: str = Field(alias='imageBase64', min_length=10)
+    mime_type: str = Field(default='image/jpeg', alias='mimeType')
+
+
+class TimetableParseSlot(ApiModel):
+    weekday: int = Field(ge=1, le=7)
+    position: int = Field(ge=1, le=10)
+    subject_code: str = Field(alias='subjectCode', min_length=1, max_length=32)
+    topic_id: str = Field(default='', alias='topicId', max_length=64)
+
+
+class TimetableParseImageResponse(ApiModel):
+    slots: list[TimetableParseSlot]
+    confidence: float = 1.0
+    note_vi: str | None = Field(default=None, alias='noteVi')
+
+
 class StudySessionCreateRequest(ApiModel):
     client_session_id: str = Field(alias='clientSessionId', min_length=1, max_length=64)
     task_title: str = Field(alias='taskTitle', min_length=1, max_length=160)
@@ -118,3 +136,20 @@ class ConsentUpdateRequest(ApiModel):
     granted: bool
     version: str = '2026-11'
     extra: dict[str, Any] | None = None
+
+
+class PvpMatchmakeRequest(ApiModel):
+    champion_id: str = Field(alias='championId')
+    subject_code: str = Field(alias='subjectCode')
+    grade_band: str = Field(alias='gradeBand')
+    curriculum: str = Field(default='gdpt_2018')
+
+
+class PvpRoundSubmitRequest(ApiModel):
+    answer_text: str = Field(alias='answerText')
+    reasoning_text: str = Field(alias='reasoningText')
+
+
+class PvpRoundActionRequest(ApiModel):
+    action_type: str = Field(default='basic', alias='actionType')
+
