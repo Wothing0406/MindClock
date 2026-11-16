@@ -20,7 +20,7 @@ Ma trận này giúp AI không “làm đẹp một màn” rồi báo xong sả
 | P-14 | Phòng solo/AI/bạn | study timer/API có phần mã; Live room/bạn chưa có production | ROOM-01–06, FOCUS-01–08 | R5/R7 |
 | P-15 | Giao hữu/PvP nộp lý do | `assets/game` art; arena/networking chưa có production | GAME-01–05 | R8 |
 | G-01 | Ranked/rank/coin sau [GDD](../04-game/01-pvp-gdd.md) | Đặc tả/asset nghiên cứu, chưa có ranked production | hai máy/reconnect/ledger/playtest/rights | R8+ |
-| Q-01 | Môi trường/release | `app/`, `services/api/`, CI cần bổ sung | build sạch, PostgreSQL, secret scan, rollback | R0/R9 |
+| Q-01 | Môi trường/release | `app/`, `services/api/`, `.github/workflows/ci.yml` (T029–T031 đã xác nhận `pytest` 19 pass, `flutter analyze`, Kotlin unit test 6/6, `app-debug.apk`, backup/restore rehearsal) | chạy CI `postgres:16-alpine` + `flutter test`, build ký, secret scan, rollback | R0/R9 |
 
 ## Cách dùng trong task
 

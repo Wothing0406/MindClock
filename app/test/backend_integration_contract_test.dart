@@ -13,13 +13,11 @@ import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/data/services/pending_alarm_event_store.dart';
 import 'package:mindclock_app/data/services/personal_api_client.dart';
 import 'package:mindclock_app/domain/models/alarm_config.dart';
-import 'package:mindclock_app/domain/models/auth_session.dart';
 import 'package:mindclock_app/domain/models/personal_flow_models.dart';
 import 'package:mindclock_app/domain/models/study_ai_models.dart';
 import 'package:mindclock_app/domain/models/study_focus_models.dart';
 import 'package:mindclock_app/domain/models/study_profile.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
-import 'package:mindclock_app/domain/services/alarm_sync_gateway.dart';
 import 'package:mindclock_app/domain/services/study_focus_bridge.dart';
 import 'package:mindclock_app/ui/core/theme/mindclock_theme.dart';
 import 'package:mindclock_app/ui/features/guest_shell/view_models/guest_workspace_view_model.dart';
@@ -34,12 +32,24 @@ class _RecordingAlarmScheduler implements AlarmSchedulerService {
   int emergencyStopCallCount = 0;
   final List<String> callLog = <String>[];
 
+  static const AlarmPermissionSnapshot _grantedSnapshot =
+      AlarmPermissionSnapshot(
+    isOsBridgeConnected: true,
+    exactAlarm: OsPermissionState.granted,
+    notifications: OsPermissionState.granted,
+    fullScreenIntent: OsPermissionState.granted,
+  );
+
+  @override
+  int get bridgeVersion => AlarmSchedulerService.currentBridgeVersion;
+
   @override
   bool get isOsBridgeConnected => true;
 
   @override
   Future<AlarmServiceCapabilities> checkCapabilities() async {
     return const AlarmServiceCapabilities(
+      bridgeVersion: AlarmSchedulerService.currentBridgeVersion,
       isOsBridgeConnected: true,
       supportsExactAlarm: true,
       supportsFullScreenIntent: true,
@@ -49,12 +59,7 @@ class _RecordingAlarmScheduler implements AlarmSchedulerService {
 
   @override
   Future<AlarmPermissionSnapshot> getPermissionStatus() async {
-    return const AlarmPermissionSnapshot(
-      isOsBridgeConnected: true,
-      exactAlarm: OsPermissionState.granted,
-      notifications: OsPermissionState.granted,
-      fullScreenIntent: OsPermissionState.granted,
-    );
+    return _grantedSnapshot;
   }
 
   @override
@@ -65,6 +70,7 @@ class _RecordingAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.scheduledReady,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã lập lịch báo thức trên hệ thống.',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -75,6 +81,7 @@ class _RecordingAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.savedConfigOnly,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã hủy báo thức local.',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -88,17 +95,19 @@ class _RecordingAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.scheduledReady,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã hoãn 5 phút.',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
   @override
-  Future<AlarmScheduleResult> triggerEmergencyStop({String? alarmId}) async {
+  Future<AlarmScheduleResult> triggerEmergencyStop(String? alarmId) async {
     emergencyStopCallCount += 1;
     callLog.add('emergency_stop:${alarmId ?? "none"}');
     return const AlarmScheduleResult(
       status: AlarmSyncStatus.savedConfigOnly,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã dừng khẩn cấp chuông và rung.',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -157,7 +166,7 @@ void main() {
   late LoopbackV1ContractServer server;
 
   setUp(() async {
-    previousHttpOverrides = HttpOverrides.global;
+    previousHttpOverrides = HttpOverrides.current;
     HttpOverrides.global = null;
     server = await LoopbackV1ContractServer.start();
   });

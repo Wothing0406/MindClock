@@ -50,6 +50,10 @@ class StudyProfile {
   final String goalLabel;
   final bool alarmOnlyMode;
 
+  List<String> get prioritySubjectCodes => prioritySubjects
+      .map((PrioritySubject item) => item.subjectCode)
+      .toList(growable: false);
+
   bool hasAnyApprovedSubject() {
     for (final String code in selectedSubjectCodes) {
       if (SubjectCatalog.isApproved(code)) return true;

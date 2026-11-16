@@ -433,7 +433,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
             label: 'Chỉnh môn học & Thời khóa biểu',
             icon: MindClockIconKind.edit,
             variant: MindClockButtonVariant.secondary,
-            onPressed: onOpenProfileSetup,
+            onPressed: widget.onOpenProfileSetup,
           ),
         ],
       ),

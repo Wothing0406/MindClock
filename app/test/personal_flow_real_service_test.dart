@@ -46,7 +46,7 @@ void main() {
   late LoopbackV1ContractServer server;
 
   setUp(() async {
-    previousHttpOverrides = HttpOverrides.global;
+    previousHttpOverrides = HttpOverrides.current;
     HttpOverrides.global = null;
     server = await LoopbackV1ContractServer.start();
   });

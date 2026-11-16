@@ -9,12 +9,19 @@ import app.db.models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = Base.metadata
+_DEFAULT_INI_URL = 'sqlite+pysqlite:///./mindclock_local.db'
 
 
 def get_url() -> str:
+    override_url = config.attributes.get('sqlalchemy.url')
+    if isinstance(override_url, str) and override_url.strip():
+        return override_url.strip()
+    ini_url = config.get_main_option('sqlalchemy.url')
+    if ini_url and ini_url.strip() and ini_url.strip() != _DEFAULT_INI_URL:
+        return ini_url.strip()
     return get_settings().database_url
 
 

@@ -813,7 +813,8 @@ class StudyFocusViewModel extends ChangeNotifier {
           clearLastReturnNotice: awaySeconds == 0,
         );
       case StudyFocusLevel.standard:
-        if (awaySeconds > StudyFocusSnapshot.standardReminderThresholdSeconds) {
+        if (awaySeconds >
+            StudyFocusSessionSnapshot.standardReminderThresholdSeconds) {
           final String msg =
               'Bạn vừa ra khỏi MindClock ${formatVietnameseAwayDuration(awaySeconds)}. Tiếp tục việc đang làm?';
           next = next.copyWith(lastReturnNoticeVi: msg);
@@ -827,7 +828,8 @@ class StudyFocusViewModel extends ChangeNotifier {
           }
         }
       case StudyFocusLevel.commitment:
-        if (awaySeconds > StudyFocusSnapshot.commitmentThresholdSeconds) {
+        if (awaySeconds >
+            StudyFocusSessionSnapshot.commitmentThresholdSeconds) {
           next = next.copyWith(
             commitmentFrozenAwayMs: current.commitmentFrozenAwayMs + awayMs,
             plannedEndAtEpochMs: current.plannedEndAtEpochMs + awayMs,
@@ -904,7 +906,8 @@ class StudyFocusViewModel extends ChangeNotifier {
       final int tailAway = math.max(0, nowMs - current.leftAtEpochMs!);
       extraAwayMs += tailAway;
       if (current.level == StudyFocusLevel.commitment &&
-          tailAway > StudyFocusSnapshot.commitmentThresholdSeconds * 1000) {
+          tailAway >
+              StudyFocusSessionSnapshot.commitmentThresholdSeconds * 1000) {
         extraCommitmentAwayMs += tailAway;
       }
     }

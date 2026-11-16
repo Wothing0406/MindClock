@@ -1,0 +1,39 @@
+# Bàn giao nhiệm vụ — T030 (B01b)
+
+- **Trạng thái cuối:** `verifying` (`flutter analyze`, Kotlin `testDebugUnitTest` 6/6 và build `app-debug.apk` đã pass 100%; còn `flutter test` cần chạy trên CI hoặc máy không bị Windows Application Control chặn `flutter_tester.exe`).
+- **Đã làm:**
+  - Sửa dứt điểm toàn bộ 69 lỗi/cảnh báo phân tích tĩnh trong `app/` (`flutter analyze` đạt `No issues found!`).
+  - Khởi tạo đầy đủ hệ thống build Android Gradle (`app/android/settings.gradle.kts`, `app/android/build.gradle.kts`, `app/android/gradle.properties`, `app/android/app/build.gradle.kts`, `app/android/gradle/wrapper/gradle-wrapper.properties`).
+  - Bổ sung `<uses-permission android:name="android.permission.INTERNET" />` vào `app/android/app/src/main/AndroidManifest.xml` và làm sạch cảnh báo biên dịch Kotlin trong `StudyFocusBridgeHandler.kt`.
+  - Chạy pass toàn bộ 6 unit test Kotlin (`AlarmOccurrenceCalculatorTest`: 3/3, `AlarmSoundResolverTest`: 3/3) và đóng gói thành công `app/build/app/outputs/flutter-apk/app-debug.apk` (`155,263,160` bytes).
+  - Thiết lập GitHub Actions workflow `.github/workflows/ci.yml` cho toàn bộ cổng R0 (Docs/Tasks/Assets, FastAPI + PostgreSQL migration, Flutter analyze/test + Kotlin unit + Debug APK).
+- **File/code/docs thay đổi:**
+  - `app/pubspec.yaml`, `app/analysis_options.yaml`
+  - `app/lib/data/debug/debug_fixture_alarm_sync_gateway.dart`
+  - `app/lib/data/debug/debug_fixture_study_ai_gateway.dart`
+  - `app/lib/data/repositories/local_study_focus_repository.dart`
+  - `app/lib/data/services/firebase_auth_gateway.dart`
+  - `app/lib/data/services/method_channel_camera_gateway.dart`
+  - `app/lib/domain/models/study_profile.dart`
+  - `app/lib/domain/services/alarm_scheduler_service.dart`
+  - `app/lib/ui/features/guest_shell/views/alarm_config_screen.dart`
+  - `app/lib/ui/features/personal_flow/views/practice_session_screen.dart`
+  - `app/lib/ui/features/study_focus/view_models/study_focus_view_model.dart`
+  - `app/lib/ui/features/study_focus/views/study_space_screen.dart`
+  - `app/test/backend_integration_contract_test.dart`
+  - `app/test/personal_flow_real_service_test.dart`
+  - `app/test/study_focus_local_test.dart`
+  - `app/android/settings.gradle.kts`, `app/android/build.gradle.kts`, `app/android/gradle.properties`, `app/android/app/build.gradle.kts`, `app/android/gradle/wrapper/gradle-wrapper.properties`
+  - `app/android/app/src/main/AndroidManifest.xml`, `app/android/app/src/main/kotlin/com/mindclock/app/StudyFocusBridgeHandler.kt`
+  - `.github/workflows/ci.yml`, `.gitignore`
+  - `tasks/T030-b01b-flutter-android-build/*`
+- **Test đã chạy:**
+  - `.local-sdk\flutter\bin\flutter.bat analyze` -> `No issues found! (ran in 12.0s)` (16/11/2026).
+  - `gradlew.bat testDebugUnitTest --no-daemon` -> `BUILD SUCCESSFUL`, `AlarmOccurrenceCalculatorTest` (3/3 pass), `AlarmSoundResolverTest` (3/3 pass) (16/11/2026).
+  - `gradlew.bat :app:assembleDebug --no-daemon` -> `BUILD SUCCESSFUL`, tạo `app/build/app/outputs/flutter-apk/app-debug.apk` (`155,263,160` bytes, 16/11/2026).
+- **Test chưa chạy/giới hạn:**
+  - `.local-sdk\flutter\bin\flutter.bat test -r expanded`: bị Windows Application Control policy chặn thực thi `flutter_tester.exe` trên máy local.
+- **Rủi ro còn lại:**
+  - Cần chạy `flutter test` trên GitHub Actions CI hoặc mở quyền thực thi `flutter_tester.exe` trong Windows Security.
+- **Điểm tiếp tục chính xác:** Đẩy nhánh lên GitHub để kích hoạt `.github/workflows/ci.yml` hoặc thêm exclusion WDAC cho `.local-sdk/flutter` rồi chạy lại `flutter test -r expanded`; tiếp tục lát cắt kế tiếp sửa hành vi native alarm (`Mở câu` dừng âm/rung và màn khóa ẩn môn/TKB chi tiết theo `AGENTS.md §3`).
+- **Quyết định phải xin người phụ trách:** Không có.

@@ -333,7 +333,7 @@ class AndroidMethodChannelAlarmSchedulerService
       );
       if (response == null) {
         _bridgeConfirmed = false;
-        return const UnboundAlarmSchedulerService().checkCapabilities();
+        return await const UnboundAlarmSchedulerService().checkCapabilities();
       }
       if (!_isCompatibleVersion(response)) {
         _bridgeConfirmed = false;
@@ -416,7 +416,7 @@ class AndroidMethodChannelAlarmSchedulerService
       );
       if (response == null) {
         _bridgeConfirmed = false;
-        return const UnboundAlarmSchedulerService().scheduleAlarm(alarm);
+        return await const UnboundAlarmSchedulerService().scheduleAlarm(alarm);
       }
       return _parseScheduleResponse(response);
     } on MissingPluginException {
@@ -442,7 +442,7 @@ class AndroidMethodChannelAlarmSchedulerService
       );
       if (response == null) {
         _bridgeConfirmed = false;
-        return const UnboundAlarmSchedulerService().cancelAlarm(alarmId);
+        return await const UnboundAlarmSchedulerService().cancelAlarm(alarmId);
       }
       return _parseScheduleResponse(response);
     } on MissingPluginException {
@@ -481,7 +481,7 @@ class AndroidMethodChannelAlarmSchedulerService
         }),
       );
       if (response == null) {
-        return const UnboundAlarmSchedulerService().snoozeAlarm(
+        return await const UnboundAlarmSchedulerService().snoozeAlarm(
           alarm,
           minutes: minutes,
         );
@@ -511,7 +511,8 @@ class AndroidMethodChannelAlarmSchedulerService
         _versionedArgs(<String, dynamic>{'alarmId': alarmId ?? ''}),
       );
       if (response == null) {
-        return const UnboundAlarmSchedulerService().triggerEmergencyStop(alarmId);
+        return await const UnboundAlarmSchedulerService()
+            .triggerEmergencyStop(alarmId);
       }
       return _parseScheduleResponse(response);
     } on MissingPluginException {

@@ -1,0 +1,23 @@
+# Bàn giao nhiệm vụ — T031 (B01c)
+
+- **Trạng thái cuối:** `verifying` (đã đạt AC-01..AC-04 local; còn chờ chạy `TC-05` trên PostgreSQL server thật khi bật Docker Desktop hoặc trên CI).
+- **Đã làm:**
+  - Thêm revision Alembic `0002_align_question_indexes.py` tạo đủ 5 chỉ mục đơn trên bảng `questions`, giúp `compare_metadata` giữa DB đã migrate và `Base.metadata` đạt `0` chênh lệch.
+  - Cập nhật `services/api/alembic/env.py` nhận `sqlalchemy.url` từ `Config` programmatic và giữ logger của pytest (`disable_existing_loggers=False`).
+  - Xây dựng `services/api/app/db/backup.py` hỗ trợ xuất/nhập bản sao lưu JSON toàn bộ 11 bảng theo đúng thứ tự khóa ngoại kèm kiểm tra SHA-256 trong một DB transaction nguyên tử.
+  - Bổ sung `services/api/tests/test_migrations_and_data_invariants.py` kiểm chứng: upgrade từ DB trống, upgrade từ `0001` có dữ liệu lên `head` (`0002`), downgrade về `0001` và `base`, biên dịch DDL sang dialect `postgresql`, unique constraints (`DATA-02`), atomic rollback khi lỗi giữa chừng (`DATA-04`), và diễn tập backup/restore (`DATA-06`).
+- **File/code/docs thay đổi:**
+  - `services/api/alembic/env.py`
+  - `services/api/alembic/versions/0002_align_question_indexes.py`
+  - `services/api/app/db/backup.py`
+  - `services/api/tests/test_migrations_and_data_invariants.py`
+  - `docs/02-engineering/03-du-lieu-sql.md`
+  - `tasks/T031-b01c-postgresql-migration/*`
+- **Test đã chạy:**
+  - `services/api/.venv/Scripts/python.exe -m pytest -vv --durations=20` -> `19 passed, 1 skipped in 7.65s` (Windows Python 3.11.0rc2, 16/11/2026). Xem `tests.md`.
+- **Test chưa chạy/giới hạn:**
+  - `test_live_postgresql_migration_and_health_when_configured` (`TC-05`) đang `skipped` trên máy local vì Docker Desktop Linux engine chưa chạy (`open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`).
+- **Rủi ro còn lại:**
+  - Theo quy tắc `AGENTS.md §3`, SQLite không thay thế PostgreSQL cho bằng chứng release; cần bật Docker Desktop hoặc chạy workflow `.github/workflows/ci.yml` để chốt `done` cho `T031`.
+- **Điểm tiếp tục chính xác:** Khởi động Docker Desktop rồi chạy `docker compose up -d postgres` trong `services/api/` và chạy `POSTGRES_TEST_URL=postgresql+psycopg://mindclock:mindclock_local_dev@127.0.0.1:5432/mindclock .\.venv\Scripts\python.exe -m pytest -vv tests/test_migrations_and_data_invariants.py`.
+- **Quyết định phải xin người phụ trách:** Không có.

@@ -28,5 +28,7 @@ services/api/.venv/
 /.local-sdk/
 app/.dart_tool/
 app/.flutter-plugins-dependencies
+app/build/
+app/android/.gradle/
 app/android/local.properties
 app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java

@@ -42,9 +42,9 @@ class StudyFocusBridgeHandler(private val activity: Activity) {
             "getNotificationPermissionStatus" -> result.success(getNotificationPermissionStatus())
             "requestNotificationPermission" -> handleRequestNotificationPermission(result)
             "showSingleStudyReminder" -> {
-                val titleVi = (args?.get("titleVi") as? String)?.trim().takeUnless { it.isNullOrEmpty() }
+                val titleVi = (args["titleVi"] as? String)?.trim().takeUnless { it.isNullOrEmpty() }
                     ?: "Phiên học đang mở"
-                val bodyVi = (args?.get("bodyVi") as? String)?.trim().takeUnless { it.isNullOrEmpty() }
+                val bodyVi = (args["bodyVi"] as? String)?.trim().takeUnless { it.isNullOrEmpty() }
                     ?: "Quay lại việc học đang làm trên MindClock."
                 showSingleStudyReminder(titleVi, bodyVi)
                 result.success(hashMapOf("shown" to true))

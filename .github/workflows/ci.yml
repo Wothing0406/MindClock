@@ -1,0 +1,102 @@
+name: MindClock CI (R0 Gates)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docs-and-tasks:
+    name: Docs, Task Records & Asset Provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow for asset QA
+        run: pip install Pillow
+      - name: Check Markdown links
+        run: python scripts/check_docs_links.py
+      - name: Check task handoff records
+        run: python scripts/check_task_records.py
+      - name: Check game research assets
+        run: python scripts/check_game_assets.py
+
+  backend-api-postgres:
+    name: FastAPI /v1 & PostgreSQL Alembic Migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: mindclock_test
+          POSTGRES_USER: mindclock
+          POSTGRES_PASSWORD: mindclock_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U mindclock -d mindclock_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    defaults:
+      run:
+        working-directory: services/api
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://mindclock:mindclock_ci_password@127.0.0.1:5432/mindclock_test
+      GEMINI_MOCK_MODE: 'true'
+      LOCAL_DEV_BEARER_UID_FALLBACK: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: services/api/requirements.txt
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+      - name: Verify Alembic upgrade -> downgrade -> upgrade on PostgreSQL
+        run: |
+          python -m alembic upgrade head
+          python -m alembic downgrade base
+          python -m alembic upgrade head
+      - name: Run pytest suite
+        run: python -m pytest -vv --durations=20
+
+  flutter-android:
+    name: Flutter Analyze, Widget Tests, Kotlin Unit & Debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Run Flutter static analysis
+        run: flutter analyze
+      - name: Run Flutter unit, widget and contract tests
+        run: flutter test -r expanded
+      - name: Generate Android Gradle config
+        run: flutter build apk --config-only
+      - name: Run Android Kotlin unit tests
+        working-directory: app/android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindclock-debug-apk
+          path: app/build/app/outputs/flutter-apk/app-debug.apk

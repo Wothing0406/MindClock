@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/models/study_focus_models.dart';
-import 'local_key_value_store.dart';
+import '../services/local_key_value_store.dart';
 
 /// Kho lưu trữ cục bộ Không gian học tách biệt hoàn toàn theo từng `ownerScopeKey`.
 ///

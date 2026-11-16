@@ -1,9 +1,12 @@
+import '../../domain/models/personal_flow_models.dart';
 import '../../domain/models/study_ai_models.dart';
 import '../../domain/models/study_focus_models.dart';
 import '../../domain/services/study_ai_gateway.dart';
 
 /// Fixture mẫu chỉ dùng ở debug khi `MINDCLOCK_DEBUG_FIXTURE=true`.
 class DebugFixtureStudyAiGateway implements StudyAiGateway {
+  const DebugFixtureStudyAiGateway();
+
   @override
   bool get isDebugFixture => true;
 

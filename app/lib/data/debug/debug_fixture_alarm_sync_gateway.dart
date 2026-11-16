@@ -3,6 +3,8 @@ import '../../domain/services/alarm_sync_gateway.dart';
 
 /// Fixture debug mô phỏng `/v1/alarms` khi bật `MINDCLOCK_DEBUG_FIXTURE=true` ở chế độ debug.
 class DebugFixtureAlarmSyncGateway implements AlarmSyncGateway {
+  const DebugFixtureAlarmSyncGateway();
+
   @override
   bool get isDebugFixture => true;
 

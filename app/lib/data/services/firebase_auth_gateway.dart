@@ -91,6 +91,13 @@ class FirebaseAuthGateway implements AuthSessionGateway {
     );
   }
 
+  Future<AuthSession> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) {
+    return signInWithEmail(email: email, password: password);
+  }
+
   @override
   Future<AuthSession> signUpWithEmail({
     required String email,
@@ -183,7 +190,7 @@ class FirebaseAuthGateway implements AuthSessionGateway {
       final String? newRefreshToken = response['refresh_token'] as String?;
       final String? uid = response['user_id'] as String? ?? current.uid;
       if (newIdToken == null || newIdToken.isEmpty || uid == null) {
-        return markSessionExpired();
+        return await markSessionExpired();
       }
       final AuthSession updated = current.copyWith(
         status: AuthStatus.authenticated,

@@ -85,12 +85,24 @@ class _StubAlarmScheduler implements AlarmSchedulerService {
   AlarmRingPayload? pendingRing;
   bool emergencyStopCalled = false;
 
+  static const AlarmPermissionSnapshot _grantedSnapshot =
+      AlarmPermissionSnapshot(
+    isOsBridgeConnected: true,
+    exactAlarm: OsPermissionState.granted,
+    notifications: OsPermissionState.granted,
+    fullScreenIntent: OsPermissionState.granted,
+  );
+
+  @override
+  int get bridgeVersion => AlarmSchedulerService.currentBridgeVersion;
+
   @override
   bool get isOsBridgeConnected => true;
 
   @override
   Future<AlarmServiceCapabilities> checkCapabilities() async {
     return const AlarmServiceCapabilities(
+      bridgeVersion: AlarmSchedulerService.currentBridgeVersion,
       isOsBridgeConnected: true,
       supportsExactAlarm: true,
       supportsFullScreenIntent: true,
@@ -100,12 +112,7 @@ class _StubAlarmScheduler implements AlarmSchedulerService {
 
   @override
   Future<AlarmPermissionSnapshot> getPermissionStatus() async {
-    return const AlarmPermissionSnapshot(
-      isOsBridgeConnected: true,
-      exactAlarm: OsPermissionState.granted,
-      notifications: OsPermissionState.granted,
-      fullScreenIntent: OsPermissionState.granted,
-    );
+    return _grantedSnapshot;
   }
 
   @override
@@ -114,6 +121,7 @@ class _StubAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.scheduledReady,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã sẵn sàng',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -123,6 +131,7 @@ class _StubAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.savedConfigOnly,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã hủy',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -135,17 +144,19 @@ class _StubAlarmScheduler implements AlarmSchedulerService {
       status: AlarmSyncStatus.scheduledReady,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã hoãn',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
   @override
-  Future<AlarmScheduleResult> triggerEmergencyStop({String? alarmId}) async {
+  Future<AlarmScheduleResult> triggerEmergencyStop(String? alarmId) async {
     emergencyStopCalled = true;
     pendingRing = null;
     return const AlarmScheduleResult(
       status: AlarmSyncStatus.savedConfigOnly,
       errorCode: AlarmBridgeErrorCode.ok,
       messageVi: 'Đã dừng khẩn cấp',
+      permissionSnapshot: _grantedSnapshot,
     );
   }
 
@@ -398,7 +409,7 @@ void main() {
         );
         await vm.initialize(ownerScopeKey: 'user:alice');
         await vm.startSession(overrideTaskTitle: 'Ôn Hình học');
-        final String sessionId = vm.activeSnapshot!.sessionId;
+        expect(vm.activeSnapshot!.sessionId, isNotEmpty);
 
         clock.advance(const Duration(minutes: 25));
         vm.checkClockTick();

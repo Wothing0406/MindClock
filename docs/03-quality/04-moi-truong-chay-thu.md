@@ -26,7 +26,7 @@ flutter run -d <device-id> --dart-define-from-file=.env
 
 `app/.env` gitignored. `MINDCLOCK_API_BASE_URL` phải là URL máy Android có thể tới: emulator thường dùng `10.0.2.2`; thiết bị thật có thể dùng `adb reverse` rồi `127.0.0.1` hoặc IP LAN; HTTPS bắt buộc khi staging/production. `MINDCLOCK_DEBUG_FIXTURE=false` khi kiểm tích hợp thật. Chỉ đặt Firebase Web API key cần cho Auth trong client; **Gemini key chỉ backend**. Nếu chưa có Firebase test project, ghi phần Auth chưa kiểm và chỉ dùng guest/local.
 
-Mỗi lần đổi native alarm/Manifest, chạy AD01–AD07 trên Android thật; `flutter test` không thay thế. APK debug chỉ dùng nội bộ, không gọi release ký. Ghi build hash, model/API level/OEM/quyền và giờ chuông thực tế.
+Mỗi lần đổi native alarm/Manifest, chạy AD01–AD07 trên Android thật; `flutter test` không thay thế. APK debug chỉ dùng nội bộ, không gọi release ký. Ghi build hash, model/API level/OEM/quyền và giờ chuông thực tế. Trong T030 (B01b), `flutter analyze` đạt `No issues found!`, `gradlew.bat testDebugUnitTest` đạt 6/6 ca Kotlin và `:app:assembleDebug` xuất thành công `app/build/app/outputs/flutter-apk/app-debug.apk` với `JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`; riêng `flutter_tester.exe` bị Windows Application Control chặn trên máy host nên chạy qua `.github/workflows/ci.yml`.
 
 ## 3. FastAPI local và PostgreSQL
 
