@@ -77,6 +77,8 @@ class AppStrings {
   static const String ringOpenQuestion = 'Mở câu hỏi';
   static const String ringSnooze5m = 'Hoãn 5 phút';
   static const String ringEmergencyStop = 'Dừng khẩn cấp';
+  static const String ringSoundStoppedReviewNotice =
+      'Đã dừng âm báo · Hoàn thành câu ôn để nhận thưởng.';
   static const String ringChallengeHint =
       'Chế độ thử thách không hỗ trợ Hoãn. Dừng khẩn cấp luôn hoạt động 1 chạm.';
   static const String ringNormalHint =

@@ -130,7 +130,13 @@ data class RingPayloadRecord(
     val label: String,
     val subjectCode: String?,
     val triggeredAtEpochMillis: Long,
+    val ringState: String = STATE_RINGING,
+    val showLockScreenDetails: Boolean = false,
 ) {
+    fun markSoundStoppedForReview(): RingPayloadRecord = copy(
+        ringState = STATE_SOUND_STOPPED_REVIEW_ACTIVE,
+    )
+
     fun toBridgeMap(): Map<String, Any?> = hashMapOf(
         "alarmId" to alarmId,
         "formattedTime" to formattedTime,
@@ -138,6 +144,8 @@ data class RingPayloadRecord(
         "label" to label,
         "subjectCode" to subjectCode,
         "triggeredAtEpochMillis" to triggeredAtEpochMillis,
+        "ringState" to ringState,
+        "showLockScreenDetails" to showLockScreenDetails,
     )
 
     fun toJson(): JSONObject = JSONObject().apply {
@@ -147,13 +155,24 @@ data class RingPayloadRecord(
         put("label", label)
         put("subjectCode", subjectCode ?: JSONObject.NULL)
         put("triggeredAtEpochMillis", triggeredAtEpochMillis)
+        put("ringState", ringState)
+        put("showLockScreenDetails", showLockScreenDetails)
     }
 
     companion object {
+        const val STATE_RINGING = "ringing"
+        const val STATE_SOUND_STOPPED_REVIEW_ACTIVE = "sound_stopped_review_active"
+
         fun fromJson(json: JSONObject): RingPayloadRecord? {
             val alarmId = json.optString("alarmId", "").trim()
             if (alarmId.isEmpty()) return null
             val rawSubject = if (json.isNull("subjectCode")) null else json.optString("subjectCode", "")
+            val rawState = json.optString("ringState", STATE_RINGING)
+            val normalizedState = if (rawState == STATE_SOUND_STOPPED_REVIEW_ACTIVE) {
+                STATE_SOUND_STOPPED_REVIEW_ACTIVE
+            } else {
+                STATE_RINGING
+            }
             return RingPayloadRecord(
                 alarmId = alarmId,
                 formattedTime = json.optString("formattedTime", "06:00"),
@@ -165,7 +184,36 @@ data class RingPayloadRecord(
                 label = json.optString("label", "Báo thức buổi sáng"),
                 subjectCode = rawSubject?.takeIf { it.isNotBlank() },
                 triggeredAtEpochMillis = json.optLong("triggeredAtEpochMillis", 0L),
+                ringState = normalizedState,
+                showLockScreenDetails = json.optBoolean("showLockScreenDetails", false),
             )
+        }
+    }
+}
+
+/**
+ * Định dạng hiển thị riêng tư mặc định trên màn hình khóa (`SLEEP-03`, `AGENTS.md §3`).
+ * Khi màn khóa chưa mở và user chưa chọn hiện chi tiết, chỉ hiển thị nội dung trung tính
+ * ("Báo thức <HH:mm>" / "Mở để xem kế hoạch hôm nay"), không lộ môn học hay TKB.
+ */
+object LockScreenPrivacyFormatter {
+    const val NEUTRAL_LOCKSCREEN_SUBTITLE_VI = "Mở để xem kế hoạch hôm nay"
+
+    fun formatPublicNotificationTitle(formattedTime: String): String {
+        val cleanTime = formattedTime.trim().ifEmpty { "06:00" }
+        return "Báo thức $cleanTime"
+    }
+
+    fun formatPublicNotificationText(): String = NEUTRAL_LOCKSCREEN_SUBTITLE_VI
+
+    fun formatRingLabel(payload: RingPayloadRecord, isKeyguardLocked: Boolean): String {
+        if (isKeyguardLocked && !payload.showLockScreenDetails) {
+            return NEUTRAL_LOCKSCREEN_SUBTITLE_VI
+        }
+        return if (!payload.subjectCode.isNullOrBlank()) {
+            "${payload.label} • ${payload.subjectCode}"
+        } else {
+            payload.label
         }
     }
 }

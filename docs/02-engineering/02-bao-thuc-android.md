@@ -50,4 +50,4 @@ AD01 foreground/khóa màn; AD02 app bị swipe/process chết; AD03 offline/tok
 
 ## 5. Ranh giới code và release
 
-Flutter: `AlarmSchedulerService` + ViewModel/UI; Kotlin: Scheduler/Receiver/Service/Activity và manifest/notification; test bridge/occurrence/âm/tắt. Không thêm quyền chỉ để “khắt khe” hơn. Mỗi thay đổi Manifest/OS alarm cần chạy lại AD01–AD07 trên máy thật. Cấu hình release không được xem API là điều kiện để báo thức reo. iOS có giới hạn khác ở [lộ trình tương lai](../05-future/01-ios.md).
+Flutter: `AlarmSchedulerService` + ViewModel/UI; Kotlin: Scheduler/Receiver/Service/Activity và manifest/notification; test bridge/occurrence/âm/tắt (`AlarmOccurrenceCalculatorTest`, `AlarmSoundResolverTest`, `AlarmRingPrivacyAndStateTest` trong `app/android/app/src/test/kotlin/com/mindclock/app/`). Không thêm quyền chỉ để “khắt khe” hơn. Mỗi thay đổi Manifest/OS alarm cần chạy lại AD01–AD07 trên máy thật. Cấu hình release không được xem API là điều kiện để báo thức reo. iOS có giới hạn khác ở [lộ trình tương lai](../05-future/01-ios.md).

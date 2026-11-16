@@ -37,8 +37,10 @@ class AlarmRingService : Service() {
                 handleEmergencyStop(alarmId)
                 return START_NOT_STICKY
             }
+            ACTION_STOP_SOUND_FOR_QUESTION,
             ACTION_LOWER_VOLUME -> {
-                mediaPlayer?.setVolume(0.25f, 0.25f)
+                val alarmId = intent.getStringExtra(EXTRA_ALARM_ID) ?: currentAlarmId
+                handleStopSoundForQuestion(alarmId)
                 return START_NOT_STICKY
             }
             ACTION_START_RING -> {
@@ -123,6 +125,25 @@ class AlarmRingService : Service() {
         )
         stopPlaybackAndForeground()
         sendBroadcast(Intent(ACTION_RING_STATE_CHANGED).setPackage(packageName))
+        stopSelf()
+    }
+
+    /**
+     * Khi người dùng bấm `Mở câu`: dừng ngay âm thanh và rung cục bộ (`sound_stopped_review_active`)
+     * trước khi phát cảnh/mở câu trong Flutter; lượt học chưa hoàn thành nên chưa cấp thưởng.
+     */
+    private fun handleStopSoundForQuestion(alarmId: String?) {
+        val store = NativeAlarmStore(this)
+        val active = store.getActiveRingPayload()
+        if (active != null) {
+            store.setActiveRingPayload(active.markSoundStoppedForReview())
+        }
+        store.recordLocalAlarmEvent(
+            alarmId = alarmId ?: active?.alarmId ?: "unknown",
+            eventType = "sound_stopped_review_active",
+            timestampMillis = System.currentTimeMillis(),
+        )
+        stopPlaybackAndForeground()
         stopSelf()
     }
 
@@ -258,6 +279,7 @@ class AlarmRingService : Service() {
         const val NOTIFICATION_ID = 4109
 
         const val ACTION_START_RING = "com.mindclock.app.action.START_RING"
+        const val ACTION_STOP_SOUND_FOR_QUESTION = "com.mindclock.app.action.STOP_SOUND_FOR_QUESTION"
         const val ACTION_LOWER_VOLUME = "com.mindclock.app.action.LOWER_VOLUME"
         const val ACTION_EMERGENCY_STOP = "com.mindclock.app.action.EMERGENCY_STOP"
         const val ACTION_RING_STATE_CHANGED = "com.mindclock.app.action.RING_STATE_CHANGED"
@@ -287,7 +309,7 @@ class AlarmRingService : Service() {
                 description = context.getString(R.string.alarm_channel_desc)
                 setSound(null, null)
                 enableVibration(false)
-                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             }
             manager.createNotificationChannel(channel)
         }
@@ -332,19 +354,38 @@ class AlarmRingService : Service() {
                 "Chế độ thường"
             }
 
-            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Notification.Builder(context, CHANNEL_ID)
-            } else {
-                @Suppress("DEPRECATION")
-                Notification.Builder(context)
+            fun newBuilder(): Notification.Builder {
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Notification.Builder(context, CHANNEL_ID)
+                } else {
+                    @Suppress("DEPRECATION")
+                    Notification.Builder(context)
+                }
             }
 
-            return builder
+            // Bản hiển thị trung tính trên màn hình khóa (SLEEP-03: không lộ môn học/TKB)
+            val publicNotification = newBuilder()
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle(LockScreenPrivacyFormatter.formatPublicNotificationTitle(payload.formattedTime))
+                .setContentText(LockScreenPrivacyFormatter.formatPublicNotificationText())
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .addAction(
+                    Notification.Action.Builder(
+                        null,
+                        context.getString(R.string.alarm_emergency_stop),
+                        stopPendingIntent,
+                    ).build()
+                )
+                .build()
+
+            return newBuilder()
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle("${payload.formattedTime} • ${payload.label}")
                 .setContentText(modeLabel)
                 .setCategory(Notification.CATEGORY_ALARM)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setVisibility(Notification.VISIBILITY_PRIVATE)
+                .setPublicVersion(publicNotification)
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setFullScreenIntent(fullScreenPendingIntent, true)

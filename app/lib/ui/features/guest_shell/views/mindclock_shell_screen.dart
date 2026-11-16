@@ -379,7 +379,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: <Widget>[
                         Text(
-                          'Báo thức đang phát nhỏ tiếng.',
+                          AppStrings.ringSoundStoppedReviewNotice,
                           style: mc.captionStyle.copyWith(color: mc.nightText),
                         ),
                         MindClockButton(

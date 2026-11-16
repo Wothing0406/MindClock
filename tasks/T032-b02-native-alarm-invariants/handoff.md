@@ -1,0 +1,26 @@
+# Bàn giao nhiệm vụ — T032 (B02)
+
+- **Trạng thái cuối:** `verifying` (đã đạt AC-01..AC-04 và 9/9 Kotlin unit test; chờ kiểm chứng vật lý `AD01–AD07` + `SLEEP-03` trên 2 thiết bị Android thật).
+- **Đã làm:**
+  - Sửa `AlarmRingService.kt` và `AlarmRingActivity.kt` để khi bấm `Mở câu` (`ACTION_STOP_SOUND_FOR_QUESTION`), âm thanh và rung dừng ngay cục bộ (`stopPlaybackAndForeground()`), cập nhật trạng thái phiên chuông sang `sound_stopped_review_active` trước khi mở `MainActivity` / cảnh mở màn.
+  - Bổ sung `LockScreenPrivacyFormatter` trong `NativeAlarmModels.kt`: khi màn khóa chưa mở (`isKeyguardLocked == true`) và chưa bật `showLockScreenDetails`, `AlarmRingActivity` chỉ hiện `"Mở để xem kế hoạch hôm nay"`; đồng thời `AlarmRingService` chuyển kênh và notification sang `Notification.VISIBILITY_PRIVATE` kèm `publicVersion` trung tính (`"Báo thức <HH:mm>"` / `"Mở để xem kế hoạch hôm nay"`).
+  - Đồng bộ thông báo trạng thái trên `MindClockShellScreen` (`AppStrings.ringSoundStoppedReviewNotice`).
+  - Viết `AlarmRingPrivacyAndStateTest.kt` kiểm chứng 3 kịch bản riêng tư màn khóa và trạng thái `sound_stopped_review_active`.
+- **File/code/docs thay đổi:**
+  - `app/android/app/src/main/kotlin/com/mindclock/app/NativeAlarmModels.kt`
+  - `app/android/app/src/main/kotlin/com/mindclock/app/AlarmRingService.kt`
+  - `app/android/app/src/main/kotlin/com/mindclock/app/AlarmRingActivity.kt`
+  - `app/android/app/src/test/kotlin/com/mindclock/app/AlarmRingPrivacyAndStateTest.kt`
+  - `app/lib/ui/core/strings/app_strings.dart`
+  - `app/lib/ui/features/guest_shell/views/mindclock_shell_screen.dart`
+  - `docs/02-engineering/02-bao-thuc-android.md`
+  - `tasks/T032-b02-native-alarm-invariants/*`
+- **Test đã chạy:**
+  - `.local-sdk\flutter\bin\flutter.bat analyze` -> `No issues found!`.
+  - `gradlew.bat :app:testDebugUnitTest --no-daemon` -> `BUILD SUCCESSFUL` (9/9 ca Kotlin unit test pass: `AlarmOccurrenceCalculatorTest` 3/3, `AlarmSoundResolverTest` 3/3, `AlarmRingPrivacyAndStateTest` 3/3).
+- **Test chưa chạy/giới hạn:**
+  - `TC-05` (`AD01–AD07`, `SLEEP-03` trên ít nhất 2 máy Android thật): hiện tại `adb devices` chưa có máy thật kết nối.
+- **Rủi ro còn lại:**
+  - Hành vi OEM tiết kiệm pin và hiển thị `fullScreenIntent` trên màn khóa Android 14/15 cần xác nhận trên thiết bị vật lý thật.
+- **Điểm tiếp tục chính xác:** Cắm 2 máy Android thật qua ADB, cài `app/build/app/outputs/flutter-apk/app-debug.apk` và chạy ma trận `AD01–AD07` + `SLEEP-03`; song song mở lát cắt tiếp theo cho `B03/B05` (hợp đồng `MorningCard` + cổng `Bỏ lượt` ở lần sai thứ 5 + adapter `EduSkills-VN`).
+- **Quyết định phải xin người phụ trách:** Cần 2 máy Android vật lý để hoàn tất nghiệm thu `AD01–AD07`.

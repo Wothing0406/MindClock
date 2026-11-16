@@ -121,13 +121,11 @@ class AlarmRingActivity : Activity() {
         val btnEmergencyStop = findViewById<Button>(R.id.btnEmergencyStop)
 
         val isChallenge = payload.mode == NativeAlarmRecord.MODE_CHALLENGE
+        val isKeyguardLocked =
+            (getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager)?.isKeyguardLocked == true
         txtModeBadge.text = if (isChallenge) "Chế độ thử thách" else "Chế độ thường"
         txtAlarmTime.text = payload.formattedTime
-        txtAlarmLabel.text = if (!payload.subjectCode.isNullOrBlank()) {
-            "${payload.label} • ${payload.subjectCode}"
-        } else {
-            payload.label
-        }
+        txtAlarmLabel.text = LockScreenPrivacyFormatter.formatRingLabel(payload, isKeyguardLocked)
         txtAlarmHint.text = getString(
             if (isChallenge) R.string.alarm_challenge_note else R.string.alarm_normal_note
         )
@@ -152,18 +150,21 @@ class AlarmRingActivity : Activity() {
 
     private fun openQuestionInMainApp() {
         val store = NativeAlarmStore(this)
-        store.setPendingRingLaunch(payload)
+        val stoppedPayload = payload.markSoundStoppedForReview()
+        store.setPendingRingLaunch(stoppedPayload)
+        store.setActiveRingPayload(stoppedPayload)
         store.recordLocalAlarmEvent(
             alarmId = payload.alarmId,
             eventType = "open_question",
             timestampMillis = System.currentTimeMillis(),
         )
 
-        // Hạ âm lượng chuông khi chuyển sang màn câu hỏi (vẫn giữ nút Dừng khẩn cấp)
-        val lowerVolumeIntent = Intent(this, AlarmRingService::class.java).apply {
-            action = AlarmRingService.ACTION_LOWER_VOLUME
+        // Dừng ngay âm thanh và rung cục bộ trước khi mở cảnh/câu trong Flutter (AGENTS.md §3)
+        val stopSoundIntent = Intent(this, AlarmRingService::class.java).apply {
+            action = AlarmRingService.ACTION_STOP_SOUND_FOR_QUESTION
+            putExtra(AlarmRingService.EXTRA_ALARM_ID, payload.alarmId)
         }
-        startService(lowerVolumeIntent)
+        startService(stopSoundIntent)
 
         val launchMain = {
             val mainIntent = Intent(this, MainActivity::class.java).apply {
