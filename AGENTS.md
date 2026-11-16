@@ -31,6 +31,7 @@ Yêu cầu người dùng hiện tại → quy tắc an toàn này → docs cano
 2. Làm một lát cắt dọc theo [roadmap](docs/00-start/02-lo-trinh.md), ưu tiên R0/R1. Không gộp alarm, UI, AI, PvP trong một task. Giữ hợp đồng API/state, sửa docs + contract tests khi đổi. Test theo rủi ro: OS/permission, A/B, uncertain, XP trùng, migration, offline.
 3. Sau mỗi lát: cập nhật plan, chạy test phù hợp, ghi kết quả thực trong `tests.md`. Lỗi lặp: tái hiện → nguyên nhân → sửa → test lại ở `worklog.md`; sau ba vòng không tiến bộ, ghi giả thuyết và điểm cần quyết định, tiếp tục phần độc lập.
 4. Trước bàn giao: rà diff/secret/dữ liệu/asset, chạy `python scripts/check_docs_links.py`, `python scripts/check_task_records.py` và test code liên quan. Điền `handoff.md` với trạng thái, thay đổi, test/ngày/môi trường, rủi ro, **điểm tiếp tục chính xác**. Không gắn `done` nếu AC/test bắt buộc chưa đạt. [Mẫu](docs/00-start/03-quy-trinh-vibe-code.md).
+5. **Sau mỗi task đạt AC/test:** stage đúng file của task (không dùng `git add .` khi có WIP khác), rà staged diff/secret/asset, đồng bộ remote, commit có ID task rồi push nhánh hiện hành lên GitHub; xác minh commit xuất hiện trên remote và ghi SHA/nhánh vào `handoff.md`. Không force push, không đưa file WIP/secret/ảnh học sinh vào commit. Push lỗi hoặc remote xung đột: giữ `verifying`, ghi lỗi và điểm tiếp tục, không báo đã xong hoặc tự ghi đè lịch sử. [Quy trình](docs/00-start/03-quy-trinh-vibe-code.md).
 
 ## 5. Skill và ranh giới nền tảng
 

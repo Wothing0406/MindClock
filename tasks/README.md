@@ -8,7 +8,7 @@ Mỗi yêu cầu có thay đổi code, cấu hình chạy, dữ liệu, API ho�
 2. Chọn ID kế tiếp, sao chép `_template/` thành `TNNN-ten-ngan/`. Điền `README.md`, `spec.md`, `plan.md`, `tests.md` **trước khi sửa code**. Nếu là lỗi khẩn cấp, ghi tối thiểu hành vi mong đợi, rủi ro và test tái hiện trước khi sửa; hoàn thiện plan ngay sau khi ổn định.
 3. Ghi `source_refs` là file + mục cụ thể. Nếu docs mâu thuẫn, ghi quyết định vào task; sửa docs chuẩn trước/cùng code, không tự chọn theo trí nhớ.
 4. Làm từng bước nhỏ; sau mỗi bước cập nhật checkbox `plan.md`, chạy test phù hợp, ghi bằng chứng ở `tests.md`. Nếu thất bại, ghi vòng sửa ở `worklog.md` rồi lặp **tái hiện → xác định nguyên nhân → sửa → kiểm tra lại**.
-5. Trước khi xong: chạy cổng test phù hợp rủi ro, rà soát diff, cập nhật docs chuẩn và `handoff.md`. Chỉ đặt trạng thái `done` khi acceptance pass; nếu chưa, đặt `in_progress` hoặc `blocked` với bước tiếp theo cụ thể.
+5. Trước khi xong: chạy cổng test phù hợp rủi ro, rà soát diff, cập nhật docs chuẩn và `handoff.md`. Khi acceptance pass, stage riêng file task, rà staged diff/secret/asset, đối chiếu remote, commit có ID task và push nhánh hiện hành; ghi SHA/nhánh vào handoff sau khi xác minh push. Không force push hoặc gộp WIP khác. Push lỗi giữ `verifying` với điểm tiếp tục; chỉ đặt `done` khi acceptance và đồng bộ Git đều đạt.
 
 ## Trạng thái và quay lại
 

@@ -2,6 +2,8 @@
 
 **Định hướng:** “bình minh trên trang vở”, tối giản, bình tĩnh, đọc được khi mới thức. Trọng tâm trên giờ báo/câu hỏi/việc học, game là lớp phụ. Ảnh đồng hồ iOS do người dùng gửi chỉ tham chiếu cách thấy ngay thời lượng ngủ; thiết kế MindClock dùng token, bố cục và icon riêng, không sao chép màn iOS. Không emoji hệ thống, gradient/neon RPG lấn nội dung, mascot quấy rầy lúc chuông reo hoặc lời phóng đại. **Nguồn code hiện có:** [`mindclock_theme.dart`](../../app/lib/ui/core/theme/mindclock_theme.dart), [`app_strings.dart`](../../app/lib/ui/core/strings/app_strings.dart); task UI phải so token thực tế với bảng dưới và ghi quyết định khi đổi.
 
+**Nhận diện app:** dấu đồng hồ mở thành góc trang vở, chấm vàng buổi sáng; [SVG và quy tắc sử dụng](../../assets/brand/README.md). Đây là asset thương hiệu riêng, không thay avatar/rank/game. Launcher Android chưa tích hợp/test; task launcher phải xuất icon đúng chuẩn từ SVG và kiểm crop trên máy/emulator.
+
 ## Tokens mục tiêu v1
 
 | Token | Hex | Dùng cho |

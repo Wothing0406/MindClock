@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">MindClock</title>
+  <desc id="desc">Mặt đồng hồ mở thành góc trang vở, có điểm sáng buổi sáng</desc>
+  <rect width="512" height="512" rx="112" fill="#101A30"/>
+  <path d="M354 111C322 92 286 82 249 82C150 82 76 158 76 256C76 352 154 430 251 430C283 430 310 424 334 411" fill="none" stroke="#126F73" stroke-width="31" stroke-linecap="round"/>
+  <path d="M411 185C435 234 436 289 413 337" fill="none" stroke="#126F73" stroke-width="31" stroke-linecap="round"/>
+  <circle cx="385" cy="143" r="17" fill="#F4B95F"/>
+  <path d="M250 257H171M250 257L226 322" fill="none" stroke="#F7F7F2" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="250" cy="257" r="16" fill="#F7F7F2"/>
+  <path d="M329 412C346 365 372 351 415 335C408 375 377 410 329 412Z" fill="#F7F7F2"/>
+</svg>

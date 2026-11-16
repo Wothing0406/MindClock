@@ -7,5 +7,6 @@
 - **Test chưa chạy/giới hạn:** lý do và điều kiện chạy.
 - **Rủi ro còn lại:** ...
 - **Điểm tiếp tục chính xác:** mở file nào, bước nào trong `plan.md`, test nào chạy lại, ai/điều kiện nào cần.
+- **Git:** nhánh, SHA commit task, remote push đã xác minh hoặc lỗi còn chặn; nếu cập nhật handoff sau push thì commit/push bản bàn giao tiếp theo.
 - **Quyết định phải xin người phụ trách:** chỉ nếu còn mâu thuẫn sản phẩm/quyền/chi phí không thể tự xử lý.
 

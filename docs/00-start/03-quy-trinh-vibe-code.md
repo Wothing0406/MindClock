@@ -10,6 +10,7 @@ Tài liệu này là **hợp đồng làm việc** cho AI và thành viên. [AGE
 4. **Thực hiện từng bước nhỏ:** test tái hiện/lỗi trước nếu có; sửa tối thiểu; chạy test đúng tầng; cập nhật `plan.md`, `tests.md`, `worklog.md` mỗi lát. Một lỗi lặp: tái hiện → nguyên nhân → sửa → test lại. Sau ba vòng không tiến triển, ghi giả thuyết và chặn riêng phần đó.
 5. **Soát ngang:** auth/consent, idempotency, câu/đáp án, offline, Dừng khẩn cấp, copy tiếng Việt, accessibility, migration/API/docs/contract test. Xem diff và chắc không stage secret, dữ liệu học sinh, ảnh bài làm hoặc corpus chưa được phép.
 6. **Bàn giao:** điền `handoff.md` theo [mẫu dưới](#mau-ban-giao), ghi test thật với môi trường/thiết bị/ngày, rủi ro, bước tiếp tục chính xác. `done` chỉ khi AC bắt buộc đạt; nếu không, `verifying`/`blocked` và nêu nguyên nhân. Cập nhật [hiện trạng](01-hien-trang.md) khi mức tin cậy thay đổi.
+7. **Đồng bộ Git sau task:** khi AC/test đạt, stage **chỉ** file thuộc task, kiểm `git diff --cached`, secret/dữ liệu/quyền asset, đối chiếu remote, commit có ID task và push nhánh hiện hành. Xác minh SHA ở remote. Ghi nhánh/SHA và kết quả push vào `handoff.md` bằng commit bàn giao tiếp theo nếu cần, rồi push commit đó. Không `git add .` khi có WIP của task khác, không force push hoặc ghi đè conflict. Nếu push thất bại, giữ `verifying` và báo lỗi/điểm tiếp tục; không gọi task đã bàn giao xong.
 
 ## Mẫu giao AI coding có thể dùng nguyên văn
 
@@ -43,4 +44,5 @@ Trạng thái: done | verifying | blocked
 AC/TC: pass/fail/chưa chạy; lệnh, thiết bị, ngày, log hoặc ảnh chứng cứ
 Rủi ro: dữ liệu/quyền/hệ điều hành/AI/bản quyền còn lại
 Điểm tiếp tục: file, bước plan, lệnh test và điều kiện để mở tiếp
+Git: nhánh, commit SHA, remote push đã xác minh hoặc lỗi còn chặn
 ```
