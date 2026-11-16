@@ -1,6 +1,7 @@
 # Bàn giao nhiệm vụ T040
 
 - **Trạng thái:** `done`
+- **Commit SHA:** `422b2c5c9603099a4c878e38d7265db267a1518f` (nhánh `main`)
 - **Thay đổi chính:**
   1. Xây dựng module chuẩn hóa đáp án toán học và khoa học tự nhiên `services/api/app/services/answer_normalizer.py`:
      - Tự động nhận diện và quy đổi số thập phân dấu phẩy `,` sang dấu chấm `.` (`0,5` == `0.5`, `3,14` == `3.14`).
