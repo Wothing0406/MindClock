@@ -47,7 +47,12 @@ class MeGuestScreen extends StatelessWidget {
         children: <Widget>[
           Text(AppStrings.navMe, style: mc.screenTitleStyle),
           SizedBox(height: mc.space12),
-          const MindClockStatusPill(label: AppStrings.guestBadge),
+          MindClockStatusPill(
+            label: viewModel.profile.alias.isNotEmpty
+                ? '${viewModel.profile.alias} · ${viewModel.profile.gradeLevel ?? "Lớp 11"}'
+                : 'Học sinh THPT',
+            accentWarm: true,
+          ),
           if (personalViewModel != null) ...<Widget>[
             SizedBox(height: mc.space16),
             AccountAuthCard(viewModel: personalViewModel!),
@@ -61,8 +66,8 @@ class MeGuestScreen extends StatelessWidget {
                 SizedBox(height: mc.space8),
                 Text(
                   viewModel.isOsBridgeConnected
-                      ? 'Đã nối dịch vụ báo thức hệ điều hành Android.'
-                      : 'Chưa nối OS native (đang dùng giao diện lưu cấu hình cục bộ).',
+                      ? 'Báo thức hệ thống đang sẵn sàng.'
+                      : 'Đang sử dụng chế độ báo thức tiêu chuẩn trên máy.',
                   style: mc.bodyStrongStyle,
                 ),
                 SizedBox(height: mc.space8),

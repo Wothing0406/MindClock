@@ -3,6 +3,24 @@ enum AlarmMode {
   challenge,
 }
 
+enum AlarmSubjectRule {
+  todaySchedule('today_schedule', 'Theo lịch học hôm nay'),
+  priorityWeak('priority_weak', 'Ưu tiên môn yếu / thi'),
+  fixedSubject('fixed_subject', 'Môn cố định'),
+  none('none', 'Chỉ báo thức');
+
+  const AlarmSubjectRule(this.id, this.labelVi);
+  final String id;
+  final String labelVi;
+
+  static AlarmSubjectRule fromId(String? id) {
+    for (final AlarmSubjectRule rule in values) {
+      if (rule.id == id || rule.name == id) return rule;
+    }
+    return todaySchedule;
+  }
+}
+
 enum AlarmSoundOption {
   gentleDawn('gentle_dawn', 'Chuông sáng dịu'),
   clearBell('clear_bell', 'Chuông rõ'),
@@ -68,6 +86,7 @@ class AlarmConfig {
     this.soundOption = AlarmSoundOption.gentleDawn,
     this.vibrateEnabled = true,
     this.mode = AlarmMode.normal,
+    this.subjectRule = AlarmSubjectRule.todaySchedule,
     this.subjectCode,
     this.label = 'Báo thức buổi sáng',
     this.syncStatus = AlarmSyncStatus.savedConfigOnly,
@@ -87,6 +106,7 @@ class AlarmConfig {
   final AlarmSoundOption soundOption;
   final bool vibrateEnabled;
   final AlarmMode mode;
+  final AlarmSubjectRule subjectRule;
   final String? subjectCode;
   final String label;
   final AlarmSyncStatus syncStatus;
@@ -113,6 +133,7 @@ class AlarmConfig {
     AlarmSoundOption? soundOption,
     bool? vibrateEnabled,
     AlarmMode? mode,
+    AlarmSubjectRule? subjectRule,
     String? subjectCode,
     bool clearSubjectCode = false,
     String? label,
@@ -137,6 +158,7 @@ class AlarmConfig {
       soundOption: soundOption ?? this.soundOption,
       vibrateEnabled: vibrateEnabled ?? this.vibrateEnabled,
       mode: mode ?? this.mode,
+      subjectRule: subjectRule ?? this.subjectRule,
       subjectCode: clearSubjectCode ? null : (subjectCode ?? this.subjectCode),
       label: label ?? this.label,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -164,6 +186,7 @@ class AlarmConfig {
         'soundOption': soundOption.id,
         'vibrateEnabled': vibrateEnabled,
         'mode': mode.name,
+        'subjectRule': subjectRule.id,
         'subjectCode': subjectCode,
         'label': label,
         'syncStatus': syncStatus.name,
@@ -197,6 +220,11 @@ class AlarmConfig {
         (AlarmMode m) => m.name == rawMode,
         orElse: () => AlarmMode.normal,
       ),
+      subjectRule: json.containsKey('subjectRule')
+          ? AlarmSubjectRule.fromId(json['subjectRule'] as String?)
+          : (json['subjectCode'] == null
+              ? AlarmSubjectRule.none
+              : AlarmSubjectRule.fixedSubject),
       subjectCode: json['subjectCode'] as String?,
       label: json['label'] as String? ?? 'Báo thức buổi sáng',
       syncStatus: AlarmSyncStatus.values.firstWhere(

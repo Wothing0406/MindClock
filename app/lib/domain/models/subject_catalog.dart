@@ -14,14 +14,20 @@ class SubjectInfo {
 class SubjectCatalog {
   const SubjectCatalog._();
 
-  static const List<String> gradeLevels = <String>[
-    'Lớp 6',
-    'Lớp 7',
-    'Lớp 8',
-    'Lớp 9',
+  static const List<String> thptGradeLevels = <String>[
     'Lớp 10',
     'Lớp 11',
     'Lớp 12',
+  ];
+
+  static const List<String> gradeLevels = <String>[
+    'Lớp 10',
+    'Lớp 11',
+    'Lớp 12',
+    'Lớp 9',
+    'Lớp 8',
+    'Lớp 7',
+    'Lớp 6',
   ];
 
   static const List<SubjectInfo> allSubjects = <SubjectInfo>[

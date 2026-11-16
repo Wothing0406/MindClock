@@ -3,11 +3,31 @@ from typing import Any
 import uuid
 
 from fastapi import Depends, Header, HTTPException, status
+import jwt
+from jwt import PyJWKClient
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError, PyJWKError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db.models import User
+
+
+GOOGLE_FIREBASE_JWKS_URL = (
+    'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
+)
+_jwks_client: PyJWKClient | None = None
+
+
+def get_jwks_client() -> PyJWKClient:
+    global _jwks_client
+    if _jwks_client is None:
+        _jwks_client = PyJWKClient(
+            GOOGLE_FIREBASE_JWKS_URL,
+            cache_jwk_set=True,
+            lifespan=3600,
+        )
+    return _jwks_client
 
 
 @dataclass(frozen=True)
@@ -71,12 +91,50 @@ def verify_bearer_token(
         if dev_uid:
             return dev_uid
 
-    # Nếu chưa cấu hình Firebase Admin/project verifier thật ngoài dev fallback:
-    _raise_api_error(
-        status.HTTP_401_UNAUTHORIZED,
-        'AUTH_EXPIRED',
-        'Token hết hạn hoặc chưa xác minh được với Firebase project.',
-    )
+    project_id = (settings.firebase_project_id or '').strip()
+    if not project_id:
+        _raise_api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            'AUTH_EXPIRED',
+            'Chưa cấu hình Firebase Project ID để xác minh danh tính.',
+        )
+
+    try:
+        signing_key = get_jwks_client().get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=['RS256'],
+            audience=project_id,
+            issuer=f'https://securetoken.google.com/{project_id}',
+            options={'require': ['exp', 'iss', 'aud', 'sub']},
+        )
+        uid = str(payload.get('sub', '')).strip()
+        if not uid:
+            _raise_api_error(
+                status.HTTP_401_UNAUTHORIZED,
+                'AUTH_EXPIRED',
+                'Firebase ID token không chứa định danh người dùng (sub).',
+            )
+        return uid
+    except ExpiredSignatureError:
+        _raise_api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            'AUTH_EXPIRED',
+            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+        )
+    except (InvalidTokenError, PyJWKError) as exc:
+        _raise_api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            'AUTH_EXPIRED',
+            f'Token xác thực Firebase không hợp lệ: {str(exc)}',
+        )
+    except Exception as exc:
+        _raise_api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            'AUTH_EXPIRED',
+            f'Không thể xác minh Firebase ID token: {str(exc)}',
+        )
     raise AssertionError('Unreachable')
 
 

@@ -260,3 +260,143 @@ class ConsentEvent(Base):
     version: Mapped[str] = mapped_column(String(32), default='2026-11')
     granted: Mapped[bool] = mapped_column(Boolean, default=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+# --- CÁC BẢNG ĐẤU TRƯỜNG SOLO 1V1 (T038) ---
+
+
+class MatchQueue(Base):
+    __tablename__ = 'match_queue'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), unique=True, index=True
+    )
+    champion_id: Mapped[str] = mapped_column(String(32))
+    subject_code: Mapped[str] = mapped_column(String(32), index=True)
+    grade_band: Mapped[str] = mapped_column(String(40), index=True)
+    curriculum: Mapped[str] = mapped_column(String(32), default='gdpt_2018')
+    queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class Match(Base):
+    __tablename__ = 'matches'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    subject_code: Mapped[str] = mapped_column(String(32), index=True)
+    grade_band: Mapped[str] = mapped_column(String(40), index=True)
+    curriculum: Mapped[str] = mapped_column(String(32), default='gdpt_2018')
+    status: Mapped[str] = mapped_column(String(24), default='in_progress', index=True)
+    rule_version: Mapped[str] = mapped_column(String(32), default='solo-three-v0.1')
+    current_round: Mapped[int] = mapped_column(Integer, default=1)
+    secret_round_no: Mapped[int] = mapped_column(Integer, default=3)
+    winner_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    finish_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class MatchPlayer(Base):
+    __tablename__ = 'match_players'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'user_id', name='uq_match_player'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('matches.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    champion_id: Mapped[str] = mapped_column(String(32))
+    hp: Mapped[int] = mapped_column(Integer, default=100)
+    armor: Mapped[int] = mapped_column(Integer, default=50)
+    ward: Mapped[int] = mapped_column(Integer, default=0)
+    qi: Mapped[int] = mapped_column(Integer, default=0)
+    skill_1_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    skill_2_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    consecutive_correct: Mapped[int] = mapped_column(Integer, default=0)
+    passive_triggers: Mapped[int] = mapped_column(Integer, default=0)
+    passive_pending_ward: Mapped[int] = mapped_column(Integer, default=0)
+    buff_next_basic: Mapped[int] = mapped_column(Integer, default=0)
+    penalty_next_basic: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class MatchRound(Base):
+    __tablename__ = 'match_rounds'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'round_no', name='uq_match_round_no'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('matches.id', ondelete='CASCADE'), index=True
+    )
+    round_no: Mapped[int] = mapped_column(Integer)
+    question_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('questions.id', ondelete='RESTRICT')
+    )
+    question_revision: Mapped[int] = mapped_column(Integer, default=1)
+    prompt: Mapped[str] = mapped_column(Text)
+    reasoning_prompt_vi: Mapped[str] = mapped_column(Text)
+    rubric_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    deadline_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    state: Mapped[str] = mapped_column(String(24), default='answering')  # answering, action_window, settled, void
+
+
+class RoundSubmission(Base):
+    __tablename__ = 'round_submissions'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'round_no', 'user_id', name='uq_round_submission'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('matches.id', ondelete='CASCADE'), index=True
+    )
+    round_no: Mapped[int] = mapped_column(Integer)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    answer_text: Mapped[str] = mapped_column(String(255))
+    reasoning_text: Mapped[str] = mapped_column(Text)
+    grade_status: Mapped[str] = mapped_column(String(24))  # correct, incorrect, uncertain, timeout
+    feedback_vi: Mapped[str] = mapped_column(String(255), default='')
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class RoundAction(Base):
+    __tablename__ = 'round_actions'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'round_no', 'user_id', name='uq_round_action'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('matches.id', ondelete='CASCADE'), index=True
+    )
+    round_no: Mapped[int] = mapped_column(Integer)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    action_type: Mapped[str] = mapped_column(String(24), default='basic')
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class MatchEvent(Base):
+    __tablename__ = 'match_events'
+    __table_args__ = (
+        UniqueConstraint('match_id', 'sequence', name='uq_match_event_sequence'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    match_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('matches.id', ondelete='CASCADE'), index=True
+    )
+    sequence: Mapped[int] = mapped_column(Integer)
+    event_type: Mapped[str] = mapped_column(String(48))
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

@@ -26,9 +26,9 @@ Trận tối đa 6 round. Khi AI `uncertain`, câu lỗi, model/rubric đổi gi
 | --- | --- | --- | --- | --- |
 | Hà Nhân `ha_nhan` | Bền bỉ, burst thấp | 2 round đúng liên tiếp hồi 8 armor sau settle, tối đa 2 lần | Bước Vững: 25 damage + hồi 6 armor | Tĩnh Tâm Phản Kích: 32 damage + hồi 8 HP nếu sống |
 | Tuyệt Đỉnh `tuyet_dinh` | Sát thương, ít thủ | 2 round đúng liên tiếp buff Đánh thường kế +6, tối đa 2 lần, không cộng dồn | Một Nét Thành Chiêu: 38 damage | Đường Kiếm Cuối Trang: 46 damage, Đánh thường round sau 22; không dùng round 6 |
-| Hàn Bối Pháp `han_boi_thap` **ID legacy** | Tanker, kết trận chậm | Armor về 0 lần đầu tạo 12 ward round kế, một lần/trận | Dựng Tháp: 18 damage +14 ward trong round | Trấn Tháp: 28 damage + hồi 16 armor |
+| Hàn Bối Pháp `han_boi_phap` (alias `han_boi_thap`) | Tanker, kết trận chậm | Armor về 0 lần đầu tạo 12 ward round kế, một lần/trận | Dựng Tháp: 18 damage +14 ward trong round | Trấn Tháp: 28 damage + hồi 16 armor |
 
-Tên hiển thị “Hàn Bối Pháp” và ID `han_boi_thap` đang lệch do lịch sử; **chốt catalog/version và migration trước code PvP**. Các số trên không chứng minh cân bằng. `combat_rule_version=solo-three-v0.1`; server lưu version trong match/event, không tự thay giữa trận.
+Đã chuẩn hóa ID chính thức là `han_boi_phap` (khớp slug `han-boi-phap` trong `assets/game/manifest.json`), đồng thời backend và client duy trì bộ giải mã alias tương thích ngược 100% với định danh legacy `han_boi_thap`. Phiên bản luật chính thức: `combat_rule_version=solo-three-v0.1`; server lưu version trong match/event và không thay đổi giữa trận.
 
 ## 3. Giao diện trận
 

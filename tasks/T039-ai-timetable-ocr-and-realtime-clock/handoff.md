@@ -1,6 +1,7 @@
 # Bàn giao nhiệm vụ T039
 
 - **Trạng thái:** `done`
+- **Commit SHA:** `9106c545d351b4d44f36e3a5d1e1df9609b099ea` (nhánh `main`)
 - **Thay đổi chính:**
   1. Đã triển khai tính năng AI Timetable OCR: Backend Gemini Vision endpoint `POST /v1/timetable/parse-image`, trích xuất tự động danh sách tiết học, chuẩn hóa tên môn THPT.
   2. Giao diện Flutter: Thêm nút `Quét ảnh thời khóa biểu (AI tự động điền)` trong `TimetableProfileScreen`, hiển thị thẻ duyệt bản nháp (draft preview) với môn/tiết từng ngày trong tuần; học sinh nhấn `Xác nhận & Lưu thời khóa biểu` mới cập nhật TKB vào hệ thống.

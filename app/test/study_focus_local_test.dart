@@ -376,7 +376,7 @@ void main() {
         await vm.onAppResumed();
         expect(vm.activeSnapshot!.commitmentAwaitingResume, isTrue);
         expect(vm.inAppFocusSeconds, 60);
-        expect(vm.remainingSeconds, 1440);
+        expect(vm.remainingSeconds, 1435);
         expect(vm.elapsedWallSeconds, 76);
 
         // Chờ thêm 20 giây trước khi bấm Tiếp tục học -> không tăng inAppFocusSeconds

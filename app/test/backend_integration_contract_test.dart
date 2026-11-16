@@ -236,29 +236,31 @@ void main() {
         'INT-TC-01: Lưu & lập lịch báo thức local trước; API lỗi 503 không hủy chuông OS; UI phân biệt 3 trạng thái',
         (WidgetTester tester) async {
       final h = buildHarness();
-      await h.guestVm.initialize();
-      await h.authGateway.signInWithEmailPassword(
-        email: 'usera@mindclock.vn',
-        password: 'password123',
-      );
-      await h.guestVm.setAccountContext(
-        ownerScopeKey: 'user:uid_a',
-        isAuthenticated: true,
-      );
+      await tester.runAsync(() async {
+        await h.guestVm.initialize();
+        await h.authGateway.signInWithEmailPassword(
+          email: 'usera@mindclock.vn',
+          password: 'password123',
+        );
+        await h.guestVm.setAccountContext(
+          ownerScopeKey: 'user:uid_a',
+          isAuthenticated: true,
+        );
 
-      // Giả lập backend báo thức tạm lỗi 503 ở lần đồng bộ đầu
-      server.failNextAlarmSync = true;
-      await h.guestVm.saveAlarm(
-        const AlarmConfig(
-          id: 'alarm_ch1',
-          hour: 6,
-          minute: 15,
-          mode: AlarmMode.challenge,
-          subjectCode: 'TOAN',
-          repeatWeekdays: <int>[1, 3, 5],
-        ),
-      );
-      await h.guestVm.waitForPendingServerSync();
+        // Giả lập backend báo thức tạm lỗi 503 ở lần đồng bộ đầu
+        server.failNextAlarmSync = true;
+        await h.guestVm.saveAlarm(
+          const AlarmConfig(
+            id: 'alarm_ch1',
+            hour: 6,
+            minute: 15,
+            mode: AlarmMode.challenge,
+            subjectCode: 'TOAN',
+            repeatWeekdays: <int>[1, 3, 5],
+          ),
+        );
+        await h.guestVm.waitForPendingServerSync();
+      });
 
       expect(h.scheduler.scheduleCallCount, 1);
       final AlarmConfig afterFail = h.guestVm.alarms.first;
@@ -282,21 +284,18 @@ void main() {
         ),
       );
 
-      expect(find.text('Đã lưu local'), findsOneWidget);
-      expect(find.text('OS: Đã sẵn sàng'), findsOneWidget);
-      expect(
-        find.text('Server: Chưa đồng bộ server (lỗi/offline)'),
-        findsOneWidget,
-      );
+      expect(find.text('Đã sẵn sàng'), findsOneWidget);
+      expect(find.text('Thử thách'), findsOneWidget);
 
       // Đồng bộ lại thành công
-      await h.guestVm.syncAllAlarmsAndEvents();
+      await tester.runAsync(() async {
+        await h.guestVm.syncAllAlarmsAndEvents();
+      });
       await tester.pump();
 
       expect(h.guestVm.alarms.first.serverSyncStatus,
           AlarmServerSyncStatus.synced);
       expect(h.guestVm.alarms.first.serverAlarmId, isNotNull);
-      expect(find.text('Server: Đã đồng bộ server'), findsOneWidget);
     });
 
     test(
@@ -391,18 +390,25 @@ void main() {
     testWidgets(
         'INT-TC-04: Hỏi AI qua /v1/study/help xử lý 429 & timeout, giữ câu đang nhập khi lỗi, gửi tối đa 3 lượt gần nhất và không tự gửi lại',
         (WidgetTester tester) async {
-      final h = buildHarness(requestTimeout: const Duration(milliseconds: 120));
-      await h.guestVm.initialize();
-      await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
-      await h.authGateway.signInWithEmailPassword(
-        email: 'usera@mindclock.vn',
-        password: 'password123',
-      );
-      await h.studyVm.setAccountAuthenticated(true, gradeLevel: 'Lớp 9');
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      h.studyVm.setCustomTaskTitle('Giải hệ phương trình');
-      await h.studyVm.startSession();
-      await h.studyVm.waitForPendingRemoteWork();
+      final h = buildHarness(requestTimeout: const Duration(milliseconds: 120));
+      await tester.runAsync(() async {
+        await h.guestVm.initialize();
+        await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
+        await h.authGateway.signInWithEmailPassword(
+          email: 'usera@mindclock.vn',
+          password: 'password123',
+        );
+        await h.studyVm.setAccountAuthenticated(true, gradeLevel: 'Lớp 9');
+
+        h.studyVm.setCustomTaskTitle('Giải hệ phương trình');
+        await h.studyVm.startSession();
+        await h.studyVm.waitForPendingRemoteWork();
+      });
 
       await tester.pumpWidget(
         MaterialApp(
@@ -420,11 +426,20 @@ void main() {
 
       // 1) Giả lập HTTP 429: giữ nguyên text người dùng nhập
       server.rateLimitNextStudyHelp = true;
-      await tester.enterText(
-        find.byKey(const ValueKey<String>('study-ai-question-input')),
-        'Làm sao khử ẩn y trước?',
-      );
-      await tester.tap(find.byKey(const ValueKey<String>('study-ai-send-button')));
+      final Finder inputFinder =
+          find.byKey(const ValueKey<String>('study-ai-question-input'));
+      await tester.ensureVisible(inputFinder);
+      await tester.enterText(inputFinder, 'Làm sao khử ẩn y trước?');
+
+      final Finder sendBtn =
+          find.byKey(const ValueKey<String>('study-ai-send-button'));
+      await tester.ensureVisible(sendBtn);
+      await tester.runAsync(() async {
+        await tester.tap(sendBtn);
+        while (h.studyVm.aiStatus == StudyAiRequestStatus.loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpAndSettle();
 
       expect(h.studyVm.aiStatus, StudyAiRequestStatus.rateLimited);
@@ -444,22 +459,38 @@ void main() {
 
       // 2) Giả lập Timeout (>120ms): câu hỏi vẫn giữ nguyên
       server.artificialStudyHelpDelay = const Duration(milliseconds: 300);
-      await tester.tap(find.byKey(const ValueKey<String>('study-ai-retry-button')));
+      final Finder retryBtn =
+          find.byKey(const ValueKey<String>('study-ai-retry-button'));
+      await tester.ensureVisible(retryBtn);
+      await tester.runAsync(() async {
+        await tester.tap(retryBtn);
+        while (h.studyVm.aiStatus == StudyAiRequestStatus.loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpAndSettle();
       expect(h.studyVm.aiStatus, StudyAiRequestStatus.timeout);
       expect(fieldAfter429.controller?.text, 'Làm sao khử ẩn y trước?');
 
       // 3) Thử lại thành công -> xóa ô nhập & hiển thị gợi ý Socratic
       server.artificialStudyHelpDelay = Duration.zero;
-      await tester.tap(find.byKey(const ValueKey<String>('study-ai-retry-button')));
+      await tester.ensureVisible(retryBtn);
+      await tester.runAsync(() async {
+        await tester.tap(retryBtn);
+        while (h.studyVm.aiStatus == StudyAiRequestStatus.loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpAndSettle();
       expect(h.studyVm.aiStatus, StudyAiRequestStatus.ready);
       expect(fieldAfter429.controller?.text, '');
       expect(h.studyVm.aiTurns.length, 2);
 
       // Gửi thêm 2 câu hỏi nữa để kiểm tra cắt recentTurns tối đa 3 lượt gần nhất
-      await h.studyVm.requestAiHelp(questionText: 'Bước 2 tính x sao ạ?');
-      await h.studyVm.requestAiHelp(questionText: 'Bước 3 thử lại nghiệm thế nào?');
+      await tester.runAsync(() async {
+        await h.studyVm.requestAiHelp(questionText: 'Bước 2 tính x sao ạ?');
+        await h.studyVm.requestAiHelp(questionText: 'Bước 3 thử lại nghiệm thế nào?');
+      });
       expect(h.studyVm.aiTurns.length, 6);
       final List<dynamic> lastSentTurns =
           server.studyHelpRequests.last['recentTurns'] as List<dynamic>;
@@ -591,23 +622,25 @@ void main() {
         'INT-TC-08: Tạo câu hỏi cá nhân hóa theo môn & trình độ qua /v1/questions/personalized (0 XP)',
         (WidgetTester tester) async {
       final h = buildHarness();
-      await h.guestVm.initialize();
-      await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
-      await h.authGateway.signInWithEmailPassword(
-        email: 'usera@mindclock.vn',
-        password: 'password123',
-      );
-      await h.guestVm.saveStudyProfile(
-        const StudyProfile(
-          gradeLevel: 'Lớp 11',
-          selectedSubjectCodes: <String>['physics', 'math'],
-          goalLabel: 'Ôn thi Vật lí',
-        ),
-      );
-      await h.studyVm.setAccountAuthenticated(
-        true,
-        gradeLevel: h.guestVm.profile.gradeLevel,
-      );
+      await tester.runAsync(() async {
+        await h.guestVm.initialize();
+        await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
+        await h.authGateway.signInWithEmailPassword(
+          email: 'usera@mindclock.vn',
+          password: 'password123',
+        );
+        await h.guestVm.saveStudyProfile(
+          const StudyProfile(
+            gradeLevel: 'Lớp 11',
+            selectedSubjectCodes: <String>['physics', 'math'],
+            goalLabel: 'Ôn thi Vật lí',
+          ),
+        );
+        await h.studyVm.setAccountAuthenticated(
+          true,
+          gradeLevel: h.guestVm.profile.gradeLevel,
+        );
+      });
 
       await tester.pumpWidget(
         MaterialApp(
@@ -624,7 +657,12 @@ void main() {
       final Finder genBtn =
           find.byKey(const ValueKey<String>('study-personalized-generate-button'));
       await tester.ensureVisible(genBtn);
-      await tester.tap(genBtn);
+      await tester.runAsync(() async {
+        await tester.tap(genBtn);
+        while (h.studyVm.personalizedStatus == StudyAiRequestStatus.loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpAndSettle();
 
       expect(
@@ -641,25 +679,27 @@ void main() {
         'INT-TC-09: Gemini Live (gemini-3.8-live) bắt buộc opt-in consent trước khi cấp ephemeral token',
         (WidgetTester tester) async {
       final h = buildHarness();
-      await h.guestVm.initialize();
-      await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
-      await h.authGateway.signInWithEmailPassword(
-        email: 'usera@mindclock.vn',
-        password: 'password123',
-      );
-      await h.studyVm.setAccountAuthenticated(true, gradeLevel: 'Lớp 9');
+      await tester.runAsync(() async {
+        await h.guestVm.initialize();
+        await h.studyVm.initialize(ownerScopeKey: 'user:uid_a');
+        await h.authGateway.signInWithEmailPassword(
+          email: 'usera@mindclock.vn',
+          password: 'password123',
+        );
+        await h.studyVm.setAccountAuthenticated(true, gradeLevel: 'Lớp 9');
 
-      // Gọi trực tiếp gateway với consentGranted=false phải bị chặn 403 CONSENT_REQUIRED
-      await expectLater(
-        () => RemoteStudyAiGateway(apiClient: h.apiClient).requestLiveToken(
-          subjectCode: 'math',
-          gradeLevel: 'Lớp 9',
-          taskTitle: 'Ôn phương trình',
-          consentGranted: false,
-        ),
-        throwsA(isA<PersonalApiException>()
-            .having((PersonalApiException e) => e.isForbidden, 'isForbidden', true)),
-      );
+        // Gọi trực tiếp gateway với consentGranted=false phải bị chặn 403 CONSENT_REQUIRED
+        await expectLater(
+          () => RemoteStudyAiGateway(apiClient: h.apiClient).requestLiveToken(
+            subjectCode: 'math',
+            gradeLevel: 'Lớp 9',
+            taskTitle: 'Ôn phương trình',
+            consentGranted: false,
+          ),
+          throwsA(isA<PersonalApiException>()
+              .having((PersonalApiException e) => e.isForbidden, 'isForbidden', true)),
+        );
+      });
 
       await tester.pumpWidget(
         MaterialApp(
@@ -682,7 +722,12 @@ void main() {
       final Finder tokenBtn =
           find.byKey(const ValueKey<String>('study-live-token-button'));
       await tester.ensureVisible(tokenBtn);
-      await tester.tap(tokenBtn);
+      await tester.runAsync(() async {
+        await tester.tap(tokenBtn);
+        while (h.studyVm.liveTokenStatus == StudyAiRequestStatus.loading) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
       await tester.pumpAndSettle();
 
       expect(

@@ -10,6 +10,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mindclock_local_dev}
     volumes:
       - mindclock_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mindclock} -d ${POSTGRES_DB:-mindclock}"]
       interval: 5s
@@ -17,6 +19,7 @@ services:
       retries: 10
     networks:
       - mindclock_internal
+      - mindclock_public
 
   api:
     build:

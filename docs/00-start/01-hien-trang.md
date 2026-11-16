@@ -9,7 +9,8 @@
 | Nội dung học | Schema, một số câu đội viết/seed, tài liệu quy trình | Số câu theo môn/chủ đề, người duyệt, rubric, giấy phép từng item, benchmark chấm câu viết tay/chữ nhập. |
 | AI | Code gọi Gemini server-side, nhánh `uncertain`, Socratic/Live token | Test với model/config thực tế, độ chính xác, latency, quota/chi phí, quyền dữ liệu trẻ em và fallback. Không có bằng chứng AI có thể chấm mọi môn công tâm. |
 | Không gian học | Flutter timer/bridge/API học tập | Lifecycle, pin, offline, accessibility và camera/mic trên máy thật; camera/Live vẫn là tùy chọn có rủi ro quyền/chi phí. |
-| Onboarding THPT/planner | Auth/profile và màn cơ bản có phần mã | Chưa có bằng chứng flow email→catalog lớp 10–12→avatar→plan xác nhận→dashboard; catalog/reviewer/AI plan cần task. |
+| Onboarding THPT/planner | Auth/profile và màn cơ bản có phần mã; app đang chạy trên emulator vẫn ưu tiên khách, cho vào dashboard khi chưa chọn lớp/môn; `AuthScreen` WIP chưa nối luồng. [Đối chiếu 16/11](../03-quality/06-doi-chieu-app-tren-emulator.md) | Chưa có bằng chứng flow email→catalog lớp 10–12→avatar→plan xác nhận→dashboard; catalog/reviewer/AI plan cần task. |
+| Thời khóa biểu | Flutter cho thêm/sửa tiết thủ công theo 7 ngày; [ảnh emulator và đối chiếu mã](../03-quality/06-doi-chieu-app-tren-emulator.md) | Chưa có tải ảnh/file TKB, AI parse, màn kiểm/sửa/xác nhận trước lưu hoặc kiểm đồng bộ tài khoản. |
 | Phòng AI và bạn bè | Timer/API help/Live token có phần mã | Chưa có phòng media bạn bè hay avatar AI realtime được chứng minh; cần quota, consent, moderation, hai máy và chi phí. |
 | Lịch ngủ/DND | Báo thức native/âm có phần mã | Vòng ngủ/thức theo ảnh tham chiếu, nhiều chuông, DND theo OS và màn khóa riêng tư chưa có bằng chứng test dọc. |
 | Game | Art nghiên cứu ở [`assets/game/`](../../assets/game), luật v0.1 | Chưa có Flutter arena/PvP server, hai máy đồng bộ, cân bằng hoặc quyền phát hành thương mại. |

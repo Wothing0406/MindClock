@@ -311,12 +311,19 @@ class FirebaseAuthGateway implements AuthSessionGateway {
         code.contains('EMAIL_NOT_FOUND')) {
       return 'Email hoặc mật khẩu chưa đúng.';
     }
+    if (code.contains('CONFIGURATION_NOT_FOUND') ||
+        code.contains('OPERATION_NOT_ALLOWED')) {
+      return 'Firebase Auth chưa bật tính năng Email/Password. Vui lòng bật tại Firebase Console (Authentication > Sign-in method).';
+    }
+    if (code.contains('API_KEY_INVALID')) {
+      return 'Firebase Web API key không hợp lệ. Vui lòng kiểm tra lại cấu hình Project settings.';
+    }
     if (code.contains('TOKEN_EXPIRED') || code.contains('INVALID_REFRESH_TOKEN')) {
       return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
     }
     if (code.contains('TOO_MANY_ATTEMPTS')) {
       return 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.';
     }
-    return 'Không thể xác thực tài khoản lúc này.';
+    return 'Không thể xác thực tài khoản lúc này ($code).';
   }
 }

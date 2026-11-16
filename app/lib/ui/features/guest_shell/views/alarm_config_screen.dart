@@ -39,6 +39,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   late AlarmSoundOption _soundOption;
   late bool _vibrateEnabled;
   late AlarmMode _mode;
+  late AlarmSubjectRule _subjectRule;
   String? _subjectCode;
 
   late int _classStartMinutes;
@@ -60,6 +61,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _soundOption = existing.soundOption;
       _vibrateEnabled = existing.vibrateEnabled;
       _mode = existing.mode;
+      _subjectRule = existing.subjectRule;
       _subjectCode = existing.subjectCode;
     } else {
       _hour = 6;
@@ -70,9 +72,10 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _soundOption = AlarmSoundOption.gentleDawn;
       _vibrateEnabled = true;
       _mode = AlarmMode.normal;
+      _subjectRule = AlarmSubjectRule.todaySchedule;
       final List<String> userSubjects =
           widget.viewModel.profile.selectedSubjectCodes;
-      _subjectCode = userSubjects.isNotEmpty ? userSubjects.first : null;
+      _subjectCode = userSubjects.isNotEmpty ? userSubjects.first : 'math';
     }
 
     final WakeSuggestionInput prefs = widget.viewModel.wakePreferences;
@@ -150,7 +153,10 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       soundOption: _soundOption,
       vibrateEnabled: _vibrateEnabled,
       mode: _mode,
-      subjectCode: _subjectCode,
+      subjectRule: _subjectRule,
+      subjectCode: _subjectRule == AlarmSubjectRule.fixedSubject
+          ? _subjectCode
+          : (_subjectRule == AlarmSubjectRule.none ? null : _subjectCode),
     );
 
     final WakeSuggestionInput wakeInput = _currentWakeInput();
@@ -525,30 +531,103 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(AppStrings.alarmSubjectTitle, style: mc.sectionTitleStyle),
+                    SizedBox(height: mc.space4),
+                    Text(
+                      'Tự động chọn môn theo lịch học thực tế, ưu tiên môn thi, hoặc chọn môn cố định.',
+                      style: mc.captionStyle,
+                    ),
                     SizedBox(height: mc.space12),
                     Wrap(
                       spacing: mc.space8,
                       runSpacing: mc.space8,
                       children: <Widget>[
                         MindClockPressable(
-                          key: const ValueKey<String>('alarm-subject-none'),
-                          selected: _subjectCode == null,
+                          key: const ValueKey<String>('alarm-rule-today-schedule'),
+                          selected: _subjectRule == AlarmSubjectRule.todaySchedule,
+                          semanticLabel: 'Theo lịch học hôm nay',
+                          onPressed: () => setState(() {
+                            _subjectRule = AlarmSubjectRule.todaySchedule;
+                          }),
+                          child: _ChoiceTag(
+                            label: 'Theo lịch học hôm nay',
+                            selected: _subjectRule == AlarmSubjectRule.todaySchedule,
+                          ),
+                        ),
+                        MindClockPressable(
+                          key: const ValueKey<String>('alarm-rule-priority-weak'),
+                          selected: _subjectRule == AlarmSubjectRule.priorityWeak,
+                          semanticLabel: 'Ưu tiên môn yếu / thi',
+                          onPressed: () => setState(() {
+                            _subjectRule = AlarmSubjectRule.priorityWeak;
+                          }),
+                          child: _ChoiceTag(
+                            label: 'Ưu tiên môn yếu / thi',
+                            selected: _subjectRule == AlarmSubjectRule.priorityWeak,
+                          ),
+                        ),
+                        MindClockPressable(
+                          key: const ValueKey<String>('alarm-rule-fixed-subject'),
+                          selected: _subjectRule == AlarmSubjectRule.fixedSubject,
+                          semanticLabel: 'Môn cố định',
+                          onPressed: () => setState(() {
+                            _subjectRule = AlarmSubjectRule.fixedSubject;
+                            _subjectCode ??= 'math';
+                          }),
+                          child: _ChoiceTag(
+                            label: 'Môn cố định',
+                            selected: _subjectRule == AlarmSubjectRule.fixedSubject,
+                          ),
+                        ),
+                        MindClockPressable(
+                          key: const ValueKey<String>('alarm-rule-none'),
+                          selected: _subjectRule == AlarmSubjectRule.none,
                           semanticLabel: 'Chỉ báo thức',
-                          onPressed: () => setState(() => _subjectCode = null),
+                          onPressed: () => setState(() {
+                            _subjectRule = AlarmSubjectRule.none;
+                            _subjectCode = null;
+                          }),
                           child: _ChoiceTag(
                             label: 'Chỉ báo thức',
-                            selected: _subjectCode == null,
+                            selected: _subjectRule == AlarmSubjectRule.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: mc.space12),
+                    Text(
+                      'Danh mục môn học:',
+                      style: mc.bodyStyle.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: mc.space8),
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      children: <Widget>[
+                        MindClockPressable(
+                          key: const ValueKey<String>('alarm-subject-none'),
+                          selected: _subjectRule == AlarmSubjectRule.none || _subjectCode == null,
+                          semanticLabel: 'Chỉ báo thức',
+                          onPressed: () => setState(() {
+                            _subjectRule = AlarmSubjectRule.none;
+                            _subjectCode = null;
+                          }),
+                          child: _ChoiceTag(
+                            label: 'Chỉ báo thức',
+                            selected: _subjectRule == AlarmSubjectRule.none || _subjectCode == null,
                           ),
                         ),
                         ...SubjectCatalog.allSubjects.map((SubjectInfo subject) {
-                          final bool selected = _subjectCode == subject.code;
+                          final bool selected = _subjectCode == subject.code &&
+                              _subjectRule != AlarmSubjectRule.none;
                           return MindClockPressable(
                             key: ValueKey<String>(
                                 'alarm-subject-${subject.code}'),
                             selected: selected,
                             semanticLabel: subject.nameVi,
-                            onPressed: () =>
-                                setState(() => _subjectCode = subject.code),
+                            onPressed: () => setState(() {
+                              _subjectRule = AlarmSubjectRule.fixedSubject;
+                              _subjectCode = subject.code;
+                            }),
                             child: _ChoiceTag(
                               label: subject.nameVi,
                               selected: selected,

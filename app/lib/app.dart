@@ -30,9 +30,12 @@ import 'ui/features/guest_shell/views/mindclock_shell_screen.dart';
 import 'ui/features/personal_flow/view_models/personal_flow_view_model.dart';
 import 'ui/features/study_focus/view_models/study_focus_view_model.dart';
 
-const String _envApiBaseUrl = String.fromEnvironment('MINDCLOCK_API_BASE_URL');
-const String _envFirebaseWebApiKey =
-    String.fromEnvironment('MINDCLOCK_FIREBASE_WEB_API_KEY');
+const String _envApiBaseUrl =
+    String.fromEnvironment('MINDCLOCK_API_BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+const String _envFirebaseWebApiKey = String.fromEnvironment(
+  'MINDCLOCK_FIREBASE_WEB_API_KEY',
+  defaultValue: 'AIzaSyA3t_iZR9YuWH2zazi-6zA8PllbQ_-a90Y',
+);
 const bool _envUseDebugFixture =
     bool.fromEnvironment('MINDCLOCK_DEBUG_FIXTURE', defaultValue: false);
 
@@ -198,9 +201,13 @@ AuthSessionGateway createDefaultAuthGateway({
 PersonalApiClient createDefaultPersonalApiClient({
   required AuthSessionGateway authGateway,
 }) {
-  final Uri? baseUri = _envApiBaseUrl.trim().isNotEmpty
-      ? Uri.tryParse(_envApiBaseUrl.trim())
-      : null;
+  String rawUrl = _envApiBaseUrl.trim();
+  if (rawUrl == 'http://127.0.0.1:8000' &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
+    rawUrl = 'http://10.0.2.2:8000';
+  }
+  final Uri? baseUri = rawUrl.isNotEmpty ? Uri.tryParse(rawUrl) : null;
   return PersonalApiClient(
     baseUri: baseUri,
     authGateway: authGateway,

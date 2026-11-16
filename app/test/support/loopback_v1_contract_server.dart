@@ -85,6 +85,16 @@ class LoopbackV1ContractServer {
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
+    try {
+      await _dispatchRequest(request);
+    } on HttpException {
+      // Connection closed by client / timeout
+    } catch (_) {
+      // Ignore background socket errors during test teardown
+    }
+  }
+
+  Future<void> _dispatchRequest(HttpRequest request) async {
     final String path = request.uri.path;
 
     // 1. Mock Firebase Auth Identity Toolkit REST endpoints
@@ -389,6 +399,11 @@ class LoopbackV1ContractServer {
     }
 
     if (path == '/v1/alarms' && request.method == 'POST') {
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
       if (failNextAlarmSync) {
         failNextAlarmSync = false;
         await _writeJson(request.response, 503, <String, dynamic>{
@@ -400,11 +415,6 @@ class LoopbackV1ContractServer {
         });
         return;
       }
-      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
-      if (idempKey.isNotEmpty) {
-        seenIdempotencyKeys.add(idempKey);
-      }
-      final String body = await utf8.decodeStream(request);
       final String namespacedKey = '$uid:alarm_post:$idempKey';
       if (idempKey.isNotEmpty && _idempotencyResponses.containsKey(namespacedKey)) {
         await _writeJson(
@@ -602,6 +612,11 @@ class LoopbackV1ContractServer {
       if (artificialStudyHelpDelay > Duration.zero) {
         await Future<void>.delayed(artificialStudyHelpDelay);
       }
+      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
+      if (idempKey.isNotEmpty) {
+        seenIdempotencyKeys.add(idempKey);
+      }
+      final String body = await utf8.decodeStream(request);
       if (rateLimitNextStudyHelp) {
         rateLimitNextStudyHelp = false;
         await _writeJson(request.response, 429, <String, dynamic>{
@@ -624,11 +639,6 @@ class LoopbackV1ContractServer {
         });
         return;
       }
-      final String idempKey = request.headers.value('Idempotency-Key') ?? '';
-      if (idempKey.isNotEmpty) {
-        seenIdempotencyKeys.add(idempKey);
-      }
-      final String body = await utf8.decodeStream(request);
       final Map<String, dynamic> map = jsonDecode(body) as Map<String, dynamic>;
       studyHelpRequests.add(map);
 

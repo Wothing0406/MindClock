@@ -32,9 +32,11 @@ class PrioritySubject {
   }
 }
 
-/// Hồ sơ học tập cá nhân của khách theo `docs/32 §1`.
+/// Hồ sơ học tập cá nhân của học sinh theo `docs/07` và `docs/32 §1`.
 class StudyProfile {
   const StudyProfile({
+    this.alias = '',
+    this.avatarId = 'sunrise',
     this.gradeLevel,
     this.selectedSubjectCodes = const <String>[],
     this.prioritySubjects = const <PrioritySubject>[],
@@ -44,6 +46,8 @@ class StudyProfile {
 
   static const int maxPrioritySubjects = 5;
 
+  final String alias;
+  final String avatarId;
   final String? gradeLevel;
   final List<String> selectedSubjectCodes;
   final List<PrioritySubject> prioritySubjects;
@@ -69,6 +73,8 @@ class StudyProfile {
   }
 
   StudyProfile copyWith({
+    String? alias,
+    String? avatarId,
     String? gradeLevel,
     bool clearGradeLevel = false,
     List<String>? selectedSubjectCodes,
@@ -77,6 +83,8 @@ class StudyProfile {
     bool? alarmOnlyMode,
   }) {
     return StudyProfile(
+      alias: alias ?? this.alias,
+      avatarId: avatarId ?? this.avatarId,
       gradeLevel: clearGradeLevel ? null : (gradeLevel ?? this.gradeLevel),
       selectedSubjectCodes: selectedSubjectCodes ?? this.selectedSubjectCodes,
       prioritySubjects: prioritySubjects ?? this.prioritySubjects,
@@ -86,6 +94,8 @@ class StudyProfile {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
+        'alias': alias,
+        'avatarId': avatarId,
         'gradeLevel': gradeLevel,
         'selectedSubjectCodes': selectedSubjectCodes,
         'prioritySubjects':
@@ -100,6 +110,8 @@ class StudyProfile {
     final List<dynamic> rawPriorities =
         json['prioritySubjects'] as List<dynamic>? ?? <dynamic>[];
     return StudyProfile(
+      alias: json['alias'] as String? ?? '',
+      avatarId: json['avatarId'] as String? ?? 'sunrise',
       gradeLevel: json['gradeLevel'] as String?,
       selectedSubjectCodes:
           rawSubjects.whereType<String>().toList(growable: false),

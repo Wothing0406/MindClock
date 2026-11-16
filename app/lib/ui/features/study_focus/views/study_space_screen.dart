@@ -99,59 +99,64 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final MindClockTheme mc = context.mc;
-    final StudyFocusViewModel vm = widget.studyViewModel;
-    final StudyFocusSessionSnapshot? snapshot = vm.activeSnapshot;
-    final bool reduceMotion =
-        vm.reduceMotionStaticMode || MediaQuery.disableAnimationsOf(context);
+    return ListenableBuilder(
+      listenable: widget.studyViewModel,
+      builder: (BuildContext context, _) {
+        final MindClockTheme mc = context.mc;
+        final StudyFocusViewModel vm = widget.studyViewModel;
+        final StudyFocusSessionSnapshot? snapshot = vm.activeSnapshot;
+        final bool reduceMotion =
+            vm.reduceMotionStaticMode || MediaQuery.disableAnimationsOf(context);
 
-    return Scaffold(
-      backgroundColor: mc.paper,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(mc.space20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Wrap(
-                spacing: mc.space8,
-                runSpacing: mc.space8,
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
+        return Scaffold(
+          backgroundColor: mc.paper,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(mc.space20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(AppStrings.studySpaceTitle, style: mc.screenTitleStyle),
-                  MindClockButton(
-                    key: const ValueKey<String>('study-space-back'),
-                    label: 'Về Hôm nay',
-                    variant: MindClockButtonVariant.subtle,
-                    expand: false,
-                    onPressed: widget.onClose,
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text(AppStrings.studySpaceTitle, style: mc.screenTitleStyle),
+                      MindClockButton(
+                        key: const ValueKey<String>('study-space-back'),
+                        label: 'Về Hôm nay',
+                        variant: MindClockButtonVariant.subtle,
+                        expand: false,
+                        onPressed: widget.onClose,
+                      ),
+                    ],
                   ),
+                  SizedBox(height: mc.space8),
+                  MindClockStatusPill(
+                    key: const ValueKey<String>('study-scope-pill'),
+                    label: _headerScopeLabel(vm),
+                  ),
+                  if (vm.statusBannerVi != null) ...<Widget>[
+                    SizedBox(height: mc.space12),
+                    MindClockNoticeBanner(
+                      message: vm.statusBannerVi!,
+                      isWarm: false,
+                    ),
+                  ],
+                  SizedBox(height: mc.space16),
+                  if (snapshot == null)
+                    _buildSetupAndHistory(context, mc, vm, reduceMotion)
+                  else if (snapshot.status.isTerminal)
+                    _buildSummaryAndSave(context, mc, vm, snapshot)
+                  else
+                    _buildActiveSession(context, mc, vm, snapshot, reduceMotion),
                 ],
               ),
-              SizedBox(height: mc.space8),
-              MindClockStatusPill(
-                key: const ValueKey<String>('study-scope-pill'),
-                label: _headerScopeLabel(vm),
-              ),
-              if (vm.statusBannerVi != null) ...<Widget>[
-                SizedBox(height: mc.space12),
-                MindClockNoticeBanner(
-                  message: vm.statusBannerVi!,
-                  isWarm: false,
-                ),
-              ],
-              SizedBox(height: mc.space16),
-              if (snapshot == null)
-                _buildSetupAndHistory(context, mc, vm, reduceMotion)
-              else if (snapshot.status.isTerminal)
-                _buildSummaryAndSave(context, mc, vm, snapshot)
-              else
-                _buildActiveSession(context, mc, vm, snapshot, reduceMotion),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

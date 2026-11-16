@@ -357,6 +357,8 @@ void main() {
             ),
             child: MindClockApp(
               repository: GuestWorkspaceRepository(store: store),
+              alarmScheduler: const UnboundAlarmSchedulerService(),
+              enableStudyTicker: false,
               authGateway: DebugFixtureAuthGateway(),
               personalRepository: DebugFixturePersonalFlowRepository(),
               cameraGateway: _FakeCameraGateway(),
