@@ -66,7 +66,7 @@ class MeGuestScreen extends StatelessWidget {
                 SizedBox(height: mc.space8),
                 Text(
                   viewModel.isOsBridgeConnected
-                      ? 'Báo thức hệ thống đang sẵn sàng.'
+                      ? 'Báo thức đã sẵn sàng.'
                       : 'Đang sử dụng chế độ báo thức tiêu chuẩn trên máy.',
                   style: mc.bodyStrongStyle,
                 ),
@@ -153,7 +153,7 @@ class MeGuestScreen extends StatelessWidget {
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('me-reset-local'),
-            label: 'Xóa dữ liệu khách trên máy & bắt đầu lại',
+            label: 'Thiết lập lại dữ liệu ứng dụng',
             icon: MindClockIconKind.trash,
             variant: MindClockButtonVariant.subtle,
             onPressed: onResetGuestData,

@@ -526,7 +526,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   Text('Chưa có báo thức nào', style: mc.sectionTitleStyle),
                   SizedBox(height: mc.space8),
                   Text(
-                    'Đặt giờ báo thức local và xem phép tính gợi ý giờ dậy theo lịch học.',
+                    'Đặt giờ báo thức và xem gợi ý giờ dậy phù hợp với thời khóa biểu hôm nay.',
                     style: mc.bodyStyle,
                   ),
                   SizedBox(height: mc.space12),
@@ -797,7 +797,7 @@ class _TodayScreenState extends State<TodayScreen> {
           Text(
             hasOngoing
                 ? 'Đang mở: ${active.taskTitle} (${formatDurationClock(widget.studyViewModel!.remainingSeconds)})'
-                : 'Gợi ý hôm nay: $suggestedTitle · Timer cục bộ, tự chọn mức tập trung.',
+                : 'Gợi ý hôm nay: $suggestedTitle · Bấm để bắt đầu tập trung.',
             style: mc.bodyStyle,
           ),
           SizedBox(height: mc.space12),

@@ -184,7 +184,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             setState(() {
               _activeAlarmPlayingInQuestion = false;
               _activeAlarmIdInQuestion = null;
-              _todayBanner = 'Đã dừng khẩn cấp báo thức cục bộ.';
+              _todayBanner = 'Đã dừng chuông báo thức.';
               _stage = _GuestFlowStage.mainTabs;
               _selectedTabIndex = 0;
             });
@@ -437,7 +437,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                               _activeAlarmPlayingInQuestion = false;
                               _activeAlarmIdInQuestion = null;
                               _todayBanner =
-                                  'Đã dừng khẩn cấp báo thức cục bộ.';
+                                  'Đã dừng chuông báo thức.';
                             });
                           },
                         ),

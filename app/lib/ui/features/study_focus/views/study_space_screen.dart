@@ -63,15 +63,12 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
 
   String _headerScopeLabel(StudyFocusViewModel vm) {
     if (!vm.hasAiGateway) {
-      return 'Lưu cục bộ · Camera & AI đang tắt';
-    }
-    if (vm.isAiDebugFixture) {
-      return 'Lưu cục bộ · Camera tắt · AI mẫu (debug)';
+      return 'Không gian tự học';
     }
     if (vm.isAuthenticated) {
-      return 'Lưu cục bộ · Camera tắt · AI qua backend';
+      return 'Không gian học · Bạn học AI đồng hành';
     }
-    return 'Lưu cục bộ · Camera tắt · Đăng nhập để hỏi AI';
+    return 'Không gian tự học · Đăng nhập để cùng học với AI';
   }
 
   Future<void> _submitAiHelp(StudyFocusViewModel vm) async {
@@ -471,10 +468,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                   MindClockStatusPill(
                     key: const ValueKey<String>('study-remote-session-pill'),
                     label: snapshot.remoteSessionSynced
-                        ? (vm.isAiDebugFixture
-                            ? 'Phiên mẫu (debug)'
-                            : 'Server: Đã tạo phiên')
-                        : 'Phiên local',
+                        ? 'Đã lưu tiến độ'
+                        : 'Tự học trên máy',
                     accentWarm: !snapshot.remoteSessionSynced,
                   ),
                 ],
@@ -605,23 +600,19 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text('Hỏi MindClock (AI qua backend)', style: mc.sectionTitleStyle),
+              Text('Bạn học AI đồng hành', style: mc.sectionTitleStyle),
               MindClockStatusPill(
                 key: const ValueKey<String>('study-ai-status-pill'),
                 label: !vm.hasAiGateway
-                    ? 'Chưa nối backend'
-                    : vm.isAiDebugFixture
-                        ? 'Mẫu debug'
-                        : (vm.isAuthenticated ? 'Sẵn sàng' : 'Cần đăng nhập'),
+                    ? 'Chưa khả dụng'
+                    : (vm.isAuthenticated ? 'Sẵn sàng' : 'Cần đăng nhập'),
                 accentWarm: !vm.hasAiGateway || !vm.isAuthenticated,
               ),
             ],
           ),
           SizedBox(height: mc.space8),
           Text(
-            vm.isAiDebugFixture
-                ? 'Đang dùng dữ liệu mẫu debug. Ở bản nối thật, câu hỏi đi qua POST /v1/study/help (tối đa 3 lượt gần nhất), không gửi key ở máy.'
-                : 'Hỏi qua máy chủ backend MindClock (tối đa 3 lượt gần nhất). Câu hỏi bạn đang gõ được giữ nguyên nếu lỗi mạng/timeout/hết lượt.',
+            'Bạn học AI sẽ gợi ý phương pháp giải từng bước cho bài học hôm nay.',
             style: mc.captionStyle,
           ),
           if (vm.aiTurns.isNotEmpty) ...<Widget>[
@@ -1135,11 +1126,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     SizedBox(height: mc.space4),
                     Text(
                       item.remoteFinishSynced
-                          ? (vm.isAiDebugFixture
-                              ? 'Đồng bộ mẫu (debug)'
-                              : 'Đã đồng bộ kết thúc lên server')
+                          ? 'Đã lưu an toàn lên tài khoản'
                           : (item.remoteSyncErrorVi ??
-                              'Chưa đồng bộ kết thúc lên server (lưu an toàn trên máy)'),
+                              'Đã lưu trên máy (sẽ tự động đồng bộ khi có mạng)'),
                       key: ValueKey<String>(
                           'study-history-sync-${item.sessionId}'),
                       style: mc.captionStyle.copyWith(
@@ -1153,7 +1142,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                       MindClockButton(
                         key: ValueKey<String>(
                             'study-history-retry-${item.sessionId}'),
-                        label: 'Đồng bộ lại kết thúc phiên',
+                        label: 'Đồng bộ lại',
                         icon: MindClockIconKind.info,
                         variant: MindClockButtonVariant.secondary,
                         expand: false,
