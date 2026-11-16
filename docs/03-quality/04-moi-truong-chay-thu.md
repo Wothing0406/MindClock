@@ -42,7 +42,7 @@ Copy-Item .env.example .env
 
 `.env.example` mặc định SQLite local; **chỉ phục vụ phát triển**. Trước test PostgreSQL, đặt password dev riêng trong `.env`, chạy `docker compose up -d --build` từ `services/api/` (compose có `postgres` + `api`; Dockerfile chạy `alembic upgrade head` trước `uvicorn`), rồi kiểm `GET /v1/health` trả `dbDialect=postgresql`. Không dùng password mẫu cho staging/production. Docker cần engine đang chạy; nếu không, ghi điều kiện thiếu. Tắt `LOCAL_DEV_BEARER_UID_FALLBACK` và `GEMINI_MOCK_MODE` theo policy của môi trường test thực; **không dùng token `dev:*` để chứng minh production auth**. Model ID/chi phí/quota trong `.env.example` phải được kiểm với tài liệu nhà cung cấp trước live.
 
-Trong phiên T024, `pytest --collect-only` thấy 14 ca nhưng runtime bị treo ở ca health; B01 phải tái hiện và sửa trước khi đánh dấu API test pass. Không chạy AI live bằng ảnh học sinh thật khi chưa có consent/chính sách phù hợp.
+Trong phiên T024, `pytest --collect-only` thấy 14 ca nhưng runtime bị treo ở ca health; T029 (B01a) đã tắt `PRAGMA journal_mode=WAL` trên SQLite test/in-memory, đặt `busy_timeout=5000`, khóa `/demo` và `/product` khi `app_env=production`, và xác nhận `15 passed` trên Windows Python 3.11. Không chạy AI live bằng ảnh học sinh thật khi chưa có consent/chính sách phù hợp.
 
 ## 4. Cách ghi một ca máy thật
 

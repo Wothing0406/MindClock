@@ -11,6 +11,10 @@ from app.config import Settings, get_settings
 from app.db.base import Base, build_engine, create_session_factory, db_session_dependency
 from app.db.seed import seed_approved_questions
 from app.demo_ui import create_demo_router
+try:
+    from app.product_ui import create_product_router
+except ImportError:  # pragma: no cover
+    create_product_router = None
 from app.routes.v1 import create_v1_router
 from app.services.gemini_service import GeminiService
 
@@ -72,7 +76,10 @@ def create_app(
             gemini_factory=gemini_factory,
         )
     )
-    app.include_router(create_demo_router())
+    if cfg.app_env.lower() in {'development', 'test', 'local'}:
+        app.include_router(create_demo_router())
+        if create_product_router is not None:
+            app.include_router(create_product_router())
     return app
 
 

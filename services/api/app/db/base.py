@@ -20,6 +20,7 @@ def build_engine(settings: Settings | None = None) -> Engine:
     }
     if cfg.is_sqlite:
         connect_args['check_same_thread'] = False
+        connect_args['timeout'] = 10
     else:
         engine_kwargs['pool_pre_ping'] = True
         engine_kwargs['pool_size'] = 10
@@ -28,11 +29,16 @@ def build_engine(settings: Settings | None = None) -> Engine:
     engine = create_engine(cfg.database_url, connect_args=connect_args, **engine_kwargs)
 
     if cfg.is_sqlite:
+        is_memory = ':memory:' in cfg.database_url or 'mode=memory' in cfg.database_url
+        enable_wal = not is_memory and cfg.app_env.lower() != 'test'
+
         @event.listens_for(engine, 'connect')
         def _set_sqlite_pragmas(dbapi_conn: Any, _record: Any) -> None:
             cursor = dbapi_conn.cursor()
             cursor.execute('PRAGMA foreign_keys=ON')
-            cursor.execute('PRAGMA journal_mode=WAL')
+            cursor.execute('PRAGMA busy_timeout=5000')
+            if enable_wal:
+                cursor.execute('PRAGMA journal_mode=WAL')
             cursor.close()
 
     return engine

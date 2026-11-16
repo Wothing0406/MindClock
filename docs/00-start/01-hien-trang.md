@@ -5,7 +5,7 @@
 | Phần | Hiện có trong repo | Bằng chứng còn thiếu trước pilot |
 | --- | --- | --- |
 | Android | Flutter UI, domain/data, Kotlin báo thức, camera/focus bridge, unit/widget/integration test source | Build sạch trong CI, kiểm màn khóa/app đóng/reboot/offline/quyền/Dừng khẩn cấp trên hai máy Android thật; các task T014–T021 còn trạng thái blocked hoặc chưa hoàn tất. |
-| Backend | FastAPI `/v1`, auth gateway, SQLAlchemy, Alembic, seed ít câu, Gemini gateway, Docker config | Bộ test ổn định trên CI, migration PostgreSQL từ trống/có dữ liệu, Firebase project test thật, quyền A/B, backup/restore. Trong T025, pytest runtime local chưa được xác nhận; không diễn giải test file là test pass. |
+| Backend | FastAPI `/v1`, auth gateway, SQLAlchemy, Alembic, seed ít câu, Gemini gateway, Docker config; `pytest` local (`15 passed`, gồm test khóa `/demo` và `/product` khi `app_env=production`) đã xác nhận ở [T029](../../tasks/T029-b01a-on-dinh-backend-test/handoff.md) | Bộ test ổn định trên CI, migration PostgreSQL từ trống/có dữ liệu, Firebase project test thật, quyền A/B trên PostgreSQL, backup/restore. |
 | Nội dung học | Schema, một số câu đội viết/seed, tài liệu quy trình | Số câu theo môn/chủ đề, người duyệt, rubric, giấy phép từng item, benchmark chấm câu viết tay/chữ nhập. |
 | AI | Code gọi Gemini server-side, nhánh `uncertain`, Socratic/Live token | Test với model/config thực tế, độ chính xác, latency, quota/chi phí, quyền dữ liệu trẻ em và fallback. Không có bằng chứng AI có thể chấm mọi môn công tâm. |
 | Không gian học | Flutter timer/bridge/API học tập | Lifecycle, pin, offline, accessibility và camera/mic trên máy thật; camera/Live vẫn là tùy chọn có rủi ro quyền/chi phí. |

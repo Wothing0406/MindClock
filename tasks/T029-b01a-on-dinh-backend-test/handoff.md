@@ -1,0 +1,25 @@
+# Bàn giao nhiệm vụ — T029 (B01a)
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Chẩn đoán và ổn định cấu hình SQLite trong `services/api/app/db/base.py`: đặt `connect_args['timeout'] = 10`, `PRAGMA busy_timeout=5000`, và không bật `PRAGMA journal_mode=WAL` cho DB `:memory:` hoặc khi `app_env == 'test'` để tránh khóa file `.db-wal`/`.db-shm` trên Windows.
+  - Sửa `services/api/app/main.py` để chỉ mount `create_demo_router()` và `create_product_router()` khi `cfg.app_env.lower() in {'development', 'test', 'local'}`, bảo vệ nguyên vẹn WIP của `T022`/`T023` ở môi trường dev/test nhưng khóa hoàn toàn ở `production`.
+  - Thêm ca kiểm thử `test_production_env_disables_web_routes_and_dev_token_fallback` vào `services/api/tests/test_api_v1.py`.
+  - Cập nhật `docs/00-start/01-hien-trang.md` và `docs/03-quality/04-moi-truong-chay-thu.md`.
+- **File/code/docs thay đổi:**
+  - `services/api/app/db/base.py`
+  - `services/api/app/main.py`
+  - `services/api/tests/test_api_v1.py`
+  - `docs/00-start/01-hien-trang.md`
+  - `docs/03-quality/04-moi-truong-chay-thu.md`
+  - `tasks/T029-b01a-on-dinh-backend-test/*`
+- **Test đã chạy:**
+  - `services/api/.venv/Scripts/python.exe -m pytest -vv tests/test_api_v1.py -k test_health_and_zero_secret_exposure` -> `1 passed in 3.81s` (Windows Python 3.11.0rc2, 16/11/2026).
+  - `services/api/.venv/Scripts/python.exe -m pytest -vv --durations=20` -> `15 passed in 9.01s` (Windows Python 3.11.0rc2, 16/11/2026).
+  - `python scripts/check_docs_links.py` và `python scripts/check_task_records.py` -> pass. Xem `tests.md`.
+- **Test chưa chạy/giới hạn:**
+  - Migration và integration test trên PostgreSQL thật thuộc lát cắt `B01c`.
+- **Rủi ro còn lại:**
+  - `services/api/app/demo_ui.py` và `product_ui.py` vẫn là WIP chưa commit của `T022`/`T023` trong working tree; đã được cô lập khỏi `production`.
+- **Điểm tiếp tục chính xác:** Mở task `T030-b01b-flutter-android-build` để kiểm tra và ổn định `flutter doctor`, `flutter analyze`, `flutter test`, Gradle unit test và build APK debug theo `docs/00-start/05-goi-task-dau-tien.md` (B01b).
+- **Quyết định phải xin người phụ trách:** Không có.

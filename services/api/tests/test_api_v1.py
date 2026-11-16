@@ -676,3 +676,28 @@ def test_demo_console_and_bermuda_audio_route(tmp_path: Path) -> None:
         assert audio.status_code in {200, 404}
         if audio.status_code == 200:
             assert audio.headers['content-type'].startswith('audio/')
+
+
+def test_production_env_disables_web_routes_and_dev_token_fallback(tmp_path: Path) -> None:
+    db_file = tmp_path / 'prod_guard.db'
+    prod_settings = Settings(
+        app_env='production',
+        database_url=f'sqlite+pysqlite:///{db_file.as_posix()}',
+        gemini_api_key=SecretStr('AQ.PROD_SECRET_NEVER_LEAK'),
+        local_dev_bearer_uid_fallback=True,
+    )
+    app = create_app(prod_settings)
+    with TestClient(app) as client:
+        assert client.get('/demo').status_code == 404
+        assert client.get('/demo/bermuda.mp3').status_code == 404
+        assert client.get('/product').status_code == 404
+        assert client.get('/product/style.css').status_code == 404
+        assert client.get('/product/app.js').status_code == 404
+
+        me_res = client.get('/v1/me', headers={'Authorization': 'Bearer dev:spoof_user'})
+        assert me_res.status_code == 401
+        assert me_res.json()['error']['code'] == 'AUTH_EXPIRED'
+
+        health_res = client.get('/v1/health')
+        assert health_res.status_code == 200
+        assert 'AQ.PROD_SECRET_NEVER_LEAK' not in health_res.text
