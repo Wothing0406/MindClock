@@ -53,6 +53,7 @@ from app.services.eduskills_adapter import (
     extract_public_morning_card,
     sanitize_pre_reveal_hint,
 )
+from app.services.answer_normalizer import is_answer_accepted
 from app.services.gemini_service import (
     OFFLINE_HELP_FALLBACK_VI,
     GeminiService,
@@ -780,13 +781,13 @@ def create_v1_router(
 
         question = db.get(Question, session.question_id)
         accepted = [
-            str(x).strip().lower()
+            str(x)
             for x in ((question.answer_spec_json or {}).get('accepted', ['8']) if question else ['8'])
         ]
-        answer_norm = payload.answer_value.strip().lower()
+        answer_raw = payload.answer_value.strip()
         reasoning_norm = payload.reasoning_text.strip().lower()
 
-        if 'uncertain' in reasoning_norm or not answer_norm:
+        if 'uncertain' in reasoning_norm or not answer_raw:
             result = 'uncertain'
             xp_delta = 0
             observed_steps: list[str] = []
@@ -794,7 +795,7 @@ def create_v1_router(
             hint = None
             feedback = 'Chưa đủ rõ bước lập luận để chấm dứt khoát.'
             next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
-        elif answer_norm in accepted:
+        elif is_answer_accepted(payload.answer_value, accepted):
             already_rewarded = (
                 session.state == 'completed'
                 or db.scalar(
@@ -998,6 +999,11 @@ def create_v1_router(
             reasoning_text=reasoning_text,
             wrong_attempts_so_far=session.wrong_attempts,
         )
+
+        # Chuẩn hóa bảo vệ học sinh: nếu OCR nhận diện được đáp án nhưng Gemini so khớp thô chưa khớp
+        if grade.result == 'incorrect' and grade.predicted_answer and is_answer_accepted(grade.predicted_answer, accepted):
+            grade.result = 'correct'
+            grade.feedback_vi = 'Đáp án và bước giải đã được đối chiếu chuẩn hóa chính xác.'
 
         xp_delta = 0
         if grade.result == 'correct':

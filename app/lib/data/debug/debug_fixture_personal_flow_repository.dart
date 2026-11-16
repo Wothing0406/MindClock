@@ -1,4 +1,5 @@
 import '../../domain/models/personal_flow_models.dart';
+import '../../domain/services/answer_normalizer.dart';
 import '../../domain/services/personal_flow_repository.dart';
 
 /// Fixture debug tách riêng cho demo/test UI khi chưa bật backend thật `T016`.
@@ -118,7 +119,7 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
         isServerAuthoritative: false,
         isDebugFixture: true,
       );
-    } else if (cleanAnswer == '8' || cleanAnswer == 'x=8' || cleanAnswer == 'x = 8') {
+    } else if (isAnswerAccepted(cleanAnswer, const <String>['8', 'x=8', 'x = 8'])) {
       _wrongStreakInChallenge = 0;
       outcome = GradingResult(
         attemptId: 'debug_att_$clientAttemptId',
