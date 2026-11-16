@@ -30,6 +30,11 @@ abstract interface class PersonalFlowRepository {
     required String idempotencyKey,
   });
 
+  Future<SessionAbandonResult> abandonSession({
+    required String sessionId,
+    required String idempotencyKey,
+  });
+
   Future<GradingResult> submitTextAnswer({
     required String sessionId,
     required String answerValue,

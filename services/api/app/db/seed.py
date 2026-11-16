@@ -14,7 +14,17 @@ SEED_QUESTIONS: list[dict] = [
         'reasoning_prompt_vi': 'Viết một hoặc hai bước biến đổi chính của bạn.',
         'rubric_json': {
             'steps': ['Nhân phá ngoặc hoặc chia hai vế cho 2', 'Tìm x = 8'],
-            'hint_vi': 'Chia hai vế cho 2 trước sẽ rút gọn rất nhanh: x - 3 = 5.',
+            'hint_vi': 'Chia hai vế cho 2 trước sẽ rút gọn rất nhanh.',
+            'morning_card': {
+                'card_id': 'math9-linear-001-card',
+                'duration_target_seconds': 8,
+                'learning_outcome': 'Giải phương trình bậc nhất một ẩn chứa dấu ngoặc bằng phép chia hai vế',
+                'setup_vi': 'Hai túi quà giống nhau đều bớt đi 3 viên kẹo thì tổng cộng còn 10 viên.',
+                'cliff_vi': 'Trước khi mở ngoặc, phép tính nào giúp tìm ngay số kẹo trong mỗi túi?',
+                'static_fallback_vi': 'Hai phần bằng nhau có tổng là 10. Hãy rút gọn từng phần trước khi tìm x.',
+                'reveal_vi': 'Chia cả hai vế của 2(x - 3) = 10 cho 2 ta được x - 3 = 5, suy ra x = 8.',
+                'asset_id': 'team-owned-math9-linear-001',
+            },
         },
         'rubric_revision': 3,
         'status': 'published',
@@ -104,7 +114,17 @@ SEED_QUESTIONS: list[dict] = [
         'reasoning_prompt_vi': 'Ghi công thức định luật Ôm bạn vừa áp dụng.',
         'rubric_json': {
             'steps': ['I = U / R', 'I = 12 / 6 = 2 A'],
-            'hint_vi': 'Áp dụng công thức I = U / R.',
+            'hint_vi': 'Áp dụng công thức định luật Ôm cho đoạn mạch chỉ có điện trở.',
+            'morning_card': {
+                'card_id': 'phys9-ohm-001-card',
+                'duration_target_seconds': 9,
+                'learning_outcome': 'Vận dụng định luật Ôm I = U / R để tính cường độ dòng điện',
+                'setup_vi': 'Một bóng đèn có điện trở 6 Ω được nối vào nguồn điện không đổi 12 V.',
+                'cliff_vi': 'Cường độ dòng điện chạy qua bóng đèn phụ thuộc vào U và R theo hệ thức nào?',
+                'static_fallback_vi': 'Hiệu điện thế U = 12 V đặt vào điện trở R = 6 Ω. Dùng định luật Ôm để tính I.',
+                'reveal_vi': 'Theo định luật Ôm: I = U / R = 12 / 6 = 2 A.',
+                'asset_id': 'team-owned-phys9-ohm-001',
+            },
         },
         'rubric_revision': 1,
         'status': 'published',
@@ -151,12 +171,15 @@ SEED_QUESTIONS: list[dict] = [
 
 
 def seed_approved_questions(db: Session) -> int:
-    inserted = 0
+    inserted_or_updated = 0
     for item in SEED_QUESTIONS:
         existing = db.get(Question, item['id'])
         if existing is None:
             db.add(Question(**item))
-            inserted += 1
-    if inserted:
+            inserted_or_updated += 1
+        elif existing.rubric_json != item['rubric_json']:
+            existing.rubric_json = item['rubric_json']
+            inserted_or_updated += 1
+    if inserted_or_updated:
         db.commit()
-    return inserted
+    return inserted_or_updated

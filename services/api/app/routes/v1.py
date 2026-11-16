@@ -39,6 +39,11 @@ from app.schemas import (
     StudySessionFinishRequest,
     TimetablePutRequest,
 )
+from app.services.eduskills_adapter import (
+    extract_post_attempt_reveal_vi,
+    extract_public_morning_card,
+    sanitize_pre_reveal_hint,
+)
 from app.services.gemini_service import (
     OFFLINE_HELP_FALLBACK_VI,
     GeminiService,
@@ -475,6 +480,7 @@ def create_v1_router(
             'offlinePolicy': 'ungraded_only',
             'estimatedSeconds': 75,
             'fallback': False,
+            'morningCard': extract_public_morning_card(selected),
         }
 
     @router.post('/questions/personalized')
@@ -763,13 +769,30 @@ def create_v1_router(
             show_hint = session.wrong_attempts >= 3
             observed_steps = [payload.reasoning_text.strip()] if (show_hint and payload.reasoning_text.strip()) else []
             first_issue = 'Kiểm tra lại bước biến đổi chính.' if show_hint else None
-            hint = (
+            raw_hint = (
                 (question.rubric_json or {}).get('hint_vi')
                 if (show_hint and question)
                 else None
             )
+            hint = (
+                sanitize_pre_reveal_hint(raw_hint, accepted)
+                if show_hint
+                else None
+            )
             feedback = 'Bài này chưa đúng. Bạn có thể thử lại.'
-            next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+            if session.wrong_attempts >= 5:
+                next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            else:
+                next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+
+        can_abandon = result != 'correct' and session.wrong_attempts >= 5
+        if can_abandon and 'abandon' not in next_actions:
+            next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+        reveal_vi = (
+            extract_post_attempt_reveal_vi(question)
+            if (result == 'correct' and question is not None)
+            else None
+        )
 
         attempt_id = f'att_{uuid.uuid4().hex[:10]}'
         client_attempt_id = idempotency_key or attempt_id
@@ -818,6 +841,9 @@ def create_v1_router(
             'feedback': feedback,
             'hint': hint,
             'nextActions': next_actions,
+            'confirmedIncorrectCount': session.wrong_attempts,
+            'canAbandon': can_abandon,
+            'revealVi': reveal_vi,
             'xpAwarded': xp_delta,
             'modelVersion': 'deterministic-validator',
             'rubricRevision': question.rubric_revision if question else 1,
@@ -935,9 +961,27 @@ def create_v1_router(
             next_actions = ['finish']
         elif grade.result == 'incorrect':
             session.wrong_attempts += 1
-            next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+            if session.wrong_attempts >= 5:
+                next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            else:
+                next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
         else:
-            next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+            if session.wrong_attempts >= 5:
+                next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            else:
+                next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+
+        can_abandon = grade.result != 'correct' and session.wrong_attempts >= 5
+        reveal_vi = (
+            extract_post_attempt_reveal_vi(question)
+            if (grade.result == 'correct' and question is not None)
+            else None
+        )
+        sanitized_hint = (
+            sanitize_pre_reveal_hint(grade.hint_vi, accepted)
+            if grade.hint_vi
+            else None
+        )
 
         attempt_id = f'att_photo_{uuid.uuid4().hex[:8]}'
         db.add(
@@ -983,8 +1027,11 @@ def create_v1_router(
             'observedSteps': grade.observed_steps,
             'firstIssue': grade.first_issue,
             'feedback': grade.feedback,
-            'hint': grade.hint_vi,
+            'hint': sanitized_hint,
             'nextActions': next_actions,
+            'confirmedIncorrectCount': session.wrong_attempts,
+            'canAbandon': can_abandon,
+            'revealVi': reveal_vi,
             'xpAwarded': xp_delta,
             'modelVersion': grade.model_version,
             'rubricRevision': question.rubric_revision if question else 1,
@@ -995,6 +1042,73 @@ def create_v1_router(
             route=f'POST:/v1/sessions/{session_id}/attempts',
             key=idempotency_key,
             payload=idem_payload,
+            response_json=resp,
+        )
+        db.commit()
+        return resp
+
+    @router.post('/sessions/{session_id}/abandon')
+    def abandon_alarm_session(
+        session_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
+    ) -> dict[str, Any]:
+        session = db.get(AlarmSession, session_id)
+        if session is None:
+            raise _api_error(404, 'SESSION_NOT_FOUND', 'Không tìm thấy phiên học.')
+        if session.user_id != principal.user.id:
+            raise _api_error(
+                403,
+                'FORBIDDEN_OWNER',
+                'Không có quyền bỏ lượt phiên của tài khoản khác.',
+            )
+
+        raw_body = {'sessionId': session_id, 'action': 'abandon'}
+        cached = lookup_idempotency(
+            db,
+            user_id=principal.user.id,
+            route=f'POST:/v1/sessions/{session_id}/abandon',
+            key=idempotency_key,
+            payload=raw_body,
+        )
+        if cached is not None:
+            return cached
+
+        if session.state == 'completed':
+            raise _api_error(
+                409,
+                'SESSION_ALREADY_COMPLETED',
+                'Phiên này đã hoàn thành nên không thể bỏ lượt.',
+            )
+        if session.state != 'abandoned' and session.wrong_attempts < 5:
+            raise _api_error(
+                409,
+                'ABANDON_THRESHOLD_NOT_MET',
+                'Chỉ mở Bỏ lượt sau khi đã thử và sai rõ từ 5 lần. Dừng khẩn cấp luôn có sẵn.',
+            )
+
+        question = db.get(Question, session.question_id)
+        if session.state != 'abandoned':
+            session.state = 'abandoned'
+            session.version += 1
+
+        resp = {
+            'sessionId': session.id,
+            'state': session.state,
+            'version': session.version,
+            'confirmedIncorrectCount': session.wrong_attempts,
+            'xpAwarded': 0,
+            'streakDayAwarded': False,
+            'revealVi': extract_post_attempt_reveal_vi(question),
+            'messageVi': 'Đã bỏ lượt câu này (0 EXP, không trừ điểm đã có). Bạn có thể xem lời giải chuẩn bên dưới.',
+        }
+        save_idempotency(
+            db,
+            user_id=principal.user.id,
+            route=f'POST:/v1/sessions/{session_id}/abandon',
+            key=idempotency_key,
+            payload=raw_body,
             response_json=resp,
         )
         db.commit()

@@ -74,6 +74,19 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   }
 
   @override
+  Future<SessionAbandonResult> abandonSession({
+    required String sessionId,
+    required String idempotencyKey,
+  }) async {
+    final Map<String, dynamic> json = await _apiClient.postJson(
+      '/sessions/$sessionId/abandon',
+      idempotencyKey: idempotencyKey,
+      body: <String, dynamic>{'sessionId': sessionId, 'action': 'abandon'},
+    );
+    return SessionAbandonResult.fromJson(json);
+  }
+
+  @override
   Future<GradingResult> submitTextAnswer({
     required String sessionId,
     required String answerValue,

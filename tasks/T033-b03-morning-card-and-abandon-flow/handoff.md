@@ -1,0 +1,33 @@
+# Bàn giao nhiệm vụ — T033 (B03/B05)
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Tạo adapter [`services/api/app/services/eduskills_adapter.py`](../../services/api/app/services/eduskills_adapter.py) với 4 chế độ prompt `AUTHOR_DRAFT`, `GRADE_CANDIDATE`, `HINT_ONE_STEP`, `POST_ATTEMPT_EXPLAIN` cùng bộ lọc `sanitize_pre_reveal_hint` đảm bảo gợi ý trước khi kết thúc lượt không bao giờ lộ đáp án cuối.
+  - Bổ sung `morning_card` gốc đội tạo vào `services/api/app/db/seed.py` và trả `morningCard` công khai (không có `revealVi`) trong `GET /v1/challenges/next`.
+  - Cập nhật `POST /v1/sessions/{id}/answers` và `/attempts` trả `confirmedIncorrectCount`, `canAbandon` (`wrong_attempts >= 5`), và chỉ trả `revealVi` khi `result == 'correct'`.
+  - Mở route `POST /v1/sessions/{id}/abandon` (idempotent, kiểm tra owner 403, chặn 409 `ABANDON_THRESHOLD_NOT_MET` khi `wrong_attempts < 5`, trả `state='abandoned'`, `xpAwarded=0`, `streakDayAwarded=False` và `revealVi`).
+  - Nối toàn bộ luồng trên Flutter (`MorningHookCard`, nút `Bỏ qua mở màn · Vào câu hỏi`, hỗ trợ `Reduce Motion` dùng `staticFallbackVi`, nút `Bỏ lượt (0 EXP · xem lời giải chuẩn)` từ lần sai thứ 5, và hiển thị `revealVi` hậu lượt).
+- **File/code/docs thay đổi:**
+  - `services/api/app/services/eduskills_adapter.py`
+  - `services/api/app/db/seed.py`
+  - `services/api/app/routes/v1.py`
+  - `services/api/tests/test_api_v1.py`
+  - `app/lib/domain/models/personal_flow_models.dart`
+  - `app/lib/domain/services/personal_flow_repository.dart`
+  - `app/lib/data/repositories/remote_personal_flow_repository.dart`
+  - `app/lib/data/debug/debug_fixture_personal_flow_repository.dart`
+  - `app/lib/ui/features/personal_flow/view_models/personal_flow_view_model.dart`
+  - `app/lib/ui/features/personal_flow/views/practice_session_screen.dart`
+  - `docs/02-engineering/04-hop-dong-api.md`
+  - `docs/02-engineering/11-eduskills-vn-tich-hop.md`
+  - `docs/03-quality/03-truy-vet-yeu-cau.md`
+  - `tasks/T033-b03-morning-card-and-abandon-flow/*`
+- **Test đã chạy:**
+  - `services/api/.venv/Scripts/python.exe -m pytest -vv --durations=20` -> `21 passed, 1 skipped` (16/11/2026).
+  - `.local-sdk\flutter\bin\flutter.bat analyze` -> `No issues found!` (16/11/2026).
+- **Test chưa chạy/giới hạn:**
+  - Kiểm thử E2E trên máy Android thật cùng chuông sáng (`MORNING-01..03`) cần thiết bị vật lý cắm qua ADB.
+- **Rủi ro còn lại:**
+  - Hiện mới có câu/MorningCard mẫu đội tạo; cần reviewer bộ môn mở rộng ngân hàng câu THPT lớp 10–12 trước pilot.
+- **Điểm tiếp tục chính xác:** Mở task tiếp theo cho `B06` (Catalog chương trình THPT lớp 10–12 + Onboarding planner có xác nhận) và chạy kiểm thử thiết bị thật khi có máy Android.
+- **Quyết định phải xin người phụ trách:** Cần danh mục reviewer nội dung và câu hỏi THPT lớp 10–12 được duyệt cho pilot.

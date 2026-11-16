@@ -239,6 +239,39 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                 ),
                 if (question != null) ...<Widget>[
                   SizedBox(height: mc.space16),
+                  if (question.morningCard != null &&
+                      pvm.isMorningHookVisible) ...<Widget>[
+                    MindClockCard(
+                      key: const ValueKey<String>('morning-hook-card'),
+                      highlighted: true,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Mở màn buổi sáng (${question.morningCard!.durationTargetSeconds} giây)',
+                            style: mc.sectionTitleStyle,
+                          ),
+                          SizedBox(height: mc.space4),
+                          Text(
+                            MediaQuery.disableAnimationsOf(context)
+                                ? question.morningCard!.staticFallbackVi
+                                : '${question.morningCard!.setupVi}\n${question.morningCard!.cliffVi}',
+                            key: const ValueKey<String>('morning-hook-text'),
+                            style: mc.bodyStyle,
+                          ),
+                          SizedBox(height: mc.space8),
+                          MindClockButton(
+                            key: const ValueKey<String>('morning-hook-skip'),
+                            label: 'Bỏ qua mở màn · Vào câu hỏi',
+                            icon: MindClockIconKind.book,
+                            variant: MindClockButtonVariant.secondary,
+                            onPressed: pvm.skipOrFinishMorningHook,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: mc.space12),
+                  ],
                   Text(
                     question.prompt,
                     key: const ValueKey<String>('practice-question-prompt'),
@@ -389,6 +422,33 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                           MindClockNoticeBanner(
                             key: const ValueKey<String>('grading-method-hint'),
                             message: 'Gợi ý phương pháp: ${result.hintVi}',
+                          ),
+                        ],
+                        if (pvm.canAbandonCurrentSession &&
+                            pvm.activeSession?.state != 'abandoned' &&
+                            pvm.activeSession?.state != 'completed') ...<Widget>[
+                          SizedBox(height: mc.space8),
+                          MindClockButton(
+                            key: const ValueKey<String>(
+                              'practice-abandon-session',
+                            ),
+                            label: 'Bỏ lượt (0 EXP · xem lời giải chuẩn)',
+                            icon: MindClockIconKind.clock,
+                            variant: MindClockButtonVariant.secondary,
+                            onPressed: pvm.isBusy
+                                ? null
+                                : pvm.abandonActiveSession,
+                          ),
+                        ],
+                        if (pvm.postAttemptRevealVi != null &&
+                            pvm.postAttemptRevealVi!.isNotEmpty) ...<Widget>[
+                          SizedBox(height: mc.space8),
+                          MindClockNoticeBanner(
+                            key: const ValueKey<String>(
+                              'practice-post-attempt-reveal',
+                            ),
+                            message: 'Giải thích chuẩn: ${pvm.postAttemptRevealVi}',
+                            isWarm: false,
                           ),
                         ],
                         if (result.verdict != GradingVerdict.correct &&

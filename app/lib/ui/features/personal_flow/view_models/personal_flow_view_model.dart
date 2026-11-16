@@ -43,7 +43,9 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   bool _isBusy = false;
   bool _challengeModeSession = false;
+  bool _morningHookCompletedOrSkipped = false;
   int _clearWrongCount = 0;
+  String? _postAttemptRevealVi;
   String? _bannerMessageVi;
   String? _errorMessageVi;
 
@@ -69,13 +71,26 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   bool get isBusy => _isBusy;
   bool get isChallengeModeSession => _challengeModeSession;
+  bool get isMorningHookVisible =>
+      _currentQuestion?.morningCard != null && !_morningHookCompletedOrSkipped;
   int get clearWrongCount => _clearWrongCount;
+  String? get postAttemptRevealVi =>
+      _postAttemptRevealVi ?? _lastResult?.revealVi;
+  bool get canAbandonCurrentSession =>
+      _clearWrongCount >= 5 || (_lastResult?.canAbandon ?? false);
   String? get bannerMessageVi => _bannerMessageVi;
   String? get errorMessageVi => _errorMessageVi;
   bool get hasRetryableTextFailure => _hasRetryableTextFailure;
   bool get hasRetryablePhotoFailure => _hasRetryablePhotoFailure;
   String? get activeIdempotencyKey => _pendingIdempotencyKey;
   String? get activeClientAttemptId => _pendingClientAttemptId;
+
+  /// Bỏ qua đoạn mở màn (6–12 giây) để vào thẳng câu hỏi của cùng lượt học (`MORNING-01`).
+  void skipOrFinishMorningHook() {
+    if (_morningHookCompletedOrSkipped) return;
+    _morningHookCompletedOrSkipped = true;
+    notifyListeners();
+  }
 
   /// Theo `docs/31` & `docs/07 §6`: chế độ thử thách chỉ hiện gợi ý phương pháp từ lần sai rõ thứ 3.
   bool get canRevealMethodHint {
@@ -168,6 +183,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _sessionHistory = const <SessionHistoryItem>[];
     _pendingPhotoPreview = null;
     _lastFeedbackReport = null;
+    _morningHookCompletedOrSkipped = false;
+    _postAttemptRevealVi = null;
     _clearWrongCount = 0;
     _clearSubmissionKeys();
   }
@@ -222,6 +239,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _lastFeedbackReport = null;
     _pendingPhotoPreview = null;
     _challengeModeSession = challengeMode;
+    _morningHookCompletedOrSkipped = false;
+    _postAttemptRevealVi = null;
     _clearWrongCount = 0;
     _clearSubmissionKeys();
     notifyListeners();
@@ -492,14 +511,70 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   void _applyGradingResult(GradingResult result) {
     _lastResult = result;
+    _morningHookCompletedOrSkipped = true;
     switch (result.verdict) {
       case GradingVerdict.correct:
         _clearWrongCount = 0;
+        _postAttemptRevealVi = result.revealVi;
       case GradingVerdict.incorrect:
-        _clearWrongCount += 1;
+        _clearWrongCount = result.confirmedIncorrectCount > 0
+            ? result.confirmedIncorrectCount
+            : (_clearWrongCount + 1);
       case GradingVerdict.uncertain:
         // Không cộng lượt sai rõ khi AI chưa chắc chắn (`docs/31`, `docs/39`).
         break;
+    }
+  }
+
+  /// Bỏ lượt sau khi đã thử và sai rõ từ 5 lần (`MORNING-02`, `MORNING-03`):
+  /// kết thúc phiên với `0 EXP`, không cộng ngày chuỗi, không trừ điểm đã có và hiển thị lời giải chuẩn.
+  Future<SessionAbandonResult?> abandonActiveSession() async {
+    final StudySessionRecord? session = _activeSession;
+    if (session == null) return null;
+    if (!canAbandonCurrentSession) {
+      _errorMessageVi =
+          'Chỉ mở Bỏ lượt sau khi đã thử và sai rõ từ 5 lần. Dừng khẩn cấp luôn có sẵn.';
+      notifyListeners();
+      return null;
+    }
+    if (!_authSession.isAuthenticated || session.isOfflineLocal) {
+      _activeSession = session.copyWith(state: 'abandoned');
+      _bannerMessageVi =
+          'Đã bỏ lượt câu này trên máy (0 EXP, không trừ điểm đã có).';
+      notifyListeners();
+      return SessionAbandonResult(
+        sessionId: session.sessionId,
+        state: 'abandoned',
+        version: session.version + 1,
+        confirmedIncorrectCount: _clearWrongCount,
+        xpAwarded: 0,
+        streakDayAwarded: false,
+        messageVi: _bannerMessageVi!,
+      );
+    }
+
+    _isBusy = true;
+    _errorMessageVi = null;
+    notifyListeners();
+    try {
+      final SessionAbandonResult res = await _repository.abandonSession(
+        sessionId: session.sessionId,
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+      );
+      _activeSession = session.copyWith(
+        state: res.state,
+        version: res.version,
+      );
+      _postAttemptRevealVi = res.revealVi;
+      _bannerMessageVi = res.messageVi;
+      await _loadOnlineProgressQuietly();
+      return res;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      return null;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
     }
   }
 

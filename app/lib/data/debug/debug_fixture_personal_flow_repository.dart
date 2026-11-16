@@ -70,6 +70,24 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   }
 
   @override
+  Future<SessionAbandonResult> abandonSession({
+    required String sessionId,
+    required String idempotencyKey,
+  }) async {
+    return SessionAbandonResult(
+      sessionId: sessionId,
+      state: 'abandoned',
+      version: 2,
+      confirmedIncorrectCount: _wrongStreakInChallenge,
+      xpAwarded: 0,
+      streakDayAwarded: false,
+      messageVi: '[Fixture debug] Đã bỏ lượt câu này (0 EXP).',
+      revealVi:
+          '[Fixture debug] Chia hai vế của 2(x − 3) = 10 cho 2 được x − 3 = 5, suy ra x = 8.',
+    );
+  }
+
+  @override
   Future<GradingResult> submitTextAnswer({
     required String sessionId,
     required String answerValue,
@@ -120,6 +138,7 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
     } else {
       _wrongStreakInChallenge += 1;
       final bool allowHint = _wrongStreakInChallenge >= 3;
+      final bool allowAbandon = _wrongStreakInChallenge >= 5;
       outcome = GradingResult(
         attemptId: 'debug_att_$clientAttemptId',
         verdict: GradingVerdict.incorrect,
@@ -131,11 +150,15 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
         hintVi: allowHint
             ? 'Nhân số 2 vào cả hai số hạng trong ngoặc trước khi chuyển vế.'
             : null,
-        nextActions: const <String>['retry', 'finish_ungraded', 'emergency_stop'],
+        nextActions: allowAbandon
+            ? const <String>['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            : const <String>['retry', 'finish_ungraded', 'emergency_stop'],
         xpAwarded: 0,
         modelVersion: 'debug-fixture-v1',
         rubricRevision: 3,
         isServerAuthoritative: false,
+        confirmedIncorrectCount: _wrongStreakInChallenge,
+        canAbandon: allowAbandon,
         isDebugFixture: true,
       );
     }

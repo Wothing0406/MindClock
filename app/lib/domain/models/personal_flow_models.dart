@@ -17,7 +17,50 @@ enum GradingVerdict {
   }
 }
 
-/// Đề bài nhận từ `GET /v1/challenges/next` (tuyệt đối không chứa đáp án/rubric).
+/// Thẻ mở màn ngắn 6–12 giây gắn trực tiếp với câu hỏi (`docs/01-product/09-giac-ngu-va-bao-thuc.md`, `11-eduskills-vn-tich-hop.md`).
+class MorningHookCard {
+  const MorningHookCard({
+    required this.cardId,
+    required this.questionId,
+    required this.questionRevision,
+    required this.learningOutcome,
+    required this.durationTargetSeconds,
+    required this.setupVi,
+    required this.cliffVi,
+    required this.staticFallbackVi,
+    this.assetId = '',
+    this.skipAllowed = true,
+  });
+
+  final String cardId;
+  final String questionId;
+  final int questionRevision;
+  final String learningOutcome;
+  final int durationTargetSeconds;
+  final String setupVi;
+  final String cliffVi;
+  final String staticFallbackVi;
+  final String assetId;
+  final bool skipAllowed;
+
+  factory MorningHookCard.fromJson(Map<String, dynamic> json) {
+    return MorningHookCard(
+      cardId: json['cardId'] as String? ?? 'mc_default',
+      questionId: json['questionId'] as String? ?? '',
+      questionRevision: (json['questionRevision'] as num?)?.toInt() ?? 1,
+      learningOutcome: json['learningOutcome'] as String? ?? '',
+      durationTargetSeconds:
+          ((json['durationTargetSeconds'] as num?)?.toInt() ?? 8).clamp(6, 12),
+      setupVi: json['setupVi'] as String? ?? '',
+      cliffVi: json['cliffVi'] as String? ?? '',
+      staticFallbackVi: json['staticFallbackVi'] as String? ?? '',
+      assetId: json['assetId'] as String? ?? '',
+      skipAllowed: json['skipAllowed'] as bool? ?? true,
+    );
+  }
+}
+
+/// Đề bài nhận từ `GET /v1/challenges/next` (tuyệt đối không chứa đáp án/rubric/reveal trước khi kết thúc).
 class ChallengeQuestion {
   const ChallengeQuestion({
     required this.questionId,
@@ -30,6 +73,7 @@ class ChallengeQuestion {
     required this.reasoningPromptVi,
     required this.offlinePolicy,
     required this.estimatedSeconds,
+    this.morningCard,
     this.fallback = false,
     this.isDebugFixture = false,
   });
@@ -44,6 +88,7 @@ class ChallengeQuestion {
   final String reasoningPromptVi;
   final String offlinePolicy;
   final int estimatedSeconds;
+  final MorningHookCard? morningCard;
   final bool fallback;
   final bool isDebugFixture;
 
@@ -51,6 +96,7 @@ class ChallengeQuestion {
     Map<String, dynamic> json, {
     bool isDebugFixture = false,
   }) {
+    final Object? rawCard = json['morningCard'];
     return ChallengeQuestion(
       questionId: json['questionId'] as String? ?? 'unknown-question',
       questionRevision: (json['questionRevision'] as num?)?.toInt() ?? 1,
@@ -63,6 +109,9 @@ class ChallengeQuestion {
           'Viết ngắn gọn bước làm hoặc lý do bạn chọn đáp án.',
       offlinePolicy: json['offlinePolicy'] as String? ?? 'ungraded_only',
       estimatedSeconds: (json['estimatedSeconds'] as num?)?.toInt() ?? 75,
+      morningCard: rawCard is Map<String, dynamic>
+          ? MorningHookCard.fromJson(rawCard)
+          : null,
       fallback: json['fallback'] as bool? ?? false,
       isDebugFixture: isDebugFixture,
     );
@@ -120,6 +169,9 @@ class GradingResult {
     required this.modelVersion,
     required this.rubricRevision,
     required this.isServerAuthoritative,
+    this.confirmedIncorrectCount = 0,
+    this.canAbandon = false,
+    this.revealVi,
     this.isDebugFixture = false,
   });
 
@@ -134,6 +186,9 @@ class GradingResult {
   final String modelVersion;
   final int rubricRevision;
   final bool isServerAuthoritative;
+  final int confirmedIncorrectCount;
+  final bool canAbandon;
+  final String? revealVi;
   final bool isDebugFixture;
 
   int get authoritativeXpAwarded =>
@@ -148,6 +203,13 @@ class GradingResult {
         json['observedSteps'] as List<dynamic>? ?? const <dynamic>[];
     final List<dynamic> rawActions =
         json['nextActions'] as List<dynamic>? ?? const <dynamic>[];
+    final List<String> parsedActions =
+        rawActions.whereType<String>().toList(growable: false);
+    final int wrongCount =
+        (json['confirmedIncorrectCount'] as num?)?.toInt() ?? 0;
+    final bool canAbandon = (json['canAbandon'] as bool?) ??
+        parsedActions.contains('abandon') ||
+        wrongCount >= 5;
     return GradingResult(
       attemptId: json['attemptId'] as String? ?? '',
       verdict: GradingVerdict.fromWire(json['result'] as String?),
@@ -156,12 +218,52 @@ class GradingResult {
       feedbackVi: json['feedback'] as String? ??
           'Đã nhận phản hồi từ hệ thống chấm.',
       hintVi: json['hint'] as String?,
-      nextActions: rawActions.whereType<String>().toList(growable: false),
+      nextActions: parsedActions,
       xpAwarded: (json['xpAwarded'] as num?)?.toInt() ?? 0,
       modelVersion: json['modelVersion'] as String? ?? '',
       rubricRevision: (json['rubricRevision'] as num?)?.toInt() ?? 0,
       isServerAuthoritative: isServerAuthoritative,
+      confirmedIncorrectCount: wrongCount,
+      canAbandon: canAbandon,
+      revealVi: json['revealVi'] as String?,
       isDebugFixture: isDebugFixture,
+    );
+  }
+}
+
+class SessionAbandonResult {
+  const SessionAbandonResult({
+    required this.sessionId,
+    required this.state,
+    required this.version,
+    required this.confirmedIncorrectCount,
+    required this.xpAwarded,
+    required this.streakDayAwarded,
+    required this.messageVi,
+    this.revealVi,
+  });
+
+  final String sessionId;
+  final String state;
+  final int version;
+  final int confirmedIncorrectCount;
+  final int xpAwarded;
+  final bool streakDayAwarded;
+  final String messageVi;
+  final String? revealVi;
+
+  factory SessionAbandonResult.fromJson(Map<String, dynamic> json) {
+    return SessionAbandonResult(
+      sessionId: json['sessionId'] as String? ?? '',
+      state: json['state'] as String? ?? 'abandoned',
+      version: (json['version'] as num?)?.toInt() ?? 1,
+      confirmedIncorrectCount:
+          (json['confirmedIncorrectCount'] as num?)?.toInt() ?? 5,
+      xpAwarded: (json['xpAwarded'] as num?)?.toInt() ?? 0,
+      streakDayAwarded: json['streakDayAwarded'] as bool? ?? false,
+      messageVi: json['messageVi'] as String? ??
+          'Đã bỏ lượt câu này (0 EXP, không trừ điểm đã có).',
+      revealVi: json['revealVi'] as String?,
     );
   }
 }

@@ -7,6 +7,11 @@ from pydantic import SecretStr
 
 from app.config import Settings
 from app.main import create_app
+from app.services.eduskills_adapter import (
+    EduSkillsMode,
+    build_eduskills_prompt_spec,
+    sanitize_pre_reveal_hint,
+)
 from app.services.gemini_service import GeminiService
 
 
@@ -701,3 +706,135 @@ def test_production_env_disables_web_routes_and_dev_token_fallback(tmp_path: Pat
         health_res = client.get('/v1/health')
         assert health_res.status_code == 200
         assert 'AQ.PROD_SECRET_NEVER_LEAK' not in health_res.text
+
+
+def test_morning_card_hook_and_abandon_at_5_incorrect(tmp_path: Path) -> None:
+    app = create_app(_make_settings(tmp_path, mock_mode=True))
+    with TestClient(app) as client:
+        nxt = client.get(
+            '/v1/challenges/next?subject=TOAN&date=2026-11-16',
+            headers=_headers('user_morning'),
+        )
+        assert nxt.status_code == 200
+        q_data = nxt.json()
+        assert 'morningCard' in q_data
+        mc = q_data['morningCard']
+        assert mc['questionId'] == q_data['questionId']
+        assert mc['questionRevision'] == q_data['questionRevision']
+        assert 6 <= mc['durationTargetSeconds'] <= 12
+        assert mc['setupVi']
+        assert mc['cliffVi']
+        assert mc['staticFallbackVi']
+        assert mc['skipAllowed'] is True
+        # Tuyệt đối không lộ revealVi, answerSpec hay rubric trước khi kết thúc phiên
+        assert 'revealVi' not in mc
+        assert 'reveal_vi' not in mc
+        assert 'answerSpec' not in q_data
+        assert 'rubric' not in q_data
+
+        sess = client.post(
+            '/v1/sessions',
+            headers=_headers('user_morning'),
+            json={
+                'localSessionId': 'loc_mc_5',
+                'alarmId': 'alarm_morning',
+                'questionId': q_data['questionId'],
+                'localDate': '2026-11-16',
+            },
+        ).json()
+        sid = sess['sessionId']
+
+        # 1) Nộp bài uncertain -> confirmedIncorrectCount vẫn là 0
+        unc = client.post(
+            f'/v1/sessions/{sid}/answers',
+            headers=_headers('user_morning', idem='mc-unc-1'),
+            json={'answerValue': '', 'reasoningText': 'uncertain chưa rõ'},
+        )
+        assert unc.status_code == 200
+        assert unc.json()['result'] == 'uncertain'
+        assert unc.json()['confirmedIncorrectCount'] == 0
+        assert unc.json()['canAbandon'] is False
+
+        # 2) Sai rõ từ lần 1 đến lần 4: chưa được phép abandon
+        for idx in range(1, 5):
+            w = client.post(
+                f'/v1/sessions/{sid}/answers',
+                headers=_headers('user_morning', idem=f'mc-wrong-{idx}'),
+                json={'answerValue': f'x = {90 + idx}', 'reasoningText': 'Thử biến đổi'},
+            )
+            assert w.status_code == 200
+            w_body = w.json()
+            assert w_body['result'] == 'incorrect'
+            assert w_body['confirmedIncorrectCount'] == idx
+            assert w_body['canAbandon'] is False
+            assert w_body['revealVi'] is None
+            if idx < 3:
+                assert w_body['hint'] is None
+            else:
+                assert w_body['hint'] is not None
+                assert 'x = 8' not in w_body['hint'].lower()
+
+        early_abandon = client.post(
+            f'/v1/sessions/{sid}/abandon',
+            headers=_headers('user_morning', idem='mc-ab-early'),
+        )
+        assert early_abandon.status_code == 409
+        assert early_abandon.json()['error']['code'] == 'ABANDON_THRESHOLD_NOT_MET'
+
+        # 3) Sai rõ lần thứ 5 -> canAbandon = True và nextActions có 'abandon'
+        w5 = client.post(
+            f'/v1/sessions/{sid}/answers',
+            headers=_headers('user_morning', idem='mc-wrong-5'),
+            json={'answerValue': 'x = 99', 'reasoningText': 'Thử lần 5'},
+        )
+        assert w5.status_code == 200
+        w5_body = w5.json()
+        assert w5_body['confirmedIncorrectCount'] == 5
+        assert w5_body['canAbandon'] is True
+        assert 'abandon' in w5_body['nextActions']
+
+        # User B không được abandon phiên của User Morning
+        cross_ab = client.post(
+            f'/v1/sessions/{sid}/abandon',
+            headers=_headers('user_other', idem='mc-ab-cross'),
+        )
+        assert cross_ab.status_code == 403
+
+        # 4) Bỏ lượt hợp lệ (idempotent) -> state=abandoned, xpAwarded=0, có revealVi
+        ab1 = client.post(
+            f'/v1/sessions/{sid}/abandon',
+            headers=_headers('user_morning', idem='mc-ab-ok'),
+        )
+        ab2 = client.post(
+            f'/v1/sessions/{sid}/abandon',
+            headers=_headers('user_morning', idem='mc-ab-ok'),
+        )
+        assert ab1.status_code == 200
+        ab_body = ab1.json()
+        assert ab_body['state'] == 'abandoned'
+        assert ab_body['xpAwarded'] == 0
+        assert ab_body['streakDayAwarded'] is False
+        assert ab_body['revealVi'] is not None
+        assert 'x = 8' in ab_body['revealVi']
+        assert ab2.json() == ab_body
+
+        summary = client.get('/v1/progress/summary', headers=_headers('user_morning'))
+        assert summary.json()['xp'] == 0
+
+
+def test_eduskills_adapter_modes_and_answer_leak_guard() -> None:
+    hint_spec = build_eduskills_prompt_spec(EduSkillsMode.HINT_ONE_STEP, 'VAT_LY', grade_band='Lớp 10')
+    grade_spec = build_eduskills_prompt_spec(EduSkillsMode.GRADE_CANDIDATE, 'TOAN', grade_band='Lớp 11')
+    explain_spec = build_eduskills_prompt_spec(EduSkillsMode.POST_ATTEMPT_EXPLAIN, 'HOA_HOC', grade_band='Lớp 12')
+
+    assert hint_spec.allows_final_answer_reveal is False
+    assert grade_spec.allows_final_answer_reveal is False
+    assert explain_spec.allows_final_answer_reveal is True
+    assert 'giai-chi-tiet' in hint_spec.system_instruction_vi
+
+    # Nếu hint vô tình chứa đáp án "x = 8" hoặc "has lived", bộ lọc phải thay bằng gợi ý an toàn
+    leaked = sanitize_pre_reveal_hint('Chia 2 vế ta được kết quả x = 8 ngay.', ['8', 'x=8', 'x = 8'])
+    assert 'x = 8' not in leaked.lower()
+
+    safe = sanitize_pre_reveal_hint('Chia hai vế cho 2 trước khi chuyển vế.', ['8', 'x=8', 'x = 8'])
+    assert safe == 'Chia hai vế cho 2 trước khi chuyển vế.'

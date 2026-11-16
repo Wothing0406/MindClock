@@ -1,6 +1,6 @@
 # Tích hợp EduSkills-VN vào nội dung và chấm bài
 
-**Nguồn:** [EduSkills-VN](https://github.com/Wothing0406/EduSkills-VN) của nhóm. Đây là **bộ quy tắc sư phạm, chuẩn hóa và tạo prompt**, không phải kho câu hỏi đã duyệt hay model chấm bài. Bản tích hợp đầu là thiết kế; chưa có adapter chạy trong FastAPI. [Ngân hàng câu](05-ngan-hang-cau-hoi.md), [AI/chấm](06-ai-va-cham-bai.md), [catalog](10-catalog-chuong-trinh-va-ke-hoach.md).
+**Nguồn:** [EduSkills-VN](https://github.com/Wothing0406/EduSkills-VN) của nhóm. Đây là **bộ quy tắc sư phạm, chuẩn hóa và tạo prompt**, không phải kho câu hỏi đã duyệt hay model chấm bài. Adapter đầu tiên đã được triển khai tại [`services/api/app/services/eduskills_adapter.py`](../../services/api/app/services/eduskills_adapter.py) (T033). [Ngân hàng câu](05-ngan-hang-cau-hoi.md), [AI/chấm](06-ai-va-cham-bai.md), [catalog](10-catalog-chuong-trinh-va-ke-hoach.md).
 
 ## 1. Phạm vi dùng được
 

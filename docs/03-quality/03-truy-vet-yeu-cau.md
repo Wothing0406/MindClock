@@ -6,11 +6,11 @@ Ma trận này giúp AI không “làm đẹp một màn” rồi báo xong sả
 | --- | --- | --- | --- | --- |
 | P-01 | [PRD §4](../01-product/01-prd.md) đăng ký/hồ sơ học/avatar/plan | `app/lib` Auth/onboarding hiện có một phần; catalog/plan cần mở | UX-01, AUTH-01, ON-01–06 | R2 |
 | P-02 | Lưu alarm, quyền OS, gợi giờ cần xác nhận | `app/lib/domain/services/alarm_scheduler_service.dart`, `app/android/` | AL-01–04, AD01/04/07, bridge/unit | R1 |
-| P-03 | Chuông thử thách/Dừng khẩn cấp, mở màn→câu | `app/android/AlarmRing*`, Flutter ring UI; MorningCard/asset registry chưa có | AL-05–09, MORNING-01, MEDIA-01–03, AD02/03/05/06/09 | R1/R3, release blocker |
+| P-03 | Chuông thử thách/Dừng khẩn cấp, mở màn→câu | `app/android/AlarmRing*` (T032 dừng âm khi `Mở câu`), Flutter ring UI + `MorningHookCard` (T033) | AL-05–09, MORNING-01, MEDIA-01–03, AD02/03/05/06/09 | R1/R3, release blocker |
 | P-04 | Chuông thường/Hoãn local | Android alarm mode + UI | AL-10, AD06 | R1 |
 | P-05 | Không có câu/mất mạng | local cache/content resolver | LEARN-01, AL-07 | R3 |
-| P-06 | Nộp chữ/ảnh, chấm ba trạng thái; EduSkills hỗ trợ | `/v1/sessions/{id}/answers|attempts`, Gemini service; adapter EduSkills chưa có | LEARN-02–05, AI-01, EDU-01/03/04, idempotency, eval | R3/R4 |
-| P-07 | Sai bài và gợi mở/bỏ lượt sau 5 sai rõ | challenge UI + study help service; abandon route chưa có | LEARN-06, AI-02, MORNING-02, EDU-02 | R3/R4 |
+| P-06 | Nộp chữ/ảnh, chấm ba trạng thái; EduSkills hỗ trợ | `/v1/sessions/{id}/answers|attempts`, Gemini service, `eduskills_adapter.py` (T033) | LEARN-02–05, AI-01, EDU-01/03/04, idempotency, eval | R3/R4 |
+| P-07 | Sai bài và gợi mở/bỏ lượt sau 5 sai rõ | challenge UI + `/v1/sessions/{id}/abandon` (T033) + study help service | LEARN-06, AI-02, MORNING-02, EDU-02 | R3/R4 |
 | P-08 | Tiến độ riêng, XP/chuỗi server, bỏ lượt không thưởng | `xp_ledger`, progress query; streak day policy cần migration | DATA-01, MORNING-03, A/B, duplicate | R3/R4 |
 | P-09 | Không gian học | Flutter study focus + `/v1/study/*` | FOCUS-01–08, Android lifecycle | R5 |
 | P-10 | Xóa/rút consent | Auth/consent API + local state | AUTH-04, PRIV-01, SQL purge/ẩn bảng | R2/R9 |
