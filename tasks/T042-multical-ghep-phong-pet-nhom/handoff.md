@@ -7,4 +7,4 @@
 - **Chưa chạy:** Android/backend/PostgreSQL/4 máy, moderation pilot, asset pet.
 - **Rủi ro:** matchmaking công khai cho học sinh, lịch rảnh nhạy cảm, áp lực pet; giữ feature flag tắt.
 - **Điểm tiếp tục:** bắt đầu từ R7 phòng mời hai người và test ROOM-05; sau khi qua cổng, task R7b đầu là availability/vote GROUP-01/02, rồi room nhóm, discovery, pet.
-- **Git:** nhánh `main`; SHA và xác minh remote sẽ ghi trong bàn giao sau commit.
+- **Git:** nhánh `main`; commit tài liệu `abc4d16`; xác minh remote sau commit bàn giao.
