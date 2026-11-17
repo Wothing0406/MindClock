@@ -7,4 +7,4 @@
 - **Chưa test runtime:** alarm Android thật, PostgreSQL ledger, hai tài khoản/nhóm, pilot áp lực xã hội.
 - **Rủi ro:** clock drift/lỗi OS, tính công bằng khi một người nghỉ, dữ liệu học sinh.
 - **Điểm tiếp tục:** triển khai group invite từ R7; sau đó on-time ledger riêng và morning care GROUP-06/09; giữ cờ tắt đến khi test máy thật.
-- **Git:** điền SHA commit sau khi commit/push tài liệu task.
+- **Git:** nhánh `main`; commit tài liệu `2863532`; xác minh remote sau commit bàn giao.
