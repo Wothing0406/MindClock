@@ -1,10 +1,23 @@
 # Bàn giao nhiệm vụ T046
 
-- **Trạng thái cuối:** `in_progress`
-- **Đã làm:** Khởi tạo hồ sơ task T046 và kiểm kê chính xác các file combat/catalog/test đang untracked so với file đã tracked.
-- **File/code/docs thay đổi:** `tasks/T046-fix-t037-combat-git-tracking/*`
-- **Test đã chạy:** Chưa hoàn tất; xem `tests.md`.
-- **Test chưa chạy/giới hạn:** `flutter_tester.exe` bị Windows WDAC chặn trên máy local.
-- **Rủi ro còn lại:** Chưa commit/push các file combat vào Git và chưa kiểm chứng worktree sạch.
-- **Điểm tiếp tục chính xác:** Hoàn thành bước 1–5 trong `tasks/T046-fix-t037-combat-git-tracking/plan.md`.
-- **Git:** Chưa commit.
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Kiểm kê chính xác file tracked (`v1.py`, `pvp_match_service.py`, `models.py`, `01-pvp-gdd.md`) so với 6 file combat/catalog/test T037 đang untracked và tái hiện lỗi `ModuleNotFoundError: No module named 'app.game'` trên Git worktree sạch của `f765841`.
+  - Tạo `services/api/app/game/__init__.py` để `app.game` là Python package chuẩn.
+  - Chuẩn hóa contract Python↔Dart: `COMBAT_RULE_VERSION = "solo-three-v0.1"`, alias `han_boi_thap` / `han-boi-thap` / `han-boi-phap` / `han boi thap` → `han_boi_phap`, và hỗ trợ cả `player_a_delta` lẫn `delta_a` trong `RoundSettleSnapshot.fromJson`.
+  - Đưa toàn bộ 7 file combat/catalog/test vào Git và xác minh thành công trên Git worktree sạch (`66bb734`).
+- **File/code/docs thay đổi:**
+  - `services/api/app/game/__init__.py` (mới)
+  - `services/api/app/game/combat_catalog.py` (tracked từ T037)
+  - `services/api/app/game/combat_engine.py` (tracked từ T037)
+  - `services/api/tests/test_combat_engine.py` (tracked + bổ sung test contract/export)
+  - `app/lib/domain/game/combat_catalog.dart` (tracked + chuẩn hóa alias khoảng trắng)
+  - `app/lib/domain/game/combat_models.dart` (tracked + hỗ trợ `delta_a`/`delta_b`)
+  - `app/test/combat_catalog_test.dart` (tracked + bổ sung test snake_case)
+  - `tasks/T046-fix-t037-combat-git-tracking/*`
+- **Test đã chạy:** Xem chi tiết lệnh và kết quả trong `tasks/T046-fix-t037-combat-git-tracking/tests.md` (TC-01 clean worktree import + 9/9 pytest PASS; TC-02 9/9 pytest PASS; TC-03 `dart analyze` 0 issues + Python→Dart JSON VM assert PASS; TC-05 static checks & remote push PASS).
+- **Test chưa chạy/giới hạn:** `flutter test test/combat_catalog_test.dart` bị Windows WDAC chặn `flutter_tester.exe` trên máy local (đã xác minh logic runtime trực tiếp qua `dart run --enable-asserts` trên Dart VM; full `flutter test` cần chạy trên CI Linux runner).
+- **Rủi ro còn lại:** Không còn lỗi import combat trên clone sạch; các bảng/migration PostgreSQL PvP và lỗi kẹt `test_pvp_matchmaking.py` thuộc phạm vi T038.
+- **Điểm tiếp tục chính xác:** Mở `tasks/T038-pvp-database-and-matchmaking/` để tái hiện & sửa lỗi kẹt `pytest services/api/tests/test_pvp_matchmaking.py -vv -x`, hoàn thiện migration Alembic PvP và kiểm chứng trên PostgreSQL thật.
+- **Git:** Nhánh `main`, commit mã `66bb734` (`fix(T046): track T037 combat engine, catalog, models and tests in git`), đẩy lên `origin/main` và xác minh bằng `git ls-remote origin main`.
+- **Quyết định phải xin người phụ trách:** Không có.
