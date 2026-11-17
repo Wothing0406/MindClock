@@ -283,6 +283,7 @@ class Match(Base):
     __tablename__ = 'matches'
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    mode: Mapped[str] = mapped_column(String(24), default='duel_1v1', index=True)
     subject_code: Mapped[str] = mapped_column(String(32), index=True)
     grade_band: Mapped[str] = mapped_column(String(40), index=True)
     curriculum: Mapped[str] = mapped_column(String(32), default='gdpt_2018')
@@ -340,6 +341,7 @@ class MatchRound(Base):
         String(64), ForeignKey('questions.id', ondelete='RESTRICT')
     )
     question_revision: Mapped[int] = mapped_column(Integer, default=1)
+    rubric_revision: Mapped[int] = mapped_column(Integer, default=1)
     prompt: Mapped[str] = mapped_column(Text)
     reasoning_prompt_vi: Mapped[str] = mapped_column(Text)
     rubric_json: Mapped[dict] = mapped_column(JSON, default=dict)

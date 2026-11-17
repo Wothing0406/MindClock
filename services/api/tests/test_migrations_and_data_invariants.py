@@ -28,7 +28,14 @@ from app.db.models import (
     Attempt,
     ConsentEvent,
     IdempotencyRecord,
+    Match,
+    MatchEvent,
+    MatchPlayer,
+    MatchQueue,
+    MatchRound,
     Question,
+    RoundAction,
+    RoundSubmission,
     StudySession,
     TimetableSlot,
     TopicProgress,
@@ -82,8 +89,21 @@ def test_alembic_upgrade_empty_db_and_schema_parity(tmp_path: Path) -> None:
 
     joined_sql = '\n'.join(compiled_sql)
     assert 'CREATE TABLE users' in joined_sql
+    assert 'CREATE TABLE matches' in joined_sql
+    assert 'CREATE TABLE match_players' in joined_sql
+    assert 'CREATE TABLE match_rounds' in joined_sql
+    assert 'CREATE TABLE round_submissions' in joined_sql
+    assert 'CREATE TABLE round_actions' in joined_sql
+    assert 'CREATE TABLE match_events' in joined_sql
+    assert 'CREATE TABLE match_queue' in joined_sql
     assert 'ON DELETE CASCADE' in joined_sql
+    assert 'ON DELETE RESTRICT' in joined_sql
     assert 'uq_xp_ledger_idempotent' in joined_sql
+    assert 'uq_match_player' in joined_sql
+    assert 'uq_match_round_no' in joined_sql
+    assert 'uq_round_submission' in joined_sql
+    assert 'uq_round_action' in joined_sql
+    assert 'uq_match_event_sequence' in joined_sql
     assert 'ix_questions_bank_lookup' in joined_sql
     assert 'ix_questions_subject_code' in joined_sql
 
@@ -142,13 +162,25 @@ def test_alembic_upgrade_with_existing_data_and_downgrade(tmp_path: Path) -> Non
             )
             db.commit()
 
-        # 2) Nâng cấp từ 0001 lên head (0002) trên DB đang có dữ liệu
+        # 2) Nâng cấp từ 0001 -> 0002 -> head (0003_add_pvp_match_tables) trên DB đang có dữ liệu
+        command.upgrade(alembic_cfg, '0002_align_question_indexes')
         command.upgrade(alembic_cfg, 'head')
 
         inspector_head = inspect(engine)
         q_indexes_head = {idx['name'] for idx in inspector_head.get_indexes('questions')}
         assert 'ix_questions_subject_code' in q_indexes_head
         assert 'ix_questions_status' in q_indexes_head
+        head_tables = set(inspector_head.get_table_names())
+        for pvp_tbl in (
+            'match_queue',
+            'matches',
+            'match_players',
+            'match_rounds',
+            'round_submissions',
+            'round_actions',
+            'match_events',
+        ):
+            assert pvp_tbl in head_tables
 
         with session_factory() as db:
             loaded_user = db.get(User, 'u_mig_1')
@@ -157,7 +189,15 @@ def test_alembic_upgrade_with_existing_data_and_downgrade(tmp_path: Path) -> Non
             loaded_xp = db.get(XpLedger, 'xp_mig_1')
             assert loaded_xp is not None and loaded_xp.delta == 10
 
-        # 3) Downgrade về 0001_initial_schema: dữ liệu vẫn nguyên vẹn
+        # 3) Downgrade về 0002_align_question_indexes: bảng PvP bị gỡ, dữ liệu cũ vẫn nguyên vẹn
+        command.downgrade(alembic_cfg, '0002_align_question_indexes')
+        inspector_0002 = inspect(engine)
+        assert 'matches' not in set(inspector_0002.get_table_names())
+        with session_factory() as db:
+            assert db.get(User, 'u_mig_1') is not None
+            assert db.get(Alarm, 'al_mig_1') is not None
+
+        # 3b) Downgrade tiếp về 0001_initial_schema: dữ liệu vẫn nguyên vẹn
         command.downgrade(alembic_cfg, '0001_initial_schema')
         with session_factory() as db:
             assert db.get(User, 'u_mig_1') is not None
@@ -263,6 +303,132 @@ def test_unique_constraints_and_atomic_rollback(tmp_path: Path) -> None:
                 db.scalars(select(XpLedger).where(XpLedger.user_id == 'u_inv'))
             )
             assert len(total_xp_rows) == 1
+
+        # T038 PvP unique & FK invariants: uq_match_player, uq_round_submission, uq_round_action, uq_match_event_sequence, RESTRICT question delete
+        with session_factory() as db:
+            seed_approved_questions(db)
+            m = Match(
+                id='m_inv_1',
+                mode='duel_1v1',
+                subject_code='TOAN',
+                grade_band='Lớp 9',
+                curriculum='gdpt_2018',
+                status='in_progress',
+                rule_version='solo-three-v0.1',
+                current_round=1,
+                secret_round_no=3,
+            )
+            db.add(m)
+            db.flush()
+            db.add(MatchPlayer(id='mp_1', match_id=m.id, user_id='u_inv', champion_id='ha_nhan'))
+            db.add(
+                MatchRound(
+                    id='mr_1',
+                    match_id=m.id,
+                    round_no=1,
+                    question_id='math9-linear-001',
+                    question_revision=1,
+                    rubric_revision=3,
+                    prompt='Giải phương trình 2(x - 3) = 10.',
+                    reasoning_prompt_vi='Viết 1 bước.',
+                    rubric_json={'steps': ['Chia 2']},
+                    deadline_at=m.created_at,
+                    state='answering',
+                )
+            )
+            db.add(
+                RoundSubmission(
+                    id='rs_1',
+                    match_id=m.id,
+                    round_no=1,
+                    user_id='u_inv',
+                    answer_text='8',
+                    reasoning_text='x-3=5',
+                    grade_status='correct',
+                )
+            )
+            db.add(
+                RoundAction(
+                    id='ra_1',
+                    match_id=m.id,
+                    round_no=1,
+                    user_id='u_inv',
+                    action_type='basic',
+                )
+            )
+            db.add(
+                MatchEvent(
+                    id='me_1',
+                    match_id=m.id,
+                    sequence=1,
+                    event_type='matched',
+                    payload_json={},
+                )
+            )
+            db.commit()
+
+        # Trùng (match_id, user_id) -> IntegrityError
+        with session_factory() as db:
+            db.add(MatchPlayer(id='mp_dup', match_id='m_inv_1', user_id='u_inv', champion_id='ha_nhan'))
+            with pytest.raises(IntegrityError):
+                db.commit()
+            db.rollback()
+
+        # Trùng (match_id, round_no, user_id) submission -> IntegrityError
+        with session_factory() as db:
+            db.add(
+                RoundSubmission(
+                    id='rs_dup',
+                    match_id='m_inv_1',
+                    round_no=1,
+                    user_id='u_inv',
+                    answer_text='8',
+                    reasoning_text='retry',
+                    grade_status='correct',
+                )
+            )
+            with pytest.raises(IntegrityError):
+                db.commit()
+            db.rollback()
+
+        # Trùng (match_id, round_no, user_id) action -> IntegrityError
+        with session_factory() as db:
+            db.add(
+                RoundAction(
+                    id='ra_dup',
+                    match_id='m_inv_1',
+                    round_no=1,
+                    user_id='u_inv',
+                    action_type='basic',
+                )
+            )
+            with pytest.raises(IntegrityError):
+                db.commit()
+            db.rollback()
+
+        # Trùng (match_id, sequence) event -> IntegrityError
+        with session_factory() as db:
+            db.add(
+                MatchEvent(
+                    id='me_dup',
+                    match_id='m_inv_1',
+                    sequence=1,
+                    event_type='round_started',
+                    payload_json={},
+                )
+            )
+            with pytest.raises(IntegrityError):
+                db.commit()
+            db.rollback()
+
+        # Xóa Question đang bị MatchRound tham chiếu -> FK ON DELETE RESTRICT
+        with session_factory() as db:
+            q_used = db.get(Question, 'math9-linear-001')
+            assert q_used is not None
+            db.delete(q_used)
+            with pytest.raises(IntegrityError):
+                db.commit()
+            db.rollback()
     finally:
         engine.dispose()
 
@@ -417,18 +583,46 @@ def test_backup_and_restore_rehearsal(tmp_path: Path) -> None:
 
 def test_live_postgresql_migration_and_health_when_configured() -> None:
     pg_url = os.environ.get('POSTGRES_TEST_URL', '').strip()
+    if not pg_url.startswith('postgresql'):
+        env_db = os.environ.get('DATABASE_URL', '').strip()
+        pg_url = env_db if env_db.startswith('postgresql') else ''
     if not pg_url:
-        pytest.skip('POSTGRES_TEST_URL chưa được cấu hình (Docker daemon tắt trên máy local; chạy trên CI postgres service).')
+        pytest.skip('POSTGRES_TEST_URL / DATABASE_URL PostgreSQL chưa được cấu hình (Docker daemon tắt trên máy local; chạy trên CI postgres service).')
 
     alembic_cfg = _make_alembic_config(pg_url)
+    # 1. DB trống -> upgrade head (0003) + kiểm parity Base.metadata
     command.downgrade(alembic_cfg, 'base')
     command.upgrade(alembic_cfg, 'head')
+
+    pg_engine = build_engine(Settings(app_env='test', database_url=pg_url))
+    try:
+        with pg_engine.connect() as conn:
+            mc = MigrationContext.configure(conn)
+            assert compare_metadata(mc, Base.metadata) == []
+    finally:
+        pg_engine.dispose()
+
+    # 2. Downgrade về 0002_align_question_indexes -> nâng cấp lại lên head (0003)
+    command.downgrade(alembic_cfg, '0002_align_question_indexes')
+    pg_engine_check = build_engine(Settings(app_env='test', database_url=pg_url))
+    try:
+        assert 'matches' not in set(inspect(pg_engine_check).get_table_names())
+    finally:
+        pg_engine_check.dispose()
+
+    command.upgrade(alembic_cfg, 'head')
+    pg_engine_reup = build_engine(Settings(app_env='test', database_url=pg_url))
+    try:
+        assert 'matches' in set(inspect(pg_engine_reup).get_table_names())
+    finally:
+        pg_engine_reup.dispose()
 
     settings = Settings(
         app_env='test',
         database_url=pg_url,
         gemini_mock_mode=True,
         local_dev_bearer_uid_fallback=True,
+        firebase_project_id='',
     )
     app = create_app(settings)
     with TestClient(app) as client:

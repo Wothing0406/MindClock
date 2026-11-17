@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import json
 import random
 from typing import Any
 
@@ -58,9 +59,78 @@ def _iso_utc(dt: datetime) -> str:
     return dt.isoformat()
 
 
+def _parse_json_dict(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+            return parsed if isinstance(parsed, dict) else {}
+        except Exception:
+            return {}
+    return {}
+
+
+def _extract_accepted_answers(question: Question | None) -> list[str]:
+    if question is None:
+        return []
+    spec = _parse_json_dict(question.answer_spec_json)
+    raw_accepted = spec.get('accepted', [])
+    if not isinstance(raw_accepted, list):
+        return []
+    return [str(a).strip().lower() for a in raw_accepted if str(a).strip()]
+
+
+def _is_question_pvp_eligible(question: Question, curriculum: str) -> bool:
+    """Kiểm định chặt ngân hàng câu PvP: published, approved_bank, reviewer, rubric, revision & curriculum."""
+    if question.status != 'published':
+        return False
+    if question.source_type != 'approved_bank':
+        return False
+    if not (question.approved_by or '').strip():
+        return False
+    if (question.revision or 0) < 1 or (question.rubric_revision or 0) < 1:
+        return False
+
+    rubric = _parse_json_dict(question.rubric_json)
+    if not rubric:
+        return False
+    rights_status = str(rubric.get('rights_status', 'approved')).strip().lower()
+    if rights_status in {'revoked', 'unapproved', 'pending', 'rejected'}:
+        return False
+
+    q_curriculum = str(rubric.get('curriculum', 'gdpt_2018')).strip().lower()
+    if q_curriculum != curriculum:
+        return False
+
+    return bool(_extract_accepted_answers(question))
+
+
 class PvpMatchService:
     def __init__(self, db: Session) -> None:
         self._db = db
+
+    def _lock_match(self, match_id: str) -> Match | None:
+        query = self._db.query(Match).filter(Match.id == match_id)
+        bind = self._db.get_bind()
+        if bind is not None and bind.dialect.name == 'postgresql':
+            query = query.with_for_update()
+        return query.first()
+
+    def _get_eligible_questions(
+        self, *, subject_code: str, grade_band: str, curriculum: str
+    ) -> list[Question]:
+        candidates = (
+            self._db.query(Question)
+            .filter(
+                Question.status == 'published',
+                Question.source_type == 'approved_bank',
+                Question.subject_code == subject_code,
+                Question.grade_band == grade_band,
+            )
+            .all()
+        )
+        return [q for q in candidates if _is_question_pvp_eligible(q, curriculum)]
 
     def queue_player(
         self,
@@ -72,25 +142,30 @@ class PvpMatchService:
         curriculum: str = 'gdpt_2018',
     ) -> dict[str, Any]:
         """Đưa người chơi vào hàng đợi giao hữu hoặc ghép cặp ngay nếu tìm thấy đối thủ hợp lệ."""
-        norm_champ = normalize_champion_id(raw_champion_id)
-        norm_subject = normalize_subject_code(raw_subject_code)
+        try:
+            norm_champ = normalize_champion_id(raw_champion_id)
+        except ValueError as exc:
+            raise PvpServiceError(
+                code='INVALID_CHAMPION',
+                message_vi=f'Nhân vật không hợp lệ: {raw_champion_id}',
+                status_code=400,
+            ) from exc
 
-        # 1. Kiểm tra ngân hàng câu hỏi: bắt buộc có ít nhất 6 câu đã duyệt
-        approved_questions = (
-            self._db.query(Question)
-            .filter(
-                Question.status == 'published',
-                Question.subject_code == norm_subject,
-                Question.grade_band == grade_band,
-            )
-            .all()
+        norm_subject = normalize_subject_code(raw_subject_code)
+        norm_curriculum = (curriculum or 'gdpt_2018').strip().lower() or 'gdpt_2018'
+
+        # 1. Kiểm tra ngân hàng câu hỏi: bắt buộc có ít nhất 6 câu đã duyệt, có reviewer, rubric & khớp chương trình
+        approved_questions = self._get_eligible_questions(
+            subject_code=norm_subject,
+            grade_band=grade_band,
+            curriculum=norm_curriculum,
         )
         if len(approved_questions) < 6:
             raise PvpServiceError(
                 code='INSUFFICIENT_APPROVED_QUESTIONS',
                 message_vi=(
-                    f'Chưa đủ tối thiểu 6 câu hỏi đã duyệt Bộ GD&ĐT cho môn {norm_subject} - '
-                    f'{grade_band} để mở đấu trường giao hữu.'
+                    f'Chưa đủ tối thiểu 6 câu hỏi đã duyệt Bộ GD&ĐT (có rubric, revision & quyền hợp lệ) '
+                    f'cho môn {norm_subject} - {grade_band} ({norm_curriculum}) để mở đấu trường giao hữu.'
                 ),
                 status_code=400,
             )
@@ -110,15 +185,16 @@ class PvpMatchService:
                 match_id=existing_player.match_id, user_id=user_id
             )
 
-        # 3. Tìm đối thủ phù hợp trong hàng đợi
+        # 3. Tìm đối thủ phù hợp trong hàng đợi (cùng môn, cùng khối, cùng chương trình)
         opponent_entry = (
             self._db.query(MatchQueue)
             .filter(
                 MatchQueue.user_id != user_id,
                 MatchQueue.subject_code == norm_subject,
                 MatchQueue.grade_band == grade_band,
-                MatchQueue.curriculum == curriculum,
+                MatchQueue.curriculum == norm_curriculum,
             )
+            .order_by(MatchQueue.queued_at.asc())
             .first()
         )
 
@@ -131,7 +207,7 @@ class PvpMatchService:
                 existing_queue.champion_id = norm_champ.value
                 existing_queue.subject_code = norm_subject
                 existing_queue.grade_band = grade_band
-                existing_queue.curriculum = curriculum
+                existing_queue.curriculum = norm_curriculum
                 existing_queue.queued_at = utc_now()
             else:
                 new_queue = MatchQueue(
@@ -139,7 +215,7 @@ class PvpMatchService:
                     champion_id=norm_champ.value,
                     subject_code=norm_subject,
                     grade_band=grade_band,
-                    curriculum=curriculum,
+                    curriculum=norm_curriculum,
                     queued_at=utc_now(),
                 )
                 self._db.add(new_queue)
@@ -149,7 +225,7 @@ class PvpMatchService:
                 'status': 'waiting',
                 'subject_code': norm_subject,
                 'grade_band': grade_band,
-                'curriculum': curriculum,
+                'curriculum': norm_curriculum,
                 'message_vi': 'Đang tìm kiếm đối thủ cùng môn và khối lớp...',
             }
 
@@ -170,12 +246,13 @@ class PvpMatchService:
         random.shuffle(selected_questions)
         q_pool = selected_questions[:6]
 
-        # Khởi tạo Match
+        # Khởi tạo Match (giao hữu 1v1, ranked tắt)
         secret_round_no = 3  # Chọn round 3 làm secret round
         new_match = Match(
+            mode='duel_1v1',
             subject_code=norm_subject,
             grade_band=grade_band,
-            curriculum=curriculum,
+            curriculum=norm_curriculum,
             status='in_progress',
             rule_version=COMBAT_RULE_VERSION,
             current_round=1,
@@ -197,7 +274,7 @@ class PvpMatchService:
         )
         self._db.add_all([player_a, player_b])
 
-        # Tạo MatchRound 1
+        # Tạo MatchRound 1 (khóa question_id, question_revision, rubric_revision, deadline)
         q1 = q_pool[0]
         round_1_deadline = utc_now() + timedelta(seconds=75)
         round_1 = MatchRound(
@@ -205,6 +282,7 @@ class PvpMatchService:
             round_no=1,
             question_id=q1.id,
             question_revision=q1.revision,
+            rubric_revision=q1.rubric_revision,
             prompt=q1.prompt,
             reasoning_prompt_vi=q1.reasoning_prompt_vi,
             rubric_json=q1.rubric_json or {},
@@ -220,8 +298,11 @@ class PvpMatchService:
             event_type='matched',
             payload_json={
                 'match_id': new_match.id,
+                'mode': new_match.mode,
+                'rule_version': new_match.rule_version,
                 'subject_code': norm_subject,
                 'grade_band': grade_band,
+                'curriculum': norm_curriculum,
                 'player_a': {'user_id': user_id, 'champion_id': norm_champ.value},
                 'player_b': {
                     'user_id': opponent_user_id,
@@ -238,6 +319,7 @@ class PvpMatchService:
                 'round_no': 1,
                 'question_id': q1.id,
                 'question_revision': q1.revision,
+                'rubric_revision': q1.rubric_revision,
                 'prompt': q1.prompt,
                 'reasoning_prompt_vi': q1.reasoning_prompt_vi,
                 'deadline_at': _iso_utc(round_1_deadline),
@@ -322,8 +404,12 @@ class PvpMatchService:
 
         round_info: dict[str, Any] | None = None
         if current_round:
+            reveal_allowed = current_round.state in {'action_window', 'settled', 'void'}
             round_info = {
                 'round_no': current_round.round_no,
+                'question_id': current_round.question_id,
+                'question_revision': current_round.question_revision,
+                'rubric_revision': current_round.rubric_revision,
                 'prompt': current_round.prompt,
                 'reasoning_prompt_vi': current_round.reasoning_prompt_vi,
                 'deadline_at': _iso_utc(current_round.deadline_at),
@@ -334,12 +420,12 @@ class PvpMatchService:
                         'submitted': True,
                         'grade_status': (
                             my_sub.grade_status
-                            if current_round.state in {'action_window', 'settled'}
+                            if reveal_allowed
                             else 'grading_pending'
                         ),
                         'feedback_vi': (
                             my_sub.feedback_vi
-                            if current_round.state in {'action_window', 'settled'}
+                            if reveal_allowed
                             else ''
                         ),
                     }
@@ -351,10 +437,12 @@ class PvpMatchService:
 
         return {
             'match_id': match.id,
+            'mode': match.mode,
             'status': match.status,
             'rule_version': match.rule_version,
             'subject_code': match.subject_code,
             'grade_band': match.grade_band,
+            'curriculum': match.curriculum,
             'current_round': match.current_round,
             'secret_round_no': match.secret_round_no,
             'winner_user_id': match.winner_user_id,
@@ -418,16 +506,12 @@ class PvpMatchService:
         reasoning_text: str,
     ) -> dict[str, Any]:
         """Nộp bài làm (đáp án + 1 bước lý giải bắt buộc) với tính lũy đẳng (Idempotency)."""
-        match = self._db.query(Match).filter(Match.id == match_id).first()
-        if not match or match.status != 'in_progress':
+        match = self._lock_match(match_id)
+        if not match:
             raise PvpServiceError(
-                code='MATCH_NOT_ACTIVE',
-                message_vi='Trận đấu không ở trạng thái hoạt động.',
-            )
-        if match.current_round != round_no:
-            raise PvpServiceError(
-                code='INVALID_ROUND',
-                message_vi='Round nộp bài không hợp lệ.',
+                code='MATCH_NOT_FOUND',
+                message_vi='Không tìm thấy trận đấu.',
+                status_code=404,
             )
 
         players = self._db.query(MatchPlayer).filter(MatchPlayer.match_id == match_id).all()
@@ -444,13 +528,8 @@ class PvpMatchService:
             .filter(MatchRound.match_id == match_id, MatchRound.round_no == round_no)
             .first()
         )
-        if not current_round or current_round.state != 'answering':
-            raise PvpServiceError(
-                code='ROUND_NOT_ANSWERING',
-                message_vi='Round hiện tại không trong thời gian nộp bài.',
-            )
 
-        # Idempotency: nếu đã nộp rồi thì trả lại kết quả cũ
+        # Idempotency: kiểm tra trước khi kiểm tra state chuyển vòng để retry luôn an toàn
         existing_sub = (
             self._db.query(RoundSubmission)
             .filter(
@@ -464,10 +543,26 @@ class PvpMatchService:
             return {
                 'submitted': True,
                 'grade_status': existing_sub.grade_status,
-                'round_state': current_round.state,
+                'round_state': current_round.state if current_round else 'settled',
                 'feedback_vi': existing_sub.feedback_vi,
                 'is_duplicate': True,
             }
+
+        if match.status != 'in_progress':
+            raise PvpServiceError(
+                code='MATCH_NOT_ACTIVE',
+                message_vi='Trận đấu không ở trạng thái hoạt động.',
+            )
+        if match.current_round != round_no:
+            raise PvpServiceError(
+                code='INVALID_ROUND',
+                message_vi='Round nộp bài không hợp lệ.',
+            )
+        if not current_round or current_round.state != 'answering':
+            raise PvpServiceError(
+                code='ROUND_NOT_ANSWERING',
+                message_vi='Round hiện tại không trong thời gian nộp bài.',
+            )
 
         clean_reasoning = reasoning_text.strip()
         clean_answer = answer_text.strip().lower()
@@ -486,26 +581,23 @@ class PvpMatchService:
             grade_status = 'incorrect'
             feedback_vi = 'Cần nộp kèm ít nhất một bước trình bày lời giải để kích hoạt chiêu thức.'
         else:
-            # Chấm bài theo rubric chuẩn của question
+            # Chấm bài theo rubric/revision đã khóa của round; câu lỗi/đổi revision -> uncertain (void)
             q = self._db.query(Question).filter(Question.id == current_round.question_id).first()
-            accepted_answers: list[str] = []
-            if q and q.answer_spec_json:
-                spec = q.answer_spec_json
-                if isinstance(spec, str):
-                    try:
-                        spec = json.loads(spec)
-                    except Exception:
-                        spec = {}
-                if isinstance(spec, dict):
-                    accepted_answers = [
-                        str(a).strip().lower()
-                        for a in spec.get('accepted', [])
-                    ]
-            if not accepted_answers:
-                accepted_answers = [clean_answer]
-
-            # Kiểm tra đáp án chính xác (chuẩn hóa số thập phân, phân số, biến, đơn vị)
-            if is_answer_accepted(clean_answer, accepted_answers):
+            accepted_answers = _extract_accepted_answers(q)
+            question_invalid = (
+                q is None
+                or q.status != 'published'
+                or q.revision != current_round.question_revision
+                or q.rubric_revision != current_round.rubric_revision
+                or not accepted_answers
+            )
+            if question_invalid:
+                grade_status = 'uncertain'
+                feedback_vi = (
+                    'Câu hỏi hoặc rubric đã thay đổi/thiếu đáp án chuẩn; '
+                    'round được đưa vào review/void để bảo đảm công bằng.'
+                )
+            elif is_answer_accepted(clean_answer, accepted_answers):
                 grade_status = 'correct'
                 feedback_vi = 'Đáp án và bước trình bày chính xác.'
             else:
@@ -542,7 +634,11 @@ class PvpMatchService:
                         match_id=match_id,
                         sequence=seq,
                         event_type='round_voided',
-                        payload_json={'round_no': round_no, 'reason': 'uncertain_submission_review'},
+                        payload_json={
+                            'round_no': round_no,
+                            'reason': 'uncertain_submission_review',
+                            'grades': {s.user_id: s.grade_status for s in all_subs},
+                        },
                     )
                 )
             else:
@@ -589,17 +685,13 @@ class PvpMatchService:
         user_id: str,
         raw_action_type: str,
     ) -> dict[str, Any]:
-        """Chọn chiêu thức trong cửa sổ hành động và giải quyết round khi cả hai đã chọn."""
-        match = self._db.query(Match).filter(Match.id == match_id).first()
-        if not match or match.status != 'in_progress':
+        """Chọn chiêu thức trong cửa sổ hành động và giải quyết round đúng 1 lần khi cả hai đã chọn."""
+        match = self._lock_match(match_id)
+        if not match:
             raise PvpServiceError(
-                code='MATCH_NOT_ACTIVE',
-                message_vi='Trận đấu không ở trạng thái hoạt động.',
-            )
-        if match.current_round != round_no:
-            raise PvpServiceError(
-                code='INVALID_ROUND',
-                message_vi='Round chọn chiêu không hợp lệ.',
+                code='MATCH_NOT_FOUND',
+                message_vi='Không tìm thấy trận đấu.',
+                status_code=404,
             )
 
         players = self._db.query(MatchPlayer).filter(MatchPlayer.match_id == match_id).all()
@@ -616,13 +708,8 @@ class PvpMatchService:
             .filter(MatchRound.match_id == match_id, MatchRound.round_no == round_no)
             .first()
         )
-        if not current_round or current_round.state != 'action_window':
-            raise PvpServiceError(
-                code='ACTION_WINDOW_CLOSED',
-                message_vi='Cửa sổ chọn chiêu chưa mở hoặc đã kết thúc.',
-            )
 
-        # Idempotency
+        # Idempotency: kiểm tra trước state/current_round để retry sau settle không bao giờ lỗi hay settle lại
         existing_act = (
             self._db.query(RoundAction)
             .filter(
@@ -635,9 +722,26 @@ class PvpMatchService:
         if existing_act:
             return {
                 'action_type': existing_act.action_type,
-                'round_state': current_round.state,
+                'round_state': current_round.state if current_round else 'settled',
+                'settle_result': None,
                 'is_duplicate': True,
             }
+
+        if match.status != 'in_progress':
+            raise PvpServiceError(
+                code='MATCH_NOT_ACTIVE',
+                message_vi='Trận đấu không ở trạng thái hoạt động.',
+            )
+        if match.current_round != round_no:
+            raise PvpServiceError(
+                code='INVALID_ROUND',
+                message_vi='Round chọn chiêu không hợp lệ.',
+            )
+        if not current_round or current_round.state != 'action_window':
+            raise PvpServiceError(
+                code='ACTION_WINDOW_CLOSED',
+                message_vi='Cửa sổ chọn chiêu chưa mở hoặc đã kết thúc.',
+            )
 
         norm_action = raw_action_type.strip().lower()
         if norm_action not in {'basic', 'skill_1', 'skill_2'}:
@@ -807,7 +911,9 @@ class PvpMatchService:
                     sequence=seq,
                     event_type='round_settled',
                     payload_json={
+                        'rule_version': settle_res.rule_version,
                         'round_no': round_no,
+                        'is_secret_round': settle_res.is_secret_round,
                         'delta_a': delta_a_dict,
                         'delta_b': delta_b_dict,
                         'match_finished': settle_res.match_finished,
@@ -830,6 +936,7 @@ class PvpMatchService:
                         event_type='match_finished',
                         payload_json={
                             'match_id': match_id,
+                            'rule_version': match.rule_version,
                             'winner_user_id': settle_res.winner_user_id,
                             'finish_reason': settle_res.finish_reason,
                         },
@@ -838,53 +945,67 @@ class PvpMatchService:
             else:
                 next_round_no = round_no + 1
                 match.current_round = next_round_no
-                approved_questions = (
-                    self._db.query(Question)
-                    .filter(
-                        Question.status == 'published',
-                        Question.subject_code == match.subject_code,
-                        Question.grade_band == match.grade_band,
+                approved_questions = self._get_eligible_questions(
+                    subject_code=match.subject_code,
+                    grade_band=match.grade_band,
+                    curriculum=match.curriculum,
+                )
+                if not approved_questions:
+                    match.status = 'void'
+                    match.finish_reason = 'question_pool_unavailable'
+                    seq_void = self._next_event_sequence(match_id)
+                    self._db.add(
+                        MatchEvent(
+                            match_id=match_id,
+                            sequence=seq_void,
+                            event_type='match_voided',
+                            payload_json={
+                                'match_id': match_id,
+                                'reason': 'question_pool_unavailable',
+                            },
+                        )
                     )
-                    .all()
-                )
-                used_q_ids = {
-                    r.question_id
-                    for r in self._db.query(MatchRound).filter(MatchRound.match_id == match_id).all()
-                }
-                avail_questions = [q for q in approved_questions if q.id not in used_q_ids]
-                next_q = avail_questions[0] if avail_questions else approved_questions[0]
+                else:
+                    used_q_ids = {
+                        r.question_id
+                        for r in self._db.query(MatchRound).filter(MatchRound.match_id == match_id).all()
+                    }
+                    avail_questions = [q for q in approved_questions if q.id not in used_q_ids]
+                    next_q = avail_questions[0] if avail_questions else approved_questions[0]
 
-                next_deadline = utc_now() + timedelta(seconds=75)
-                next_round = MatchRound(
-                    match_id=match_id,
-                    round_no=next_round_no,
-                    question_id=next_q.id,
-                    question_revision=next_q.revision,
-                    prompt=next_q.prompt,
-                    reasoning_prompt_vi=next_q.reasoning_prompt_vi,
-                    rubric_json=next_q.rubric_json or {},
-                    deadline_at=next_deadline,
-                    state='answering',
-                )
-                self._db.add(next_round)
-
-                seq_next = self._next_event_sequence(match_id)
-                self._db.add(
-                    MatchEvent(
+                    next_deadline = utc_now() + timedelta(seconds=75)
+                    next_round = MatchRound(
                         match_id=match_id,
-                        sequence=seq_next,
-                        event_type='round_started',
-                        payload_json={
-                            'round_no': next_round_no,
-                            'question_id': next_q.id,
-                            'question_revision': next_q.revision,
-                            'prompt': next_q.prompt,
-                            'reasoning_prompt_vi': next_q.reasoning_prompt_vi,
-                            'deadline_at': _iso_utc(next_deadline),
-                            'is_secret_round': (match.secret_round_no == next_round_no),
-                        },
+                        round_no=next_round_no,
+                        question_id=next_q.id,
+                        question_revision=next_q.revision,
+                        rubric_revision=next_q.rubric_revision,
+                        prompt=next_q.prompt,
+                        reasoning_prompt_vi=next_q.reasoning_prompt_vi,
+                        rubric_json=next_q.rubric_json or {},
+                        deadline_at=next_deadline,
+                        state='answering',
                     )
-                )
+                    self._db.add(next_round)
+
+                    seq_next = self._next_event_sequence(match_id)
+                    self._db.add(
+                        MatchEvent(
+                            match_id=match_id,
+                            sequence=seq_next,
+                            event_type='round_started',
+                            payload_json={
+                                'round_no': next_round_no,
+                                'question_id': next_q.id,
+                                'question_revision': next_q.revision,
+                                'rubric_revision': next_q.rubric_revision,
+                                'prompt': next_q.prompt,
+                                'reasoning_prompt_vi': next_q.reasoning_prompt_vi,
+                                'deadline_at': _iso_utc(next_deadline),
+                                'is_secret_round': (match.secret_round_no == next_round_no),
+                            },
+                        )
+                    )
 
             settle_result_data = {
                 'round_settled': True,

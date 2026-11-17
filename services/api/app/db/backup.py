@@ -24,6 +24,13 @@ ORDERED_TABLE_NAMES: tuple[str, ...] = (
     'topic_progress',
     'idempotency_records',
     'consent_events',
+    'match_queue',
+    'matches',
+    'match_players',
+    'match_rounds',
+    'round_submissions',
+    'round_actions',
+    'match_events',
 )
 
 
@@ -74,7 +81,7 @@ def export_database_snapshot(engine: Engine) -> dict[str, Any]:
 
     checksum = _compute_tables_sha256(tables_payload)
     return {
-        'schemaVersion': '0002_align_question_indexes',
+        'schemaVersion': '0003_add_pvp_match_tables',
         'exportedAt': datetime.now(timezone.utc).isoformat(),
         'tableOrder': list(ORDERED_TABLE_NAMES),
         'rowCounts': {k: len(v) for k, v in tables_payload.items()},

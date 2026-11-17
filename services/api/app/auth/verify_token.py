@@ -26,6 +26,7 @@ def get_jwks_client() -> PyJWKClient:
             GOOGLE_FIREBASE_JWKS_URL,
             cache_jwk_set=True,
             lifespan=3600,
+            timeout=5,
         )
     return _jwks_client
 

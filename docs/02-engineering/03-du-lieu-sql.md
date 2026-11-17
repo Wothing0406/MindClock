@@ -1,6 +1,6 @@
 # Dữ liệu, PostgreSQL và migration
 
-**Nguồn sự thật online:** PostgreSQL qua FastAPI. SQLite chỉ local/test một máy; Firestore không lưu nghiệp vụ. **Hiện có:** SQLAlchemy models và Alembic migration đầu trong [`services/api/app/db/`](../../services/api/app/db) và [`alembic/`](../../services/api/alembic). Bảng hiện có **không có PvP/rank**; phần đó ở [game spec](../04-game/01-pvp-gdd.md). Mọi schema mới cần migration + rollback/data migration + test trên PostgreSQL.
+**Nguồn sự thật online:** PostgreSQL qua FastAPI. SQLite chỉ local/test một máy; Firestore không lưu nghiệp vụ. **Hiện có:** SQLAlchemy models và Alembic migration tới `0003_add_pvp_match_tables` trong [`services/api/app/db/`](../../services/api/app/db) và [`alembic/`](../../services/api/alembic). Bảng hiện có gồm 11 bảng cá nhân/nội dung và 7 bảng đấu trường giao hữu 1v1 (`match_queue`, `matches`, `match_players`, `match_rounds`, `round_submissions`, `round_actions`, `match_events`); **chưa có `rank_ledger`/ranked**; đặc tả đầy đủ ở [game spec](../04-game/01-pvp-gdd.md). Mọi schema mới cần migration + rollback/data migration + test trên PostgreSQL.
 
 ## 1. Danh mục bảng hiện có và owner
 
@@ -17,6 +17,13 @@
 | `topic_progress` | user/topic key, lượt/đúng/next review | Backend sau attempt hợp lệ. |
 | `idempotency_records` | unique user/route/key + payload/result hash | Backend chống retry/trùng. |
 | `consent_events` | lịch sử đồng ý/rút theo user/version/scope | Backend audit; không tự suy consent. |
+| `match_queue` | `user_id` unique (FK `users` CASCADE), `champion_id`, `subject_code`, `grade_band`, `curriculum` | Backend hàng đợi giao hữu 1v1; chỉ ghép khi đủ ≥6 câu published/approved khớp môn/khối/chương trình. |
+| `matches` | `mode` (`duel_1v1`), `rule_version` (`solo-three-v0.1`), `subject_code`, `grade_band`, `curriculum`, `status`, `current_round`, `winner_user_id` | Backend transaction duy nhất (ranked tắt). |
+| `match_players` | unique `(match_id,user_id)`, FK `matches`/`users` CASCADE, snapshot HP/armor/ward/qi/passive | Backend authoritative từ combat engine. |
+| `match_rounds` | unique `(match_id,round_no)`, FK `questions` RESTRICT, khóa `question_revision`, `rubric_revision`, `deadline_at`, `state` (`answering|action_window|settled|void`) | Backend; không lộ `rubric_json` trước reveal. |
+| `round_submissions` | unique `(match_id,round_no,user_id)`, đáp án + bước trình bày, `grade_status` (`correct|incorrect|uncertain|timeout`) | Backend idempotent; thiếu bước giải → `incorrect`, lỗi/đổi rubric → `uncertain`. |
+| `round_actions` | unique `(match_id,round_no,user_id)`, `action_type` (`basic|skill_1|skill_2`) | Backend idempotent; settle đúng 1 lần có khóa hàng trên PostgreSQL. |
+| `match_events` | unique `(match_id,sequence)`, `event_type`, `payload_json` tuần tự cho reconnect | Backend append-only theo transaction. |
 
 `rank_ledger` chỉ được thêm khi mở ranked; không tạo `rating_ledger` song song. Avatar/upload/moderation/content pipeline chi tiết chưa nằm đủ trong migration hiện tại; task riêng phải chốt schema và retention trước code.
 
@@ -49,4 +56,4 @@ Dev/test có thể dùng SQLite để chạy nhanh, **không** dùng kết quả
 
 ## 5. Test tối thiểu
 
-`DATA-01` user A/B, anonymous/expired token; `DATA-02` duplicate session/attempt/XP; `DATA-03` payload khác cùng key; `DATA-04` transaction lỗi giữa chừng; `DATA-05` migration PostgreSQL trống/có dữ liệu/rollback; `DATA-06` xóa user/backup/TTL; `DATA-07` conflict timetable revision; `DATA-08` question draft/retired không cấp XP; `DATA-09` ảnh/temp/log không sót. Ghi schema version/DB engine/test môi trường trong task. Revision hiện hành `0002_align_question_indexes` (`services/api/alembic/versions/`) đã khớp 100% với `Base.metadata` (`compare_metadata == []`), có module diễn tập backup/restore có kiểm tra SHA-256 (`services/api/app/db/backup.py`) và bộ test tự động `services/api/tests/test_migrations_and_data_invariants.py`.
+`DATA-01` user A/B, anonymous/expired token; `DATA-02` duplicate session/attempt/XP; `DATA-03` payload khác cùng key; `DATA-04` transaction lỗi giữa chừng; `DATA-05` migration PostgreSQL trống/có dữ liệu/rollback; `DATA-06` xóa user/backup/TTL; `DATA-07` conflict timetable revision; `DATA-08` question draft/retired không cấp XP; `DATA-09` ảnh/temp/log không sót. Ghi schema version/DB engine/test môi trường trong task. Revision hiện hành `0003_add_pvp_match_tables` (`services/api/alembic/versions/`) đã khớp 100% với `Base.metadata` (`compare_metadata == []`), có module diễn tập backup/restore có kiểm tra SHA-256 (`services/api/app/db/backup.py`) và bộ test tự động `services/api/tests/test_migrations_and_data_invariants.py` + `services/api/tests/test_pvp_matchmaking.py`.

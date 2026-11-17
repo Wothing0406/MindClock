@@ -139,6 +139,8 @@ class ConsentUpdateRequest(ApiModel):
 
 
 class PvpMatchmakeRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
     champion_id: str = Field(alias='championId')
     subject_code: str = Field(alias='subjectCode')
     grade_band: str = Field(alias='gradeBand')
@@ -146,10 +148,14 @@ class PvpMatchmakeRequest(ApiModel):
 
 
 class PvpRoundSubmitRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
     answer_text: str = Field(alias='answerText')
     reasoning_text: str = Field(alias='reasoningText')
 
 
 class PvpRoundActionRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
     action_type: str = Field(default='basic', alias='actionType')
 

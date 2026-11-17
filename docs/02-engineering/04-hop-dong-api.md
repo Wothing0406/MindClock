@@ -20,6 +20,7 @@
 | Phiên/attempt | `GET/POST /sessions`, `POST /sessions/{id}/events`, `/answers`, `/attempts`, `/abandon`, `/feedback` | Session owner, câu/rubric revision, retry không nhân XP, `abandon` mở từ 5 lần sai rõ; ảnh chỉ tạm thời. |
 | Tiến độ | `GET /progress/summary` | Chỉ dữ liệu user từ token, không lấy tiến độ bạn cùng lớp. |
 | Học | `POST /study/sessions`, `/study/sessions/{id}/finish`, `/study/help`, `/study/live-token` | Timer local không bị API chặn; Live token opt-in và ephemeral; rate limit/timeout. |
+| Đấu trường 1v1 giao hữu (T038, ranked tắt) | `POST /pvp/matchmake`, `/pvp/matchmake/cancel`, `GET /pvp/matches/{id}`, `/pvp/matches/{id}/events`, `POST /pvp/matches/{id}/rounds/{round_no}/submit`, `/action` | Chỉ ghép khi có ≥6 câu `published`/`approved_bank` có `approved_by`/rubric/revision khớp môn/khối/chương trình; participant-only `403`, `extra='forbid'` chặn HP/damage/grade từ client, idempotent submit/action, `uncertain` → `void`, settle đúng 1 lần; không lộ rubric trước reveal. |
 
 Flutter phải có contract test cho mỗi endpoint nó dùng với payload thật, token sai/A-B, offline/timeout, schema thay đổi. Route hiện có vẫn có thể chưa pass runtime ở môi trường hiện tại; [hiện trạng](../00-start/01-hien-trang.md).
 
@@ -41,7 +42,7 @@ MultiCal `availability`/`proposal`/`vote`, tìm phòng, yêu cầu vào/duyệt,
 
 Lời mời QR/link, redeem, chat nhóm và AI turn từ ảnh cũng **chưa có route**. [Contract phòng realtime](09-phong-hoc-realtime.md) yêu cầu invite token opaque có hạn, join sau kiểm quyền, chat không tự vào AI, ảnh tạm có đích nhận rõ, voice phụ thuộc lựa chọn người học. Không được đưa token phòng/media hoặc ảnh bài vào QR hay log.
 
-Đấu trường [G1–G4](../04-game/04-che-do-don-doi-va-asset-gap.md) chưa có route production. G2 cần queue/cancel, match snapshot, submit, action, event stream và result/appeal; G3 thêm team invite/ready, bốn submission và target actor trong action. Server lấy HP/armor/qi/rating từ state đã version, không nhận số do client tự gửi; retry cùng key không settle hai lần. Luyện đơn offline không giả gọi API thành match online.
+Đấu trường [G1–G4](../04-game/04-che-do-don-doi-va-asset-gap.md): backend giao hữu 1v1 (`POST /pvp/matchmake`, `/cancel`, `GET /pvp/matches/{id}`, `/events`, `POST .../submit`, `.../action`) đã có mã nguồn và migration `0003_add_pvp_match_tables` (T038), **chưa mở ranked/RP/appeal, chưa có Flutter UI hai máy và chưa có G3 2v2**. G3 cần thêm team invite/ready, bốn submission và target actor trong action. Server lấy HP/armor/qi/rating từ state đã version, không nhận số do client tự gửi; retry cùng key không settle hai lần. Luyện đơn offline không giả gọi API thành match online.
 
 ## 5. Offline/retry và bảo vệ server
 
