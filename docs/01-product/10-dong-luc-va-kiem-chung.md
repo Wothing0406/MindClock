@@ -16,6 +16,8 @@ Nhận dấu hiệu do **user tự báo** (`Quá khó`, `Cần nghỉ`, `Chấm 
 
 Bạn học là lời mời hai chiều, phòng nhỏ, không công khai việc riêng; gợi `Học cùng 25 phút` thay vì bảng điểm tập trung. PvP chỉ khi người học muốn: cùng câu, trình bày lý do để kích hoạt skill, tướng khác lối chơi nhưng không mua lợi thế. Rank theo môn/mùa có opt-in; profile khác chỉ xem thành tích tổng hợp đã chọn. Humor ở avatar/FX là tình huống nhẹ, không giễu học lực/chấm sai/ngủ muộn.
 
+Nhánh [nhóm cam kết và pet chung](12-lich-chung-ghep-phong-va-pet-nhom.md) nối báo thức với bạn thật: lời mời dễ gửi, ngày dậy đúng giờ và hoàn thành câu đã xác nhận chăm pet của nhóm chính, buổi học tự chọn góp thêm theo trần. Nhóm thấy tiến độ chung, không thấy ai “làm hỏng” chuỗi; một người vắng không mất cấp pet hoặc điểm của người khác. AI là trợ giảng gợi mở khi được hỏi, không đóng giả bạn thân hay tự chen lời lúc học sâu. Kiểm thử xem pet làm tăng cảm giác đồng hành hay gây áp lực; nếu gây xấu hổ/thiếu ngủ, giảm hoặc bỏ phần hiển thị chuỗi nhóm.
+
 ## Thí nghiệm trước khi mở rộng
 
 | Giả thuyết | Cách kiểm nhỏ | Chỉ số và quyết định |

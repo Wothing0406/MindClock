@@ -45,7 +45,7 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | P-15 | Thi đấu | Giao hữu dùng cùng câu/rubric, người chơi nộp đáp án và lý do; server chốt kết quả, sai/uncertain không xử thua do AI lỗi; ranked là cổng sau | GAME-01–05 |
 | P-16 | Thưởng phiên tập trung | Sau khi hoàn thành phiên, server cấp EXP theo phút running trọn vẹn có trần phiên/ngày và idempotency; offline chỉ hiện dự kiến; pause/nghỉ/hủy không tính, không đổi RP | FOCUS-10, DATA-01 |
 | P-17 | Hẹn giờ học và tìm phòng | MultiCal chỉ chia sẻ rảnh/bận đã cho phép, đề xuất giờ cần từng người xác nhận; mời bạn trước, tìm phòng theo môn/giờ sau cổng consent/moderation; không lộ TKB hay tạo người/phòng giả | GROUP-01–05, GROUP-08 |
-| P-18 | Học nhóm và pet chung | Phòng 2–4 người giữ mục tiêu riêng/timer local, mic/cam off; AI nhóm cần mọi người đồng ý; pet chỉ nhận điểm xác nhận có trần, không phạt người vắng | GROUP-05–08 |
+| P-18 | Nhóm cam kết, học chung và nuôi pet | Mời bạn bằng link/mã có chấp nhận; ngày đúng giờ + câu đúng tạo chuỗi riêng và chăm pet nhóm chính; nhiệm vụ học có điểm chăm phụ; phòng 2–4 người giữ mục tiêu riêng/timer local, mic/cam off; AI nhóm cần mọi người đồng ý; không phạt người vắng | GROUP-05–09 |
 
 ## 5. Quy tắc bất biến
 

@@ -20,7 +20,7 @@ Ma trận này giúp AI không “làm đẹp một màn” rồi báo xong sả
 | P-14 | Hai lựa chọn chính solo/AI; bạn bè sau cổng | study timer/API có phần mã; Live room/bạn chưa có production | ROOM-01–08, FOCUS-01–09 | R5/R7 |
 | P-16 | EXP theo thời gian phiên đã hoàn thành | Chưa có ledger thời gian được xác minh; cần API/SQL task riêng | FOCUS-10, ROOM-08, DATA-01 | R5 |
 | P-17 | [MultiCal và tìm phòng](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích Flutter availability UI, FastAPI matching/vote, PostgreSQL, room security | GROUP-01–05/08, A/B, 2–4 máy | R7b |
-| P-18 | [Phòng nhóm và pet](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích room membership, AI consent, pet ledger | GROUP-05–08, idempotency, privacy | R7b |
+| P-18 | [Nhóm cam kết, chuỗi đúng giờ và pet](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích group invite/membership, on-time day, AI consent, morning/study care ledger | GROUP-05–09, idempotency, Android alarm, privacy | R7b |
 | P-15 | Giao hữu/PvP nộp lý do | `assets/game` art; arena/networking chưa có production | GAME-01–05 | R8 |
 | G-01 | Ranked/rank/coin sau [GDD](../04-game/01-pvp-gdd.md) | Đặc tả/asset nghiên cứu, chưa có ranked production | hai máy/reconnect/ledger/playtest/rights | R8+ |
 | Q-01 | Môi trường/release | `app/`, `services/api/`, `.github/workflows/ci.yml` (T029–T031 đã xác nhận `pytest` 19 pass, `flutter analyze`, Kotlin unit test 6/6, `app-debug.apk`, backup/restore rehearsal) | chạy CI `postgres:16-alpine` + `flutter test`, build ký, secret scan, rollback | R0/R9 |

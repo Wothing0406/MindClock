@@ -1,6 +1,14 @@
-# MultiCal, ghép bạn học và pet nhóm
+# Nhóm bạn học, MultiCal và pet chung
 
 **Trạng thái:** thiết kế P2 sau phòng một mình/AI và phòng mời 2 người; chưa có tính năng online production. `MultiCal` ở đây là lớp **tìm giờ rảnh chung** trong MindClock, không phải đọc toàn bộ lịch Google của bạn bè. Android Flutter là client đầu tiên; không thêm web client chỉ để làm phòng học. [PRD](01-prd.md), [phòng hiện hành](08-phong-hoc-ai-va-ban-be.md), [lịch cá nhân](05-lich-hoc-nhac-viec.md), [quyền riêng tư](04-tai-khoan-quyen-rieng-tu.md).
+
+**Trọng tâm:** người học rủ bạn thân hoặc bạn quen từ mạng xã hội lập một **nhóm cam kết nhỏ**, cùng hẹn học và chăm một pet. Lịch chung chỉ giúp nhóm tìm giờ phù hợp; phòng AI là trợ giúp tự chọn khi không có bạn hoặc khi cần hỏi bài. Pet nhận tiến độ từ ngày hoàn thành thử thách báo thức và nhiệm vụ học, không chỉ từ phút bật timer.
+
+## 0. Tạo nhóm trong chưa đầy một phút
+
+`Tôi → Nhóm của tôi → Tạo nhóm → đặt tên/chọn pet → gửi link hoặc mã mời → bạn chấp nhận`. Link có hạn và không tự thêm người; có thể chia sẻ qua ứng dụng mạng xã hội người dùng chọn, **không đọc danh bạ hoặc đăng bài thay họ**. Người nhận đăng nhập/xác minh và đồng ý tham gia; đủ điều kiện tuổi/consent mới mở tính năng xã hội. Nhóm đầu tối đa 4 người, chỉ thành viên xem được. Có `Rời nhóm`, `Chặn`, `Báo cáo`, đổi trưởng nhóm khi người tạo rời. Mỗi người có thể có bạn bè riêng, nhưng chỉ chọn **một nhóm chăm pet chính cho mỗi ngày**; đổi nhóm có hiệu lực từ ngày kế tiếp để không nhân thưởng.
+
+Màn nhóm đầu tiên cho thấy pet, số ngày đã được chăm, nhiệm vụ chung hôm nay, ai **tự chọn hiển thị** trạng thái `Đã hoàn thành`, và nút `Hẹn giờ học`/`Vào phòng`. Không hiện giờ báo thức, giờ thức dậy, bài làm, điểm yếu hay lý do một người vắng. Không gắn nhãn `lười`, `phá chuỗi nhóm` cho ai.
 
 ## 1. Một nơi, bốn cách học
 
@@ -39,15 +47,25 @@ Phòng chờ có `Bắt đầu khi đủ người` và `Bắt đầu với ngư�
 
 **AI trong nhóm:** chỉ sau khi mọi người đồng ý, AI có thể nhận câu hỏi được gắn `Hỏi MindClock`; AI trả gợi ý một bước cho cả phòng và gắn nhãn rõ. Không nghe lén hội thoại, phân loại “lạc đề”, tự chen lời khi phòng im lặng hoặc đưa đáp án trọn bài. Nếu một người rút consent, AI nhóm dừng ngay; timer/phòng bạn vẫn chạy. 1–1 với AI có thể có đối thoại giọng nói ở nhịp `Thảo luận` sau khi opt-in; `Học sâu` vẫn im lặng và AI chỉ trả chữ khi hỏi.
 
-## 5. Pet nhóm: phần thưởng chung không giữ chân bằng phạt
+## 5. Chuỗi buổi sáng và pet nhóm
 
 Pet là nhân vật 2D gốc, **trang trí và tiến hóa hình ảnh** của nhóm; tách khỏi avatar hồ sơ và tướng PvP. Nhóm chọn một trong các pet mặc định; tên pet qua kiểm duyệt như tên nhóm. Pet có ba trạng thái UI `nghỉ`, `vui`, `lên cấp` theo mốc đóng góp đã xác nhận. Không dùng trạng thái `ốm/chết` do một người vắng học, không trừ cấp, EXP hay streak cá nhân vì bạn khác bỏ buổi. Không bảng xếp hạng giờ dậy giữa các nhóm.
 
-Mỗi thành viên hoàn thành phiên hợp lệ nhận EXP cá nhân theo `study-time-v0.1`; nhóm nhận **điểm chăm sóc pet** từ một sự kiện riêng, tối đa một lần/người/ngày và có trần đóng góp ngày để tránh bật timer vô hạn. Điểm nhóm chỉ cấp sau server xác nhận, không nhân EXP cá nhân, không mua sức mạnh PvP. Mất mạng hiện `Đang chờ đồng bộ`; retry không cấp lại. Có thể thêm vật phẩm trang trí từ nhiệm vụ nhóm tự nguyện sau pilot, không bán lợi thế học hay chiến đấu. Thành viên rời nhóm không xóa điểm đã góp; xóa tài khoản xử lý theo chính sách dữ liệu và quy tắc ledger/audit. Mọi người có thể tắt animation pet trong phòng; `Học sâu` không phát hiệu ứng pet.
+**Ngày chuỗi đúng giờ (mới, tách khỏi chuỗi ôn sáng hiện hành):** trên ngày người học đã tự đặt thử thách, báo thức reo theo lịch local, người học vào lượt trong cửa sổ đúng giờ đã công bố và hoàn thành câu có trình bày, được backend xác nhận `correct` trong cùng buổi sáng. Mốc thử nghiệm để thiết kế/test: mở lượt trong 15 phút từ giờ chuông dự kiến và hoàn thành trong 60 phút; user thấy đồng hồ còn lại, không kéo dài âm chuông. Mốc phải thử trên máy thật và với học sinh trước khi chốt. Đây là **bằng chứng thao tác trong app**, không chứng minh chắc người học đã tỉnh hoặc ngủ đủ. Nếu mở muộn nhưng làm đúng, vẫn nhận EXP/chuỗi ôn sáng theo [quy tắc cũ](09-giac-ngu-va-bao-thuc.md), nhưng không nhận nhãn `Đúng giờ`, ngày chuỗi đúng giờ hay `morning_care`. Ngày nghỉ đã lên lịch và lỗi hệ thống/OS/câu chấm `uncertain` dùng `system_grace`, không tính là người học bỏ cuộc. Lịch ngủ được ưu tiên: app không đề xuất dậy quá sớm để nuôi pet.
+
+**Chăm pet:** mỗi ngày chuỗi đúng giờ đã xác nhận tạo tối đa một `morning_care` cho nhóm chính, cộng một dấu chăm và tiến độ hình ảnh. Nếu người học hoàn thành nhiệm vụ học tự chọn của ngày hoặc phiên học đủ điều kiện, có thể nhận thêm `study_care` theo trần riêng; chỉ bấm vào phòng, mở camera hoặc để timer chạy không chứng minh hiểu bài. Một sự kiện sáng không thể nuôi nhiều nhóm, retry không cấp lại. Pet hiển thị `Đang chờ đồng bộ` khi offline, chỉ lên cấp khi server xác nhận. Không đổi điểm pet thành rank/PvP hoặc EXP cá nhân.
+
+**Chuỗi nhóm:** nhóm chọn những **ngày muốn chăm pet**; mỗi thành viên vẫn tự chọn giờ báo và có thể lên lịch nghỉ riêng, nhóm không ép bật báo thức. Một ngày theo lịch nhóm được tính `Đã chăm` khi **ít nhất một** thành viên có `morning_care` hợp lệ; từ hai người trở lên có thẻ `Cùng nhau` và thưởng mỹ thuật nhỏ, không thêm sức mạnh. Các ngày liên tiếp được chăm tạo chuỗi nhóm hiển thị bên cạnh pet. Ngày chưa ai hoàn thành thì không tăng ngày mới; pet vẫn giữ cấp, trang phục và điểm cũ. Không bắt một bạn làm hộ, chuyển điểm, mua vật phẩm cứu chuỗi hay gửi thông báo nêu tên người “làm đứt” chuỗi. Khi OS/backend gây lỗi cho cả nhóm, ngày được giữ theo `system_grace` nhưng không cộng ngày mới. Thông báo nhóm là opt-in, tối đa một lời mời trung tính theo khung giờ từng người cho phép.
+
+Mỗi thành viên hoàn thành phiên hợp lệ vẫn nhận EXP cá nhân theo `study-time-v0.1`; `study_care` là sổ riêng và có trần, không nhân EXP. Có thể thêm vật phẩm trang trí từ nhiệm vụ nhóm tự nguyện sau pilot. Thành viên rời nhóm không xóa điểm đã góp; xóa tài khoản xử lý theo chính sách dữ liệu và ledger/audit. Mọi người có thể tắt animation pet trong phòng; `Học sâu` không phát hiệu ứng pet.
+
+## 5a. Vai trò AI bên cạnh bạn thật
+
+Bạn thật là nơi trò chuyện và giữ lời hẹn; AI không đóng giả bạn cùng lớp, không nhận vai “người hiểu bạn tuyệt đối”. Ở phòng `Học cùng MindClock`, AI là **trợ giảng gợi mở**: chào ngắn nếu người học đã chọn chế độ có đối thoại, nhận mục tiêu rồi im lặng khi học sâu; chỉ phản biện một bước khi được hỏi. Cuối phiên có thể tóm tắt việc người học tự đánh dấu. Trong nhóm người thật, AI chỉ tham gia theo đồng ý của tất cả thành viên và câu hỏi được gửi có chủ đích. Không tự bình luận chuyện đời tư, không nhớ lịch sử vô hạn; người học xem/xóa dữ liệu dùng để cá nhân hóa. Voice cần opt-in và không được bật vào chặng `Học sâu`. Không hứa AI sẵn sàng 24/7 hoặc chấm đúng mọi môn.
 
 ## 6. UI dọc và lời chữ
 
-Tab `Không gian học`: hai nút chính, mục `Học với bạn` khi được mở, lời hẹn kế tiếp. Màn MultiCal là dải ngày/khung giờ, mỗi ô ghi `2/3 rảnh`, nút `Đề xuất giờ`; không có lịch cá nhân của bạn bè. Màn tìm phòng có hai bộ lọc lớn `Cùng môn`/`Cùng tập trung`, tối đa ba bộ lọc phụ, thẻ phòng gọn và nhãn `Chỉ mời`/`Có thể xin vào`. Phòng dọc ưu tiên timer, mục tiêu, trạng thái mic/cam, số người; ô video chỉ chiếm chỗ khi được bật. Pet nằm ở góc nhỏ của phòng chờ/tổng kết, không che bài và không rung trong Học sâu. Chữ gợi ý: `3 người rảnh lúc 19:30`, `Chờ 1 người xác nhận`, `Bạn có thể học một mình ngay`.
+Tab `Không gian học`: hai nút chính, mục `Học với bạn` khi được mở, lời hẹn kế tiếp. Tab `Nhóm của tôi` cho thấy pet và ngày chăm chung; hành động đầu là `Mời bạn`, không bắt thiết lập lịch trước. Màn MultiCal là dải ngày/khung giờ, mỗi ô ghi `2/3 rảnh`, nút `Đề xuất giờ`; không có lịch cá nhân của bạn bè. Màn tìm phòng có hai bộ lọc lớn `Cùng môn`/`Cùng tập trung`, tối đa ba bộ lọc phụ, thẻ phòng gọn và nhãn `Chỉ mời`/`Có thể xin vào`. Phòng dọc ưu tiên timer, mục tiêu, trạng thái mic/cam, số người; ô video chỉ chiếm chỗ khi được bật. Pet nằm ở góc nhỏ của phòng chờ/tổng kết, không che bài và không rung trong Học sâu. Chữ gợi ý: `Hôm nay pet đã được chăm`, `3 người rảnh lúc 19:30`, `Chờ 1 người xác nhận`, `Bạn có thể học một mình ngay`.
 
 ## 7. Cổng mở và tiêu chí kiểm chứng
 

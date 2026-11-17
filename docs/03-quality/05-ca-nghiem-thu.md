@@ -80,9 +80,10 @@
 | GROUP-03 | P-17 | `Cùng môn` khớp grade/curriculum/subject, `Cùng tập trung` khác môn vẫn hợp lệ; block/consent/capacity lọc cứng; không kết quả có empty state | match domain/API |
 | GROUP-04 | P-17 | Hai người xin chỗ cuối chỉ một vào; ID guess/token hết hạn/user A/B không xem hoặc vào phòng | PostgreSQL transaction/security/2 máy |
 | GROUP-05 | P-17/P-18 | Reconnect, đổi account, mất host và lỗi media không làm mất timer cá nhân hoặc cấp EXP trùng | Android 2–4 máy + API |
-| GROUP-06 | P-18 | Pet: 24:59 = 0, 25:00 = 1; hai phiên cùng ngày/retry vẫn tối đa 1/người; rời nhóm không trừ điểm người khác | PostgreSQL ledger A/B |
+| GROUP-06 | P-18 | Mở lượt trong 15 phút + `correct` trong 60 phút cấp đúng một ngày chuỗi đúng giờ/morning care cho một nhóm chính; muộn vẫn có thưởng ôn sáng cũ nhưng không chăm pet; hai thành viên cùng ngày chỉ một group care day. Study care: 24:59 = 0, 25:00 = 1; retry/hai phiên cùng ngày không nhân; rời nhóm không trừ cấp | PostgreSQL ledger A/B + Android alarm thật |
 | GROUP-07 | P-18 | AI nhóm chỉ vào khi mọi người opt-in; rút một người dừng AI, phòng vẫn chạy; Học sâu không tự phát âm | Android 2–4 máy + AI/consent |
 | GROUP-08 | P-17/P-18 | Mic/cam tắt khi join, report/block hữu hiệu, không lộ TKB/việc riêng/avatar pending qua search/event | privacy/security/manual |
+| GROUP-09 | P-18 | Link/mã mời hết hạn không tự thêm người; đổi nhóm chính chỉ áp dụng ngày sau; OS không reo/clock drift/offline/AI uncertain/ngày nghỉ trước lịch không gán missed hay thưởng oan; thông báo không nêu tên người vắng | API/PostgreSQL + Android 2 máy + copy review |
 | GAME-01 | P-15 | Hai bên cùng câu/rubric/deadline, cần đáp án và lý do; khoanh lụi không kích hoạt skill | server contract/content eval |
 | GAME-02 | P-15 | Ảnh mờ/AI uncertain/network fault → void/review, không đổi RP, không tự xử thua | 2 máy/API transaction |
 | GAME-03 | P-15 | Submit/action kép/reconnect → HP/event/result/ledger một lần từ server | API PostgreSQL/2 máy |
