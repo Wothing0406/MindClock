@@ -13,7 +13,7 @@
 | R6 — thử người dùng thật | Cohort THPT tự nguyện dùng luồng lõi, đo giá trị/khó chịu/độ tin cậy | R1–R5, chính sách tuổi/quyền dữ liệu | Dừng an toàn, retention/opt-out, lỗi chấm, hỗ trợ; quyết định tiếp tục/đổi hướng. |
 | R7 — phòng AI Live và bạn bè | Avatar 2D có nét mặt/miệng theo giọng thật; phòng mời 2 người bằng link/mã/QR, chat nhóm và ảnh hỏi AI có chọn đích | R5/R6, privacy, realtime/moderation, ảnh temp/voice consent | ROOM-01–11: hai máy, deep link/TTL/A-B, mạng yếu/reconnect, chat không tự gửi AI, voice/Reduce Motion, cam/mic tắt thật. |
 | R7b — nhóm cam kết và lịch chung | Mời bạn vào nhóm nhỏ qua link/mã, chuỗi đúng giờ chăm pet chung, MultiCal hẹn 2–4 người; tìm phòng người lạ/AI nhóm sau cổng riêng | R7, alarm/câu/chuỗi đủ tin cậy, consent theo tuổi, moderation, PostgreSQL ledger, 4 tài khoản thử | GROUP-01–09: privacy lịch, vote/timezone, ngày đúng giờ/OS grace, chống thưởng trùng, pet không phạt vắng; feature flag riêng. |
-| R8 — giao hữu/ranked sau cổng | Hai người cùng câu/lý do, tướng 2D; sau playtest mới rank/mùa | R4/R6, content/rubric đủ, hai máy | Server chốt trận/void/ledger, anti-abuse/balance, không phạt do AI uncertain. |
+| R8 — đấu trường theo lát | G1 luyện đơn với bot rule; G2 giao hữu 1v1 hai máy; G3 giao hữu đội 2v2 bốn máy; G4 ranked chỉ sau cổng riêng | R4/R6, content/rubric đủ, quyền art, PostgreSQL/máy thật | GAME-01–10; server chốt trận/void/ledger, 2v2 bốn submission/target, balance và Reduce Motion. |
 | R9 — phát hành rộng/iOS | Hỗ trợ, bảo mật, store release; iOS task riêng sau Android | Release gates, ngân sách/hỗ trợ, Mac/iPhone cho iOS | Checklist [release](../03-quality/02-van-hanh-phat-hanh.md), build ký, giám sát/rollback, quyền nội dung/art. |
 
 ## Backlog bắt đầu ngay

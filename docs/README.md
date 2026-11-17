@@ -23,7 +23,7 @@
 | Phòng học một mình/AI/bạn | [Hành vi phòng](01-product/08-phong-hoc-ai-va-ban-be.md), [UX](01-product/02-hanh-trinh-ux.md) | [Học local](02-engineering/07-khong-gian-hoc.md), [realtime](02-engineering/09-phong-hoc-realtime.md) | FOCUS/ROOM + lifecycle/2 máy/quota |
 | MultiCal, ghép phòng, pet nhóm | [Lịch chung và nhóm](01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | [Ghép phòng/ledger](02-engineering/12-lich-chung-va-ghep-phong.md), [SQL](02-engineering/03-du-lieu-sql.md) | GROUP-01–09, PostgreSQL/2–4 máy/privacy |
 | Động lực và thử người dùng | [Vòng giá trị và thí nghiệm](01-product/10-dong-luc-va-kiem-chung.md) | [Quyền dữ liệu](01-product/04-tai-khoan-quyen-rieng-tu.md) | Khó chịu, bỏ dùng, ngủ, consent trước mở rộng |
-| PvP, nhân vật, rank | [GDD thử nghiệm](04-game/01-pvp-gdd.md), [asset](04-game/02-nhan-vat-asset.md), [rank/mùa/coin](04-game/03-rank-mua-va-kinh-te.md) | [API](02-engineering/04-hop-dong-api.md) chỉ mở task sau cổng | Hai máy/playtest/quyền trước ranked |
+| PvP, nhân vật, rank | [GDD 1v1](04-game/01-pvp-gdd.md), [luyện đơn/đội và asset gap](04-game/04-che-do-don-doi-va-asset-gap.md), [prompt task](04-game/05-prompts-trien-khai-dau-truong.md), [rank/mùa/coin](04-game/03-rank-mua-va-kinh-te.md) | [API](02-engineering/04-hop-dong-api.md) chỉ mở task sau cổng | GAME-01–10; một máy luyện, hai máy 1v1, bốn máy 2v2 |
 | Pilot/release/iOS | [Lộ trình](00-start/02-lo-trinh.md) | [Vận hành](03-quality/02-van-hanh-phat-hanh.md), [iOS sau](05-future/01-ios.md) | Máy thật, PostgreSQL, privacy, rollback |
 
 ## Cấu trúc docs

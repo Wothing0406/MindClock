@@ -21,7 +21,7 @@ Ma trận này giúp AI không “làm đẹp một màn” rồi báo xong sả
 | P-16 | EXP theo thời gian phiên đã hoàn thành | Chưa có ledger thời gian được xác minh; cần API/SQL task riêng | FOCUS-10, ROOM-08, DATA-01 | R5 |
 | P-17 | [MultiCal và tìm phòng](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích Flutter availability UI, FastAPI matching/vote, PostgreSQL, room security | GROUP-01–05/08, A/B, 2–4 máy | R7b |
 | P-18 | [Nhóm cam kết, chuỗi đúng giờ và pet](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích group invite/membership, on-time day, AI consent, morning/study care ledger | GROUP-05–09, idempotency, Android alarm, privacy | R7b |
-| P-15 | Giao hữu/PvP nộp lý do | `assets/game` art; arena/networking chưa có production | GAME-01–05 | R8 |
+| P-15 | [Luyện đơn, đấu đơn và đấu đội](../04-game/04-che-do-don-doi-va-asset-gap.md) | `assets/game` art nghiên cứu; arena/networking chưa có production | GAME-01–10; một/hai/bốn Android, PostgreSQL, art QA | R8 G1–G4 |
 | G-01 | Ranked/rank/coin sau [GDD](../04-game/01-pvp-gdd.md) | Đặc tả/asset nghiên cứu, chưa có ranked production | hai máy/reconnect/ledger/playtest/rights | R8+ |
 | Q-01 | Môi trường/release | `app/`, `services/api/`, `.github/workflows/ci.yml` (T029–T031 đã xác nhận `pytest` 19 pass, `flutter analyze`, Kotlin unit test 6/6, `app-debug.apk`, backup/restore rehearsal) | chạy CI `postgres:16-alpine` + `flutter test`, build ký, secret scan, rollback | R0/R9 |
 

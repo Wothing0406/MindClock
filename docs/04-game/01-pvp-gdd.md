@@ -2,6 +2,8 @@
 
 **Trạng thái:** đặc tả thử nghiệm **chưa có PvP Flutter/API live**. Mở giao hữu sau khi câu/chấm/consent đạt [cổng R8](../00-start/02-lo-trinh.md); ranked/rank/coin sau playtest và quyền. Không biến game thành cách tắt báo thức hoặc lấy giờ dậy xếp hạng. [PRD](../01-product/01-prd.md), [content](../02-engineering/05-ngan-hang-cau-hoi.md), [AI/chấm](../02-engineering/06-ai-va-cham-bai.md).
 
+Tài liệu này là luật **1v1**. Ba cửa vào `Luyện đơn` (PvE), `Đấu đơn` (1v1) và `Đấu đội` (2v2) cùng asset gap ở [modes](04-che-do-don-doi-va-asset-gap.md); [prompt triển khai](05-prompts-trien-khai-dau-truong.md) buộc làm theo từng lát cắt. Team rule hiện là nháp playtest, không được dùng để mở ranked.
+
 ## 1. Vòng chơi và ghép trận
 
 Người chơi opt-in, chọn môn/khối/chương trình/nhân vật. Server ghép **một môn chung** cùng khối/curriculum/content pool version và độ khó đã duyệt; không cần trùng toàn bộ tổ hợp. Hai bên nhận **cùng question ID + revision + rubric + deadline** mỗi round, loại câu tự luận ngắn đã duyệt/chuyển thể và nộp đáp án cùng một bước trình bày bằng chữ hoặc ảnh mới tùy mode. Server chấm cả hai trước khi cho chọn action. Không phát câu bằng Gemini lúc ghép/trong round. Bài, lựa chọn và grade của đối thủ không lộ trước reveal.

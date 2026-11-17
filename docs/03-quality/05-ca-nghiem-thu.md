@@ -92,5 +92,10 @@
 | GAME-03 | P-15 | Submit/action kép/reconnect → HP/event/result/ledger một lần từ server | API PostgreSQL/2 máy |
 | GAME-04 | P-15 | Không có câu/rubric đủ chuẩn cùng lớp/môn thì không ghép ranked | catalog/content/matchmaker |
 | GAME-05 | P-15 | Tướng/FX/balance/reduced motion/asset quyền được kiểm trước mở game | playtest/art/performance review |
+| GAME-06 | P-15 | Luyện đơn dùng câu approved/cache, bot có seed/replay, offline chỉ luyện local; sai/uncertain không cấp RP hoặc giả kết quả online | Dart unit/widget + Android một máy |
+| GAME-07 | P-15 | Màn đấu đơn chỉ hiện kết quả khi server settle; 2 máy cùng câu/rubric, queue cancel/timeout, reconnect/duplicate action không nhân HP | PostgreSQL A/B + Android hai máy |
+| GAME-08 | P-15 | 2v2 bốn người cùng câu, bốn bài/lý do độc lập, không lộ bài đồng đội trước deadline; đúng rõ mới action/target | PostgreSQL bốn account + Android bốn máy |
+| GAME-09 | P-15 | 2v2 hai action/đội resolve đồng thời, target/heal/ward/KO/hòa/round 6 đúng version; uncertain/lỗi một bài void/review cả round, không đổi RP | team engine property/transaction + bốn máy |
+| GAME-10 | P-15 | 320/360/390dp bốn tướng nhìn đúng hướng, target/FX/âm đúng người/tướng; Reduce Motion và bỏ FX không đổi trận, frame timing profile mode đạt ngưỡng đã chốt | art visual QA + Flutter profile Android |
 
 Một TC có thể chưa triển khai vì feature chưa mở; task phải ghi `không áp dụng giai đoạn này` hoặc `chưa chạy`, không xóa dòng để có vẻ pass. Ngưỡng AI/pilot được chốt trước thử người dùng tại [release](02-van-hanh-phat-hanh.md).

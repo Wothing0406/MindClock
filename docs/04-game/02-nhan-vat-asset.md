@@ -39,3 +39,5 @@ Mỗi tướng cần một brief riêng có: silhouette/tuổi biểu kiến tru
 ## 5. Pipeline và cổng
 
 Các script `scripts/build_game_assets.py`, `build_game_projectiles.py`, `build_rank_frames.py`, `build_rank_badges.py`, `build_game_audio.py`, `check_game_assets.py`, `render_stage_previews.py` dùng `assets/game/`. QA tự động kiểm số file/alpha/anchor/facing/audio/manifest; QA mắt kiểm motion/FX/hit/đọc chữ; QA sản phẩm kiểm quyền và hiệu năng Flutter. Asset pass script **không** đồng nghĩa đủ quyền phát hành hoặc animation đã chuẩn. [GDD](01-pvp-gdd.md), [quality](../03-quality/01-ke-hoach-kiem-thu.md).
+
+Inventory theo mode và asset còn thiếu cho UI luyện đơn/1v1/2v2 nằm ở [bảng asset gap](04-che-do-don-doi-va-asset-gap.md#6-asset-đang-có-và-khoảng-thiếu). Không tạo thêm tướng trước khi layout bốn actor và FX đúng target đạt trên Android.

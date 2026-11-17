@@ -41,6 +41,8 @@ MultiCal `availability`/`proposal`/`vote`, tìm phòng, yêu cầu vào/duyệt,
 
 Lời mời QR/link, redeem, chat nhóm và AI turn từ ảnh cũng **chưa có route**. [Contract phòng realtime](09-phong-hoc-realtime.md) yêu cầu invite token opaque có hạn, join sau kiểm quyền, chat không tự vào AI, ảnh tạm có đích nhận rõ, voice phụ thuộc lựa chọn người học. Không được đưa token phòng/media hoặc ảnh bài vào QR hay log.
 
+Đấu trường [G1–G4](../04-game/04-che-do-don-doi-va-asset-gap.md) chưa có route production. G2 cần queue/cancel, match snapshot, submit, action, event stream và result/appeal; G3 thêm team invite/ready, bốn submission và target actor trong action. Server lấy HP/armor/qi/rating từ state đã version, không nhận số do client tự gửi; retry cùng key không settle hai lần. Luyện đơn offline không giả gọi API thành match online.
+
 ## 5. Offline/retry và bảo vệ server
 
 Alarm/timer local không chờ API. Metadata dismiss có thể queue tối đa 7 ngày với key ổn định sau đăng nhập/consent; không dựa vào giờ máy để cấp XP. Bản nháp chữ gửi sau chỉ khi người dùng xác nhận; ảnh **không queue upload ngầm**. Rate limit theo user/route/device rủi ro, payload length/MIME/magic bytes, timeout AI thấp hơn timeout client, request ID và log redaction. Tắt `/demo`, `/product` ở production, có test. [Kiểm thử](../03-quality/01-ke-hoach-kiem-thu.md).
