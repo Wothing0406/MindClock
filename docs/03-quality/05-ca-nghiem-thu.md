@@ -75,6 +75,9 @@
 | ROOM-06 | P-14 | Hỏi ngoài chủ đề/đáp án: AI chuyển nhẹ về mục tiêu, gợi một bước; dừng/nghỉ vẫn được | prompt eval/human review |
 | ROOM-07 | P-14 | Học sâu ở solo/AI không phát audio tự động kể cả chuyển chặng, kết thúc hay lỗi mạng; AI phản hồi chữ khi chủ động hỏi | Android audio/manual + widget |
 | ROOM-08 | P-16 | Tổng kết hiện thời gian được tính, việc tự đánh dấu, ghi chú, EXP đã xác nhận hoặc chờ đồng bộ; solo không tự gọi AI | widget/API/ledger |
+| ROOM-09 | P-14 | Link/mã/QR cùng token có hạn; expired/revoked/reused/capacity/block/age/consent không vào; quét chỉ xem trước, không tự bật cam/mic; QR không chứa dữ liệu riêng | Android deep link + API PostgreSQL A/B + 2 máy |
+| ROOM-10 | P-14 | Chat nhóm không vào AI; ảnh chọn/chụp có preview, chọn đích nhóm/AI, xóa temp sau thành công/lỗi; hỏi sau phiên được; AI chỉ thấy nội dung được chọn, voice lỗi vẫn có chữ | API/security/Android 2 máy + temp/log audit |
+| ROOM-11 | P-14 | Avatar 2D chớp mắt/nét mặt/miệng theo audio thật; buffering/stop không mấp máy; Học sâu không autoplay, nút Nghe chủ động; Reduce Motion/thiết bị yếu dùng ảnh tĩnh, timer vẫn mượt | Flutter animation/audio + Android thật/TalkBack |
 | GROUP-01 | P-17 | MultiCal cùng input/revision ra cùng giờ; timezone/DST/quiet hours đúng; nhóm chỉ nhận số người rảnh, không lộ lịch/nguyên nhân bận | domain/PostgreSQL A/B |
 | GROUP-02 | P-17 | Vote đủ/từ chối/hết hạn/sửa lịch; chỉ ghi đã hẹn đúng số người xác nhận, không tự đặt alarm hoặc nhắc trùng | API + Android notifications |
 | GROUP-03 | P-17 | `Cùng môn` khớp grade/curriculum/subject, `Cùng tập trung` khác môn vẫn hợp lệ; block/consent/capacity lọc cứng; không kết quả có empty state | match domain/API |

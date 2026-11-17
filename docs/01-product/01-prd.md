@@ -41,7 +41,7 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | P-11 | Lập lịch học và việc hôm nay | Nhập/sửa TKB nhiều môn, nhắc opt-in, gợi giờ/câu/việc có lý do và chỉ áp dụng sau xác nhận | PLAN-01–05 |
 | P-12 | Xem hồ sơ và chia sẻ | Lịch sử/tiến độ có nguồn rõ; avatar/tên được duyệt; profile công khai mặc định ẩn, không lộ giờ dậy/TKB/bài | PROFILE-01–04 |
 | P-13 | Đặt lịch ngủ và nhiều chuông | Vòng 24 giờ/nhập số tương đương, âm tùy chọn, lời nhắc thời lượng ngủ; DND chỉ khi OS/quyền cho phép, fallback rõ | SLEEP-01–05 |
-| P-14 | Học cùng AI hoặc bạn | Hai lựa chọn chính một mình/cùng AI; AI chỉ tham gia trong chế độ đã chọn, không có trong phiên một mình; bạn bè là feature flag sau; mic/cam/âm tắt mặc định, nhịp sâu không phát âm; rời được | ROOM-01–08 |
+| P-14 | Học một mình, cùng AI hoặc bạn | Hai lựa chọn chính một mình/cùng AI; bạn bè là feature flag sau. Phòng mời bằng link/mã/QR có xem trước và quyền join; chat người thật tách tin gửi AI, ảnh có xem trước/đích rõ; AI avatar 2D cử động theo audio thật, voice opt-in; mic/cam/âm tắt mặc định, Học sâu không tự phát âm | ROOM-01–11 |
 | P-15 | Thi đấu | Giao hữu dùng cùng câu/rubric, người chơi nộp đáp án và lý do; server chốt kết quả, sai/uncertain không xử thua do AI lỗi; ranked là cổng sau | GAME-01–05 |
 | P-16 | Thưởng phiên tập trung | Sau khi hoàn thành phiên, server cấp EXP theo phút running trọn vẹn có trần phiên/ngày và idempotency; offline chỉ hiện dự kiến; pause/nghỉ/hủy không tính, không đổi RP | FOCUS-10, DATA-01 |
 | P-17 | Hẹn giờ học và tìm phòng | MultiCal chỉ chia sẻ rảnh/bận đã cho phép, đề xuất giờ cần từng người xác nhận; mời bạn trước, tìm phòng theo môn/giờ sau cổng consent/moderation; không lộ TKB hay tạo người/phòng giả | GROUP-01–05, GROUP-08 |

@@ -34,6 +34,7 @@
 | Ảnh bài làm | Bộ nhớ xử lý tạm thời | **Không lưu mặc định**, không log; xóa cả khi exception | Test temp-file/queue/backup không sót. |
 | Video/frame/cảm xúc tập trung | Không thu ở P0 | Không quay liên tục, không suy đoán tập trung từ mặt hoặc app khác | Bất kỳ thử nghiệm mới cần PRD, consent, retention riêng. |
 | Âm/ảnh phòng học và AI | Chỉ khi user bật mic/cam/Live | Không lưu mặc định; frame gửi AI phải được user chọn/xem lại; telemetry chỉ kỹ thuật | Dừng streaming khi tắt/rời; delete/export theo chính sách tính năng trước mở. |
+| Chat/ảnh phòng bạn và QR mời | Khi user gửi tin/ảnh hoặc tạo lời mời | Chat chỉ cho thành viên; AI chỉ nhận tin/ảnh được tag và consent; QR chứa token có hạn, không chứa dữ liệu học | Thu hồi link, rời/chặn, xóa ảnh tạm/TTL chat; lịch sử dài hạn cần consent riêng. |
 | Khung rảnh MultiCal/nhóm | Khi user bật chia sẻ khung rảnh hoặc tham gia nhóm | Chỉ free/busy và số người rảnh; TKB, giờ ngủ/báo và nguyên nhân bận vẫn riêng | Rút chia sẻ/hủy nhóm dừng projection/nhắc; retention proposal phải chốt trước mở. |
 
 Thời hạn retention cụ thể, nơi lưu trữ, quyền nhà cung cấp và văn bản chính sách phải được owner chốt **trước pilot**; docs không tự đặt con số tùy tiện để coi đã tuân thủ.

@@ -12,6 +12,8 @@
 
 `created → waiting_invite → joining → active → reconnecting | paused → ended`; token/membership hết hạn → `left`, không tự join lại tài khoản khác. Server kiểm invite TTL, capacity, blocked users, owner, idempotency và giới hạn tạo phòng. Client dùng local timer cả khi `reconnecting`. Khi media không sẵn có, hiển thị `Chỉ âm thanh` hoặc `Chỉ chữ`, không render hình người/AI giả đang tham gia.
 
+**QR/deep link:** backend tạo invite token opaque đủ entropy, lưu hash/token metadata (`room_id`, inviter/đích nếu có, expiry, max uses, revoked, room version); link HTTPS mở app qua Android App Link hoặc web fallback chỉ giải thích cách cài/mở app, không là web client phòng học. QR là biểu diễn của link, không lưu ảnh QR trên server. Khi redeem, xác minh Auth/tuổi/consent/block/capacity/expiry/revocation trong transaction; token không tự là quyền vào media. Tạo request hoặc membership rồi mới cấp room/media token ngắn hạn, scope đúng người/phòng. Rate limit quét/redeem, không log token thô; cùng `clientRequestId` trả cùng kết quả. Xóa/thu hồi link ngăn join mới, không tự đuổi người đã được chấp nhận nếu chưa có hành động kick riêng.
+
 ## Camera/voice và quyền dữ liệu
 
 Mic/cam chỉ sau thao tác user và quyền OS, indicator trong app, stop ngay khi tắt hoặc rời phòng. Không lưu video/audio mặc định; frame gửi AI chỉ khi user bấm `Hỏi về trang này`, review frame trước gửi, xử lý tạm và xóa. Không dùng camera để chấm lơ là, đọc biểu cảm hoặc phát hiện điện thoại thứ hai. Nếu dùng transcription để người học xem lại, phải có consent, TTL và xóa riêng; không mặc định bật. Với người chưa thành niên, mở Live và phòng bạn sau review độ tuổi/quyền/nhà cung cấp, không bằng một flag client.
@@ -20,6 +22,14 @@ Mic/cam chỉ sau thao tác user và quyền OS, indicator trong app, stop ngay 
 
 Avatar là nhân vật 2D gốc, nhãn `MindClock AI`, animation `idle/listening/speaking/thinking` theo **trạng thái kết nối và audio thật**; không giả đang nhìn user. Miệng theo âm lượng nếu chưa có viseme; không tạo ảnh mặt người thật từ video học sinh. Giới hạn frame/memory, fallback ảnh tĩnh khi Reduce Motion/pin yếu. SFX/nhạc phòng tách âm báo thức. Không cho avatar nói khi mic/cam tắt mà UI không giải thích nguồn phản hồi.
 
+Asset rig 2D tối thiểu có lớp đầu/thân, mắt/chớp, chân mày và các hình miệng; timeline của miệng lấy từ clock phát audio (viseme nếu pipeline trả được, nếu không dùng biên độ đã làm mượt), dừng khi audio pause/stop/buffer. Các trạng thái `idle|thinking|speaking|error` do event thật điều khiển; không chạy vòng miệng giả trong lúc model chờ. Khi mất frame budget, giảm chuyển động rồi chuyển ảnh tĩnh, không làm timer/chat giật. Ở `deep`, phản hồi AI chữ và avatar không phát cử động nói cho đến khi người dùng tự bấm `Nghe`.
+
+## Chat người thật, ảnh hỏi AI và voice trả lời
+
+Backend tách `group_message` khỏi `ai_turn`: AI không subscribe toàn bộ room event/chat. `POST` hỏi AI nhận `selected_message_ids`/text/ảnh **do người gửi chọn**, kiểm owner/membership/quyền xem từng message và consent AI của mọi người nếu dùng trong nhóm; không gửi ảnh của người khác sang AI chỉ vì có trong phòng. Ảnh chọn/chụp → preview/crop/che → xác nhận đích `nhóm|AI` → upload tạm; kiểm MIME/magic bytes/size/EXIF, quét nội dung nhạy cảm theo policy rồi xử lý, xóa khi xong/lỗi/timeout. Chat P2 đầu không lưu lịch sử sau phiên mặc định; server chỉ giữ state tối thiểu để đồng bộ trong phiên, TTL, audit moderation tách nội dung. Sau phiên, user có thể mở `Hỏi AI` từ recap và tự chọn ảnh mới/ghi chú được phép dùng, không mặc định chuyển chat nhóm cũ.
+
+AI trả text trước; voice là artifact/stream riêng với `voiceRequested` và consent. Ở `deep`, không autoplay, chỉ phát sau nút `Nghe`; ở nhịp thảo luận có thể bật autoplay sau lựa chọn riêng. Lỗi TTS/Live không xóa text; tắt/rời phòng hủy audio và trạng thái avatar. Reconnect có message ID/sequence để không hiển thị hoặc phát lại câu trả lời hai lần. Không lưu audio/transcript mặc định; nếu cần lịch sử sau này, chốt retention, export/delete và quyền mọi thành viên trước code.
+
 ## Chi phí và vận hành
 
 Mỗi session có max phút/turn/token theo môi trường, budget/ngày và kill switch server; UI báo `Còn X phút AI` theo quota thật, không hứa miễn phí vô hạn. Live API tài liệu hiện hành nêu giới hạn kết nối/phiên và cần quản lý nối lại, vì vậy task phải kiểm model/quota/SDK/giá lúc code. Telemetry chỉ duration, status, bytes/token ước tính, lỗi; không log âm thanh/bản chép/lời giải. Kiểm mạng yếu, reconnect, tai nghe/Bluetooth, app background, cuộc gọi đến, hai thiết bị, tài khoản đổi, xóa dữ liệu. [Nguồn Live](https://ai.google.dev/gemini-api/docs/live-api/session-management), [ephemeral token](https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens), [giá](https://ai.google.dev/gemini-api/docs/pricing/).
@@ -27,3 +37,5 @@ Mỗi session có max phút/turn/token theo môi trường, budget/ngày và kil
 ## Contract đề xuất, chưa triển khai
 
 `POST /v1/study/rooms` tạo private room; `POST /rooms/{id}/invites`, `POST /rooms/{id}/join`, `POST /rooms/{id}/leave`, `GET /rooms/{id}/snapshot`, WebSocket `/rooms/{id}/events` cho membership/state. `POST /v1/study/live-token` chỉ nếu consent/quota và scope session/voice đúng. Các payload cần `clientRequestId`, `roomVersion`, auth subject, hạn TTL; 401/403/404/409/429 có ý nghĩa, không lộ existence phòng người khác. Migration/contract test/anti-abuse và delete/export trước khi mở route. [API hiện hành](04-hop-dong-api.md).
+
+Task triển khai cần thêm contract riêng cho `POST /rooms/{id}/invites` trả link/expiry/uses nhưng không trả hash token; `POST /invites/redeem`, `POST /rooms/{id}/messages`, `POST /rooms/{id}/ai-turns`, upload ảnh tạm và `POST /ai-turns/{id}/voice` nếu voice theo lượt. QR tạo ở client từ link đã nhận. Group AI membership/consent là state server, không chỉ nút UI. Route/payload này **chưa có trong API** và phải có migration, OpenAPI, test A/B/TTL trước khi client gọi.

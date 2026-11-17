@@ -8,6 +8,8 @@
 
 `Tôi → Nhóm của tôi → Tạo nhóm → đặt tên/chọn pet → gửi link hoặc mã mời → bạn chấp nhận`. Link có hạn và không tự thêm người; có thể chia sẻ qua ứng dụng mạng xã hội người dùng chọn, **không đọc danh bạ hoặc đăng bài thay họ**. Người nhận đăng nhập/xác minh và đồng ý tham gia; đủ điều kiện tuổi/consent mới mở tính năng xã hội. Nhóm đầu tối đa 4 người, chỉ thành viên xem được. Có `Rời nhóm`, `Chặn`, `Báo cáo`, đổi trưởng nhóm khi người tạo rời. Mỗi người có thể có bạn bè riêng, nhưng chỉ chọn **một nhóm chăm pet chính cho mỗi ngày**; đổi nhóm có hiệu lực từ ngày kế tiếp để không nhân thưởng.
 
+Link mời nhóm/phòng có thể hiện thành **QR trên màn hình** để bạn ngồi cạnh quét hoặc gửi ảnh QR qua app người dùng chọn; QR và link cùng một token có hạn. Quét QR không tự vào phòng hoặc bật media: người nhận xem trước, đăng nhập và xác nhận. Phòng nhóm có chat giữa thành viên; mời `MindClock AI` là quyết định riêng của cả phòng. Luồng ảnh bài/nhắn AI và avatar có nét mặt cử động xem [phòng học](08-phong-hoc-ai-va-ban-be.md); chế độ một mình vẫn vào được khi không có ai online.
+
 Màn nhóm đầu tiên cho thấy pet, số ngày đã được chăm, nhiệm vụ chung hôm nay, ai **tự chọn hiển thị** trạng thái `Đã hoàn thành`, và nút `Hẹn giờ học`/`Vào phòng`. Không hiện giờ báo thức, giờ thức dậy, bài làm, điểm yếu hay lý do một người vắng. Không gắn nhãn `lười`, `phá chuỗi nhóm` cho ai.
 
 ## 1. Một nơi, bốn cách học

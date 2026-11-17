@@ -36,6 +36,20 @@ Trợ lý Socratic nhận môn/lớp/mục tiêu/câu hỏi và lịch sử đ�
 
 User tạo phòng `Chỉ mời`, mã/link ngắn hạn, tối đa 2 người ở giai đoạn đầu; bạn chấp nhận mới vào. Không tự bật cam/mic khi join. Mỗi người có timer local đồng bộ mốc phòng, việc riêng có thể ẩn; chủ phòng không xem bài/TKB/điểm riêng. Người tham gia có `Rời`, `Chặn`, `Báo cáo`; chủ phòng có `Kết thúc phòng` nhưng không tắt timer local của người kia. Kết bạn bằng lời mời hai chiều, có danh sách chặn; không mở tìm kiếm công khai/nhắn tin tự do ở giai đoạn đầu. Phòng AI và phòng bạn cùng dùng shell UI nhưng networking khác nhau; khi AI quota hết, phòng bạn/timer vẫn chạy.
 
+### Vào phòng bằng QR hoặc link
+
+Chủ phòng chọn `Mời bạn` → app tạo **cùng một lời mời** dưới dạng link HTTPS, mã ngắn và QR để quét trực tiếp hoặc chia sẻ qua app khác. QR chỉ chứa link có token mời ngẫu nhiên, không có email, TKB, giờ báo thức, ID tuần tự hay mật khẩu. Trên màn mời có `Sao chép`, `Chia sẻ`, `Hiện QR`, `Thu hồi`; cho đặt hạn và số lượt dùng theo loại phòng. Người nhận mở link/quét QR → đăng nhập nếu cần → xem tên phòng, loại phòng, số người, chủ phòng đã duyệt, quyền mic/cam và quy tắc → bấm `Xin vào` hoặc `Tham gia` nếu đã được mời đích danh. Link không tự bật mic/cam và không tự đưa người lạ vào phòng. Phòng chỉ mời khác với phòng có thể xin vào; chủ phòng có danh sách chờ và nút duyệt/từ chối. Khi đủ chỗ, hết hạn, bị thu hồi, bị chặn hoặc sai điều kiện tuổi/consent, UI báo lý do phù hợp và cho quay lại học một mình.
+
+### Chat, ảnh bài học và gọi AI
+
+Phòng bạn có hai ngữ cảnh rõ: `Trò chuyện nhóm` chỉ thành viên thấy và `Hỏi MindClock` chỉ hoạt động sau khi AI được mọi thành viên đồng ý mời vào. Tin nhắn nhóm **không tự chuyển cho AI**. Người gửi chọn `Gửi cho nhóm` hoặc `Hỏi AI`; nếu hỏi AI về tin nhắn/ảnh trong chat nhóm, phải chọn lại đúng nội dung được chia sẻ và thấy bản xem trước. Bấm `+ Ảnh` chọn ảnh hoặc chụp mới, crop/che thông tin riêng, xem trước rồi xác nhận người nhận; ảnh không tự lưu vào hồ sơ hay gửi vào Gemini chỉ vì đã xuất hiện trong chat. Ảnh bài có thể hỏi **sau phiên** từ recap/ghi chú bằng luồng `Hỏi AI`, không buộc giữ phòng hoặc timer chạy. AI trả gợi ý bằng chữ; giọng nói chỉ khi người học bật `Trả lời bằng giọng nói` và chạm `Nghe` hoặc ở nhịp thảo luận đã đồng ý. Trong `Học sâu`, phản hồi mặc định là chữ, không tự phát tiếng; nút nghe là thao tác chủ động. Có `Tắt giọng` ngay trên câu trả lời, phụ đề luôn có, lỗi voice vẫn đọc được chữ.
+
+Lưu chat nhóm là lựa chọn của phòng với thời hạn công khai trước khi gửi; mặc định P2 đầu chỉ giữ trong phiên, ảnh xử lý tạm và xóa sau phiên/timeout. Nếu mở lịch sử sau này phải có consent/retention/export/delete và thử quyền khi thành viên rời nhóm. AI chỉ nhận nội dung được tag/gửi, không nghe mic nền hoặc đọc toàn bộ chat. Không cho thành viên khác ép AI đọc ảnh hay phát tiếng trên máy của người chưa đồng ý.
+
+### Gương mặt MindClock AI
+
+Trong phòng AI, nhân vật 2D gốc có **mắt, miệng, chân mày và hướng đầu chuyển động** theo trạng thái thật: nhìn/chớp mắt khi chờ, nét suy nghĩ khi đang xử lý, miệng khớp nhịp audio khi phát lời, dừng miệng ngay khi ngừng tiếng. Nét mặt chỉ biểu đạt trạng thái của **AI**, không giả AI đang nhìn hoặc đo cảm xúc người dùng. Nhãn `MindClock AI` luôn thấy; không dùng mặt người thật giả lập bạn cùng lớp. Khi mất audio, avatar không nói mấp máy; khi Reduce Motion/máy yếu, dùng ảnh tĩnh và chỉ báo `Đang trả lời`. Ở phòng nhóm, AI xuất hiện trong một ô riêng sau khi được mời, không thay ô của bạn thật và có nút `Mời AI ra`.
+
 Lịch rảnh chung, nhóm 2–4 người, tìm phòng theo môn hoặc chỉ cùng giờ tập trung, AI nhóm và pet là các lát **sau** phòng mời 2 người, có feature flag và cổng riêng. [Thiết kế MultiCal và nhóm](12-lich-chung-ghep-phong-va-pet-nhom.md).
 
 ## Acceptance
@@ -50,5 +64,8 @@ Lịch rảnh chung, nhóm 2–4 người, tìm phòng theo môn hoặc chỉ c�
 | ROOM-04 | Rời app/tạm nghỉ/rời phòng | Không chửi/phạt/giữ app; có nhắc chỉ nếu đã opt-in. |
 | ROOM-05 | Mời bạn/đổi account/block | Người lạ không vào, không lộ việc riêng; kick/report có audit. |
 | ROOM-06 | Hỏi ngoài chủ đề hoặc yêu cầu lời giải | AI chuyển về mục tiêu bằng lời trung tính, gợi một bước, không lộ đáp án trước nỗ lực. |
+| ROOM-09 | Chia sẻ link/mã/QR và thu hồi; người chưa đăng nhập hoặc không được mời mở link | Xem trước phòng, xác thực/quyền rồi mới xin vào; hết hạn/chặn/đủ chỗ không join; QR không lộ dữ liệu riêng. |
+| ROOM-10 | Nhắn nhóm, gửi ảnh, tag hỏi AI trong/sau phiên | Chọn rõ người nhận/xem trước; chat nhóm không tự vào AI; ảnh tạm không lưu mặc định; text vẫn có khi voice lỗi. |
+| ROOM-11 | Bật AI voice/avatar, chuyển Học sâu/Reduce Motion/mạng yếu | Avatar chuyển động theo audio thật, dừng khi audio dừng; Học sâu không tự phát tiếng, luôn có chữ và nút tắt. |
 
 Học cùng bạn và Live voice/video là feature flags độc lập; không xuất hiện như phòng hoạt động thật trước khi có backend, moderation, thiết bị thật và ngân sách. [Kỹ thuật realtime](../02-engineering/09-phong-hoc-realtime.md).

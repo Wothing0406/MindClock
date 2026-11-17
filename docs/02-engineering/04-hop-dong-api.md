@@ -39,6 +39,8 @@ Onboarding draft/commit và catalog `GET /catalog?grade=10|11|12&version=...`; p
 
 MultiCal `availability`/`proposal`/`vote`, tìm phòng, yêu cầu vào/duyệt, snapshot và pet ledger là **đề xuất R7b**, chưa có route. Hợp đồng quyền, payload, idempotency và trường không được lộ ở [thiết kế ghép phòng](12-lich-chung-va-ghep-phong.md); phải cập nhật bảng A/OpenAPI/test cùng task code trước khi client gọi.
 
+Lời mời QR/link, redeem, chat nhóm và AI turn từ ảnh cũng **chưa có route**. [Contract phòng realtime](09-phong-hoc-realtime.md) yêu cầu invite token opaque có hạn, join sau kiểm quyền, chat không tự vào AI, ảnh tạm có đích nhận rõ, voice phụ thuộc lựa chọn người học. Không được đưa token phòng/media hoặc ảnh bài vào QR hay log.
+
 ## 5. Offline/retry và bảo vệ server
 
 Alarm/timer local không chờ API. Metadata dismiss có thể queue tối đa 7 ngày với key ổn định sau đăng nhập/consent; không dựa vào giờ máy để cấp XP. Bản nháp chữ gửi sau chỉ khi người dùng xác nhận; ảnh **không queue upload ngầm**. Rate limit theo user/route/device rủi ro, payload length/MIME/magic bytes, timeout AI thấp hơn timeout client, request ID và log redaction. Tắt `/demo`, `/product` ở production, có test. [Kiểm thử](../03-quality/01-ke-hoach-kiem-thu.md).

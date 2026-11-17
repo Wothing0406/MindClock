@@ -17,7 +17,7 @@ Ma trận này giúp AI không “làm đẹp một màn” rồi báo xong sả
 | P-11 | TKB/việc hôm nay/nhắc opt-in | timetable repo + local notifications; AI suggestion sau | PLAN-01–05 | R3/R4 |
 | P-12 | Hồ sơ/tiến độ/chia sẻ opt-in | progress API; avatar/moderation/public projection chưa mở | PROFILE-01–04 | R2/R7+ |
 | P-13 | Nhiều chuông/lịch ngủ/DND có trạng thái thật | Android alarm hiện có; sleep UI/DND chưa xác nhận | SLEEP-01–05, AD01–09 | R1 |
-| P-14 | Hai lựa chọn chính solo/AI; bạn bè sau cổng | study timer/API có phần mã; Live room/bạn chưa có production | ROOM-01–08, FOCUS-01–09 | R5/R7 |
+| P-14 | Solo/AI/bạn; QR/link, chat/ảnh chọn đích, avatar AI nói theo audio thật | study timer/API có phần mã; room media/chat/avatar chưa có production | ROOM-01–11, FOCUS-01–09, A/B/2 máy | R5/R7 |
 | P-16 | EXP theo thời gian phiên đã hoàn thành | Chưa có ledger thời gian được xác minh; cần API/SQL task riêng | FOCUS-10, ROOM-08, DATA-01 | R5 |
 | P-17 | [MultiCal và tìm phòng](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích Flutter availability UI, FastAPI matching/vote, PostgreSQL, room security | GROUP-01–05/08, A/B, 2–4 máy | R7b |
 | P-18 | [Nhóm cam kết, chuỗi đúng giờ và pet](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | Chưa có; đích group invite/membership, on-time day, AI consent, morning/study care ledger | GROUP-05–09, idempotency, Android alarm, privacy | R7b |
