@@ -25,5 +25,5 @@
   1. Bật Docker Desktop và chạy `docker compose -f services/api/docker-compose.yml up -d postgres` (hoặc kiểm tra kết quả GitHub Actions job `backend-api-postgres` sau commit T038).
   2. Chạy `POSTGRES_TEST_URL=postgresql+psycopg://mindclock:mindclock_local_dev@127.0.0.1:5432/mindclock services/api/.venv/Scripts/python.exe -m pytest services/api/tests/test_migrations_and_data_invariants.py services/api/tests/test_pvp_matchmaking.py -vv`.
   3. Khi `TC-09` PASS trên PostgreSQL 16 thật, cập nhật kết quả vào `tasks/T038-pvp-database-and-matchmaking/tests.md`, đánh dấu bước 4 trong `plan.md`, và chuyển `README.md`/`handoff.md` sang `done`.
-- **Git:** Sẽ cập nhật SHA commit T038 ngay sau khi push và xác minh trên `origin/main`.
+- **Git:** Nhánh `main`, commit mã `0742b63` (`feat(T038): add PvP alembic migration 0003, harden matchmaking/settle and fix test hangs`), đã đẩy lên `origin/main` và xác minh bằng `git ls-remote origin main`.
 - **Quyết định phải xin người phụ trách:** Không có; giữ ranked tắt (`rank_ledger` chưa thêm).
