@@ -75,6 +75,14 @@
 | ROOM-06 | P-14 | Hỏi ngoài chủ đề/đáp án: AI chuyển nhẹ về mục tiêu, gợi một bước; dừng/nghỉ vẫn được | prompt eval/human review |
 | ROOM-07 | P-14 | Học sâu ở solo/AI không phát audio tự động kể cả chuyển chặng, kết thúc hay lỗi mạng; AI phản hồi chữ khi chủ động hỏi | Android audio/manual + widget |
 | ROOM-08 | P-16 | Tổng kết hiện thời gian được tính, việc tự đánh dấu, ghi chú, EXP đã xác nhận hoặc chờ đồng bộ; solo không tự gọi AI | widget/API/ledger |
+| GROUP-01 | P-17 | MultiCal cùng input/revision ra cùng giờ; timezone/DST/quiet hours đúng; nhóm chỉ nhận số người rảnh, không lộ lịch/nguyên nhân bận | domain/PostgreSQL A/B |
+| GROUP-02 | P-17 | Vote đủ/từ chối/hết hạn/sửa lịch; chỉ ghi đã hẹn đúng số người xác nhận, không tự đặt alarm hoặc nhắc trùng | API + Android notifications |
+| GROUP-03 | P-17 | `Cùng môn` khớp grade/curriculum/subject, `Cùng tập trung` khác môn vẫn hợp lệ; block/consent/capacity lọc cứng; không kết quả có empty state | match domain/API |
+| GROUP-04 | P-17 | Hai người xin chỗ cuối chỉ một vào; ID guess/token hết hạn/user A/B không xem hoặc vào phòng | PostgreSQL transaction/security/2 máy |
+| GROUP-05 | P-17/P-18 | Reconnect, đổi account, mất host và lỗi media không làm mất timer cá nhân hoặc cấp EXP trùng | Android 2–4 máy + API |
+| GROUP-06 | P-18 | Pet: 24:59 = 0, 25:00 = 1; hai phiên cùng ngày/retry vẫn tối đa 1/người; rời nhóm không trừ điểm người khác | PostgreSQL ledger A/B |
+| GROUP-07 | P-18 | AI nhóm chỉ vào khi mọi người opt-in; rút một người dừng AI, phòng vẫn chạy; Học sâu không tự phát âm | Android 2–4 máy + AI/consent |
+| GROUP-08 | P-17/P-18 | Mic/cam tắt khi join, report/block hữu hiệu, không lộ TKB/việc riêng/avatar pending qua search/event | privacy/security/manual |
 | GAME-01 | P-15 | Hai bên cùng câu/rubric/deadline, cần đáp án và lý do; khoanh lụi không kích hoạt skill | server contract/content eval |
 | GAME-02 | P-15 | Ảnh mờ/AI uncertain/network fault → void/review, không đổi RP, không tự xử thua | 2 máy/API transaction |
 | GAME-03 | P-15 | Submit/action kép/reconnect → HP/event/result/ledger một lần từ server | API PostgreSQL/2 máy |

@@ -36,6 +36,8 @@ Trợ lý Socratic nhận môn/lớp/mục tiêu/câu hỏi và lịch sử đ�
 
 User tạo phòng `Chỉ mời`, mã/link ngắn hạn, tối đa 2 người ở giai đoạn đầu; bạn chấp nhận mới vào. Không tự bật cam/mic khi join. Mỗi người có timer local đồng bộ mốc phòng, việc riêng có thể ẩn; chủ phòng không xem bài/TKB/điểm riêng. Người tham gia có `Rời`, `Chặn`, `Báo cáo`; chủ phòng có `Kết thúc phòng` nhưng không tắt timer local của người kia. Kết bạn bằng lời mời hai chiều, có danh sách chặn; không mở tìm kiếm công khai/nhắn tin tự do ở giai đoạn đầu. Phòng AI và phòng bạn cùng dùng shell UI nhưng networking khác nhau; khi AI quota hết, phòng bạn/timer vẫn chạy.
 
+Lịch rảnh chung, nhóm 2–4 người, tìm phòng theo môn hoặc chỉ cùng giờ tập trung, AI nhóm và pet là các lát **sau** phòng mời 2 người, có feature flag và cổng riêng. [Thiết kế MultiCal và nhóm](12-lich-chung-ghep-phong-va-pet-nhom.md).
+
 ## Acceptance
 
 | ID | Khi | Phải xảy ra |

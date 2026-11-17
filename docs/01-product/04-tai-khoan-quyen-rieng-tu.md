@@ -34,12 +34,15 @@
 | Ảnh bài làm | Bộ nhớ xử lý tạm thời | **Không lưu mặc định**, không log; xóa cả khi exception | Test temp-file/queue/backup không sót. |
 | Video/frame/cảm xúc tập trung | Không thu ở P0 | Không quay liên tục, không suy đoán tập trung từ mặt hoặc app khác | Bất kỳ thử nghiệm mới cần PRD, consent, retention riêng. |
 | Âm/ảnh phòng học và AI | Chỉ khi user bật mic/cam/Live | Không lưu mặc định; frame gửi AI phải được user chọn/xem lại; telemetry chỉ kỹ thuật | Dừng streaming khi tắt/rời; delete/export theo chính sách tính năng trước mở. |
+| Khung rảnh MultiCal/nhóm | Khi user bật chia sẻ khung rảnh hoặc tham gia nhóm | Chỉ free/busy và số người rảnh; TKB, giờ ngủ/báo và nguyên nhân bận vẫn riêng | Rút chia sẻ/hủy nhóm dừng projection/nhắc; retention proposal phải chốt trước mở. |
 
 Thời hạn retention cụ thể, nơi lưu trữ, quyền nhà cung cấp và văn bản chính sách phải được owner chốt **trước pilot**; docs không tự đặt con số tùy tiện để coi đã tuân thủ.
 
 ## 4. Moderation và bảo vệ học sinh
 
 Tên, avatar upload và phát ngôn công khai phải lọc/duyệt theo rủi ro: thông tin liên hệ, khiêu dâm, bắt nạt, thù ghét, mạo danh, lộ trường/lớp/địa chỉ. Có báo cáo, tạm ẩn, kiểm tra bởi người, kháng nghị và giới hạn rate. Phòng bạn chỉ bằng lời mời, block/report, không có tìm kiếm công khai hoặc chat tự do trong bản đầu. Không bán dữ liệu hoặc quảng cáo cá nhân hóa nhắm vào học sinh. Biệt danh và ảnh công khai không làm lộ lịch thức dậy hay điểm yếu học tập. Trước khi phát hành cho người chưa thành niên, người phụ trách phải rà điều kiện tuổi, đồng ý, nhà cung cấp và chính sách dữ liệu áp dụng.
+
+Tìm phòng theo sở thích là lát sau của [R7b](../00-start/02-lo-trinh.md), chỉ mở khi có review tuổi/consent, moderation trực, giới hạn tạo/join, block/report và test chống lộ lịch. Không dùng guest ẩn danh vào phòng người lạ; pet nhóm không phạt hoặc công khai giờ dậy của thành viên.
 
 ## 5. Test bắt buộc
 

@@ -22,7 +22,7 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | --- | --- | --- |
 | **P0 — lõi Android** | Happy path đăng ký email, hồ sơ lớp/môn/avatar, dashboard có kế hoạch cơ bản; nhiều alarm local, lịch ngủ, Dừng khẩn cấp, câu duyệt và nhập chữ, timer học một mình. Nếu Auth/mạng lỗi vẫn có `Chỉ dùng báo thức trên máy`. | Không cần Gemini Live, phòng bạn, PvP hoặc iOS để người dùng kiểm báo thức; đăng ký online chỉ mở khi Auth/privacy/backend đạt. |
 | **P1 — cá nhân hóa online** | Đồng bộ TKB, gợi kế hoạch có xác nhận, camera bài làm tùy chọn, chấm ba trạng thái được đánh giá, hồ sơ tiến độ, AI gợi ý theo lượt, voice push-to-talk. | PostgreSQL/Firebase/consent, quyền nội dung và bộ chấm đạt. |
-| **P2 — đồng hành và xã hội** | Phòng học với AI Live/avatar nói, phòng mời bạn, hồ sơ công khai opt-in, giao hữu PvP. | Chi phí Live, privacy trẻ em, moderation, realtime/reconnect, câu chấm công bằng và hai máy. Ranked/coin sau playtest riêng. |
+| **P2 — đồng hành và xã hội** | Phòng học với AI Live/avatar nói, phòng mời bạn; sau đó MultiCal, nhóm nhỏ, tìm phòng opt-in và pet nhóm; hồ sơ công khai opt-in, giao hữu PvP. | Quyền trẻ em, moderation, realtime/reconnect, A/B, 2–4 máy, quyền dữ liệu lịch và pet ledger. Ranked/coin sau playtest riêng. |
 
 ## 4. Yêu cầu nghiệp vụ có thể test
 
@@ -42,8 +42,10 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | P-12 | Xem hồ sơ và chia sẻ | Lịch sử/tiến độ có nguồn rõ; avatar/tên được duyệt; profile công khai mặc định ẩn, không lộ giờ dậy/TKB/bài | PROFILE-01–04 |
 | P-13 | Đặt lịch ngủ và nhiều chuông | Vòng 24 giờ/nhập số tương đương, âm tùy chọn, lời nhắc thời lượng ngủ; DND chỉ khi OS/quyền cho phép, fallback rõ | SLEEP-01–05 |
 | P-14 | Học cùng AI hoặc bạn | Hai lựa chọn chính một mình/cùng AI; AI chỉ tham gia trong chế độ đã chọn, không có trong phiên một mình; bạn bè là feature flag sau; mic/cam/âm tắt mặc định, nhịp sâu không phát âm; rời được | ROOM-01–08 |
-| P-16 | Thưởng phiên tập trung | Sau khi hoàn thành phiên, server cấp EXP theo phút running trọn vẹn có trần phiên/ngày và idempotency; offline chỉ hiện dự kiến; pause/nghỉ/hủy không tính, không đổi RP | FOCUS-10, DATA-01 |
 | P-15 | Thi đấu | Giao hữu dùng cùng câu/rubric, người chơi nộp đáp án và lý do; server chốt kết quả, sai/uncertain không xử thua do AI lỗi; ranked là cổng sau | GAME-01–05 |
+| P-16 | Thưởng phiên tập trung | Sau khi hoàn thành phiên, server cấp EXP theo phút running trọn vẹn có trần phiên/ngày và idempotency; offline chỉ hiện dự kiến; pause/nghỉ/hủy không tính, không đổi RP | FOCUS-10, DATA-01 |
+| P-17 | Hẹn giờ học và tìm phòng | MultiCal chỉ chia sẻ rảnh/bận đã cho phép, đề xuất giờ cần từng người xác nhận; mời bạn trước, tìm phòng theo môn/giờ sau cổng consent/moderation; không lộ TKB hay tạo người/phòng giả | GROUP-01–05, GROUP-08 |
+| P-18 | Học nhóm và pet chung | Phòng 2–4 người giữ mục tiêu riêng/timer local, mic/cam off; AI nhóm cần mọi người đồng ý; pet chỉ nhận điểm xác nhận có trần, không phạt người vắng | GROUP-05–08 |
 
 ## 5. Quy tắc bất biến
 
@@ -62,6 +64,6 @@ Trong thử người dùng ghi: hoàn tất onboarding, quyền bị từ chối
 
 ## 7. Ngoài phạm vi hiện tại và câu hỏi mở
 
-Giáo viên/phụ huynh, pet, ranked/cửa hàng, AI giám sát camera liên tục, iOS không thuộc P0. Cần quyết định trước mở người dùng thật: tuổi/đồng ý, catalog chương trình và số câu tối thiểu theo môn, quyền nội dung/art, ngưỡng chấm AI, ngân sách Live, thiết bị Android mục tiêu và hình thức phân phối. Không giải quyết bằng một màn mock.
+Giáo viên/phụ huynh, pet nhóm, ranked/cửa hàng, AI giám sát camera liên tục, iOS không thuộc P0. Pet nhóm chỉ là nhánh xã hội P2 theo [thiết kế riêng](12-lich-chung-ghep-phong-va-pet-nhom.md); AI giám sát camera không nằm trong lộ trình. Cần quyết định trước mở người dùng thật: tuổi/đồng ý, catalog chương trình và số câu tối thiểu theo môn, quyền nội dung/art, ngưỡng chấm AI, ngân sách Live, thiết bị Android mục tiêu và hình thức phân phối. Không giải quyết bằng một màn mock.
 
 [Onboarding](07-dang-ky-va-khoi-tao-lo-trinh.md), [lịch và kế hoạch](05-lich-hoc-nhac-viec.md), [hồ sơ](06-ho-so-tien-do-xa-hoi.md), [giấc ngủ/báo thức](09-giac-ngu-va-bao-thuc.md), [phòng học](08-phong-hoc-ai-va-ban-be.md) là đặc tả chi tiết. [Quyết định còn mở](../00-start/06-quyet-dinh-va-gia-dinh.md).
