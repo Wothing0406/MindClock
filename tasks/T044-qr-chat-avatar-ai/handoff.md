@@ -6,4 +6,4 @@
 - **Test:** xem `tests.md`; kiểm link/task/diff trên Windows 2026-11-17.
 - **Giới hạn:** chưa test Android deep link, hai máy, media, PostgreSQL, asset animation.
 - **Điểm tiếp tục:** task R7 invite QR ROOM-09; tiếp theo chat/ảnh ROOM-10 và avatar/voice ROOM-11, giữ feature flag tắt đến khi test.
-- **Git:** điền SHA sau commit/push.
+- **Git:** nhánh `main`; commit tài liệu `bad3f59`; xác minh remote sau commit bàn giao.
