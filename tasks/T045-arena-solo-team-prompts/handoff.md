@@ -6,4 +6,4 @@
 - **Test:** xem `tests.md`; kiểm docs link/task/diff Windows 2026-11-17.
 - **Giới hạn:** chưa có playtest/balance/Android/production art.
 - **Điểm tiếp tục:** tạo task G1 Flutter luyện đơn, test GAME-06; sau đó G2 hai máy/GAME-07, G3 bốn máy/GAME-08–10.
-- **Git:** điền SHA sau commit/push.
+- **Git:** nhánh `main`; commit tài liệu `75aa4d3`; xác minh remote sau commit bàn giao.
