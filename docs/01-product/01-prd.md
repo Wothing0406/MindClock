@@ -36,12 +36,13 @@ Học sinh THPT có thể tắt báo thức rồi ngủ tiếp, ôn không sát 
 | P-06 | Nộp đáp án và bước giải | Có đường nhập chữ; ảnh chỉ sau quyền/chụp/xem lại/xác nhận; backend chấm `correct/incorrect/uncertain` | LEARN-02–05, AI-01 |
 | P-07 | Sai bài | Cho thử lại; gợi ý chỉ từ lần sai rõ thứ 3; từ lần sai rõ thứ 5 có `Bỏ lượt`; Socratic không đưa đáp án cuối trước nỗ lực | LEARN-06, AI-02, MORNING-02 |
 | P-08 | Xem tiến độ | Chỉ dữ liệu cá nhân; hoàn thành câu đúng đã xác minh mới xét XP/chuỗi học buổi sáng; bỏ lượt không cộng, không trừ EXP/RP đã có; giờ dậy không vào rating | DATA-01, MORNING-03 |
-| P-09 | Vào Không gian học | Timer local có dừng/nghỉ/kết thúc; rời app không bị phạt/khóa | FOCUS-01–05 |
+| P-09 | Vào Không gian học | Chọn `Học một mình` hoặc `Học cùng MindClock`; app gợi mục tiêu từ lịch đã xác nhận, không bắt chọn môn lại; recap trước bắt đầu; timer local có dừng/nghỉ/kết thúc; `Học sâu` im lặng; rời app không bị phạt/khóa | FOCUS-01–05, FOCUS-09 |
 | P-10 | Xóa tài khoản/rút đồng ý | API/UX có trạng thái xử lý rõ, ẩn khỏi bảng ngay, dọn dữ liệu theo chính sách; chuông local tách biệt | AUTH-04, PRIV-01 |
 | P-11 | Lập lịch học và việc hôm nay | Nhập/sửa TKB nhiều môn, nhắc opt-in, gợi giờ/câu/việc có lý do và chỉ áp dụng sau xác nhận | PLAN-01–05 |
 | P-12 | Xem hồ sơ và chia sẻ | Lịch sử/tiến độ có nguồn rõ; avatar/tên được duyệt; profile công khai mặc định ẩn, không lộ giờ dậy/TKB/bài | PROFILE-01–04 |
 | P-13 | Đặt lịch ngủ và nhiều chuông | Vòng 24 giờ/nhập số tương đương, âm tùy chọn, lời nhắc thời lượng ngủ; DND chỉ khi OS/quyền cho phép, fallback rõ | SLEEP-01–05 |
-| P-14 | Học cùng AI hoặc bạn | Chọn môn/việc/nhịp/mức nhắc và loại phòng; mic/cam tắt mặc định; timer local; lời nhắc nghiêm nhưng không xúc phạm; rời được | ROOM-01–06 |
+| P-14 | Học cùng AI hoặc bạn | Hai lựa chọn chính một mình/cùng AI; AI chỉ tham gia trong chế độ đã chọn, không có trong phiên một mình; bạn bè là feature flag sau; mic/cam/âm tắt mặc định, nhịp sâu không phát âm; rời được | ROOM-01–08 |
+| P-16 | Thưởng phiên tập trung | Sau khi hoàn thành phiên, server cấp EXP theo phút running trọn vẹn có trần phiên/ngày và idempotency; offline chỉ hiện dự kiến; pause/nghỉ/hủy không tính, không đổi RP | FOCUS-10, DATA-01 |
 | P-15 | Thi đấu | Giao hữu dùng cùng câu/rubric, người chơi nộp đáp án và lý do; server chốt kết quả, sai/uncertain không xử thua do AI lỗi; ranked là cổng sau | GAME-01–05 |
 
 ## 5. Quy tắc bất biến

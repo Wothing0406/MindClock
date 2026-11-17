@@ -43,6 +43,8 @@
 | FOCUS-06 | P-09 | AI gợi một bước, không tự bật camera/mic hay đưa đáp án cuối trước nỗ lực | prompt/API review |
 | FOCUS-07 | P-09 | Room timer/các nút chính đọc/chạm được với 320dp, chữ 200%, TalkBack/Reduce Motion | Flutter/Android manual |
 | FOCUS-08 | P-09 | Không thu app list, mặt/video hoặc nhãn cảm xúc/lơ là mặc định | inspection/network/log review |
+| FOCUS-09 | P-09/P-14 | Gợi mục tiêu từ kế hoạch/TKB, không bắt chọn môn lại; recap sửa được. Solo không khởi tạo AI. Deep ở cả hai chế độ không phát âm/nhắc/giọng; AI chỉ trả chữ khi hỏi | Flutter widget + Android audio/manual |
+| FOCUS-10 | P-16 | 4:59 running = 0 EXP, 5:00 = 1; pause/break không tính; trần 12/phiên, 30/ngày; offline chỉ dự kiến; finish lặp/đổi account không cấp trùng; hủy không thưởng | domain + PostgreSQL transaction A/B + Android offline |
 | AUTH-04 | P-10 | Xóa yêu cầu lặp idempotent, ẩn bảng ngay, trạng thái và xóa local chọn riêng | API/SQL/manual |
 | PRIV-01 | P-10 | Rút consent dừng upload/Live/bảng, xóa ảnh tạm/log/caches theo policy | API/security/manual |
 | PLAN-01 | P-11 | Nhập/sửa TKB nhiều môn, lịch lặp và ngoại lệ/nghỉ cho đúng ngày theo timezone | domain/widget/API |
@@ -65,12 +67,14 @@
 | SLEEP-03 | P-13 | Màn khóa mặc định ẩn môn/TKB, full-screen hoặc notification fallback và Dừng local | AD01/04/09 máy thật |
 | SLEEP-04 | P-13 | Sai/ảnh mờ/offline/AI timeout: thử lại/Ôn sau/Dừng; không kéo dài chuông tới đúng | Android E2E/API |
 | SLEEP-05 | P-13 | MP3 lỗi/không đọc được: fallback âm OS, chuông không mất | Android thật |
-| ROOM-01 | P-14 | Chọn solo/AI/bạn, sâu/ngắt quãng, mức nhắc; mic/cam off mặc định | widget/Android |
+| ROOM-01 | P-14 | Màn chính chọn solo/AI; bạn chỉ khi feature flag; gợi mục tiêu từ lịch hoặc học tự do; mic/cam/âm off mặc định | widget/Android |
 | ROOM-02 | P-14 | Từ chối/tắt mic/cam giữa phiên: timer/text tiếp tục, indicator tắt thật | Android permission/media |
 | ROOM-03 | P-14 | AI Live hết quota/rớt mạng: hạ cấp text/timer, không phát avatar/audio giả | integration/2 mạng |
 | ROOM-04 | P-14 | Rời app/tạm nghỉ/rời phòng: không chửi/phạt/giữ app, nhắc chỉ khi opt-in | lifecycle/copy review |
 | ROOM-05 | P-14 | Invite TTL, hai account, block/report: người lạ không vào, việc riêng không lộ | API/room security/2 máy |
 | ROOM-06 | P-14 | Hỏi ngoài chủ đề/đáp án: AI chuyển nhẹ về mục tiêu, gợi một bước; dừng/nghỉ vẫn được | prompt eval/human review |
+| ROOM-07 | P-14 | Học sâu ở solo/AI không phát audio tự động kể cả chuyển chặng, kết thúc hay lỗi mạng; AI phản hồi chữ khi chủ động hỏi | Android audio/manual + widget |
+| ROOM-08 | P-16 | Tổng kết hiện thời gian được tính, việc tự đánh dấu, ghi chú, EXP đã xác nhận hoặc chờ đồng bộ; solo không tự gọi AI | widget/API/ledger |
 | GAME-01 | P-15 | Hai bên cùng câu/rubric/deadline, cần đáp án và lý do; khoanh lụi không kích hoạt skill | server contract/content eval |
 | GAME-02 | P-15 | Ảnh mờ/AI uncertain/network fault → void/review, không đổi RP, không tự xử thua | 2 máy/API transaction |
 | GAME-03 | P-15 | Submit/action kép/reconnect → HP/event/result/ledger một lần từ server | API PostgreSQL/2 máy |

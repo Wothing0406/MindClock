@@ -4,11 +4,13 @@
 
 ## 1. Luồng và máy trạng thái
 
-`setup(roomType, task, subject, targetMinutes, cadence, coachTone) → running ↔ paused → break | finished | abandoned`. `roomType=solo|ai|friends`, `cadence=deep|interval`, `coachTone=quiet|gentle|firm`. Preset 10/25/45 phút hoặc tùy chỉnh; người dùng chọn việc từ TKB/task hôm nay hoặc nhập tay. Timer và nút `Kết thúc` chạy local khi offline/API lỗi. Khi app background/restart, tính elapsed theo đồng hồ phù hợp, đối chiếu monotonic/wall clock, hiển thị nếu dữ liệu không chắc; không cộng phạt vì rời app. Đồng bộ server là bước sau, idempotent theo `clientSessionId`.
+`setup(roomType, suggestedTask?, task, subjectContext?, targetMinutes, cadence, audioOptions) → recap → running ↔ paused → break | finished | abandoned`. Hai `roomType` chính là `solo|ai`; `friends` chỉ qua feature flag/task riêng. `subjectContext` được suy ra từ kế hoạch/TKB đã xác nhận nếu có, **không là trường bắt buộc để bắt đầu**. Preset 15/25/45 phút hoặc tùy chỉnh. Timer và nút `Kết thúc` chạy local khi offline/API lỗi. `cadence=deep` đặt mọi `audioOptions` trong phiên về off và không tự gọi AI; `solo` không khởi tạo phiên AI. Khi app background/restart, tính elapsed theo đồng hồ phù hợp, đối chiếu monotonic/wall clock, hiển thị nếu dữ liệu không chắc; không cộng phạt vì rời app. Đồng bộ server idempotent theo `clientSessionId`.
+
+EXP `study-time-v0.1` được tính **ở server** từ phút `running` hợp lệ đã hoàn thành: `min(floor(activeSeconds/300), 12)` mỗi phiên, tổng tối đa 30/ngày người dùng theo timezone đã lưu. Pause/break không tính; phiên chưa `finished`, dưới 300 giây hoặc thời gian không chắc không cấp. Client chỉ giữ dự kiến khi offline. Backend phải kiểm replay, timestamp bất thường và trần ngày; `study_session_id`/`clientSessionId` unique theo owner, một ledger entry cho một phiên, finish cùng key trả cùng kết quả. Không chuyển EXP thời gian thành RP hoặc điểm năng lực. Chi tiết hành vi ở [phòng học](../01-product/08-phong-hoc-ai-va-ban-be.md).
 
 ## 2. UI
 
-Một màn dọc: ô mình/AI hoặc bạn, việc đang làm, môn, timer lớn, `Mic/Cam/Hỏi/Tạm dừng/Nghỉ/Rời phòng`, ghi `Đã làm`/`Đang vướng`. Camera/mic tắt mặc định và chỉ bật sau thao tác riêng; trạng thái đang thu, giới hạn, tắt ngay phải nhìn thấy. Avatar AI là 2D có nhãn, chuyển động theo trạng thái/audio thật; không giả người thật hay giả đang giám sát. Nếu người dùng rời app, khi quay lại dùng câu trung tính `Bạn muốn tiếp tục phiên học?`, không mắng, không trừ XP/streak. Có giảm chuyển động và chữ 200%.
+Màn chọn có hai thẻ `Học một mình`/`Học cùng MindClock`, tiếp theo là gợi ý cá nhân, sửa mục tiêu/thời lượng, nhịp và thẻ recap. `solo` dùng timer, mục tiêu, ghi chú và nút dừng; không dựng avatar/chat AI. `ai` thêm nút hỏi và tùy chọn media. Camera/mic/âm tắt mặc định; `deep` luôn silent trong phiên, AI trả chữ khi hỏi. Avatar AI là 2D có nhãn và chỉ chuyển động theo audio thật ở nhịp đã bật âm; không giả người thật hay giám sát. Khi người dùng quay lại app, hiện câu tiếp tục trung tính; không mắng hoặc trừ EXP/streak. Có giảm chuyển động và chữ 200%.
 
 ## 3. Trợ lý
 
@@ -16,4 +18,4 @@ Gửi task/subject/grade + câu hỏi người dùng và vài lượt gần nh�
 
 ## 4. Test và cổng
 
-FOCUS-01 timer offline/pause/resume/finish; FOCUS-02 background/kill/restart/đổi giờ; FOCUS-03 đồng bộ finish lặp; FOCUS-04 API timeout không kẹt màn; FOCUS-05 camera/mic từ chối/và dừng; FOCUS-06 AI không lộ đáp án/chủ động bật camera; FOCUS-07 TalkBack/chữ lớn/màn hẹp; FOCUS-08 không thu app list/mặt/video mặc định. ROOM-01–06 bao phủ lựa chọn phòng, Live lỗi/quota, lời nhắc và bạn bè. Đo thời gian mở màn, điện/pin, quota token. Phòng bạn/Live chỉ mở sau cổng kỹ thuật và quyền, không làm điều kiện cho timer local.
+FOCUS-01 timer offline/pause/resume/finish; FOCUS-02 background/kill/restart/đổi giờ; FOCUS-03 đồng bộ finish lặp; FOCUS-04 API timeout không kẹt màn; FOCUS-05 camera/mic từ chối/và dừng; FOCUS-06 AI không lộ đáp án/chủ động bật camera; FOCUS-07 TalkBack/chữ lớn/màn hẹp; FOCUS-08 không thu app list/mặt/video mặc định; FOCUS-09 silent ở `deep`/không AI ở `solo`; FOCUS-10 tính EXP đúng phút active, cap, owner, offline và retry. ROOM-01–08 bao phủ lựa chọn phòng, Live lỗi/quota, lời nhắc và bạn bè. Đo thời gian mở màn, điện/pin, quota token. Phòng bạn/Live chỉ mở sau cổng kỹ thuật và quyền, không làm điều kiện cho timer local.

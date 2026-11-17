@@ -1,20 +1,30 @@
 # Không gian học: một mình, cùng AI, cùng bạn
 
-**Mục tiêu sản phẩm:** tạo cảm giác có bạn đồng hành để người học bắt đầu và duy trì một phiên học có việc cụ thể. Không giả AI là người thật, không “chửi”/làm nhục học sinh, không khóa họ trong phòng. Có ba lựa chọn rõ: `Học một mình`, `Học cùng MindClock`, `Mời bạn học`. [PRD](01-prd.md), [quyền riêng tư](04-tai-khoan-quyen-rieng-tu.md).
+**Mục tiêu sản phẩm:** giúp người học bắt đầu và duy trì một phiên có mục tiêu rõ. Màn vào có hai lựa chọn chính: `Học một mình` và `Học cùng MindClock`. `Mời bạn học` là nhánh riêng sau feature flag, không chen vào lựa chọn đầu. Không giả AI là người thật, không mắng người học hoặc khóa họ trong phòng. [PRD](01-prd.md), [quyền riêng tư](04-tai-khoan-quyen-rieng-tu.md).
 
 ## Trước khi vào phòng
 
-Chọn môn từ hồ sơ, việc cần làm từ lịch hoặc nhập tay, thời lượng 10/25/45 phút/tùy chỉnh, nhịp `Học sâu` (một khoảng tập trung dài) hoặc `Học ngắt quãng` (vòng tập trung/nghỉ). Chọn mức nhắc `Yên tĩnh / Nhắc nhẹ / Nghiêm túc`, mặc định `Nhắc nhẹ`; xem trước kiểu lời nói. Mic/camera **tắt mặc định**, bật độc lập; có kiểm âm/cam, trạng thái quyền và preview trước kết nối. Không yêu cầu camera để dùng timer hoặc hỏi bằng chữ. Chỉ bắt đầu tính thời gian khi người học bấm `Bắt đầu`.
+Luồng: **chọn chế độ → xem gợi ý phiên cá nhân hóa → xác nhận/sửa mục tiêu và thời lượng → chọn `Học sâu` hoặc `Học ngắt quãng` → tùy chọn âm → xem lại → `Bắt đầu`**. Gợi ý lấy từ kế hoạch đã xác nhận, TKB hôm nay và việc chưa xong, kèm lý do ngắn. Không bắt chọn môn lần nữa; người học có `Đổi mục tiêu` hoặc `Học tự do`, và chỉ đổi môn khi họ chủ động mở phần sửa. Nếu thiếu lịch/kế hoạch hoặc offline, cho nhập mục tiêu tự do mà không chặn phiên. Preset 15/25/45 phút hoặc tùy chỉnh.
+
+`Học sâu` mặc định **im lặng hoàn toàn**: không nhạc nền, tiếng đếm giờ, chuông hết chặng, lời nhắc, tự phát giọng AI hay âm báo trong app. Cả hai chế độ đều theo quy tắc này; AI chỉ hiện chữ khi người học chủ động hỏi. Trong `Học ngắt quãng`, âm báo chuyển chặng và âm nền đều tắt mặc định, người học tự bật từng loại nếu muốn. Báo thức Android do người học đã đặt là luồng riêng và vẫn hoạt động. Mic/camera **tắt mặc định**, bật độc lập đúng lúc dùng; không yêu cầu quyền để dùng timer hoặc hỏi bằng chữ. Chỉ tính thời gian khi bấm `Bắt đầu`.
+
+Thẻ xem lại trước khi bắt đầu ghi chế độ, mục tiêu, thời lượng, nhịp, âm thanh và trạng thái mic/cam; cho sửa từng mục. Khi chọn `Học một mình`, không hiện AI/avatar/nút hỏi trong phiên. Khi chọn `Học cùng MindClock`, AI chỉ phản hồi yêu cầu chủ động; text trước, voice là tùy chọn riêng ở nhịp cho phép. Không tự chuyển từ một mình sang AI.
 
 ## Bố cục phòng dọc
 
-Nửa trên: ô video của người học nếu bật, hoặc avatar tĩnh; ô MindClock **gắn nhãn AI** là avatar 2D có miệng theo âm lượng/viseme nếu có audio thật, hoặc ô bạn được mời. Nửa dưới: timer lớn, việc đang làm, môn, tiến độ các đoạn, các nút `Mic`, `Cam`, `Hỏi`, `Tạm dừng`, `Nghỉ`, `Rời phòng`. Trạng thái đang truyền âm/ảnh và nút tắt phải luôn thấy. Không có animation giả AI đang nhìn/chấm mức tập trung khi camera tắt. Khi mạng yếu, chuyển video → audio → text/timer local, giữ nút kết thúc.
+Trong `Học một mình`, ưu tiên timer lớn, mục tiêu, ghi nhanh chỗ đang vướng, `Tạm dừng` và `Kết thúc`; không có ô video hay avatar AI. Trong `Học cùng MindClock`, thêm vùng AI gắn nhãn rõ và nút `Xin một gợi ý`; mic/cam chỉ hiện khi tính năng được bật và đã có quyền. Nửa trên không chiếm chỗ của mục tiêu học nếu camera tắt. Trạng thái đang truyền âm/ảnh và nút tắt phải luôn thấy. Không có animation giả AI đang quan sát. Khi mạng yếu, giữ timer và ghi chú local, chuyển về text nếu AI đang bật.
 
 ## AI đồng hành và lời nhắc
 
-Mở phiên: hỏi `Hôm nay bạn muốn xong việc gì?`; sau khi user xác nhận, AI nhắc mục tiêu một câu. Trong phiên, mặc định **không gửi camera liên tục** và không phát lời nói tự động mỗi phút. Timer local có thể nhắc ở mốc user chọn; phát hiện im lặng/ứng dụng background chỉ khi có tín hiệu kỹ thuật đã xin phép, không suy “lười” từ mặt, tư thế hay cuộc nói chuyện ngoài. Rời app: khi quay lại hỏi `Bạn muốn tiếp tục từ phút 12 không?`; nếu người dùng đã chọn thông báo, có tối đa một nhắc local sau khoảng họ đặt. Nút `Tạm nghỉ`/`Rời phòng` luôn có; không trừ điểm vì rời hoặc không báo trước.
+AI nhận mục tiêu đã xác nhận; không hỏi lại trước khi bắt đầu. Trong phiên, mặc định **không gửi camera liên tục** và không tự phát giọng. Ở `Học sâu`, AI im lặng cho tới khi người dùng bấm hỏi và chỉ trả chữ; không có nhắc theo mốc. Ở `Học ngắt quãng`, người dùng có thể bật nhắc nhẹ theo chặng. Không suy “lười” từ mặt, tư thế, im lặng hay ứng dụng background. Khi quay lại app, hiện lựa chọn tiếp tục bằng chữ; không trừ điểm vì rời.
 
-Mức `Nghiêm túc` nói ngắn, dứt khoát: `Mình còn 8 phút. Quay lại bài đang làm nhé.` Có thể có đùa nhẹ tự trào ở avatar sau phiên, ví dụ `Tớ vừa giữ chỗ cho trang vở này.` Không dùng xúc phạm, chửi, đe dọa, gây xấu hổ trước bạn bè hoặc nhân cách “giận dỗi” kéo dài. Người học có nút `Ít nhắc hơn`, `Im lặng 10 phút`, `Tắt AI`; nếu họ bày tỏ mệt mỏi/khó chịu, giảm nhắc và gợi nghỉ.
+Nếu người dùng chọn mức nhắc ở `Học ngắt quãng`, lời nhắc ngắn và trung tính. Có thể có đùa nhẹ sau phiên, không trong phiên sâu. Không dùng xúc phạm, đe dọa, gây xấu hổ hay nhân cách “giận dỗi”. Người học luôn có nút tắt AI/âm và kết thúc; nếu họ bày tỏ mệt mỏi, giảm nhắc và gợi nghỉ.
+
+## Tổng kết và EXP thời gian
+
+Kết thúc phiên hiển thị thời gian học được tính, mục tiêu tự đánh dấu đã làm/chưa xong, ghi chú còn vướng, EXP **đã xác nhận** hoặc `Đang chờ đồng bộ`, cùng nút lên lịch tiếp. AI chỉ tóm tắt khi người học đã chọn `Học cùng MindClock` hoặc chủ động hỏi sau phiên; phần tổng kết của `Học một mình` không tự gọi AI.
+
+Quy tắc thử nghiệm `study-time-v0.1`: mỗi **5 phút trọn vẹn** ở trạng thái `running` nhận 1 EXP; tối đa 12 EXP/phiên và 30 EXP/ngày theo ngày local đã chốt với timezone. Thời gian `paused`, nghỉ, trước `Bắt đầu` và sau `Kết thúc` không tính. Phiên dưới 5 phút, hủy trước khi kết thúc hoặc dữ liệu thời gian không chắc: 0 EXP. Một `clientSessionId` chỉ được ghi EXP một lần; server kiểm khoảng thời gian, giới hạn, owner và ghi ledger trong transaction. Offline chỉ hiện `EXP dự kiến`, đồng bộ thành công mới đổi thành đã xác nhận; retry không nhân đôi. Không trừ EXP đã có khi rời app hoặc không đạt mục tiêu. EXP thời gian là thưởng duy trì thói quen, **không chứng nhận đã học hay hiểu bài**, không cộng RP PvP và không dùng để đánh giá giáo viên/phụ huynh. Các mốc số sẽ được chốt lại bằng pilot trước phát hành rộng.
 
 ## Hỏi bằng giọng nói và hình ảnh AI
 
@@ -30,7 +40,9 @@ User tạo phòng `Chỉ mời`, mã/link ngắn hạn, tối đa 2 người ở
 
 | ID | Khi | Phải xảy ra |
 | --- | --- | --- |
-| ROOM-01 | Chọn 3 loại phòng, hai nhịp và mức nhắc | Timer/việc đúng lựa chọn; mic/cam tắt khi vào. |
+| ROOM-01 | Chọn một mình hoặc cùng AI, xem gợi ý, xác nhận/sửa mục tiêu và recap | Không bắt chọn môn lại; đúng chế độ/nhịp; mic/cam/âm tắt khi vào. |
+| ROOM-07 | Chọn Học sâu ở một trong hai chế độ | Không phát âm nền, tiếng chuyển chặng, nhắc hay giọng AI; AI chỉ trả chữ sau thao tác hỏi. |
+| ROOM-08 | Hoàn thành phiên, tạm dừng/nghỉ/offline/retry finish | EXP theo phút running trọn vẹn, đúng trần; chưa sync chỉ hiện dự kiến; ledger ghi một lần; phiên ngắn/hủy không thưởng. |
 | ROOM-02 | Từ chối mic/camera hoặc tắt giữa phiên | Timer/text tiếp tục; indicator và đường bật quyền đúng. |
 | ROOM-03 | AI lỗi/quota/Live rớt mạng | Hạ cấp về text/timer, không mất phiên hoặc phát audio giả. |
 | ROOM-04 | Rời app/tạm nghỉ/rời phòng | Không chửi/phạt/giữ app; có nhắc chỉ nếu đã opt-in. |
