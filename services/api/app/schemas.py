@@ -86,6 +86,8 @@ class StudySessionCreateRequest(ApiModel):
     subject_code: str | None = Field(default=None, alias='subjectCode')
     target_minutes: int = Field(default=25, alias='targetMinutes', ge=1, le=180)
     focus_level: str = Field(default='standard', alias='focusLevel')
+    room_mode: str = Field(default='with_ai', alias='roomMode', max_length=24)
+    cadence: str = Field(default='interval', max_length=24)
     started_at: str | None = Field(default=None, alias='startedAt')
 
 

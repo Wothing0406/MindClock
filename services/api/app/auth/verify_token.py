@@ -146,7 +146,7 @@ def resolve_or_create_user(db: Session, auth_subject: str) -> User:
     created = User(
         auth_subject=auth_subject,
         alias=f'Học sinh {auth_subject[:8]}',
-        grade_band='Lớp 9',
+        grade_band='Lớp 11',
         selected_subjects_json=['TOAN', 'NGU_VAN', 'TIENG_ANH'],
     )
     db.add(created)

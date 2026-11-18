@@ -31,7 +31,7 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
     auth_subject: Mapped[str] = mapped_column(String(128), unique=True, index=True)
     alias: Mapped[str] = mapped_column(String(80), default='Học sinh MindClock')
-    grade_band: Mapped[str] = mapped_column(String(40), default='Lớp 9', index=True)
+    grade_band: Mapped[str] = mapped_column(String(40), default='Lớp 11', index=True)
     selected_subjects_json: Mapped[list[str]] = mapped_column(
         JSON, default=lambda: ['TOAN', 'NGU_VAN', 'TIENG_ANH']
     )

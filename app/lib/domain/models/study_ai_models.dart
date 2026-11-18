@@ -82,12 +82,18 @@ class RemoteStudySessionResult {
     required this.remoteSessionId,
     required this.clientSessionId,
     required this.state,
+    this.xpAwarded,
+    this.xpStatus,
+    this.dailyStudyXpRemaining,
     this.isDebugFixture = false,
   });
 
   final String remoteSessionId;
   final String clientSessionId;
   final String state;
+  final int? xpAwarded;
+  final String? xpStatus;
+  final int? dailyStudyXpRemaining;
   final bool isDebugFixture;
 
   factory RemoteStudySessionResult.fromJson(
@@ -103,6 +109,9 @@ class RemoteStudySessionResult {
       remoteSessionId: remoteId.isEmpty ? clientId : remoteId,
       clientSessionId: clientId,
       state: (json['state'] ?? 'synced').toString(),
+      xpAwarded: (json['xpAwarded'] as num?)?.toInt(),
+      xpStatus: json['xpStatus'] as String?,
+      dailyStudyXpRemaining: (json['dailyStudyXpRemaining'] as num?)?.toInt(),
       isDebugFixture: isDebugFixture,
     );
   }

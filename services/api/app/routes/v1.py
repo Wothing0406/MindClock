@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 import base64
 import hashlib
 from typing import Any, Callable
 import uuid
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, UploadFile, File, Form, status
 from sqlalchemy import delete, desc, func, select, text
@@ -158,6 +159,142 @@ def _select_published_question(
         if q.grade_band == grade_band:
             return q
     return candidates[0]
+
+
+STUDY_XP_REASON = 'study_time_v0_1'
+STUDY_XP_MAX_SESSION = 12
+STUDY_XP_MAX_DAILY = 30
+
+
+def _resolve_user_tz(tz_name: str | None) -> tzinfo:
+    clean = (tz_name or 'Asia/Ho_Chi_Minh').strip() or 'Asia/Ho_Chi_Minh'
+    try:
+        return ZoneInfo(clean)
+    except ZoneInfoNotFoundError:
+        if clean == 'Asia/Ho_Chi_Minh':
+            return timezone(timedelta(hours=7))
+        return timezone.utc
+
+
+def _as_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _parse_utc_iso(raw: str | None) -> datetime | None:
+    if not raw or not raw.strip():
+        return None
+    cleaned = raw.strip()
+    if cleaned.endswith('Z'):
+        cleaned = f'{cleaned[:-1]}+00:00'
+    try:
+        parsed = datetime.fromisoformat(cleaned)
+    except ValueError:
+        return None
+    return _as_utc(parsed)
+
+
+def _used_study_xp_today(
+    db: Session,
+    *,
+    user_id: str,
+    user_tz: tzinfo,
+    now_utc: datetime,
+) -> int:
+    local_today = now_utc.astimezone(user_tz).date()
+    rows = db.execute(
+        select(XpLedger.delta, XpLedger.created_at).where(
+            XpLedger.user_id == user_id,
+            XpLedger.source_type == 'study_session',
+            XpLedger.reason == STUDY_XP_REASON,
+        )
+    ).all()
+    total = 0
+    for delta, created_at in rows:
+        if created_at is None:
+            continue
+        if _as_utc(created_at).astimezone(user_tz).date() == local_today:
+            total += int(delta or 0)
+    return total
+
+
+def _compute_and_record_study_xp(
+    db: Session,
+    *,
+    user: User,
+    study_session: StudySession,
+    final_state: str,
+    elapsed_wall_seconds: int,
+    in_app_focus_seconds: int,
+    ended_at_iso: str | None,
+    now_utc: datetime,
+) -> tuple[int, str, int]:
+    """Tính và ghi EXP học tập `study-time-v0.1` an toàn trên server trong transaction."""
+    user_tz = _resolve_user_tz(user.time_zone)
+    used_today = _used_study_xp_today(
+        db,
+        user_id=user.id,
+        user_tz=user_tz,
+        now_utc=now_utc,
+    )
+    remaining_before = max(0, STUDY_XP_MAX_DAILY - used_today)
+
+    if final_state not in ('completed', 'finished'):
+        return 0, 'not_completed', remaining_before
+
+    if elapsed_wall_seconds > 0 and in_app_focus_seconds > elapsed_wall_seconds:
+        return 0, 'untrusted_timing', remaining_before
+    if in_app_focus_seconds > 43200:
+        return 0, 'untrusted_timing', remaining_before
+
+    if ended_at_iso is not None and ended_at_iso.strip():
+        parsed_ended = _parse_utc_iso(ended_at_iso)
+        if parsed_ended is None:
+            return 0, 'untrusted_timing', remaining_before
+        if parsed_ended > now_utc + timedelta(minutes=5):
+            return 0, 'untrusted_timing', remaining_before
+        if (
+            study_session.started_at is not None
+            and parsed_ended < _as_utc(study_session.started_at) - timedelta(seconds=60)
+        ):
+            return 0, 'untrusted_timing', remaining_before
+
+    effective_active = (
+        in_app_focus_seconds
+        if elapsed_wall_seconds <= 0
+        else min(in_app_focus_seconds, elapsed_wall_seconds)
+    )
+    if effective_active < 300:
+        return 0, 'below_minimum_duration', remaining_before
+
+    already_recorded = db.scalar(
+        select(XpLedger.id).where(
+            XpLedger.user_id == user.id,
+            XpLedger.source_type == 'study_session',
+            XpLedger.source_id == study_session.id,
+            XpLedger.reason == STUDY_XP_REASON,
+        )
+    )
+    if already_recorded is not None:
+        return 0, 'already_recorded', remaining_before
+
+    raw_xp = min(effective_active // 300, STUDY_XP_MAX_SESSION)
+    xp_awarded = min(raw_xp, remaining_before)
+    if xp_awarded <= 0:
+        return 0, 'daily_cap_reached', 0
+
+    db.add(
+        XpLedger(
+            user_id=user.id,
+            source_type='study_session',
+            source_id=study_session.id,
+            reason=STUDY_XP_REASON,
+            delta=xp_awarded,
+        )
+    )
+    db.flush()
+    return xp_awarded, 'confirmed', max(0, remaining_before - xp_awarded)
 
 
 def _has_granted_consent(db: Session, user_id: str, scope: str) -> bool:
@@ -556,7 +693,7 @@ def create_v1_router(
         settings: Settings = Depends(get_settings),
     ) -> dict[str, Any]:
         u = principal.user
-        effective_grade = (payload.grade_level or u.grade_band or 'Lớp 9').strip()
+        effective_grade = (payload.grade_level or u.grade_band or 'Lớp 11').strip()
         clean_subject = normalize_subject_code(payload.subject_code)
 
         weak_topics = list(
@@ -1261,6 +1398,14 @@ def create_v1_router(
             )
         )
         if existing is None:
+            now_utc = datetime.now(timezone.utc)
+            parsed_started = _parse_utc_iso(payload.started_at)
+            resolved_started = (
+                parsed_started
+                if parsed_started is not None
+                and now_utc - timedelta(hours=24) <= parsed_started <= now_utc + timedelta(minutes=5)
+                else now_utc
+            )
             existing = StudySession(
                 id=f'srv_study_{payload.client_session_id}',
                 user_id=principal.user.id,
@@ -1271,6 +1416,7 @@ def create_v1_router(
                 target_minutes=payload.target_minutes,
                 focus_level=payload.focus_level,
                 state='active',
+                started_at=resolved_started,
             )
             db.add(existing)
             db.flush()
@@ -1279,6 +1425,8 @@ def create_v1_router(
             'sessionId': existing.id,
             'clientSessionId': existing.client_session_id,
             'state': existing.state,
+            'roomMode': payload.room_mode,
+            'cadence': payload.cadence,
         }
         save_idempotency(
             db,
@@ -1335,18 +1483,33 @@ def create_v1_router(
             )
             db.add(study_session)
 
+        now_utc = datetime.now(timezone.utc)
         study_session.state = payload.final_status or 'finished'
         study_session.elapsed_wall_seconds = payload.elapsed_wall_seconds
         study_session.in_app_focus_seconds = payload.in_app_focus_seconds
         study_session.notes_done = payload.notes_done
         study_session.notes_stuck = payload.notes_stuck
-        study_session.ended_at = datetime.now(timezone.utc)
+        study_session.ended_at = now_utc
+        db.flush()
+
+        xp_awarded, xp_status, daily_remaining = _compute_and_record_study_xp(
+            db,
+            user=principal.user,
+            study_session=study_session,
+            final_state=study_session.state,
+            elapsed_wall_seconds=payload.elapsed_wall_seconds,
+            in_app_focus_seconds=payload.in_app_focus_seconds,
+            ended_at_iso=payload.ended_at,
+            now_utc=now_utc,
+        )
 
         resp = {
             'sessionId': study_session.id,
             'clientSessionId': study_session.client_session_id,
             'state': study_session.state,
-            'xpAwarded': 0,
+            'xpAwarded': xp_awarded,
+            'xpStatus': xp_status,
+            'dailyStudyXpRemaining': daily_remaining,
         }
         save_idempotency(
             db,
@@ -1381,7 +1544,7 @@ def create_v1_router(
             )
 
         gemini = _get_gemini(settings)
-        grade_level = (payload.grade or principal.user.grade_band or 'Lớp 9').strip()
+        grade_level = (payload.grade or principal.user.grade_band or 'Lớp 11').strip()
         clipped_turns = [t.model_dump(by_alias=True) for t in payload.recent_turns[-3:]]
 
         try:
@@ -1434,7 +1597,7 @@ def create_v1_router(
             db.commit()
 
         gemini = _get_gemini(settings)
-        grade_level = (payload.grade_level or u.grade_band or 'Lớp 9').strip()
+        grade_level = (payload.grade_level or u.grade_band or 'Lớp 11').strip()
         try:
             token_res = await gemini.create_live_ephemeral_token(
                 alias=u.alias,

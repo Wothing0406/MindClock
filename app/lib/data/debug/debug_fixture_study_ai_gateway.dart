@@ -65,7 +65,7 @@ class DebugFixtureStudyAiGateway implements StudyAiGateway {
     required String idempotencyKey,
   }) async {
     final String grade = (gradeLevel == null || gradeLevel.trim().isEmpty)
-        ? 'Lớp 9'
+        ? 'Lớp 11'
         : gradeLevel.trim();
     final String topic =
         (topicHint == null || topicHint.trim().isEmpty) ? 'trọng tâm' : topicHint.trim();

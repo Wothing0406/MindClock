@@ -25,6 +25,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     StudyAiGateway? aiGateway,
     DateTime Function()? nowProvider,
     bool enablePeriodicTicker = true,
+    this.onStudyXpSynced,
   })  : _repository = repository,
         _bridge = bridge,
         _aiGateway = aiGateway,
@@ -36,6 +37,7 @@ class StudyFocusViewModel extends ChangeNotifier {
   final StudyAiGateway? _aiGateway;
   final DateTime Function() _nowProvider;
   final bool _enablePeriodicTicker;
+  final VoidCallback? onStudyXpSynced;
 
   String _ownerScopeKey = 'guest';
   bool _isAuthenticated = false;
@@ -49,6 +51,8 @@ class StudyFocusViewModel extends ChangeNotifier {
   String? _draftSubjectCode;
   int _draftDurationMinutes = 25;
   StudyFocusLevel _draftLevel = StudyFocusLevel.standard;
+  StudyRoomMode _draftRoomMode = StudyRoomMode.withAi;
+  StudyCadence _draftCadence = StudyCadence.interval;
   bool _draftEndSoundEnabled = true;
   bool _draftNotifyOutsideApp = false;
   bool _reduceMotionStaticMode = false;
@@ -90,8 +94,13 @@ class StudyFocusViewModel extends ChangeNotifier {
   String? get draftSubjectCode => _draftSubjectCode;
   int get draftDurationMinutes => _draftDurationMinutes;
   StudyFocusLevel get draftLevel => _draftLevel;
-  bool get draftEndSoundEnabled => _draftEndSoundEnabled;
-  bool get draftNotifyOutsideApp => _draftNotifyOutsideApp;
+  StudyRoomMode get draftRoomMode => _draftRoomMode;
+  StudyCadence get draftCadence => _draftCadence;
+  bool get isDeepSilentDraft => _draftCadence == StudyCadence.deepSilent;
+  bool get draftEndSoundEnabled =>
+      _draftCadence == StudyCadence.deepSilent ? false : _draftEndSoundEnabled;
+  bool get draftNotifyOutsideApp =>
+      _draftCadence == StudyCadence.deepSilent ? false : _draftNotifyOutsideApp;
   bool get reduceMotionStaticMode => _reduceMotionStaticMode;
 
   StudyFocusSessionSnapshot? get activeSnapshot => _activeSnapshot;
@@ -266,7 +275,37 @@ class StudyFocusViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setRoomMode(StudyRoomMode mode) {
+    if (_draftRoomMode == mode) return;
+    _draftRoomMode = mode;
+    if (mode == StudyRoomMode.solo) {
+      _aiErrorVi = null;
+    }
+    notifyListeners();
+  }
+
+  void setCadence(StudyCadence cadence) {
+    if (_draftCadence == cadence) return;
+    _draftCadence = cadence;
+    if (cadence == StudyCadence.deepSilent) {
+      _draftEndSoundEnabled = false;
+      _draftNotifyOutsideApp = false;
+      _statusBannerVi =
+          'Đã bật Học sâu im lặng: tắt âm hết giờ, không nhắc trong phiên; nếu hỏi AI sẽ chỉ trả lời bằng chữ.';
+    } else if (_statusBannerVi != null &&
+        _statusBannerVi!.contains('Học sâu im lặng')) {
+      _statusBannerVi = null;
+    }
+    notifyListeners();
+  }
+
   void setEndSoundEnabled(bool enabled) {
+    if (_draftCadence == StudyCadence.deepSilent && enabled) {
+      _statusBannerVi =
+          'Học sâu đang bật im lặng hoàn toàn; chuyển về Học ngắt quãng để bật âm báo.';
+      notifyListeners();
+      return;
+    }
     _draftEndSoundEnabled = enabled;
     notifyListeners();
   }
@@ -277,6 +316,13 @@ class StudyFocusViewModel extends ChangeNotifier {
   }
 
   Future<void> setNotifyOutsideApp(bool enabled) async {
+    if (_draftCadence == StudyCadence.deepSilent && enabled) {
+      _draftNotifyOutsideApp = false;
+      _statusBannerVi =
+          'Học sâu không bật nhắc ngoài app để giữ yên lặng hoàn toàn.';
+      notifyListeners();
+      return;
+    }
     if (!enabled) {
       _draftNotifyOutsideApp = false;
       _statusBannerVi = null;
@@ -320,6 +366,13 @@ class StudyFocusViewModel extends ChangeNotifier {
     _statusBannerVi = null;
     _clearAiConversationState();
 
+    final bool resolvedEndSound = _draftCadence == StudyCadence.deepSilent
+        ? false
+        : _draftEndSoundEnabled;
+    final bool resolvedNotifyOutside = _draftCadence == StudyCadence.deepSilent
+        ? false
+        : _draftNotifyOutsideApp;
+
     final StudyFocusSessionSnapshot snapshot = StudyFocusSessionSnapshot(
       sessionId: LocalIdGenerator.nextUuidV4(),
       ownerScopeKey: _ownerScopeKey,
@@ -327,9 +380,11 @@ class StudyFocusViewModel extends ChangeNotifier {
       subjectCode: resolvedSubject,
       durationMinutes: _draftDurationMinutes,
       level: _draftLevel,
+      roomMode: _draftRoomMode,
+      cadence: _draftCadence,
       status: StudyFocusStatus.running,
-      endSoundEnabled: _draftEndSoundEnabled,
-      notifyOutsideApp: _draftNotifyOutsideApp,
+      endSoundEnabled: resolvedEndSound,
+      notifyOutsideApp: resolvedNotifyOutside,
       startedAtEpochMs: nowMs,
       plannedEndAtEpochMs: plannedEndMs,
       updatedAtEpochMs: nowMs,
@@ -422,7 +477,9 @@ class StudyFocusViewModel extends ChangeNotifier {
     final String cleanQuestion = questionText.trim();
     if (cleanQuestion.isEmpty) return false;
     final StudyFocusSessionSnapshot? current = _activeSnapshot;
-    if (current == null) return false;
+    if (current == null || current.roomMode == StudyRoomMode.solo) {
+      return false;
+    }
 
     final bool isSamePendingQuestion = _pendingHelpQuestion == cleanQuestion &&
         _pendingHelpIdempotencyKey != null;
@@ -818,7 +875,8 @@ class StudyFocusViewModel extends ChangeNotifier {
           final String msg =
               'Bạn vừa ra khỏi MindClock ${formatVietnameseAwayDuration(awaySeconds)}. Tiếp tục việc đang làm?';
           next = next.copyWith(lastReturnNoticeVi: msg);
-          if (current.notifyOutsideApp &&
+          if (current.cadence != StudyCadence.deepSilent &&
+              current.notifyOutsideApp &&
               _notificationPermission == StudyNotificationPermission.granted) {
             await _bridge.showSingleStudyReminder(
               sessionId: current.sessionId,
@@ -924,7 +982,10 @@ class StudyFocusViewModel extends ChangeNotifier {
       updatedAtEpochMs: nowMs,
     );
 
-    if (!early && current.endSoundEnabled && !_hasPlayedEndCueForSession) {
+    if (!early &&
+        current.cadence != StudyCadence.deepSilent &&
+        current.endSoundEnabled &&
+        !_hasPlayedEndCueForSession) {
       _hasPlayedEndCueForSession = true;
       await _bridge.playSessionEndCue();
     }
@@ -968,6 +1029,8 @@ class StudyFocusViewModel extends ChangeNotifier {
       subjectCode: current.subjectCode,
       targetMinutes: current.durationMinutes,
       level: current.level,
+      roomMode: current.roomMode,
+      cadence: current.cadence,
       finalStatus: current.status,
       elapsedWallSeconds: current.elapsedWallSecondsAt(endAt),
       inAppFocusSeconds: current.inAppFocusSecondsAt(endAt),
@@ -985,8 +1048,8 @@ class StudyFocusViewModel extends ChangeNotifier {
     _activeSnapshot = null;
     _clearAiConversationState();
     _statusBannerVi = _isAuthenticated && _aiGateway != null
-        ? 'Đã lưu phiên học cục bộ (0 XP từ đồng hồ) và đang đồng bộ server...'
-        : 'Đã lưu phiên học cục bộ trên máy (0 XP từ đồng hồ).';
+        ? 'Đã lưu phiên học cục bộ (EXP dự kiến: ${record.estimatedStudyXp} XP) và đang đồng bộ máy chủ...'
+        : 'Đã lưu phiên học cục bộ trên máy (EXP dự kiến: ${record.estimatedStudyXp} XP — cần đăng nhập để ghi nhận chính thức).';
     notifyListeners();
 
     if (_isAuthenticated && _aiGateway != null) {
@@ -1059,11 +1122,17 @@ class StudyFocusViewModel extends ChangeNotifier {
         remoteSessionId: finished.remoteSessionId,
         remoteFinishSynced: true,
         clearRemoteSyncError: true,
+        confirmedXpAwarded: finished.xpAwarded ?? 0,
+        dailyStudyXpRemaining: finished.dailyStudyXpRemaining,
       );
       _history = await _repository.saveRecordIdempotent(synced);
+      final int confirmedXp = synced.confirmedXpAwarded ?? 0;
       _statusBannerVi = gateway.isDebugFixture
-          ? 'Đã đồng bộ phiên học kết thúc (mẫu debug, 0 XP).'
-          : 'Đã đồng bộ phiên học kết thúc lên server (0 XP).';
+          ? 'Đã đồng bộ phiên học kết thúc (mẫu debug, $confirmedXp XP).'
+          : 'Đã đồng bộ phiên học lên máy chủ · EXP đã xác nhận: $confirmedXp XP.';
+      if (!gateway.isDebugFixture && confirmedXp > 0) {
+        onStudyXpSynced?.call();
+      }
       notifyListeners();
       return true;
     } on PersonalApiException catch (error) {
@@ -1121,7 +1190,9 @@ class StudyFocusViewModel extends ChangeNotifier {
     final bool finished = _checkTargetReached(nowMs);
     if (finished) {
       unawaited(_repository.saveSnapshot(_activeSnapshot!));
-      if (current.endSoundEnabled && !_hasPlayedEndCueForSession) {
+      if (current.cadence != StudyCadence.deepSilent &&
+          current.endSoundEnabled &&
+          !_hasPlayedEndCueForSession) {
         _hasPlayedEndCueForSession = true;
         unawaited(_bridge.playSessionEndCue());
       }

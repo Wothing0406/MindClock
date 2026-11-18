@@ -31,6 +31,8 @@ class RemoteStudyAiGateway implements StudyAiGateway {
         'subjectCode': snapshot.subjectCode,
         'targetMinutes': snapshot.durationMinutes,
         'focusLevel': snapshot.level.wireValue,
+        'roomMode': snapshot.roomMode.wireValue,
+        'cadence': snapshot.cadence.wireValue,
         'startedAt': DateTime.fromMillisecondsSinceEpoch(
           snapshot.startedAtEpochMs,
         ).toUtc().toIso8601String(),

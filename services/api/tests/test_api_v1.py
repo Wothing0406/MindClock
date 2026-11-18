@@ -66,7 +66,7 @@ def test_auth_and_profile_grade_subject_update(tmp_path: Path) -> None:
 
         me = client.get('/v1/me', headers=_headers('student_a'))
         assert me.status_code == 200
-        assert me.json()['gradeLevel'] == 'Lớp 9'
+        assert me.json()['gradeLevel'] == 'Lớp 11'
 
         patched = client.patch(
             '/v1/me',
@@ -136,6 +136,11 @@ def test_alarms_idempotency_and_cross_owner_403(tmp_path: Path) -> None:
 def test_alarm_session_answers_hint_at_3_and_idempotent_xp(tmp_path: Path) -> None:
     app = create_app(_make_settings(tmp_path, mock_mode=True))
     with TestClient(app) as client:
+        client.patch(
+            '/v1/me',
+            headers=_headers('user_xp'),
+            json={'gradeLevel': 'Lớp 9'},
+        )
         nxt = client.get(
             '/v1/challenges/next?subject=TOAN&date=2026-11-14',
             headers=_headers('user_xp'),
@@ -525,7 +530,9 @@ def test_study_session_help_and_idempotent_finish(tmp_path: Path) -> None:
             },
         )
         assert fin1.status_code == 200
-        assert fin1.json()['xpAwarded'] == 0
+        assert fin1.json()['xpAwarded'] == 4
+        assert fin1.json()['xpStatus'] == 'confirmed'
+        assert fin1.json()['dailyStudyXpRemaining'] == 26
         assert fin1.json() == fin2.json()
 
 
@@ -839,7 +846,8 @@ def test_morning_card_hook_and_abandon_at_5_incorrect(tmp_path: Path) -> None:
         assert ab_body['xpAwarded'] == 0
         assert ab_body['streakDayAwarded'] is False
         assert ab_body['revealVi'] is not None
-        assert 'x = 8' in ab_body['revealVi']
+        assert q_data['questionId'] == 'math11-trig-001'
+        assert '= 1.' in ab_body['revealVi']
         assert ab2.json() == ab_body
 
         summary = client.get('/v1/progress/summary', headers=_headers('user_morning'))
@@ -862,3 +870,146 @@ def test_eduskills_adapter_modes_and_answer_leak_guard() -> None:
 
     safe = sanitize_pre_reveal_hint('Chia hai vế cho 2 trước khi chuyển vế.', ['8', 'x=8', 'x = 8'])
     assert safe == 'Chia hai vế cho 2 trước khi chuyển vế.'
+
+
+def test_study_time_xp_ledger_rules_cap_replay_and_owner_403(tmp_path: Path) -> None:
+    app = create_app(_make_settings(tmp_path, mock_mode=True))
+    with TestClient(app) as client:
+        # 1) Phiên hoàn thành 15 phút (900s -> 3 EXP) + idempotent theo session khi đổi Idempotency-Key
+        c1 = client.post(
+            '/v1/study/sessions',
+            headers=_headers('study_exp_u', idem='se-c1'),
+            json={
+                'clientSessionId': 'cli_exp_1',
+                'taskTitle': 'Học sâu Toán 11',
+                'subjectCode': 'TOAN',
+                'targetMinutes': 15,
+                'focusLevel': 'commitment',
+                'roomMode': 'solo',
+                'cadence': 'deep',
+            },
+        )
+        assert c1.status_code == 200
+        assert c1.json()['roomMode'] == 'solo'
+        assert c1.json()['cadence'] == 'deep'
+        sid1 = c1.json()['sessionId']
+
+        # User B không được kết thúc phiên User A -> 403
+        cross_finish = client.post(
+            f'/v1/study/sessions/{sid1}/finish',
+            headers=_headers('study_other_u', idem='se-cross'),
+            json={
+                'clientSessionId': 'cli_exp_1',
+                'finalStatus': 'completed',
+                'elapsedWallSeconds': 900,
+                'inAppFocusSeconds': 900,
+            },
+        )
+        assert cross_finish.status_code == 403
+
+        f1 = client.post(
+            f'/v1/study/sessions/{sid1}/finish',
+            headers=_headers('study_exp_u', idem='se-f1-a'),
+            json={
+                'clientSessionId': 'cli_exp_1',
+                'finalStatus': 'completed',
+                'elapsedWallSeconds': 900,
+                'inAppFocusSeconds': 900,
+            },
+        )
+        assert f1.status_code == 200
+        assert f1.json()['xpAwarded'] == 3
+        assert f1.json()['xpStatus'] == 'confirmed'
+        assert f1.json()['dailyStudyXpRemaining'] == 27
+
+        # Replay cùng session nhưng khác Idempotency-Key -> KHÔNG cộng lại XP
+        f1_replay = client.post(
+            f'/v1/study/sessions/{sid1}/finish',
+            headers=_headers('study_exp_u', idem='se-f1-b'),
+            json={
+                'clientSessionId': 'cli_exp_1',
+                'finalStatus': 'completed',
+                'elapsedWallSeconds': 1200,
+                'inAppFocusSeconds': 1200,
+            },
+        )
+        assert f1_replay.status_code == 200
+        assert f1_replay.json()['xpAwarded'] == 0
+        assert f1_replay.json()['xpStatus'] == 'already_recorded'
+
+        # 2) Dưới 300s (299s) -> 0 EXP; kết thúc sớm `endedEarly` -> 0 EXP; sai lệch timing -> 0 EXP
+        c_short = client.post(
+            '/v1/study/sessions',
+            headers=_headers('study_exp_u', idem='se-cs'),
+            json={'clientSessionId': 'cli_exp_short', 'taskTitle': 'Nhanh'},
+        ).json()['sessionId']
+        f_short = client.post(
+            f'/v1/study/sessions/{c_short}/finish',
+            headers=_headers('study_exp_u', idem='se-fs'),
+            json={
+                'clientSessionId': 'cli_exp_short',
+                'finalStatus': 'completed',
+                'elapsedWallSeconds': 299,
+                'inAppFocusSeconds': 299,
+            },
+        )
+        assert f_short.json()['xpAwarded'] == 0
+        assert f_short.json()['xpStatus'] == 'below_minimum_duration'
+
+        f_early = client.post(
+            '/v1/study/sessions/srv_study_cli_exp_early/finish',
+            headers=_headers('study_exp_u', idem='se-fe'),
+            json={
+                'clientSessionId': 'cli_exp_early',
+                'finalStatus': 'endedEarly',
+                'elapsedWallSeconds': 600,
+                'inAppFocusSeconds': 600,
+            },
+        )
+        assert f_early.json()['xpAwarded'] == 0
+        assert f_early.json()['xpStatus'] == 'not_completed'
+
+        f_bad_time = client.post(
+            '/v1/study/sessions/srv_study_cli_exp_bad/finish',
+            headers=_headers('study_exp_u', idem='se-fbad'),
+            json={
+                'clientSessionId': 'cli_exp_bad',
+                'finalStatus': 'completed',
+                'elapsedWallSeconds': 400,
+                'inAppFocusSeconds': 900,
+            },
+        )
+        assert f_bad_time.json()['xpAwarded'] == 0
+        assert f_bad_time.json()['xpStatus'] == 'untrusted_timing'
+
+        # 3) Trần 12 EXP/phiên và trần 30 EXP/ngày theo user
+        # Hiện đang có 3 EXP -> 2 phiên 90 phút (12 + 12 = 24 -> tổng 27) -> phiên thứ 4 90 phút chỉ được +3 = 30 EXP
+        for idx, expected_delta, expected_rem in [
+            ('cap1', 12, 15),
+            ('cap2', 12, 3),
+            ('cap3', 3, 0),
+            ('cap4', 0, 0),
+        ]:
+            c_cap = client.post(
+                '/v1/study/sessions',
+                headers=_headers('study_exp_u', idem=f'c-{idx}'),
+                json={'clientSessionId': f'cli_{idx}', 'taskTitle': f'Phiên {idx}', 'targetMinutes': 90},
+            ).json()['sessionId']
+            f_cap = client.post(
+                f'/v1/study/sessions/{c_cap}/finish',
+                headers=_headers('study_exp_u', idem=f'f-{idx}'),
+                json={
+                    'clientSessionId': f'cli_{idx}',
+                    'finalStatus': 'completed',
+                    'elapsedWallSeconds': 5400,
+                    'inAppFocusSeconds': 5400,
+                },
+            )
+            assert f_cap.status_code == 200
+            assert f_cap.json()['xpAwarded'] == expected_delta
+            assert f_cap.json()['dailyStudyXpRemaining'] == expected_rem
+
+        summary = client.get('/v1/progress/summary', headers=_headers('study_exp_u'))
+        assert summary.status_code == 200
+        assert summary.json()['xp'] == 30
+

@@ -125,6 +125,7 @@ class _MindClockAppState extends State<MindClockApp> {
           createDefaultStudyAiGateway(apiClient: sharedApiClient),
       nowProvider: widget.studyNowProvider,
       enablePeriodicTicker: widget.enableStudyTicker,
+      onStudyXpSynced: () => _personalViewModel.refreshProgressAndHistory(),
     );
     _initializeAll();
   }

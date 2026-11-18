@@ -4,6 +4,72 @@ import 'study_profile.dart';
 import 'subject_catalog.dart';
 import 'timetable.dart';
 
+/// Hai chế độ Không gian học chính (`docs/01-product/08-phong-hoc-ai-va-ban-be.md`).
+enum StudyRoomMode {
+  solo,
+  withAi;
+
+  String get wireValue => this == solo ? 'solo' : 'with_ai';
+
+  String get labelVi {
+    switch (this) {
+      case StudyRoomMode.solo:
+        return 'Học một mình';
+      case StudyRoomMode.withAi:
+        return 'Học cùng MindClock';
+    }
+  }
+
+  String get shortBehaviorVi {
+    switch (this) {
+      case StudyRoomMode.solo:
+        return 'Đồng hồ lớn, mục tiêu và ghi chú chỗ đang vướng; không hiển thị AI hay gợi ý.';
+      case StudyRoomMode.withAi:
+        return 'Có vùng MindClock AI gắn nhãn rõ; AI chỉ gợi mở bằng chữ khi bạn chủ động hỏi.';
+    }
+  }
+
+  static StudyRoomMode fromWire(String? value) {
+    for (final StudyRoomMode mode in values) {
+      if (mode.wireValue == value || mode.name == value) return mode;
+    }
+    return StudyRoomMode.withAi;
+  }
+}
+
+/// Nhịp học trong Không gian học (`docs/01-product/08`, `docs/02-engineering/07`).
+enum StudyCadence {
+  interval,
+  deepSilent;
+
+  String get wireValue => this == deepSilent ? 'deep' : 'interval';
+
+  String get labelVi {
+    switch (this) {
+      case StudyCadence.interval:
+        return 'Học ngắt quãng';
+      case StudyCadence.deepSilent:
+        return 'Học sâu (im lặng)';
+    }
+  }
+
+  String get shortBehaviorVi {
+    switch (this) {
+      case StudyCadence.interval:
+        return 'Cho phép bật tùy chọn âm báo hết giờ hoặc 1 nhắc nhẹ ngoài app nếu muốn.';
+      case StudyCadence.deepSilent:
+        return 'Im lặng hoàn toàn trong phiên: tắt mọi âm báo hết giờ và nhắc ngoài app; AI chỉ trả lời bằng chữ.';
+    }
+  }
+
+  static StudyCadence fromWire(String? value) {
+    for (final StudyCadence cadence in values) {
+      if (cadence.wireValue == value || cadence.name == value) return cadence;
+    }
+    return StudyCadence.interval;
+  }
+}
+
 /// Mức tập trung trong Không gian học (`docs/45 §1`).
 enum StudyFocusLevel {
   flexible,
@@ -149,6 +215,8 @@ class StudyFocusSessionSnapshot {
     required this.taskTitle,
     required this.durationMinutes,
     required this.level,
+    this.roomMode = StudyRoomMode.withAi,
+    this.cadence = StudyCadence.interval,
     required this.status,
     required this.endSoundEnabled,
     required this.notifyOutsideApp,
@@ -185,6 +253,8 @@ class StudyFocusSessionSnapshot {
   final String? subjectCode;
   final int durationMinutes;
   final StudyFocusLevel level;
+  final StudyRoomMode roomMode;
+  final StudyCadence cadence;
   final StudyFocusStatus status;
   final bool endSoundEnabled;
   final bool notifyOutsideApp;
@@ -274,6 +344,8 @@ class StudyFocusSessionSnapshot {
     bool clearSubjectCode = false,
     int? durationMinutes,
     StudyFocusLevel? level,
+    StudyRoomMode? roomMode,
+    StudyCadence? cadence,
     StudyFocusStatus? status,
     bool? endSoundEnabled,
     bool? notifyOutsideApp,
@@ -309,6 +381,8 @@ class StudyFocusSessionSnapshot {
       subjectCode: clearSubjectCode ? null : (subjectCode ?? this.subjectCode),
       durationMinutes: durationMinutes ?? this.durationMinutes,
       level: level ?? this.level,
+      roomMode: roomMode ?? this.roomMode,
+      cadence: cadence ?? this.cadence,
       status: status ?? this.status,
       endSoundEnabled: endSoundEnabled ?? this.endSoundEnabled,
       notifyOutsideApp: notifyOutsideApp ?? this.notifyOutsideApp,
@@ -350,6 +424,8 @@ class StudyFocusSessionSnapshot {
       'subjectCode': subjectCode,
       'durationMinutes': durationMinutes,
       'level': level.wireValue,
+      'roomMode': roomMode.wireValue,
+      'cadence': cadence.wireValue,
       'status': status.wireValue,
       'endSoundEnabled': endSoundEnabled,
       'notifyOutsideApp': notifyOutsideApp,
@@ -384,6 +460,8 @@ class StudyFocusSessionSnapshot {
       durationMinutes: ((json['durationMinutes'] as num?)?.toInt() ?? 25)
           .clamp(minDurationMinutes, maxDurationMinutes),
       level: StudyFocusLevel.fromWire(json['level'] as String?),
+      roomMode: StudyRoomMode.fromWire(json['roomMode'] as String?),
+      cadence: StudyCadence.fromWire(json['cadence'] as String?),
       status: StudyFocusStatus.fromWire(json['status'] as String?),
       endSoundEnabled: json['endSoundEnabled'] as bool? ?? true,
       notifyOutsideApp: json['notifyOutsideApp'] as bool? ?? false,
@@ -421,6 +499,8 @@ class StudyFocusRecord {
     required this.taskTitle,
     required this.targetMinutes,
     required this.level,
+    this.roomMode = StudyRoomMode.withAi,
+    this.cadence = StudyCadence.interval,
     required this.finalStatus,
     required this.elapsedWallSeconds,
     required this.inAppFocusSeconds,
@@ -433,6 +513,8 @@ class StudyFocusRecord {
     this.finishIdempotencyKey = '',
     this.remoteFinishSynced = false,
     this.remoteSyncErrorVi,
+    this.confirmedXpAwarded,
+    this.dailyStudyXpRemaining,
   });
 
   final String sessionId;
@@ -441,6 +523,8 @@ class StudyFocusRecord {
   final String? subjectCode;
   final int targetMinutes;
   final StudyFocusLevel level;
+  final StudyRoomMode roomMode;
+  final StudyCadence cadence;
   final StudyFocusStatus finalStatus;
   final int elapsedWallSeconds;
   final int inAppFocusSeconds;
@@ -452,9 +536,20 @@ class StudyFocusRecord {
   final String finishIdempotencyKey;
   final bool remoteFinishSynced;
   final String? remoteSyncErrorVi;
+  final int? confirmedXpAwarded;
+  final int? dailyStudyXpRemaining;
 
-  /// Theo `docs/45 §§1, 5`: không tự cấp XP chỉ vì thời gian hay camera.
+  /// Theo `docs/45 §§1, 5`: đồng hồ local không tự chốt EXP chính thức (0 XP cục bộ).
   int get xpAwardedByTimer => 0;
+
+  /// EXP dự kiến theo quy tắc `study-time-v0.1` (`min(floor(active/300), 12)` cho phiên hoàn thành >= 5 phút).
+  /// Giá trị chính thức do backend ghi ledger quyết định khi đồng bộ.
+  int get estimatedStudyXp {
+    if (finalStatus != StudyFocusStatus.completed || inAppFocusSeconds < 300) {
+      return 0;
+    }
+    return math.min(inAppFocusSeconds ~/ 300, 12);
+  }
 
   StudyFocusRecord copyWith({
     String? remoteSessionId,
@@ -462,6 +557,8 @@ class StudyFocusRecord {
     bool? remoteFinishSynced,
     String? remoteSyncErrorVi,
     bool clearRemoteSyncError = false,
+    int? confirmedXpAwarded,
+    int? dailyStudyXpRemaining,
   }) {
     return StudyFocusRecord(
       sessionId: sessionId,
@@ -470,6 +567,8 @@ class StudyFocusRecord {
       subjectCode: subjectCode,
       targetMinutes: targetMinutes,
       level: level,
+      roomMode: roomMode,
+      cadence: cadence,
       finalStatus: finalStatus,
       elapsedWallSeconds: elapsedWallSeconds,
       inAppFocusSeconds: inAppFocusSeconds,
@@ -483,6 +582,9 @@ class StudyFocusRecord {
       remoteSyncErrorVi: clearRemoteSyncError
           ? null
           : (remoteSyncErrorVi ?? this.remoteSyncErrorVi),
+      confirmedXpAwarded: confirmedXpAwarded ?? this.confirmedXpAwarded,
+      dailyStudyXpRemaining:
+          dailyStudyXpRemaining ?? this.dailyStudyXpRemaining,
     );
   }
 
@@ -494,6 +596,8 @@ class StudyFocusRecord {
       'subjectCode': subjectCode,
       'targetMinutes': targetMinutes,
       'level': level.wireValue,
+      'roomMode': roomMode.wireValue,
+      'cadence': cadence.wireValue,
       'finalStatus': finalStatus.wireValue,
       'elapsedWallSeconds': elapsedWallSeconds,
       'inAppFocusSeconds': inAppFocusSeconds,
@@ -505,6 +609,8 @@ class StudyFocusRecord {
       'finishIdempotencyKey': finishIdempotencyKey,
       'remoteFinishSynced': remoteFinishSynced,
       'remoteSyncErrorVi': remoteSyncErrorVi,
+      'confirmedXpAwarded': confirmedXpAwarded,
+      'dailyStudyXpRemaining': dailyStudyXpRemaining,
     };
   }
 
@@ -517,6 +623,8 @@ class StudyFocusRecord {
       subjectCode: json['subjectCode'] as String?,
       targetMinutes: (json['targetMinutes'] as num?)?.toInt() ?? 25,
       level: StudyFocusLevel.fromWire(json['level'] as String?),
+      roomMode: StudyRoomMode.fromWire(json['roomMode'] as String?),
+      cadence: StudyCadence.fromWire(json['cadence'] as String?),
       finalStatus: StudyFocusStatus.fromWire(json['finalStatus'] as String?),
       elapsedWallSeconds: (json['elapsedWallSeconds'] as num?)?.toInt() ?? 0,
       inAppFocusSeconds: (json['inAppFocusSeconds'] as num?)?.toInt() ?? 0,
@@ -529,6 +637,8 @@ class StudyFocusRecord {
           json['finishIdempotencyKey'] as String? ?? 'study_finish_$sid',
       remoteFinishSynced: json['remoteFinishSynced'] as bool? ?? false,
       remoteSyncErrorVi: json['remoteSyncErrorVi'] as String?,
+      confirmedXpAwarded: (json['confirmedXpAwarded'] as num?)?.toInt(),
+      dailyStudyXpRemaining: (json['dailyStudyXpRemaining'] as num?)?.toInt(),
     );
   }
 }
