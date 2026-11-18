@@ -25,4 +25,4 @@
   - `RAW_COLOR_HITS: 0`; `python scripts/check_docs_links.py` (543 files PASS); `python scripts/check_task_records.py` OK.
 - **Rủi ro còn lại:** Chưa cài APK lên 2 máy Android vật lý để test hộp thoại SAF `ACTION_OPEN_DOCUMENT` & đổ chuông MP3 tùy chọn khi tắt màn hình/khởi động lại máy.
 - **Điểm tiếp tục chính xác:** Kiểm thử thực tế trên 2 máy Android thật (SAF chọn ảnh/nhạc + chuông màn khóa) và triển khai Firebase Auth + PostgreSQL thật cho giai đoạn pilot.
-- **Git:** Đang chuẩn bị commit & push lên `origin/main`.
+- **Git:** `main` · commit `8c4a0c94aa5e0d0b4f3f7302e3a7d63ee89b9b79` (đã push lên `origin/main`).
