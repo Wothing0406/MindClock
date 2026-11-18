@@ -20,8 +20,8 @@
 - **Test đã chạy (2026-11-18):**
   - `flutter test --no-pub`: **65/65 PASSED** (`auth_onboarding_flow_test.dart` 4/4, `morning_question_selector_test.dart`, `solo_arena_*`, `guest_flow_widget_test.dart`, `study_focus_local_test.dart`, v.v.).
   - `dart analyze lib test`: **No issues found!**.
-  - Kiểm chứng trên **detached clean Git worktree** (không phụ thuộc file untracked): xem kết quả commit & worktree ở mục Git bên dưới.
-  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py`: **PASS**.
+  - Kiểm chứng trên **detached clean Git worktree** tại commit `a7e4c95` (chỉ chứa file đã commit trong Git, 0 file untracked): `flutter pub get --offline` (0), `dart analyze lib test` (**No issues found!**), `flutter test --no-pub` (**65/65 PASSED** trong 15s).
+  - `python scripts/check_docs_links.py` (PASS 499 files) & `python scripts/check_task_records.py` (Task records OK).
 - **Test chưa chạy/giới hạn:**
   - Chưa chạy đăng ký trực tuyến tới Firebase Console thật (cần chủ dự án bật provider Email/Password trong Firebase Console của project thật; trong khi chưa bật, app báo đúng hướng dẫn tiếng Việt và giữ nút `Chỉ dùng báo thức trên máy`).
   - Chưa kiểm báo thức AD01–AD09 trên 2 máy Android vật lý (mới kiểm unit/contract/widget và emulator).
@@ -29,4 +29,4 @@
   - Repo local vẫn còn các file WIP untracked của nhánh khác (`T022`/`T023` web `/product`, `google-services.json`, `.idea/`) — tuyệt đối không dùng `git add .`.
 - **Điểm tiếp tục chính xác:**
   - Chốt bật Firebase Email/Password & kiểm 2 tài khoản thật A/B đầu-cuối (Android ↔ FastAPI/PostgreSQL) và playtest báo thức native trên 2 máy Android vật lý trước khi mở G2 (1v1 hai máy) và phòng học bạn bè.
-- **Git:** Đang chuẩn bị commit, kiểm chứng detached clean Git worktree và đẩy lên nhánh `main` (`origin/main`).
+- **Git:** Đã commit mã nguồn `T048` tại `a7e4c95`, xác minh clean worktree 65/65 PASS và đẩy lên nhánh `main` (`origin/main`).
