@@ -1,6 +1,6 @@
 # Tích hợp EduSkills-VN vào nội dung và chấm bài
 
-**Nguồn:** [EduSkills-VN](https://github.com/Wothing0406/EduSkills-VN) của nhóm. Đây là **bộ quy tắc sư phạm, chuẩn hóa và tạo prompt**, không phải kho câu hỏi đã duyệt hay model chấm bài. Adapter đầu tiên đã được triển khai tại [`services/api/app/services/eduskills_adapter.py`](../../services/api/app/services/eduskills_adapter.py) (T033). [Ngân hàng câu](05-ngan-hang-cau-hoi.md), [AI/chấm](06-ai-va-cham-bai.md), [catalog](10-catalog-chuong-trinh-va-ke-hoach.md).
+**Nguồn:** [EduSkills-VN](https://github.com/Wothing0406/EduSkills-VN) của nhóm kết hợp quy chuẩn văn phong giáo dục tiếng Việt ngắn gọn từ [vietnamese-education-copy](https://github.com/trussary/vietnamese-language-skill) & [vietnamese-dev](https://github.com/DevLungTung/vietnamese-dev). Đây là **bộ quy tắc sư phạm, chuẩn hóa và tạo prompt**, không phải kho câu hỏi đã duyệt hay model chấm bài. Adapter phiên bản `v2.0` đã triển khai tại [`services/api/app/services/eduskills_adapter.py`](../../services/api/app/services/eduskills_adapter.py) (đủ **11 môn THPT GDPT 2018** + CoVe + văn phong ngắn gọn 1–2 câu) và nối trực tiếp vào [`gemini_service.py`](../../services/api/app/services/gemini_service.py) (T033, T053). [Ngân hàng câu](05-ngan-hang-cau-hoi.md), [AI/chấm](06-ai-va-cham-bai.md), [catalog](10-catalog-chuong-trinh-va-ke-hoach.md).
 
 ## 1. Phạm vi dùng được
 

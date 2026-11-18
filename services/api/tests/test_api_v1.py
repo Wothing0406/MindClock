@@ -871,6 +871,120 @@ def test_eduskills_adapter_modes_and_answer_leak_guard() -> None:
     safe = sanitize_pre_reveal_hint('Chia hai vế cho 2 trước khi chuyển vế.', ['8', 'x=8', 'x = 8'])
     assert safe == 'Chia hai vế cho 2 trước khi chuyển vế.'
 
+    # Kiểm tra đủ 11 môn THPT GDPT 2018 từ EduSkills-VN + văn phong ngắn gọn người-với-người
+    expected_subjects = {
+        'TOAN': 'điều kiện xác định',
+        'VAT_LY': 'SI',
+        'HOA_HOC': 'bảo toàn',
+        'SINH_HOC': 'di truyền',
+        'NGU_VAN': 'tu từ',
+        'LICH_SU': 'mốc thời gian',
+        'DIA_LY': 'tăng thêm',
+        'GDCD': 'quy phạm pháp luật',
+        'TIENG_ANH': 'time markers',
+        'TIN_HOC': 'thuật toán',
+        'CONG_NGHE': '3 pha',
+    }
+    for code, expected_token in expected_subjects.items():
+        spec = build_eduskills_prompt_spec(EduSkillsMode.HINT_ONE_STEP, code, grade_band='Lớp 11')
+        assert expected_token in spec.system_instruction_vi
+        assert '1–2 câu' in spec.system_instruction_vi
+        assert 'eduskills-vn-adapter-v2.0' in spec.policy_version
+
+
+def test_gemini_service_embeds_eduskills_and_concise_vi_prompts_across_flows(tmp_path: Path) -> None:
+    import asyncio
+    from app.services.gemini_service import GeminiService
+
+    captured_system_prompts: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content.decode('utf-8'))
+        if 'systemInstruction' in body:
+            captured_system_prompts.append(body['systemInstruction']['parts'][0]['text'])
+        elif 'bidiGenerateContentSetup' in body:
+            captured_system_prompts.append(
+                body['bidiGenerateContentSetup']['systemInstruction']['parts'][0]['text']
+            )
+            return httpx.Response(200, json={'name': 'auth_tokens/ephem_r5'})
+
+        url = str(request.url)
+        if 'generateContent' in url:
+            # Socratic / Personalized / Photo Grade fake JSON
+            payload = {
+                'message_vi': 'Kiểm tra dấu khi chuyển vế thử nhé.',
+                'next_question_vi': 'Nếu đổi vế +4 thì thành số nào?',
+                'help_level': 'socratic',
+                'safety_status': 'safe',
+                'topic_id': 'thpt_ls_11',
+                'prompt': 'Nêu ý nghĩa chính của phong trào Cần Vương.',
+                'reasoning_prompt_vi': 'Nêu 1 dẫn chứng sự kiện.',
+                'accepted_answers': ['1885-1896'],
+                'steps': ['Xác định mốc 1885', 'Nêu tính chất yêu nước'],
+                'hint_vi': 'Nhớ lại mốc năm 1885-1896.',
+                'result': 'incorrect',
+                'observed_steps': ['U=12, R=4'],
+                'first_issue': 'Thiếu đơn vị A',
+                'feedback': 'Công thức đúng rồi, kiểm tra lại đơn vị dòng điện nhé.',
+            }
+            return httpx.Response(
+                200,
+                json={'candidates': [{'content': {'parts': [{'text': json.dumps(payload, ensure_ascii=False)}]}}]},
+            )
+        return httpx.Response(404)
+
+    service = GeminiService(_make_settings(tmp_path), transport=httpx.MockTransport(handler))
+
+    async def _run_all() -> None:
+        await service.generate_socratic_help(
+            subject_code='LICH_SU',
+            grade_level='Lớp 11',
+            task_title='Ôn Sử 11',
+            question_text='Phong trào mở đầu từ sự kiện nào?',
+            recent_turns=[],
+        )
+        draft = await service.generate_personalized_question(
+            alias='Lan',
+            grade_level='Lớp 11',
+            subject_code='DIA_LY',
+            weak_topics=[],
+            topic_hint='Tốc độ tăng trưởng',
+            difficulty=1,
+        )
+        assert '1885-1896' not in draft.hint_vi  # sanitize_pre_reveal_hint đã chặn lộ đáp án!
+        await service.create_live_ephemeral_token(
+            alias='Lan',
+            grade_level='Lớp 11',
+            subject_code='CONG_NGHE',
+            task_title='Mạch 3 pha',
+            response_modality='AUDIO',
+        )
+        photo = await service.grade_photo_attempt(
+            image_bytes=b'fake-jpeg',
+            mime_type='image/jpeg',
+            question_prompt='Tính I = U/R',
+            accepted_answers=['3 A'],
+            rubric_steps=['I = U / R'],
+            hint_vi='Đáp án là I = 3 A rồi!',
+            answer_value='3',
+            reasoning_text='12/4=3',
+            wrong_attempts_so_far=2,
+            subject_code='VAT_LY',
+            grade_level='Lớp 10',
+        )
+        assert photo.hint_vi == 'Hãy kiểm tra lại công thức hoặc phép biến đổi ở bước đầu tiên.'
+
+    asyncio.run(_run_all())
+
+    assert len(captured_system_prompts) == 4
+    assert 'HINT_ONE_STEP' in captured_system_prompts[0] and 'mốc thời gian' in captured_system_prompts[0]
+    assert 'AUTHOR_DRAFT' in captured_system_prompts[1] and 'tăng thêm' in captured_system_prompts[1]
+    assert 'HINT_ONE_STEP' in captured_system_prompts[2] and '3 pha' in captured_system_prompts[2]
+    assert 'GRADE_CANDIDATE' in captured_system_prompts[3] and 'SI' in captured_system_prompts[3]
+    for prompt_text in captured_system_prompts:
+        assert '1–2 câu' in prompt_text
+        assert 'CẤM rào đón sáo rỗng' in prompt_text
+
 
 def test_study_time_xp_ledger_rules_cap_replay_and_owner_403(tmp_path: Path) -> None:
     app = create_app(_make_settings(tmp_path, mock_mode=True))

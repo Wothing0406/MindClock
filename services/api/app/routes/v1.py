@@ -1143,6 +1143,8 @@ def create_v1_router(
             answer_value=answer_value,
             reasoning_text=reasoning_text,
             wrong_attempts_so_far=session.wrong_attempts,
+            subject_code=question.subject_code if question else 'TOAN',
+            grade_level=question.grade_band if question else principal.user.grade_band,
         )
 
         # Chuẩn hóa bảo vệ học sinh: nếu OCR nhận diện được đáp án nhưng Gemini so khớp thô chưa khớp

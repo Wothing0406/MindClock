@@ -1,0 +1,8 @@
+# Đặc tả kiểm nhận T053
+
+| ID | Tiêu chí chấp nhận | Cách kiểm |
+| --- | --- | --- |
+| AC-01 | `SUBJECT_PEDAGOGY_RULES_VI` trong `eduskills_adapter.py` bao phủ đủ **11 môn THPT GDPT 2018** (`TOAN`, `VAT_LY`, `HOA_HOC`, `SINH_HOC`, `NGU_VAN`, `LICH_SU`, `DIA_LY`, `GDCD`, `TIENG_ANH`, `TIN_HOC`, `CONG_NGHE`) khớp với `EduSkills-VN` + kiểm chứng nội bộ CoVe mà không ép lộ đáp án. | Pytest `test_eduskills_adapter_modes_and_answer_leak_guard` kiểm tra đủ 11 môn và tất cả 4 `EduSkillsMode`. |
+| AC-02 | Mọi runtime prompt trong `gemini_service.py` (`generate_socratic_help`, `generate_personalized_question`, `create_live_ephemeral_token`, `grade_photo_attempt`) đều gọi `build_eduskills_prompt_spec(...)` kèm quy tắc **ngắn gọn người-với-người** (1–2 câu, bỏ filler/rào đón, đúng xưng hô giáo dục `vi-VN`) và dùng `sanitize_pre_reveal_hint(...)` cho gợi ý nháp/chấm bài. | Pytest kiểm tra `systemInstruction` gửi qua `httpx.MockTransport` cho cả 4 luồng (Socratic, Personalized, Live token, Photo Vision). |
+| AC-03 | Đã thêm 2 skill nhẹ `.agents/skills/vietnamese-education-copy/SKILL.md` và `.agents/skills/vietnamese-dev/SKILL.md` (ghi rõ nguồn GitHub + license MIT, không cài thêm runtime package) và cập nhật routing trong `docs/00-start/07-quy-tac-skills-va-ai-agent.md` + `docs/02-engineering/11-eduskills-vn-tich-hop.md`. | Đọc/kiểm tra file skill & chạy `python scripts/check_docs_links.py`. |
+| AC-04 | Toàn bộ suite backend trên PostgreSQL 16 (`50+` test), Flutter analyze & test, `check_docs_links.py`, `check_task_records.py` PASS 100%, commit sạch và push `origin/main`. | Chạy tất cả bộ kiểm thử & đối chiếu `origin/main`. |
