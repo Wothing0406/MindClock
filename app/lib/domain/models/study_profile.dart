@@ -1,3 +1,4 @@
+import 'daily_study_plan.dart';
 import 'subject_catalog.dart';
 
 enum PriorityLevel {
@@ -40,6 +41,8 @@ class StudyProfile {
     this.gradeLevel,
     this.selectedSubjectCodes = const <String>[],
     this.prioritySubjects = const <PrioritySubject>[],
+    this.selfAssessments = const <String, SubjectSelfAssessment>{},
+    this.confirmedPlan,
     this.goalLabel = '',
     this.alarmOnlyMode = false,
   });
@@ -51,6 +54,8 @@ class StudyProfile {
   final String? gradeLevel;
   final List<String> selectedSubjectCodes;
   final List<PrioritySubject> prioritySubjects;
+  final Map<String, SubjectSelfAssessment> selfAssessments;
+  final DailyStudyPlan? confirmedPlan;
   final String goalLabel;
   final bool alarmOnlyMode;
 
@@ -79,6 +84,9 @@ class StudyProfile {
     bool clearGradeLevel = false,
     List<String>? selectedSubjectCodes,
     List<PrioritySubject>? prioritySubjects,
+    Map<String, SubjectSelfAssessment>? selfAssessments,
+    DailyStudyPlan? confirmedPlan,
+    bool clearConfirmedPlan = false,
     String? goalLabel,
     bool? alarmOnlyMode,
   }) {
@@ -88,6 +96,9 @@ class StudyProfile {
       gradeLevel: clearGradeLevel ? null : (gradeLevel ?? this.gradeLevel),
       selectedSubjectCodes: selectedSubjectCodes ?? this.selectedSubjectCodes,
       prioritySubjects: prioritySubjects ?? this.prioritySubjects,
+      selfAssessments: selfAssessments ?? this.selfAssessments,
+      confirmedPlan:
+          clearConfirmedPlan ? null : (confirmedPlan ?? this.confirmedPlan),
       goalLabel: goalLabel ?? this.goalLabel,
       alarmOnlyMode: alarmOnlyMode ?? this.alarmOnlyMode,
     );
@@ -100,6 +111,11 @@ class StudyProfile {
         'selectedSubjectCodes': selectedSubjectCodes,
         'prioritySubjects':
             prioritySubjects.map((PrioritySubject e) => e.toJson()).toList(),
+        'selfAssessments': selfAssessments.map(
+          (String key, SubjectSelfAssessment value) =>
+              MapEntry<String, String>(key, value.code),
+        ),
+        'confirmedPlan': confirmedPlan?.toJson(),
         'goalLabel': goalLabel,
         'alarmOnlyMode': alarmOnlyMode,
       };
@@ -109,6 +125,16 @@ class StudyProfile {
         json['selectedSubjectCodes'] as List<dynamic>? ?? <dynamic>[];
     final List<dynamic> rawPriorities =
         json['prioritySubjects'] as List<dynamic>? ?? <dynamic>[];
+    final Object? rawAssessments = json['selfAssessments'];
+    final Map<String, SubjectSelfAssessment> parsedAssessments =
+        <String, SubjectSelfAssessment>{};
+    if (rawAssessments is Map<String, dynamic>) {
+      rawAssessments.forEach((String key, dynamic value) {
+        parsedAssessments[key] =
+            SubjectSelfAssessment.fromCode(value as String?);
+      });
+    }
+    final Object? rawPlan = json['confirmedPlan'];
     return StudyProfile(
       alias: json['alias'] as String? ?? '',
       avatarId: json['avatarId'] as String? ?? 'sunrise',
@@ -119,6 +145,10 @@ class StudyProfile {
           .whereType<Map<String, dynamic>>()
           .map(PrioritySubject.fromJson)
           .toList(growable: false),
+      selfAssessments: parsedAssessments,
+      confirmedPlan: rawPlan is Map<String, dynamic>
+          ? DailyStudyPlan.fromJson(rawPlan)
+          : null,
       goalLabel: json['goalLabel'] as String? ?? '',
       alarmOnlyMode: json['alarmOnlyMode'] as bool? ?? false,
     );

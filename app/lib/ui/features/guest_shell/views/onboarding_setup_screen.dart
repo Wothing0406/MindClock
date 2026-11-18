@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../domain/models/daily_study_plan.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/rule_based_plan_generator.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -33,6 +35,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   String? _selectedGrade;
   late Set<String> _selectedSubjects;
   late Map<String, PriorityLevel> _priorities;
+  late Map<String, SubjectSelfAssessment> _selfAssessments;
   late TextEditingController _goalController;
 
   static const List<Map<String, dynamic>> _availableAvatars = <Map<String, dynamic>>[
@@ -71,6 +74,13 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       for (final PrioritySubject p in widget.initialProfile.prioritySubjects)
         p.subjectCode: p.level,
     };
+    _selfAssessments = <String, SubjectSelfAssessment>{
+      for (final String code in _selectedSubjects)
+        code: widget.initialProfile.selfAssessments[code] ??
+            (_priorities[code] == PriorityLevel.high
+                ? SubjectSelfAssessment.examPrep
+                : SubjectSelfAssessment.basic),
+    };
     _goalController = TextEditingController(
       text: widget.initialProfile.goalLabel.isNotEmpty
           ? widget.initialProfile.goalLabel
@@ -90,28 +100,37 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       if (_selectedSubjects.contains(code)) {
         _selectedSubjects.remove(code);
         _priorities.remove(code);
+        _selfAssessments.remove(code);
       } else {
         _selectedSubjects.add(code);
+        _selfAssessments[code] = SubjectSelfAssessment.basic;
       }
     });
   }
 
-  void _togglePriority(String code) {
+  void _cycleSelfAssessment(String code) {
     setState(() {
-      final PriorityLevel? current = _priorities[code];
-      if (current == null) {
-        if (_priorities.length < StudyProfile.maxPrioritySubjects) {
+      final SubjectSelfAssessment current =
+          _selfAssessments[code] ?? SubjectSelfAssessment.basic;
+      final SubjectSelfAssessment next = current.next;
+      _selfAssessments[code] = next;
+      if (next == SubjectSelfAssessment.examPrep) {
+        if (_priorities.length < StudyProfile.maxPrioritySubjects ||
+            _priorities.containsKey(code)) {
           _priorities[code] = PriorityLevel.high;
         }
-      } else if (current == PriorityLevel.high) {
-        _priorities[code] = PriorityLevel.medium;
+      } else if (next == SubjectSelfAssessment.beginner) {
+        if (_priorities.length < StudyProfile.maxPrioritySubjects ||
+            _priorities.containsKey(code)) {
+          _priorities[code] = PriorityLevel.medium;
+        }
       } else {
         _priorities.remove(code);
       }
     });
   }
 
-  void _submit() {
+  DailyStudyPlan _buildDraftPlan() {
     final List<PrioritySubject> priorityList = _priorities.entries
         .map(
           (MapEntry<String, PriorityLevel> entry) => PrioritySubject(
@@ -120,6 +139,26 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           ),
         )
         .toList(growable: false);
+    return RuleBasedPlanGenerator.generateDraft(
+      gradeLevel: _selectedGrade,
+      selectedSubjectCodes: _selectedSubjects.toList(growable: false),
+      selfAssessments: _selfAssessments,
+      prioritySubjects: priorityList,
+      goalLabel: _goalController.text.trim(),
+    );
+  }
+
+  void _submit({required bool confirmPlan}) {
+    final List<PrioritySubject> priorityList = _priorities.entries
+        .map(
+          (MapEntry<String, PriorityLevel> entry) => PrioritySubject(
+            subjectCode: entry.key,
+            level: entry.value,
+          ),
+        )
+        .toList(growable: false);
+    final DailyStudyPlan? confirmed =
+        confirmPlan ? _buildDraftPlan().markConfirmed(DateTime.now()) : null;
 
     widget.onSaveProfile(
       StudyProfile(
@@ -128,6 +167,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         gradeLevel: _selectedGrade,
         selectedSubjectCodes: _selectedSubjects.toList(growable: false),
         prioritySubjects: priorityList,
+        selfAssessments: Map<String, SubjectSelfAssessment>.from(
+          _selfAssessments,
+        ),
+        confirmedPlan: confirmed,
         goalLabel: _goalController.text.trim(),
         alarmOnlyMode: false,
       ),
@@ -366,19 +409,24 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
               SizedBox(height: mc.space16),
 
-              // 4. Môn ưu tiên
+              // 4. Mức tự đánh giá từng môn (điểm khởi đầu, không phải đánh giá năng lực)
               MindClockCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      '4. Chọn môn ưu tiên cải thiện (${_priorities.length}/${StudyProfile.maxPrioritySubjects})',
+                      '4. Mức tự đánh giá từng môn (chạm để đổi)',
                       style: mc.sectionTitleStyle,
+                    ),
+                    SizedBox(height: mc.space4),
+                    Text(
+                      'Mới bắt đầu / Cơ bản / Đang ôn thi / Muốn thử thách — chỉ dùng để gợi ý nhịp ôn đầu tiên.',
+                      style: mc.captionStyle,
                     ),
                     SizedBox(height: mc.space8),
                     if (_selectedSubjects.isEmpty)
                       Text(
-                        'Hãy chọn ít nhất 1 môn ở mục 3 để thiết lập ưu tiên.',
+                        'Hãy chọn ít nhất 1 môn ở mục 3 để đặt mức tự đánh giá.',
                         style: mc.captionStyle,
                       )
                     else
@@ -386,40 +434,40 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         spacing: mc.space8,
                         runSpacing: mc.space8,
                         children: _selectedSubjects.map((String code) {
-                          final PriorityLevel? level = _priorities[code];
+                          final SubjectSelfAssessment assessment =
+                              _selfAssessments[code] ??
+                                  SubjectSelfAssessment.basic;
                           final String name = SubjectCatalog.nameFor(code);
-                          final String levelLabel = level == null
-                              ? 'Chưa chọn'
-                              : (level == PriorityLevel.high
-                                  ? 'Ưu tiên cao'
-                                  : 'Vừa phải');
+                          final bool highlighted =
+                              assessment == SubjectSelfAssessment.examPrep ||
+                                  assessment == SubjectSelfAssessment.beginner;
                           return MindClockPressable(
                             key: ValueKey<String>('priority-$code'),
-                            onPressed: () => _togglePriority(code),
-                            semanticLabel: '$name: $levelLabel',
+                            onPressed: () => _cycleSelfAssessment(code),
+                            semanticLabel: '$name: ${assessment.labelVi}',
                             child: Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: mc.space12,
                                 vertical: mc.space8,
                               ),
                               decoration: BoxDecoration(
-                                color: level == PriorityLevel.high
+                                color: assessment ==
+                                        SubjectSelfAssessment.examPrep
                                     ? mc.sunriseSoft
-                                    : (level == PriorityLevel.medium
-                                        ? mc.primarySoft
-                                        : mc.paper),
+                                    : (highlighted ? mc.primarySoft : mc.paper),
                                 borderRadius:
                                     BorderRadius.circular(mc.radiusChip),
                                 border: Border.all(
-                                  color: level != null
-                                      ? (level == PriorityLevel.high
-                                          ? mc.sunrise
-                                          : mc.primary)
-                                      : mc.outline,
+                                  color: assessment ==
+                                          SubjectSelfAssessment.examPrep
+                                      ? mc.sunrise
+                                      : (highlighted
+                                          ? mc.primary
+                                          : mc.outline),
                                 ),
                               ),
                               child: Text(
-                                '$name: $levelLabel',
+                                '$name: ${assessment.labelVi}',
                                 style: mc.chipLabelStyle.copyWith(
                                   color: mc.ink,
                                 ),
@@ -464,57 +512,95 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
               SizedBox(height: mc.space16),
 
-              // 6. Thẻ xác nhận kế hoạch
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(mc.space16),
-                decoration: BoxDecoration(
-                  color: mc.primarySoft,
-                  borderRadius: BorderRadius.circular(mc.radiusCard),
-                  border: Border.all(color: mc.primary),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
+              // 6. Bản kế hoạch nháp rule-based cần người học xác nhận (ON-05)
+              Builder(
+                builder: (BuildContext context) {
+                  final DailyStudyPlan draftPlan = _buildDraftPlan();
+                  return Container(
+                    key: const ValueKey<String>('onboarding-plan-draft-card'),
+                    width: double.infinity,
+                    padding: EdgeInsets.all(mc.space16),
+                    decoration: BoxDecoration(
+                      color: mc.primarySoft,
+                      borderRadius: BorderRadius.circular(mc.radiusCard),
+                      border: Border.all(color: mc.primary),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        MindClockIcon(
-                          MindClockIconKind.check,
-                          color: mc.primary,
-                          size: 20,
+                        Wrap(
+                          spacing: mc.space8,
+                          runSpacing: mc.space4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              '6. Bản kế hoạch nháp hôm nay',
+                              style: mc.sectionTitleStyle.copyWith(
+                                color: mc.primary,
+                              ),
+                            ),
+                            MindClockStatusPill(label: draftPlan.sourceLabelVi),
+                          ],
                         ),
-                        SizedBox(width: mc.space8),
-                        Expanded(
-                          child: Text(
-                            'Kế hoạch đề xuất của bạn',
-                            style: mc.sectionTitleStyle.copyWith(color: mc.primary),
+                        SizedBox(height: mc.space8),
+                        ...draftPlan.items.map(
+                          (DailyPlanItem item) => Padding(
+                            padding: EdgeInsets.only(bottom: mc.space8),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(mc.space12),
+                              decoration: BoxDecoration(
+                                color: mc.surface,
+                                borderRadius:
+                                    BorderRadius.circular(mc.radiusControl),
+                                border: Border.all(color: mc.outline),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    item.titleVi,
+                                    style: mc.bodyStrongStyle,
+                                  ),
+                                  SizedBox(height: mc.space4),
+                                  Text(
+                                    item.reasonVi,
+                                    style: mc.captionStyle,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
+                        ),
+                        Text(
+                          'Không tự bật báo thức hay thông báo — bạn chủ động đặt chuông sau nếu muốn. (Catalog ${draftPlan.catalogVersion} · ${draftPlan.plannerRuleVersion})',
+                          style: mc.captionStyle.copyWith(color: mc.ink),
                         ),
                       ],
                     ),
-                    SizedBox(height: mc.space8),
-                    Text(
-                      '• Học sinh: ${_aliasController.text.isNotEmpty ? _aliasController.text : 'Học sinh'} (${_selectedGrade ?? 'Lớp 10'})\n'
-                      '• Môn đang theo dõi: ${_selectedSubjects.length} môn (${_selectedSubjects.map(SubjectCatalog.nameFor).take(3).join(', ')}${_selectedSubjects.length > 3 ? '...' : ''})\n'
-                      '• Báo thức tự động: 06:00 mỗi sáng có câu ôn tập gắn liền thời khóa biểu.',
-                      style: mc.bodyStyle.copyWith(color: mc.ink),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-              SizedBox(height: mc.space20),
+              SizedBox(height: mc.space16),
               MindClockButton(
                 key: const ValueKey<String>('onboarding-save'),
                 label: 'Xác nhận kế hoạch & Vào Hôm nay',
                 icon: MindClockIconKind.check,
-                onPressed: _submit,
+                onPressed: () => _submit(confirmPlan: true),
               ),
-              SizedBox(height: mc.space12),
+              SizedBox(height: mc.space8),
+              MindClockButton(
+                key: const ValueKey<String>('onboarding-skip-plan'),
+                label: 'Bỏ qua kế hoạch · Vào Hôm nay',
+                variant: MindClockButtonVariant.secondary,
+                onPressed: () => _submit(confirmPlan: false),
+              ),
+              SizedBox(height: mc.space8),
               MindClockButton(
                 key: const ValueKey<String>('onboarding-alarm-only'),
                 label: 'Để sau · Chỉ đặt báo thức',
                 icon: MindClockIconKind.bell,
-                variant: MindClockButtonVariant.secondary,
+                variant: MindClockButtonVariant.subtle,
                 onPressed: widget.onAlarmOnly,
               ),
             ],

@@ -8,6 +8,8 @@ import 'package:mindclock_app/ui/core/strings/app_strings.dart';
 
 void main() {
   Future<void> scrollAndTap(WidgetTester tester, Finder finder) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
     await tester.tap(finder);

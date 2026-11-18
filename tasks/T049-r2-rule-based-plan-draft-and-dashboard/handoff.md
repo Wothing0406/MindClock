@@ -1,0 +1,29 @@
+# Bàn giao nhiệm vụ T049
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Xây dựng mô hình & máy sinh kế hoạch nháp rule-based (`daily_study_plan.dart`, `rule_based_plan_generator.dart`): tối đa 3 việc/ngày, 10–25 phút/việc, phiên bản `rule-plan-v0.1` / `gdpt-2018-v1`, gắn nhãn `Kế hoạch cơ bản · Chưa có gợi ý AI`, phân biệt rõ môn có câu duyệt vs `Chưa có câu ôn được duyệt`, và không tự tạo/bật báo thức.
+  - Nâng cấp `StudyProfile` lưu `selfAssessments` (4 mức tự đánh giá theo môn) và `confirmedPlan` tương thích ngược JSON cũ.
+  - Nâng cấp `OnboardingSetupScreen`: chọn mức tự đánh giá từng môn, xem trước bản nháp kế hoạch trực tiếp, bỏ dòng cứng sai quy tắc `Báo thức tự động: 06:00`, hỗ trợ `Xác nhận kế hoạch & Vào Hôm nay` và `Bỏ qua kế hoạch · Vào Hôm nay`.
+  - Nâng cấp Dashboard `TodayScreen` hiển thị thẻ `Kế hoạch hôm nay` (`today-confirmed-plan-card`) sau khi người dùng xác nhận (và ẩn khi người dùng chọn bỏ qua).
+- **File/code/docs thay đổi:**
+  - `app/lib/domain/models/daily_study_plan.dart` (mới)
+  - `app/lib/domain/services/rule_based_plan_generator.dart` (mới)
+  - `app/lib/domain/models/study_profile.dart` (sửa)
+  - `app/lib/ui/features/guest_shell/views/onboarding_setup_screen.dart` (sửa)
+  - `app/lib/ui/features/guest_shell/views/today_screen.dart` (sửa)
+  - `app/test/onboarding_plan_draft_test.dart` (mới)
+  - `app/test/guest_flow_widget_test.dart` (sửa)
+  - `tasks/T049-r2-rule-based-plan-draft-and-dashboard/{README,spec,plan,tests,worklog,handoff}.md`
+- **Test đã chạy (2026-11-18):**
+  - `flutter test --no-pub`: **69/69 PASSED** (`00:15 +69: All tests passed!`).
+  - `dart analyze lib test`: **No issues found!**.
+  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py`: **PASS**.
+- **Test chưa chạy/giới hạn:**
+  - Gợi ý sắp xếp bằng AI (Gemini) trên kế hoạch nháp chưa mở ở T049 (giữ rule-based có nhãn `Chưa có gợi ý AI` cho tới cổng AI eval R4).
+  - Vẫn cần bật Firebase Email/Password trên Firebase Console của project thật và kiểm báo thức `AD01–AD09` trên 2 điện thoại Android vật lý.
+- **Rủi ro còn lại:**
+  - Các file WIP untracked của nhánh cũ (`T022`/`T023`, `google-services.json`, `.idea/`) vẫn nằm ngoài Git — giữ nguyên không stage.
+- **Điểm tiếp tục chính xác:**
+  - Sang **Bước 3 & 4** trong lộ trình: hoàn thiện Không gian học (R5 — chế độ `Học sâu` im lặng tuyệt đối + server EXP ledger cho thời gian học có trần ngày/idempotency ở `POST /v1/study/sessions/{id}/finish` trên PostgreSQL 16 thật), kiểm chứng OCR ảnh TKB với ảnh thật và chạy test báo thức `AD01–AD09` trên 2 máy Android vật lý.
+- **Git:** Đang chuẩn bị commit & push nhánh `main` (`origin/main`).

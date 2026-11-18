@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/daily_study_plan.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
@@ -315,6 +316,67 @@ class _TodayScreenState extends State<TodayScreen> {
             SizedBox(height: mc.space12),
             const MindClockNoticeBanner(
               message: AppStrings.wakeScheduleChangedNotice,
+            ),
+          ],
+          if (profile.confirmedPlan != null &&
+              profile.confirmedPlan!.items.isNotEmpty) ...<Widget>[
+            SizedBox(height: mc.space12),
+            MindClockCard(
+              key: const ValueKey<String>('today-confirmed-plan-card'),
+              highlighted: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text('Kế hoạch hôm nay', style: mc.sectionTitleStyle),
+                      MindClockStatusPill(
+                        label: profile.confirmedPlan!.sourceLabelVi,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: mc.space8),
+                  ...profile.confirmedPlan!.items.map(
+                    (DailyPlanItem item) => Padding(
+                      padding: EdgeInsets.only(bottom: mc.space8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(mc.space12),
+                        decoration: BoxDecoration(
+                          color: mc.paper,
+                          borderRadius:
+                              BorderRadius.circular(mc.radiusControl),
+                          border: Border.all(color: mc.outline),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Wrap(
+                              spacing: mc.space8,
+                              runSpacing: mc.space4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: <Widget>[
+                                Text(item.titleVi, style: mc.bodyStrongStyle),
+                                MindClockStatusPill(
+                                  label: item.hasApprovedQuestions
+                                      ? 'Có câu ôn duyệt'
+                                      : 'Chưa có câu duyệt',
+                                  accentWarm: !item.hasApprovedQuestions,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: mc.space4),
+                            Text(item.reasonVi, style: mc.captionStyle),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           SizedBox(height: mc.space16),
