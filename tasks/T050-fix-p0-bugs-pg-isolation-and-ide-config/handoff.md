@@ -26,4 +26,4 @@
   - DB dev cũ đang chạy trong `api-postgres-1` (`mindclock`) vẫn có `alembic_version = 0002` + 7 bảng PvP do phiên bản `api-api-1` cũ tạo ra; nếu cần chạy `alembic upgrade head` trực tiếp trên DB dev đó, có thể chạy `alembic stamp 0003_add_pvp_match_tables` hoặc rebuild container `docker compose up -d --build`.
   - Còn lại các hạng mục P1 trong báo cáo rà soát (`T051` đồng bộ `PATCH /v1/me` / `DELETE /v1/me` + seed THPT 10–12; `T052` Không gian học `Học sâu` + EXP thời gian học).
 - **Điểm tiếp tục chính xác:** Chọn làm tiếp `T051` (R2/R3 backend THPT 10–12 + đồng bộ hồ sơ/TKB/xóa tài khoản) hoặc `T052` (R5 Không gian học `Học sâu` im lặng + server EXP ledger).
-- **Git:** Đang chuẩn bị commit & push nhánh `main` (`origin/main`).
+- **Git:** Đã commit mã nguồn `T050` tại `863ee53` và đẩy lên nhánh `main` (`origin/main`).
