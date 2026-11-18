@@ -1,0 +1,30 @@
+{
+  "schema": "mindclock.arena-assets.v1",
+  "status": "team_generated_original",
+  "rights_note": "Original artwork generated in-repo for MindClock Flutter Arena (2026-11-18). Safe for app bundling; excludes external research files in assets/game/.",
+  "map": {
+    "id": "courtyard_dawn",
+    "path": "assets/arena/map_courtyard.png",
+    "size_px": [960, 540]
+  },
+  "champions": {
+    "ha_nhan": {
+      "portrait": "assets/arena/champ_ha_nhan.png",
+      "skill_1": "assets/arena/skill_ha_nhan_1.png",
+      "skill_2": "assets/arena/skill_ha_nhan_2.png"
+    },
+    "tuyet_dinh": {
+      "portrait": "assets/arena/champ_tuyet_dinh.png",
+      "skill_1": "assets/arena/skill_tuyet_dinh_1.png",
+      "skill_2": "assets/arena/skill_tuyet_dinh_2.png"
+    },
+    "han_boi_phap": {
+      "portrait": "assets/arena/champ_han_boi_phap.png",
+      "skill_1": "assets/arena/skill_han_boi_phap_1.png",
+      "skill_2": "assets/arena/skill_han_boi_phap_2.png"
+    }
+  },
+  "shared_skills": {
+    "basic": "assets/arena/skill_basic.png"
+  }
+}

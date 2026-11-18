@@ -330,60 +330,95 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   final ChampionSpec spec = CombatCatalog.getSpec(id);
                   final bool selected = vm.playerChampion == id;
                   return Padding(
-                    padding: EdgeInsets.only(bottom: mc.space8),
-                    child: MindClockPressable(
-                      key: ValueKey<String>('arena-champion-${id.code}'),
-                      selected: selected,
-                      semanticLabel: 'Chọn tướng ${spec.nameVi}, ${spec.roleVi}',
-                      onPressed: () => vm.selectPlayerChampion(id),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(mc.space12),
-                        decoration: BoxDecoration(
-                          color: selected ? mc.primarySoft : mc.paper,
-                          borderRadius: BorderRadius.circular(mc.radiusControl),
-                          border: Border.all(
-                            color: selected ? mc.primary : mc.outline,
-                            width: selected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Wrap(
-                              spacing: mc.space8,
-                              runSpacing: mc.space4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
+                    padding: EdgeInsets.only(bottom: mc.space12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        MindClockPressable(
+                          key: ValueKey<String>('arena-champion-${id.code}'),
+                          selected: selected,
+                          semanticLabel: 'Chọn tướng ${spec.nameVi}, ${spec.roleVi}',
+                          onPressed: () => vm.selectPlayerChampion(id),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(mc.space12),
+                            decoration: BoxDecoration(
+                              color: selected ? mc.primarySoft : mc.paper,
+                              borderRadius: BorderRadius.circular(mc.radiusControl),
+                              border: Border.all(
+                                color: selected ? mc.primary : mc.outline,
+                                width: selected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Text(spec.nameVi, style: mc.bodyStrongStyle),
-                                MindClockStatusPill(
-                                  label: spec.roleVi,
-                                  accentWarm: !selected,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    _ChampionPortraitThumb(
+                                      assetPath: spec.portraitAssetPath,
+                                      fallbackInitials: spec.nameVi,
+                                      size: 56,
+                                      highlighted: selected,
+                                    ),
+                                    SizedBox(width: mc.space12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Wrap(
+                                            spacing: mc.space8,
+                                            runSpacing: mc.space4,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            children: <Widget>[
+                                              Text(spec.nameVi,
+                                                  style: mc.bodyStrongStyle),
+                                              MindClockStatusPill(
+                                                label: spec.roleVi,
+                                                accentWarm: !selected,
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: mc.space4),
+                                          Text(
+                                            'Nội tại (${spec.passiveNameVi}): ${spec.passiveDescriptionVi}',
+                                            style: mc.captionStyle
+                                                .copyWith(color: mc.ink),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: mc.space8),
+                                Text(
+                                  'Chiêu 1 (${spec.skill1.qiCost} Qi): ${spec.skill1.nameVi} · ${spec.skill1.damage} ST'
+                                  '${spec.skill1.addWard > 0 ? " +${spec.skill1.addWard} chắn" : ""}'
+                                  '${spec.skill1.healArmor > 0 ? " +${spec.skill1.healArmor} giáp" : ""}',
+                                  style: mc.captionStyle,
+                                ),
+                                Text(
+                                  'Chiêu 2 (${spec.skill2.qiCost} Qi): ${spec.skill2.nameVi} · ${spec.skill2.damage} ST'
+                                  '${spec.skill2.healHp > 0 ? " +${spec.skill2.healHp} HP" : ""}'
+                                  '${spec.skill2.healArmor > 0 ? " +${spec.skill2.healArmor} giáp" : ""}'
+                                  '${spec.skill2.forbidRound6 ? " (cấm round 6)" : ""}',
+                                  style: mc.captionStyle,
                                 ),
                               ],
                             ),
-                            SizedBox(height: mc.space4),
-                            Text(
-                              'Nội tại (${spec.passiveNameVi}): ${spec.passiveDescriptionVi}',
-                              style: mc.captionStyle.copyWith(color: mc.ink),
-                            ),
-                            SizedBox(height: mc.space4),
-                            Text(
-                              'Chiêu 1 (${spec.skill1.qiCost} Qi): ${spec.skill1.nameVi} · ${spec.skill1.damage} ST'
-                              '${spec.skill1.addWard > 0 ? " +${spec.skill1.addWard} chắn" : ""}'
-                              '${spec.skill1.healArmor > 0 ? " +${spec.skill1.healArmor} giáp" : ""}',
-                              style: mc.captionStyle,
-                            ),
-                            Text(
-                              'Chiêu 2 (${spec.skill2.qiCost} Qi): ${spec.skill2.nameVi} · ${spec.skill2.damage} ST'
-                              '${spec.skill2.healHp > 0 ? " +${spec.skill2.healHp} HP" : ""}'
-                              '${spec.skill2.healArmor > 0 ? " +${spec.skill2.healArmor} giáp" : ""}'
-                              '${spec.skill2.forbidRound6 ? " (cấm round 6)" : ""}',
-                              style: mc.captionStyle,
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        SizedBox(height: mc.space4),
+                        MindClockButton(
+                          key: ValueKey<String>('arena-champion-detail-${id.code}'),
+                          label: 'Xem chi tiết ${spec.nameVi} (nội tại & chiêu thức)',
+                          icon: MindClockIconKind.info,
+                          variant: MindClockButtonVariant.subtle,
+                          onPressed: () => _showChampionDetailSheet(context, spec),
+                        ),
+                      ],
                     ),
                   );
                 }),
@@ -837,6 +872,10 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   Text(vm.lastGrading!.feedbackVi, style: mc.captionStyle),
                   SizedBox(height: mc.space12),
                   ...vm.actionOptions.map((SoloActionAvailability opt) {
+                    final ChampionSpec activeSpec =
+                        CombatCatalog.getSpec(vm.playerState.championId);
+                    final String skillAsset =
+                        activeSpec.assetForAction(opt.actionType);
                     return Padding(
                       padding: EdgeInsets.only(bottom: mc.space8),
                       child: MindClockPressable(
@@ -858,38 +897,59 @@ class _ArenaScreenState extends State<ArenaScreen> {
                               width: opt.enabled ? 1.5 : 1,
                             ),
                           ),
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Wrap(
-                                spacing: mc.space8,
-                                runSpacing: mc.space4,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: <Widget>[
-                                  Text(
-                                    opt.titleVi,
-                                    style: mc.bodyStrongStyle.copyWith(
-                                      color: opt.enabled ? mc.ink : mc.inkMuted,
-                                    ),
-                                  ),
-                                  MindClockStatusPill(
-                                    label: '${opt.qiCost} Qi',
-                                    accentWarm: !opt.enabled,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: mc.space4),
-                              Text(opt.effectSummaryVi, style: mc.captionStyle),
-                              if (!opt.enabled && opt.disabledReasonVi != null) ...<Widget>[
-                                SizedBox(height: mc.space4),
-                                Text(
-                                  'Lý do khóa: ${opt.disabledReasonVi!}',
-                                  key: ValueKey<String>(
-                                    'arena-action-reason-${opt.actionType.code}',
-                                  ),
-                                  style: mc.captionStyle.copyWith(color: mc.error),
+                              if (!vm.simulateAssetFallback) ...<Widget>[
+                                _SkillIconThumb(
+                                  assetPath: skillAsset,
+                                  size: 44,
+                                  dimmed: !opt.enabled,
                                 ),
+                                SizedBox(width: mc.space12),
                               ],
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Wrap(
+                                      spacing: mc.space8,
+                                      runSpacing: mc.space4,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: <Widget>[
+                                        Text(
+                                          opt.titleVi,
+                                          style: mc.bodyStrongStyle.copyWith(
+                                            color: opt.enabled
+                                                ? mc.ink
+                                                : mc.inkMuted,
+                                          ),
+                                        ),
+                                        MindClockStatusPill(
+                                          label: '${opt.qiCost} Qi',
+                                          accentWarm: !opt.enabled,
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: mc.space4),
+                                    Text(opt.effectSummaryVi,
+                                        style: mc.captionStyle),
+                                    if (!opt.enabled &&
+                                        opt.disabledReasonVi != null) ...<Widget>[
+                                      SizedBox(height: mc.space4),
+                                      Text(
+                                        'Lý do khóa: ${opt.disabledReasonVi!}',
+                                        key: ValueKey<String>(
+                                          'arena-action-reason-${opt.actionType.code}',
+                                        ),
+                                        style: mc.captionStyle
+                                            .copyWith(color: mc.error),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1171,6 +1231,239 @@ class _ArenaScreenState extends State<ArenaScreen> {
               _expandedSummaryRounds.clear();
               vm.backToHub();
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showChampionDetailSheet(
+    BuildContext context,
+    ChampionSpec spec,
+  ) async {
+    final MindClockTheme mc = context.mc;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: mc.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(mc.radiusCard)),
+      ),
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            key: ValueKey<String>('arena-champion-detail-sheet-${spec.id.code}'),
+            padding: EdgeInsets.all(mc.space20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _ChampionPortraitThumb(
+                      assetPath: spec.portraitAssetPath,
+                      fallbackInitials: spec.nameVi,
+                      size: 88,
+                      highlighted: true,
+                    ),
+                    SizedBox(width: mc.space12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(spec.nameVi, style: mc.screenTitleStyle),
+                          SizedBox(height: mc.space4),
+                          MindClockStatusPill(
+                            label: spec.roleVi,
+                            accentWarm: false,
+                          ),
+                          SizedBox(height: mc.space8),
+                          Text(
+                            '$baseHp HP · $baseArmor Giáp · Tối đa $maxQi Qi · $maxCombatRounds Round',
+                            style: mc.captionStyle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
+                Text(spec.loreVi, style: mc.bodyStyle),
+                SizedBox(height: mc.space16),
+                MindClockCard(
+                  highlighted: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Nội tại: ${spec.passiveNameVi}',
+                        style: mc.sectionTitleStyle,
+                      ),
+                      SizedBox(height: mc.space4),
+                      Text(spec.passiveDescriptionVi, style: mc.bodyStyle),
+                    ],
+                  ),
+                ),
+                SizedBox(height: mc.space12),
+                _ChampionSkillDetailRow(
+                  title: 'Đánh thường ($basicAttackQiCost Qi · $basicAttackDamage ST)',
+                  assetPath: CombatCatalog.basicAttackAssetPath,
+                  descriptionVi: spec.basicAttackDescriptionVi,
+                ),
+                SizedBox(height: mc.space8),
+                _ChampionSkillDetailRow(
+                  title:
+                      'Chiêu 1 · ${spec.skill1.nameVi} (${spec.skill1.qiCost} Qi · ${spec.skill1.damage} ST)',
+                  assetPath: spec.skill1.iconAssetPath,
+                  descriptionVi: spec.skill1.descriptionVi,
+                ),
+                SizedBox(height: mc.space8),
+                _ChampionSkillDetailRow(
+                  title:
+                      'Chiêu 2 · ${spec.skill2.nameVi} (${spec.skill2.qiCost} Qi · ${spec.skill2.damage} ST)',
+                  assetPath: spec.skill2.iconAssetPath,
+                  descriptionVi: spec.skill2.descriptionVi,
+                ),
+                SizedBox(height: mc.space16),
+                MindClockButton(
+                  key: const ValueKey<String>('arena-champion-detail-close'),
+                  label: 'Đóng xem chi tiết',
+                  variant: MindClockButtonVariant.secondary,
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ChampionPortraitThumb extends StatelessWidget {
+  const _ChampionPortraitThumb({
+    required this.assetPath,
+    required this.fallbackInitials,
+    required this.size,
+    required this.highlighted,
+  });
+
+  final String assetPath;
+  final String fallbackInitials;
+  final double size;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: mc.night,
+        borderRadius: BorderRadius.circular(mc.radiusControl),
+        border: Border.all(
+          color: highlighted ? mc.primary : mc.outline,
+          width: highlighted ? 1.5 : 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(mc.radiusControl - 1),
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Center(
+            child: Text(
+              fallbackInitials.substring(0, 2).toUpperCase(),
+              style: mc.sectionTitleStyle.copyWith(color: mc.nightText),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SkillIconThumb extends StatelessWidget {
+  const _SkillIconThumb({
+    required this.assetPath,
+    required this.size,
+    this.dimmed = false,
+  });
+
+  final String assetPath;
+  final double size;
+  final bool dimmed;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    return Opacity(
+      opacity: dimmed ? 0.5 : 1.0,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: mc.night,
+          borderRadius: BorderRadius.circular(mc.radiusChip),
+          border: Border.all(color: mc.outline),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(mc.radiusChip - 1),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Center(
+              child: MindClockIcon(
+                MindClockIconKind.arena,
+                color: mc.sunrise,
+                size: size * 0.55,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChampionSkillDetailRow extends StatelessWidget {
+  const _ChampionSkillDetailRow({
+    required this.title,
+    required this.assetPath,
+    required this.descriptionVi,
+  });
+
+  final String title;
+  final String assetPath;
+  final String descriptionVi;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(mc.space12),
+      decoration: BoxDecoration(
+        color: mc.surface,
+        borderRadius: BorderRadius.circular(mc.radiusControl),
+        border: Border.all(color: mc.outline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _SkillIconThumb(assetPath: assetPath, size: 48),
+          SizedBox(width: mc.space12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(title, style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space4),
+                Text(descriptionVi, style: mc.captionStyle),
+              ],
+            ),
           ),
         ],
       ),

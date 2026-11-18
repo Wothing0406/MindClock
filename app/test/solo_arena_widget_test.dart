@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
 import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
@@ -352,6 +353,134 @@ void main() {
         );
         expect(arenaVm.currentRound, 1);
         expect(arenaVm.currentQuestion!.id, firstRoundQuestionId);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'T054: Đóng gói đủ 11 asset đấu trường, mở modal xem chi tiết nội tại/skill trước trận và render map + skill icon',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(320, 760);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        // Xác nhận toàn bộ 11 asset ảnh gốc tải được qua asset bundle Flutter
+        final List<String> expectedAssets = <String>[
+          CombatCatalog.mapCourtyardAssetPath,
+          CombatCatalog.basicAttackAssetPath,
+          for (final ChampionSpec spec in CombatCatalog.champions.values) ...<String>[
+            spec.portraitAssetPath,
+            spec.skill1.iconAssetPath,
+            spec.skill2.iconAssetPath,
+          ],
+        ];
+        for (final String path in expectedAssets) {
+          final ByteData bytes = await rootBundle.load(path);
+          expect(bytes.lengthInBytes, greaterThan(1000), reason: 'Thiếu asset $path');
+        }
+
+        final InMemoryKeyValueStore store = InMemoryKeyValueStore();
+        final GuestWorkspaceViewModel guestVm = GuestWorkspaceViewModel(
+          repository: GuestWorkspaceRepository(store: store),
+          alarmScheduler: const UnboundAlarmSchedulerService(),
+        );
+        await guestVm.initialize();
+        await guestVm.completeOnboardingAsLater(alarmOnly: false);
+
+        final PersonalFlowViewModel personalVm = PersonalFlowViewModel(
+          authGateway: DebugFixtureAuthGateway(),
+          repository: DebugFixturePersonalFlowRepository(),
+          draftStore: OfflineTextDraftStore(store: store),
+          cameraGateway: _NoopCameraGateway(),
+        );
+        await personalVm.initialize();
+
+        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 2026);
+
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 760),
+              textScaler: TextScaler.linear(2.0),
+              disableAnimations: true,
+            ),
+            child: MaterialApp(
+              theme: MindClockTheme.buildThemeData(),
+              home: MindClockShellScreen(
+                viewModel: guestVm,
+                personalViewModel: personalVm,
+                arenaViewModel: arenaVm,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const ValueKey<String>('nav-arena')));
+        await tester.pumpAndSettle();
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-enter-solo')),
+        );
+
+        // Bấm xem chi tiết Tuyệt Đỉnh trước khi vào trận
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-champion-detail-tuyet_dinh')),
+        );
+        final Finder detailSheet = find.byKey(
+          const ValueKey<String>('arena-champion-detail-sheet-tuyet_dinh'),
+        );
+        expect(detailSheet, findsOneWidget);
+        expect(
+          find.descendant(
+            of: detailSheet,
+            matching: find.textContaining('Nội tại: Tập Trung Đột Phá'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: detailSheet,
+            matching: find.textContaining('Một Nét Thành Chiêu'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: detailSheet,
+            matching: find.textContaining('Đường Kiếm Cuối Trang'),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-champion-detail-close')),
+        );
+        expect(
+          find.byKey(
+            const ValueKey<String>('arena-champion-detail-sheet-tuyet_dinh'),
+          ),
+          findsNothing,
+        );
+
+        // Vào trận ở chế độ đồ họa thật -> thấy Map nền Võ đường Bình minh
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-subject-math')),
+        );
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-start-solo-match')),
+        );
+        expect(
+          find.byKey(const ValueKey<String>('arena-stage-map-image')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Võ đường Bình minh'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );

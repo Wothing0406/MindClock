@@ -43,113 +43,148 @@ class ArenaStageWidget extends StatelessWidget {
     return Container(
       key: ValueKey<String>(compact ? 'arena-stage-compact' : 'arena-stage-expanded'),
       width: double.infinity,
-      padding: EdgeInsets.all(compact ? mc.space12 : mc.space16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: mc.night,
         borderRadius: BorderRadius.circular(mc.radiusCard),
         border: Border.all(color: mc.nightSurface, width: 1.5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: <Widget>[
-          Wrap(
-            spacing: mc.space8,
-            runSpacing: mc.space4,
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: <Widget>[
-              Text(
-                assetFallbackMode
-                    ? 'Khung tĩnh dự phòng (khi asset lỗi)'
-                    : 'Sân luyện · Đồ họa vector tạm (art gốc chờ duyệt G4)',
-                key: const ValueKey<String>('arena-stage-mode-label'),
-                style: mc.captionStyle.copyWith(color: mc.sunrise),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  MindClockIcon(
-                    soundEnabled
-                        ? MindClockIconKind.volumeOn
-                        : MindClockIconKind.volumeOff,
-                    color: mc.nightText,
-                    size: 16,
-                  ),
-                  SizedBox(width: mc.space4),
-                  Text(
-                    soundEnabled ? 'Âm: Bật (chờ SFX G4)' : 'Âm: Tắt',
-                    style: mc.captionStyle.copyWith(color: mc.nightText),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: compact ? mc.space8 : mc.space12),
-          LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final bool narrow = constraints.maxWidth < 310;
-              final Widget leftCard = _CombatantSlotCard(
-                key: const ValueKey<String>('arena-slot-player'),
-                state: playerState,
-                spec: playerSpec,
-                facingRight: true,
-                compact: compact,
-                disableMotion: disableMotion,
-                assetFallbackMode: assetFallbackMode,
-                deltaDamageTaken: lastResolution?.settle.playerADelta.damageTaken ?? 0,
-                deltaActionUsed: lastResolution?.settle.playerADelta.actionUsed,
-              );
-              final Widget rightCard = _CombatantSlotCard(
-                key: const ValueKey<String>('arena-slot-bot'),
-                state: botState,
-                spec: botSpec,
-                facingRight: false,
-                compact: compact,
-                disableMotion: disableMotion,
-                assetFallbackMode: assetFallbackMode,
-                deltaDamageTaken: lastResolution?.settle.playerBDelta.damageTaken ?? 0,
-                deltaActionUsed: lastResolution?.settle.playerBDelta.actionUsed,
-              );
-
-              if (narrow) {
-                return Column(
-                  children: <Widget>[
-                    leftCard,
-                    SizedBox(height: mc.space8),
-                    rightCard,
-                  ],
-                );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  Expanded(child: leftCard),
-                  SizedBox(width: mc.space8),
-                  Expanded(child: rightCard),
-                ],
-              );
-            },
-          ),
-          if (!compact && lastResolution != null) ...<Widget>[
-            SizedBox(height: mc.space12),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(mc.space12),
-              decoration: BoxDecoration(
-                color: mc.nightSurface,
-                borderRadius: BorderRadius.circular(mc.radiusControl),
-                border: Border.all(color: mc.primary),
-              ),
-              child: Text(
-                disableMotion
-                    ? 'Chế độ tĩnh (Reduce Motion / Bỏ qua hiệu ứng): số liệu sát thương và hồi phục không đổi.'
-                    : 'Hiệu ứng riêng tướng: ${_fxSummary(playerSpec, botSpec, lastResolution!)}',
-                key: const ValueKey<String>('arena-stage-fx-banner'),
-                style: mc.captionStyle.copyWith(color: mc.nightText),
+          if (!assetFallbackMode)
+            Positioned.fill(
+              child: Opacity(
+                opacity: compact ? 0.24 : 0.38,
+                child: Image.asset(
+                  CombatCatalog.mapCourtyardAssetPath,
+                  key: const ValueKey<String>('arena-stage-map-image'),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
-          ],
+          if (!assetFallbackMode)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      mc.night.withAlpha(190),
+                      mc.night.withAlpha(140),
+                      mc.night.withAlpha(220),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: EdgeInsets.all(compact ? mc.space12 : mc.space16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space4,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      assetFallbackMode
+                          ? 'Khung tĩnh dự phòng (khi asset lỗi)'
+                          : 'Võ đường Bình minh · Bản gốc MindClock',
+                      key: const ValueKey<String>('arena-stage-mode-label'),
+                      style: mc.captionStyle.copyWith(color: mc.sunrise),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        MindClockIcon(
+                          soundEnabled
+                              ? MindClockIconKind.volumeOn
+                              : MindClockIconKind.volumeOff,
+                          color: mc.nightText,
+                          size: 16,
+                        ),
+                        SizedBox(width: mc.space4),
+                        Text(
+                          soundEnabled ? 'Âm: Bật (chờ SFX G4)' : 'Âm: Tắt',
+                          style: mc.captionStyle.copyWith(color: mc.nightText),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: compact ? mc.space8 : mc.space12),
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    final bool narrow = constraints.maxWidth < 310;
+                    final Widget leftCard = _CombatantSlotCard(
+                      key: const ValueKey<String>('arena-slot-player'),
+                      state: playerState,
+                      spec: playerSpec,
+                      facingRight: true,
+                      compact: compact,
+                      disableMotion: disableMotion,
+                      assetFallbackMode: assetFallbackMode,
+                      deltaDamageTaken: lastResolution?.settle.playerADelta.damageTaken ?? 0,
+                      deltaActionUsed: lastResolution?.settle.playerADelta.actionUsed,
+                    );
+                    final Widget rightCard = _CombatantSlotCard(
+                      key: const ValueKey<String>('arena-slot-bot'),
+                      state: botState,
+                      spec: botSpec,
+                      facingRight: false,
+                      compact: compact,
+                      disableMotion: disableMotion,
+                      assetFallbackMode: assetFallbackMode,
+                      deltaDamageTaken: lastResolution?.settle.playerBDelta.damageTaken ?? 0,
+                      deltaActionUsed: lastResolution?.settle.playerBDelta.actionUsed,
+                    );
+
+                    if (narrow) {
+                      return Column(
+                        children: <Widget>[
+                          leftCard,
+                          SizedBox(height: mc.space8),
+                          rightCard,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        Expanded(child: leftCard),
+                        SizedBox(width: mc.space8),
+                        Expanded(child: rightCard),
+                      ],
+                    );
+                  },
+                ),
+                if (!compact && lastResolution != null) ...<Widget>[
+                  SizedBox(height: mc.space12),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(mc.space12),
+                    decoration: BoxDecoration(
+                      color: mc.nightSurface,
+                      borderRadius: BorderRadius.circular(mc.radiusControl),
+                      border: Border.all(color: mc.primary),
+                    ),
+                    child: Text(
+                      disableMotion
+                          ? 'Chế độ tĩnh (Reduce Motion / Bỏ qua hiệu ứng): số liệu sát thương và hồi phục không đổi.'
+                          : 'Hiệu ứng riêng tướng: ${_fxSummary(playerSpec, botSpec, lastResolution!)}',
+                      key: const ValueKey<String>('arena-stage-fx-banner'),
+                      style: mc.captionStyle.copyWith(color: mc.nightText),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -271,15 +306,31 @@ class _CombatantSlotCard extends StatelessWidget {
                           ),
                         ),
                       )
-                    : CustomPaint(
-                        size: const Size(76, 68),
-                        painter: _ChampionCrestPainter(
-                          championId: state.championId,
-                          facingRight: facingRight,
-                          primaryColor: accentColor,
-                          strokeColor: mc.nightText,
-                          highlightColor: mc.sunrise,
-                          activePulse: !disableMotion && deltaActionUsed != null,
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(mc.radiusControl),
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: facingRight
+                              ? Matrix4.identity()
+                              : Matrix4.diagonal3Values(-1.0, 1.0, 1.0),
+                          child: Image.asset(
+                            spec.portraitAssetPath,
+                            width: 76,
+                            height: 76,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => CustomPaint(
+                              size: const Size(76, 68),
+                              painter: _ChampionCrestPainter(
+                                championId: state.championId,
+                                facingRight: facingRight,
+                                primaryColor: accentColor,
+                                strokeColor: mc.nightText,
+                                highlightColor: mc.sunrise,
+                                activePulse:
+                                    !disableMotion && deltaActionUsed != null,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
               ),
