@@ -86,7 +86,8 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     await _pendingServerSync;
   }
 
-  /// Cập nhật ngữ cảnh tài khoản cho đồng bộ server mà KHÔNG xóa báo thức local trên máy.
+  /// Cập nhật ngữ cảnh tài khoản cho đồng bộ server, cô lập hồ sơ/TKB theo tài khoản (ON-06)
+  /// mà KHÔNG xóa báo thức local trên máy.
   Future<void> setAccountContext({
     required String ownerScopeKey,
     required bool isAuthenticated,
@@ -97,28 +98,68 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     final bool authChanged = isAuthenticated != _isAuthenticated;
     if (!scopeChanged && !authChanged) return;
 
+    final String previousScope = _ownerScopeKey;
+    if (scopeChanged) {
+      await _repository.saveScopedAccountData(
+        previousScope,
+        profile: _workspace.profile,
+        timetable: _workspace.timetable,
+      );
+    }
+
     _ownerScopeKey = normalizedScope;
     _isAuthenticated = isAuthenticated;
     _serverSyncMessageVi = null;
 
-    if (scopeChanged && _workspace.alarms.isNotEmpty) {
-      bool updatedAny = false;
-      final List<AlarmConfig> resetSync = _workspace.alarms.map((AlarmConfig a) {
-        if (a.serverSyncedOwnerScope != null &&
-            a.serverSyncedOwnerScope != normalizedScope) {
-          updatedAny = true;
-          return a.copyWith(
-            serverSyncStatus: AlarmServerSyncStatus.localOnly,
-            clearServerAlarmId: true,
-            clearServerRevision: true,
-            clearServerSyncedOwnerScope: true,
-            clearLastServerSyncError: true,
-          );
+    if (scopeChanged) {
+      bool workspaceDirty = false;
+      List<AlarmConfig> nextAlarms = _workspace.alarms;
+      if (_workspace.alarms.isNotEmpty) {
+        bool updatedAny = false;
+        final List<AlarmConfig> resetSync =
+            _workspace.alarms.map((AlarmConfig a) {
+          if (a.serverSyncedOwnerScope != null &&
+              a.serverSyncedOwnerScope != normalizedScope) {
+            updatedAny = true;
+            return a.copyWith(
+              serverSyncStatus: AlarmServerSyncStatus.localOnly,
+              clearServerAlarmId: true,
+              clearServerRevision: true,
+              clearServerSyncedOwnerScope: true,
+              clearLastServerSyncError: true,
+            );
+          }
+          return a;
+        }).toList(growable: false);
+        if (updatedAny) {
+          nextAlarms = resetSync;
+          workspaceDirty = true;
         }
-        return a;
-      }).toList(growable: false);
-      if (updatedAny) {
-        _workspace = _workspace.copyWith(alarms: resetSync);
+      }
+
+      final ScopedAccountWorkspaceData? nextScoped =
+          await _repository.loadScopedAccountData(normalizedScope);
+      if (nextScoped != null) {
+        _workspace = _workspace.copyWith(
+          alarms: nextAlarms,
+          profile: nextScoped.profile,
+          timetable: nextScoped.timetable,
+        );
+        workspaceDirty = true;
+      } else if (previousScope != 'guest') {
+        // Đổi từ tài khoản A sang tài khoản B hoặc đăng xuất về khách:
+        // cô lập hoàn toàn hồ sơ/TKB của A nhưng giữ nguyên báo thức local trên máy.
+        _workspace = _workspace.copyWith(
+          alarms: nextAlarms,
+          profile: const StudyProfile(),
+          timetable: WeeklyTimetable(),
+        );
+        workspaceDirty = true;
+      } else if (workspaceDirty) {
+        _workspace = _workspace.copyWith(alarms: nextAlarms);
+      }
+
+      if (workspaceDirty) {
         _workspace = await _repository.save(_workspace);
       }
     }
@@ -404,6 +445,11 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       profile: normalized,
     );
     _workspace = await _repository.save(_workspace);
+    await _repository.saveScopedAccountData(
+      _ownerScopeKey,
+      profile: _workspace.profile,
+      timetable: _workspace.timetable,
+    );
     notifyListeners();
   }
 
@@ -479,6 +525,11 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       _scheduleChangedSinceAlarmSave = true;
     }
     _workspace = await _repository.save(_workspace);
+    await _repository.saveScopedAccountData(
+      _ownerScopeKey,
+      profile: _workspace.profile,
+      timetable: _workspace.timetable,
+    );
     notifyListeners();
   }
 

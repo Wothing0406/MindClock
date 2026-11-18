@@ -67,12 +67,6 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: mc.space12),
-              const MindClockNoticeBanner(
-                message:
-                    'Báo thức luôn hoạt động chuẩn xác kể cả khi không có kết nối mạng.',
-                isWarm: false,
-              ),
-              SizedBox(height: mc.space16),
               MindClockButton(
                 key: const ValueKey<String>('welcome-auth-start'),
                 label: 'Bắt đầu ngay (Đăng ký / Đăng nhập)',
@@ -109,6 +103,31 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              SizedBox(height: mc.space12),
+              Container(
+                key: const ValueKey<String>('welcome-permission-guide'),
+                width: double.infinity,
+                padding: EdgeInsets.all(mc.space12),
+                decoration: BoxDecoration(
+                  color: mc.surface,
+                  borderRadius: BorderRadius.circular(mc.radiusControl),
+                  border: Border.all(color: mc.outline),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Giải thích quyền (chỉ hỏi đúng lúc dùng)',
+                      style: mc.bodyStrongStyle,
+                    ),
+                    SizedBox(height: mc.space4),
+                    Text(
+                      'Chuông chính xác, thông báo, màn khóa, DND và camera/mic đều tắt mặc định và chỉ xin khi bạn dùng. Báo thức luôn chạy kể cả khi offline.',
+                      style: mc.captionStyle.copyWith(color: mc.ink),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

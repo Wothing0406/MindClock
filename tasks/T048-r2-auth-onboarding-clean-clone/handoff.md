@@ -1,0 +1,32 @@
+# Bàn giao nhiệm vụ T048
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Khắc phục triệt để 2 lỗi biên dịch trên bản clone sạch `origin/main` bằng cách đưa `auth_screen.dart`, `morning_question_selector.dart` và `morning_question_selector_test.dart` vào Git đúng phạm vi.
+  - Chuẩn hóa luồng R2 (`ON-01..ON-06`): thêm thẻ **Giải thích quyền** không tự bật hộp thoại OS trên `WelcomeScreen`; thêm ô **Đồng ý điều khoản & quyền riêng tư (v1)** và **Xác nhận nhóm tuổi THPT** khi đăng ký trên `AuthScreen`, đổi nút Hiện/Ẩn mật khẩu sang `MindClockPressable`, đổi nút dự phòng thành `Chỉ dùng báo thức trên máy`, sửa tràn `Row` 59px ở header `AuthScreen`.
+  - Sửa lỗi quyền riêng tư `ON-06`: tách lưu trữ `StudyProfile` & `WeeklyTimetable` theo `ownerScopeKey` trong `GuestWorkspaceRepository` & `GuestWorkspaceViewModel` để đổi tài khoản A → B (hoặc đăng xuất) tuyệt đối không lộ hồ sơ/TKB của tài khoản trước, đồng thời vẫn giữ nguyên báo thức local trên máy.
+  - Viết bộ test mới `app/test/auth_onboarding_flow_test.dart` kiểm chứng `ON-01..ON-06` (gồm cả lỗi `CONFIGURATION_NOT_FOUND` không chuyển sang tài khoản giả).
+  - Cập nhật `docs/00-start/01-hien-trang.md` theo bằng chứng thực tế ngày 2026-11-18.
+- **File/code/docs thay đổi:**
+  - `app/lib/data/repositories/guest_workspace_repository.dart` (sửa)
+  - `app/lib/domain/services/morning_question_selector.dart` (mới vào Git)
+  - `app/lib/ui/features/guest_shell/view_models/guest_workspace_view_model.dart` (sửa)
+  - `app/lib/ui/features/guest_shell/views/welcome_screen.dart` (sửa)
+  - `app/lib/ui/features/guest_shell/views/auth_screen.dart` (mới vào Git + chuẩn hóa)
+  - `app/test/morning_question_selector_test.dart` (mới vào Git)
+  - `app/test/auth_onboarding_flow_test.dart` (mới)
+  - `docs/00-start/01-hien-trang.md` (sửa)
+  - `tasks/T048-r2-auth-onboarding-clean-clone/{README,spec,plan,tests,worklog,handoff}.md`
+- **Test đã chạy (2026-11-18):**
+  - `flutter test --no-pub`: **65/65 PASSED** (`auth_onboarding_flow_test.dart` 4/4, `morning_question_selector_test.dart`, `solo_arena_*`, `guest_flow_widget_test.dart`, `study_focus_local_test.dart`, v.v.).
+  - `dart analyze lib test`: **No issues found!**.
+  - Kiểm chứng trên **detached clean Git worktree** (không phụ thuộc file untracked): xem kết quả commit & worktree ở mục Git bên dưới.
+  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py`: **PASS**.
+- **Test chưa chạy/giới hạn:**
+  - Chưa chạy đăng ký trực tuyến tới Firebase Console thật (cần chủ dự án bật provider Email/Password trong Firebase Console của project thật; trong khi chưa bật, app báo đúng hướng dẫn tiếng Việt và giữ nút `Chỉ dùng báo thức trên máy`).
+  - Chưa kiểm báo thức AD01–AD09 trên 2 máy Android vật lý (mới kiểm unit/contract/widget và emulator).
+- **Rủi ro còn lại:**
+  - Repo local vẫn còn các file WIP untracked của nhánh khác (`T022`/`T023` web `/product`, `google-services.json`, `.idea/`) — tuyệt đối không dùng `git add .`.
+- **Điểm tiếp tục chính xác:**
+  - Chốt bật Firebase Email/Password & kiểm 2 tài khoản thật A/B đầu-cuối (Android ↔ FastAPI/PostgreSQL) và playtest báo thức native trên 2 máy Android vật lý trước khi mở G2 (1v1 hai máy) và phòng học bạn bè.
+- **Git:** Đang chuẩn bị commit, kiểm chứng detached clean Git worktree và đẩy lên nhánh `main` (`origin/main`).
