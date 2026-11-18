@@ -26,4 +26,4 @@
   - Các file WIP untracked của nhánh cũ (`T022`/`T023`, `google-services.json`, `.idea/`) vẫn nằm ngoài Git — giữ nguyên không stage.
 - **Điểm tiếp tục chính xác:**
   - Sang **Bước 3 & 4** trong lộ trình: hoàn thiện Không gian học (R5 — chế độ `Học sâu` im lặng tuyệt đối + server EXP ledger cho thời gian học có trần ngày/idempotency ở `POST /v1/study/sessions/{id}/finish` trên PostgreSQL 16 thật), kiểm chứng OCR ảnh TKB với ảnh thật và chạy test báo thức `AD01–AD09` trên 2 máy Android vật lý.
-- **Git:** Đang chuẩn bị commit & push nhánh `main` (`origin/main`).
+- **Git:** Đã commit mã nguồn `T049` tại `4b86af4` và đẩy lên nhánh `main` (`origin/main`).
