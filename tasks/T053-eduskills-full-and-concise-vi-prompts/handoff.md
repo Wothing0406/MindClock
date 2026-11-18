@@ -21,4 +21,4 @@
   - `python scripts/check_task_records.py`: **Task records OK**
 - **Rủi ro còn lại:** Phản hồi thực tế của Gemini Live/Text trên model `gemini-3.8-flash` cần đánh giá tiếp bằng bộ eval mẫu thực tế khi bật `GEMINI_API_KEY` thật (`R4`).
 - **Điểm tiếp tục chính xác:** Kiểm thử thực tế trên thiết bị Android vật lý (`R6`) hoặc chạy evaluation Gemini thật với `GEMINI_API_KEY`.
-- **Git:** Đang chuẩn bị commit & push lên `origin/main`.
+- **Git:** Commit chính `1e89fce` (`1e89fce625626057bb6a3ee73622b75400007923`) đã push lên `origin/main`; cập nhật xác nhận SHA remote trong `handoff.md`.
