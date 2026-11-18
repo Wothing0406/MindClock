@@ -34,4 +34,4 @@
   - Chưa mở G2 (1v1 hai máy thật qua FastAPI/PostgreSQL), G3 (2v2), G4 (asset thương mại) và Ranked — các thẻ 1v1/2v2 đang khóa có lý do rõ ràng trên Hub.
 - **Điểm tiếp tục chính xác:**
   - Bước tiếp theo: hoàn tất xác minh PostgreSQL thật cho `tasks/T038-pvp-database-and-matchmaking/` rồi triển khai lát cắt **G2 (Giao hữu 1v1 giữa hai tài khoản thật trên Flutter Android + FastAPI/PostgreSQL)**; đồng thời tách task **G4** để thay đồ họa vector tạm bằng bộ asset đã duyệt quyền thương mại.
-- **Git:** Đang chuẩn bị commit & push nhánh `main` (sẽ cập nhật SHA chính xác ngay sau commit).
+- **Git:** Đã commit mã nguồn G1 tại `e5c6a8e` và đẩy lên nhánh `main` (`origin/main`).
