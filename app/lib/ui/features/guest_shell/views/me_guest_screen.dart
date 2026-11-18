@@ -10,19 +10,34 @@ import '../../personal_flow/views/account_auth_card.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
 /// Tab Tôi cho chế độ khách local & tùy chọn đăng nhập online (không có Đấu trường).
-class MeGuestScreen extends StatelessWidget {
+class MeGuestScreen extends StatefulWidget {
   const MeGuestScreen({
     super.key,
     required this.viewModel,
     required this.onEditProfileAndTimetable,
     required this.onResetGuestData,
     this.personalViewModel,
+    this.onDeleteAccount,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel? personalViewModel;
   final VoidCallback onEditProfileAndTimetable;
   final VoidCallback onResetGuestData;
+  final Future<void> Function()? onDeleteAccount;
+
+  @override
+  State<MeGuestScreen> createState() => _MeGuestScreenState();
+}
+
+class _MeGuestScreenState extends State<MeGuestScreen> {
+  bool _confirmingDeleteAccount = false;
+  bool _deletingAccount = false;
+
+  GuestWorkspaceViewModel get viewModel => widget.viewModel;
+  PersonalFlowViewModel? get personalViewModel => widget.personalViewModel;
+  VoidCallback get onEditProfileAndTimetable => widget.onEditProfileAndTimetable;
+  VoidCallback get onResetGuestData => widget.onResetGuestData;
 
   String _permissionLabel(OsPermissionState state) {
     switch (state) {
@@ -158,6 +173,73 @@ class MeGuestScreen extends StatelessWidget {
             variant: MindClockButtonVariant.subtle,
             onPressed: onResetGuestData,
           ),
+          if (personalViewModel != null &&
+              personalViewModel!.authSession.isAuthenticated &&
+              widget.onDeleteAccount != null) ...<Widget>[
+            SizedBox(height: mc.space16),
+            if (!_confirmingDeleteAccount)
+              MindClockButton(
+                key: const ValueKey<String>('me-delete-account-btn'),
+                label: 'Xóa tài khoản & dữ liệu trực tuyến',
+                icon: MindClockIconKind.trash,
+                variant: MindClockButtonVariant.subtle,
+                onPressed: _deletingAccount
+                    ? null
+                    : () => setState(() => _confirmingDeleteAccount = true),
+              )
+            else
+              MindClockCard(
+                key: const ValueKey<String>('me-delete-account-confirm-card'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Xác nhận xóa tài khoản trực tuyến?',
+                      style: mc.sectionTitleStyle,
+                    ),
+                    SizedBox(height: mc.space8),
+                    Text(
+                      'Hành động này xóa tài khoản, hồ sơ và lịch học đã đồng bộ trên máy chủ. Báo thức đã lưu trên thiết bị vẫn được giữ nguyên.',
+                      style: mc.captionStyle,
+                    ),
+                    SizedBox(height: mc.space12),
+                    MindClockButton(
+                      key: const ValueKey<String>('me-delete-account-confirm'),
+                      label: _deletingAccount
+                          ? 'Đang xóa tài khoản...'
+                          : 'Xác nhận xóa tài khoản',
+                      icon: MindClockIconKind.trash,
+                      variant: MindClockButtonVariant.primary,
+                      onPressed: _deletingAccount
+                          ? null
+                          : () async {
+                              setState(() => _deletingAccount = true);
+                              try {
+                                await widget.onDeleteAccount!();
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _deletingAccount = false;
+                                    _confirmingDeleteAccount = false;
+                                  });
+                                }
+                              }
+                            },
+                    ),
+                    SizedBox(height: mc.space8),
+                    MindClockButton(
+                      key: const ValueKey<String>('me-delete-account-cancel'),
+                      label: 'Giữ lại tài khoản',
+                      icon: MindClockIconKind.check,
+                      variant: MindClockButtonVariant.subtle,
+                      onPressed: _deletingAccount
+                          ? null
+                          : () => setState(() => _confirmingDeleteAccount = false),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ],
       ),
     );

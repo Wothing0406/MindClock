@@ -648,3 +648,8 @@ def test_pvp_live_postgresql_two_accounts_when_configured() -> None:
                     .first()
                 )
                 assert r1 is not None and r1.state == 'settled'
+
+            # Kiểm tra không lỗi FK khi tài khoản từng đấu PvP gọi DELETE /v1/me trên PostgreSQL 16 thật
+            del_a = client.delete('/v1/me', headers=_auth_headers('pg_usr_a'))
+            assert del_a.status_code == 202
+            assert del_a.json()['status'] == 'deleted'

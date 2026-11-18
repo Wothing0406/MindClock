@@ -669,6 +669,30 @@ def test_timetable_subject_normalization_and_account_delete(tmp_path: Path) -> N
         assert alarms_after.json()['items'] == []
 
 
+def test_thpt_seed_challenges_match_grade_band_10_11_12(tmp_path: Path) -> None:
+    app = create_app(_make_settings(tmp_path, mock_mode=True))
+    with TestClient(app) as client:
+        for grade, expected_id in (
+            ('Lớp 10', 'math10-quad-001'),
+            ('Lớp 11', 'math11-trig-001'),
+            ('Lớp 12', 'math12-deriv-001'),
+        ):
+            client.patch(
+                '/v1/me',
+                headers=_headers('thpt_u'),
+                json={'gradeLevel': grade, 'selectedSubjects': ['math', 'english', 'biology']},
+            )
+            res = client.get('/v1/challenges/next?subject=math', headers=_headers('thpt_u'))
+            assert res.status_code == 200
+            body = res.json()
+            assert body['gradeBand'] == grade
+            assert body['questionId'] == expected_id
+
+            eng = client.get('/v1/challenges/next?subject=english', headers=_headers('thpt_u'))
+            assert eng.status_code == 200
+            assert eng.json()['gradeBand'] == grade
+
+
 def test_demo_console_and_bermuda_audio_route(tmp_path: Path) -> None:
     app = create_app(_make_settings(tmp_path, mock_mode=True))
     with TestClient(app) as client:

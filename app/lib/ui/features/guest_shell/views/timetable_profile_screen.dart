@@ -111,9 +111,15 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
     });
     final WeeklyTimetable updatedTimetable = WeeklyTimetable(days: completeDays);
     await widget.viewModel.replaceEntireTimetable(updatedTimetable);
+    final PersonalFlowViewModel? pvm = widget.personalViewModel;
+    if (pvm != null && pvm.authSession.isAuthenticated) {
+      await pvm.syncTimetableToServer(updatedTimetable);
+    }
+    if (!mounted) return;
     setState(() {
       _aiParsedDraftSlots = null;
-      _feedbackMessage = 'Đã cập nhật thời khóa biểu từ AI thành công. Báo thức sáng đã tự động đồng bộ.';
+      _feedbackMessage =
+          'Đã cập nhật thời khóa biểu từ AI thành công. Giờ báo thức cũ vẫn giữ nguyên.';
     });
   }
 
@@ -196,15 +202,19 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
           ),
         )
         .toList(growable: false);
-    await widget.viewModel.saveStudyProfile(
-      StudyProfile(
-        gradeLevel: _gradeLevel,
-        selectedSubjectCodes: _selectedSubjects.toList(growable: false),
-        prioritySubjects: priorityList,
-        goalLabel: _goalController.text.trim(),
-        alarmOnlyMode: false,
-      ),
+    final StudyProfile nextProfile = widget.viewModel.profile.copyWith(
+      gradeLevel: _gradeLevel,
+      selectedSubjectCodes: _selectedSubjects.toList(growable: false),
+      prioritySubjects: priorityList,
+      goalLabel: _goalController.text.trim(),
+      alarmOnlyMode: false,
     );
+    await widget.viewModel.saveStudyProfile(nextProfile);
+    final PersonalFlowViewModel? pvm = widget.personalViewModel;
+    if (pvm != null && pvm.authSession.isAuthenticated) {
+      await pvm.syncProfileToServer(nextProfile);
+      await pvm.syncTimetableToServer(widget.viewModel.timetable);
+    }
     if (!mounted) return;
     setState(() {
       _feedbackMessage = 'Đã lưu thay đổi lớp, môn học và mục tiêu.';

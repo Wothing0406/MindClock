@@ -17,7 +17,11 @@ from app.db.models import (
     Attempt,
     ConsentEvent,
     IdempotencyRecord,
+    MatchPlayer,
+    MatchQueue,
     Question,
+    RoundAction,
+    RoundSubmission,
     StudySession,
     TimetableSlot,
     TopicProgress,
@@ -286,6 +290,10 @@ def create_v1_router(
         db: Session = Depends(get_db),
     ) -> dict[str, Any]:
         uid = principal.user.id
+        db.execute(delete(MatchQueue).where(MatchQueue.user_id == uid))
+        db.execute(delete(RoundAction).where(RoundAction.user_id == uid))
+        db.execute(delete(RoundSubmission).where(RoundSubmission.user_id == uid))
+        db.execute(delete(MatchPlayer).where(MatchPlayer.user_id == uid))
         db.execute(delete(Question).where(Question.target_user_id == uid))
         db.execute(delete(IdempotencyRecord).where(IdempotencyRecord.user_id == uid))
         db.execute(delete(XpLedger).where(XpLedger.user_id == uid))

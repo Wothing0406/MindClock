@@ -1,4 +1,6 @@
 import '../../domain/models/personal_flow_models.dart';
+import '../../domain/models/study_profile.dart';
+import '../../domain/models/timetable.dart';
 import '../../domain/services/personal_flow_repository.dart';
 import '../services/personal_api_client.dart';
 
@@ -11,6 +13,61 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
 
   @override
   bool get isDebugFixture => false;
+
+  @override
+  Future<void> syncProfile({required StudyProfile profile}) async {
+    final Map<String, dynamic> body = <String, dynamic>{
+      if (profile.alias.trim().isNotEmpty) 'alias': profile.alias.trim(),
+      if (profile.gradeLevel != null && profile.gradeLevel!.trim().isNotEmpty)
+        'gradeLevel': profile.gradeLevel!.trim(),
+      'selectedSubjects': profile.selectedSubjectCodes,
+      'goalLabel': profile.goalLabel.trim(),
+    };
+    await _apiClient.patchJson('/me', body: body);
+  }
+
+  @override
+  Future<void> recordConsent({
+    required String scope,
+    required String version,
+    required bool granted,
+  }) async {
+    await _apiClient.postJson(
+      '/me/consent',
+      idempotencyKey: 'consent_${scope}_$version',
+      body: <String, dynamic>{
+        'scope': scope,
+        'version': version,
+        'granted': granted,
+      },
+    );
+  }
+
+  @override
+  Future<void> syncTimetable({required WeeklyTimetable timetable}) async {
+    final List<Map<String, dynamic>> slots = <Map<String, dynamic>>[];
+    for (final DaySchedule day in timetable.days) {
+      if (day.isRestDay) continue;
+      for (final TimetableEntry entry in day.sortedEntries) {
+        slots.add(<String, dynamic>{
+          'weekday': day.weekday,
+          'subjectCode': entry.subjectCode,
+          'topicId': entry.note.trim().length <= 64 ? entry.note.trim() : '',
+        });
+        if (slots.length >= 56) break;
+      }
+      if (slots.length >= 56) break;
+    }
+    await _apiClient.putJson(
+      '/timetable',
+      body: <String, dynamic>{'slots': slots},
+    );
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _apiClient.deleteNoContent('/me');
+  }
 
   @override
   Future<ChallengeQuestion> fetchNextChallenge({

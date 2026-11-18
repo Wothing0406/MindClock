@@ -1,4 +1,6 @@
 import '../../domain/models/personal_flow_models.dart';
+import '../../domain/models/study_profile.dart';
+import '../../domain/models/timetable.dart';
 import '../../domain/services/answer_normalizer.dart';
 import '../../domain/services/personal_flow_repository.dart';
 
@@ -14,6 +16,22 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
 
   @override
   bool get isDebugFixture => true;
+
+  @override
+  Future<void> syncProfile({required StudyProfile profile}) async {}
+
+  @override
+  Future<void> recordConsent({
+    required String scope,
+    required String version,
+    required bool granted,
+  }) async {}
+
+  @override
+  Future<void> syncTimetable({required WeeklyTimetable timetable}) async {}
+
+  @override
+  Future<void> deleteAccount() async {}
 
   @override
   Future<ChallengeQuestion> fetchNextChallenge({

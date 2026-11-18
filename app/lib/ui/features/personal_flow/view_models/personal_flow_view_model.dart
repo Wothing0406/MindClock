@@ -4,6 +4,8 @@ import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/offline_text_draft_store.dart';
 import '../../../../domain/models/auth_session.dart';
 import '../../../../domain/models/personal_flow_models.dart';
+import '../../../../domain/models/study_profile.dart';
+import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/auth_session_gateway.dart';
 import '../../../../domain/services/camera_capture_gateway.dart';
 import '../../../../domain/services/personal_flow_repository.dart';
@@ -762,6 +764,90 @@ class PersonalFlowViewModel extends ChangeNotifier {
       imageBase64: imageBase64,
       mimeType: mimeType,
     );
+  }
+
+  /// Đồng bộ hồ sơ THPT (`PATCH /v1/me`) khi đã đăng nhập; lỗi mạng không làm mất lưu local.
+  Future<bool> syncProfileToServer(StudyProfile profile) async {
+    if (!_authSession.isAuthenticated) return false;
+    try {
+      await _repository.syncProfile(profile: profile);
+      return true;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Ghi nhận đồng ý điều khoản/dữ liệu (`POST /v1/me/consent`) trên server.
+  Future<bool> recordConsent({
+    required String scope,
+    required String version,
+    required bool granted,
+  }) async {
+    if (!_authSession.isAuthenticated) return false;
+    try {
+      await _repository.recordConsent(
+        scope: scope,
+        version: version,
+        granted: granted,
+      );
+      return true;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Đồng bộ thời khóa biểu 7 ngày (`PUT /v1/timetable`) khi đã đăng nhập; lỗi mạng giữ an toàn dữ liệu local.
+  Future<bool> syncTimetableToServer(WeeklyTimetable timetable) async {
+    if (!_authSession.isAuthenticated) return false;
+    try {
+      await _repository.syncTimetable(timetable: timetable);
+      return true;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Xóa tài khoản & dữ liệu trực tuyến (`DELETE /v1/me`), đăng xuất tại chỗ; không chạm báo thức local.
+  Future<bool> deleteAccount() async {
+    if (!_authSession.isAuthenticated) return false;
+    final String deletingScope = _authSession.ownerScopeKey;
+    _isBusy = true;
+    _errorMessageVi = null;
+    _bannerMessageVi = null;
+    notifyListeners();
+    try {
+      await _repository.deleteAccount();
+      await _draftStore.clearDraft(deletingScope);
+      await _authGateway.signOut();
+      _authSession = const AuthSession.guest();
+      _resetAccountScopedMemory();
+      _savedDraft = null;
+      _bannerMessageVi =
+          'Đã xóa tài khoản và dữ liệu trực tuyến. Báo thức local trên máy vẫn được giữ nguyên.';
+      return true;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      return false;
+    } catch (_) {
+      _errorMessageVi =
+          'Không thể xóa tài khoản lúc này. Vui lòng thử lại khi có mạng.';
+      return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
   }
 
   static String _formatYmd(DateTime dt) {

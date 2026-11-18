@@ -1,4 +1,6 @@
 import '../models/personal_flow_models.dart';
+import '../models/study_profile.dart';
+import '../models/timetable.dart';
 
 /// Hợp đồng tầng Repository cho luồng cá nhân (`docs/07`, `docs/18`, `docs/39`).
 ///
@@ -6,6 +8,22 @@ import '../models/personal_flow_models.dart';
 /// (`DebugFixturePersonalFlowRepository`) được tách riêng hoàn toàn qua interface này.
 abstract interface class PersonalFlowRepository {
   bool get isDebugFixture;
+
+  Future<void> syncProfile({
+    required StudyProfile profile,
+  });
+
+  Future<void> recordConsent({
+    required String scope,
+    required String version,
+    required bool granted,
+  });
+
+  Future<void> syncTimetable({
+    required WeeklyTimetable timetable,
+  });
+
+  Future<void> deleteAccount();
 
   Future<ChallengeQuestion> fetchNextChallenge({
     required String localDate,

@@ -90,7 +90,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
       widget.studyViewModel?.onAppBackgrounded();
     } else if (state == AppLifecycleState.resumed) {
       widget.studyViewModel?.onAppResumed();
@@ -188,7 +189,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           onEmergencyStop: () async {
             await widget.viewModel.triggerEmergencyStop(
               alarmId: activeRing.alarmId,
-              activeSessionId: widget.personalViewModel.activeSession?.sessionId,
+              activeSessionId:
+                  widget.personalViewModel.activeSession?.sessionId,
             );
             if (!mounted) return;
             setState(() {
@@ -223,7 +225,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               setState(() => _stage = _GuestFlowStage.onboardingSetup);
             },
             onSkipLater: () async {
-              await widget.viewModel.completeOnboardingAsLater(alarmOnly: false);
+              await widget.viewModel
+                  .completeOnboardingAsLater(alarmOnly: false);
               if (!mounted) return;
               setState(() {
                 _stage = _GuestFlowStage.mainTabs;
@@ -239,10 +242,24 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           body: AuthScreen(
             personalViewModel: widget.personalViewModel,
             onAuthenticated: (String? alias) async {
-              if (alias != null && alias.isNotEmpty) {
-                await widget.viewModel.saveStudyProfile(
-                  widget.viewModel.profile.copyWith(alias: alias),
+              final bool isSignedIn =
+                  widget.personalViewModel.authSession.isAuthenticated;
+              if (isSignedIn) {
+                await widget.personalViewModel.recordConsent(
+                  scope: 'terms_and_privacy',
+                  version: '2026-11',
+                  granted: true,
                 );
+              }
+              if (alias != null && alias.isNotEmpty) {
+                final StudyProfile updatedProfile =
+                    widget.viewModel.profile.copyWith(alias: alias);
+                await widget.viewModel.saveStudyProfile(updatedProfile);
+                if (isSignedIn) {
+                  await widget.personalViewModel.syncProfileToServer(
+                    updatedProfile,
+                  );
+                }
               }
               if (!mounted) return;
               setState(() {
@@ -270,6 +287,12 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             initialProfile: widget.viewModel.profile,
             onSaveProfile: (StudyProfile nextProfile) async {
               await widget.viewModel.saveStudyProfile(nextProfile);
+              if (widget.personalViewModel.authSession.isAuthenticated) {
+                await widget.personalViewModel.syncProfileToServer(nextProfile);
+                await widget.personalViewModel.syncTimetableToServer(
+                  widget.viewModel.timetable,
+                );
+              }
               if (!mounted) return;
               setState(() {
                 _todayBanner =
@@ -279,7 +302,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               });
             },
             onSkipLater: () async {
-              await widget.viewModel.completeOnboardingAsLater(alarmOnly: false);
+              await widget.viewModel
+                  .completeOnboardingAsLater(alarmOnly: false);
               if (!mounted) return;
               setState(() {
                 _stage = _GuestFlowStage.mainTabs;
@@ -332,7 +356,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           return Scaffold(
             backgroundColor: mc.paper,
             body: Center(
-              child: Text('Không gian học chưa được khởi tạo.', style: mc.bodyStyle),
+              child: Text('Không gian học chưa được khởi tạo.',
+                  style: mc.bodyStyle),
             ),
           );
         }
@@ -375,6 +400,22 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               },
               onResetGuestData: () async {
                 await widget.viewModel.resetLocalWorkspace();
+                if (!mounted) return;
+                setState(() {
+                  _todayBanner = null;
+                  _selectedTabIndex = 0;
+                  _stage = _GuestFlowStage.welcome;
+                });
+              },
+              onDeleteAccount: () async {
+                final String scopeToDelete =
+                    widget.personalViewModel.authSession.ownerScopeKey;
+                final bool deleted =
+                    await widget.personalViewModel.deleteAccount();
+                if (!deleted) return;
+                await widget.viewModel.clearDeletedAccountWorkspace(
+                  scopeToDelete,
+                );
                 if (!mounted) return;
                 setState(() {
                   _todayBanner = null;
@@ -444,15 +485,14 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                           onPressed: () async {
                             await widget.viewModel.triggerEmergencyStop(
                               alarmId: _activeAlarmIdInQuestion,
-                              activeSessionId:
-                                  widget.personalViewModel.activeSession?.sessionId,
+                              activeSessionId: widget
+                                  .personalViewModel.activeSession?.sessionId,
                             );
                             if (!mounted) return;
                             setState(() {
                               _activeAlarmPlayingInQuestion = false;
                               _activeAlarmIdInQuestion = null;
-                              _todayBanner =
-                                  'Đã dừng chuông báo thức.';
+                              _todayBanner = 'Đã dừng chuông báo thức.';
                             });
                           },
                         ),

@@ -94,6 +94,12 @@ class GuestWorkspaceRepository {
     );
   }
 
+  Future<void> clearScopedAccountData(String ownerScopeKey) async {
+    final String cleanKey = ownerScopeKey.trim();
+    if (cleanKey.isEmpty) return;
+    await _store.remove('$scopedPrefix$cleanKey');
+  }
+
   Future<void> clear() async {
     await _store.remove(workspaceKey);
   }

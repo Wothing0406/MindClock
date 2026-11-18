@@ -759,4 +759,19 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     _scheduleChangedSinceAlarmSave = false;
     await refreshOsStatus();
   }
+
+  /// Xóa dữ liệu hồ sơ/TKB của tài khoản vừa xóa (`ON-06`), nhưng vẫn giữ nguyên báo thức local trên máy.
+  Future<void> clearDeletedAccountWorkspace(String deletedScopeKey) async {
+    await _repository.clearScopedAccountData(deletedScopeKey);
+    _ownerScopeKey = 'guest';
+    _isAuthenticated = false;
+    _serverSyncMessageVi = null;
+    _workspace = _workspace.copyWith(
+      onboardingCompleted: false,
+      profile: const StudyProfile(),
+      timetable: WeeklyTimetable(),
+    );
+    _workspace = await _repository.save(_workspace);
+    notifyListeners();
+  }
 }
