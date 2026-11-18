@@ -78,11 +78,12 @@ void main() {
         find.byKey(const ValueKey<String>('onboarding-save')),
       );
 
-      // Vào màn Hôm nay: chỉ có 3 tab, không có Đấu trường
+      // Vào màn Hôm nay: đủ 4 tab chính (gồm Đấu trường G1 Luyện đơn cục bộ, không có Ranked)
       expect(find.byKey(const ValueKey<String>('nav-today')), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('nav-practice')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('nav-arena')), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('nav-me')), findsOneWidget);
-      expect(find.text('Đấu trường'), findsNothing);
+      expect(find.text('Đấu hạng'), findsNothing);
 
       // Đặt báo thức đầu tiên + xem phép tính gợi ý 07:00 - 25 - 30 - 10 = 05:55
       await scrollAndTap(

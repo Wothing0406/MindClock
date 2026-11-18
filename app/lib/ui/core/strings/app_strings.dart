@@ -18,9 +18,10 @@ class AppStrings {
   static const String guestPrivacyNote =
       'Dữ liệu lớp, môn học, thời khóa biểu và báo thức chỉ lưu trên máy của bạn.';
 
-  // 3 tab điều hướng (lược bỏ hoàn toàn Đấu trường)
+  // 4 tab điều hướng (Hôm nay, Luyện tập, Đấu trường G1, Tôi)
   static const String navToday = 'Hôm nay';
   static const String navPractice = 'Luyện tập';
+  static const String navArena = 'Đấu trường';
   static const String navMe = 'Tôi';
 
   // S03 / S05 Hồ sơ học tập & TKB 7 ngày

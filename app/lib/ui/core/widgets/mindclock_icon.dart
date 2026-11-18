@@ -18,6 +18,10 @@ enum MindClockIconKind {
   play,
   pause,
   stop,
+  arena,
+  shield,
+  volumeOff,
+  volumeOn,
 }
 
 /// Icon vector nét mảnh thống nhất (24×24 dp, nét 2 px bo tròn theo `docs/55 §5`).
@@ -195,6 +199,60 @@ class _MindClockIconPainter extends CustomPainter {
             Rect.fromLTWH(6.5 * s, 6.5 * s, 11 * s, 11 * s),
             Radius.circular(2 * s),
           ),
+          paint,
+        );
+      case MindClockIconKind.arena:
+        // Hai thanh kiếm giao nhau nét mảnh 24x24
+        canvas.drawLine(Offset(5 * s, 19 * s), Offset(18.5 * s, 5.5 * s), paint);
+        canvas.drawLine(Offset(14 * s, 5.5 * s), Offset(18.5 * s, 5.5 * s), paint);
+        canvas.drawLine(Offset(18.5 * s, 5.5 * s), Offset(18.5 * s, 10 * s), paint);
+        canvas.drawLine(Offset(19 * s, 19 * s), Offset(5.5 * s, 5.5 * s), paint);
+        canvas.drawLine(Offset(10 * s, 5.5 * s), Offset(5.5 * s, 5.5 * s), paint);
+        canvas.drawLine(Offset(5.5 * s, 5.5 * s), Offset(5.5 * s, 10 * s), paint);
+      case MindClockIconKind.shield:
+        final Path shield = Path()
+          ..moveTo(12 * s, 3.5 * s)
+          ..lineTo(19 * s, 6.5 * s)
+          ..lineTo(19 * s, 12 * s)
+          ..quadraticBezierTo(19 * s, 17.5 * s, 12 * s, 20.5 * s)
+          ..quadraticBezierTo(5 * s, 17.5 * s, 5 * s, 12 * s)
+          ..lineTo(5 * s, 6.5 * s)
+          ..close();
+        canvas.drawPath(shield, paint);
+      case MindClockIconKind.volumeOff:
+        final Path speaker = Path()
+          ..moveTo(4 * s, 9.5 * s)
+          ..lineTo(8 * s, 9.5 * s)
+          ..lineTo(12.5 * s, 5.5 * s)
+          ..lineTo(12.5 * s, 18.5 * s)
+          ..lineTo(8 * s, 14.5 * s)
+          ..lineTo(4 * s, 14.5 * s)
+          ..close();
+        canvas.drawPath(speaker, paint);
+        canvas.drawLine(Offset(15.5 * s, 9.5 * s), Offset(20 * s, 14.5 * s), paint);
+        canvas.drawLine(Offset(20 * s, 9.5 * s), Offset(15.5 * s, 14.5 * s), paint);
+      case MindClockIconKind.volumeOn:
+        final Path speakerOn = Path()
+          ..moveTo(4 * s, 9.5 * s)
+          ..lineTo(8 * s, 9.5 * s)
+          ..lineTo(12.5 * s, 5.5 * s)
+          ..lineTo(12.5 * s, 18.5 * s)
+          ..lineTo(8 * s, 14.5 * s)
+          ..lineTo(4 * s, 14.5 * s)
+          ..close();
+        canvas.drawPath(speakerOn, paint);
+        canvas.drawArc(
+          Rect.fromCircle(center: Offset(13.5 * s, 12 * s), radius: 3.5 * s),
+          -0.9,
+          1.8,
+          false,
+          paint,
+        );
+        canvas.drawArc(
+          Rect.fromCircle(center: Offset(13.5 * s, 12 * s), radius: 6.2 * s),
+          -0.9,
+          1.8,
+          false,
           paint,
         );
     }

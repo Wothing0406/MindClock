@@ -1,0 +1,37 @@
+# Bàn giao nhiệm vụ T047
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Mở lối vào tab thứ 4 **Đấu trường** (`nav-arena`) trong `MindClockShellScreen` kèm 4 icon vector mới (`arena`, `shield`, `volumeOff`, `volumeOn`) theo đúng `MindClockTheme` (0 raw hex/duration, 0 emoji hệ thống).
+  - Hoàn thiện lát cắt dọc **G1 — Luyện đơn cục bộ (`GAME-06`)**: Hub 3 chế độ (`Luyện đơn` mở, `Đấu đơn 1v1` khóa G2, `Đấu đội 2v2` khóa G3, không có Ranked/đối thủ online giả) → Thiết lập (chọn môn có pool approved, chọn 3 tướng gốc `Hà Nhân` / `Tuyệt Đỉnh` / `Hàn Bối Pháp`, chọn độ khó `Máy tập`, `seed`, trợ năng) → Màn chiến đấu dọc ưu tiên câu & ô nhập chữ lớn hơn sân → Chấm 3 trạng thái (`correct` / `incorrect` + gợi ý 1 bước / `uncertain` có `Sửa bài` & `Đổi câu khác` không mất HP) → Chọn `Đánh thường` / `Chiêu 1` / `Chiêu 2` (nút khóa ghi rõ lý do) → Phản hồi HP/Giáp/Chắn/Qi + `Xem cách chấm` (chỉ mở sau khi nộp) → Tổng kết cục bộ (`0 RP / Không xếp hạng`) + `Luyện lại cùng seed`.
+  - Xây dựng engine thuần Dart `solo_combat_engine.dart` khớp luật `solo-three-v0.1` + `DeterministicTrainingBot` theo `seed`/replay và bộ 27 câu approved cache offline (`solo_training_question_bank.dart`) tái dùng `AnswerNormalizer`.
+  - Tách bạch rõ **chạy thật** vs **placeholder**: toàn bộ logic luật, bot seed/replay, chấm 3 trạng thái, điều hướng, UI dọc và APK Android chạy thật; hình tướng trên sân dùng đồ họa vector tạm theo `MindClockTheme` (có fallback khi lỗi asset) và âm thanh game tắt mặc định, KHÔNG đóng gói `assets/game/` đang ở trạng thái `research_demo_only` (chưa duyệt quyền thương mại).
+- **File/code/docs thay đổi:**
+  - `app/lib/domain/game/solo_combat_engine.dart` (mới)
+  - `app/lib/domain/game/solo_training_question_bank.dart` (mới)
+  - `app/lib/ui/features/arena/view_models/solo_arena_view_model.dart` (mới)
+  - `app/lib/ui/features/arena/views/arena_stage_widget.dart` (mới)
+  - `app/lib/ui/features/arena/views/arena_screen.dart` (mới)
+  - `app/lib/ui/core/strings/app_strings.dart` (sửa)
+  - `app/lib/ui/core/widgets/mindclock_icon.dart` (sửa)
+  - `app/lib/ui/features/guest_shell/views/mindclock_shell_screen.dart` (sửa)
+  - `app/test/solo_arena_engine_test.dart` (mới)
+  - `app/test/solo_arena_widget_test.dart` (mới)
+  - `app/test/guest_flow_widget_test.dart` (sửa)
+  - `tasks/T047-g1-arena-solo-training/{README,spec,plan,tests,worklog,handoff}.md`
+- **Test đã chạy (2026-11-18, Windows local + Android Emulator API 37):**
+  - `flutter test --no-pub`: **61/61 PASSED** (`solo_arena_engine_test.dart` 6/6, `solo_arena_widget_test.dart` 2/2 gồm 320dp 200% Reduce Motion + 390×844 trọn trận đến Tổng kết & replay, `guest_flow_widget_test.dart` và toàn bộ bộ test hiện có).
+  - `dart analyze` trên toàn bộ file T047: **No issues found!**.
+  - `flutter build apk --debug`: **PASS** (`app/build/app/outputs/flutter-apk/app-debug.apk`).
+  - Chạy thật trên Android Emulator `Medium_Phone_API_37.0` (1080×2400): cài APK, đi qua Hub → Setup → Battle → nhập đáp án + bước trình bày → Đánh thường → kiểm tra Giáp 22/50, Qi 1/3, 0 emoji, 0 lỗi `adb logcat`.
+  - `python scripts/check_docs_links.py`: **PASS** (493 Markdown files).
+  - `python scripts/check_task_records.py`: **Task records OK**.
+  - `python scripts/check_game_assets.py`: **PASS** (kiểm cơ học repo nghiên cứu; không đóng gói vào `app/`).
+- **Test chưa chạy/giới hạn:**
+  - Chưa chạy playtest trực tiếp trên điện thoại Android vật lý (mới kiểm chứng trên Android emulator `Medium_Phone_API_37.0` — cần bổ sung test máy thật ở cổng phát hành).
+  - Chưa có âm thanh/sprite thương mại (tạm dùng vector placeholder + tắt âm mặc định chờ task G4 duyệt quyền).
+- **Rủi ro còn lại:**
+  - Chưa mở G2 (1v1 hai máy thật qua FastAPI/PostgreSQL), G3 (2v2), G4 (asset thương mại) và Ranked — các thẻ 1v1/2v2 đang khóa có lý do rõ ràng trên Hub.
+- **Điểm tiếp tục chính xác:**
+  - Bước tiếp theo: hoàn tất xác minh PostgreSQL thật cho `tasks/T038-pvp-database-and-matchmaking/` rồi triển khai lát cắt **G2 (Giao hữu 1v1 giữa hai tài khoản thật trên Flutter Android + FastAPI/PostgreSQL)**; đồng thời tách task **G4** để thay đồ họa vector tạm bằng bộ asset đã duyệt quyền thương mại.
+- **Git:** Đang chuẩn bị commit & push nhánh `main` (sẽ cập nhật SHA chính xác ngay sau commit).

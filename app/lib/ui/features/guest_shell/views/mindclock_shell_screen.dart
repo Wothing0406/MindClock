@@ -8,6 +8,8 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
+import '../../arena/view_models/solo_arena_view_model.dart';
+import '../../arena/views/arena_screen.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/practice_session_screen.dart';
 import '../../study_focus/view_models/study_focus_view_model.dart';
@@ -32,18 +34,20 @@ enum _GuestFlowStage {
   studySpace,
 }
 
-/// Khung điều hướng chính 3 tab (Hôm nay, Luyện tập, Tôi) — lược bỏ hoàn toàn Đấu trường.
+/// Khung điều hướng chính 4 tab (Hôm nay, Luyện tập, Đấu trường G1, Tôi).
 class MindClockShellScreen extends StatefulWidget {
   const MindClockShellScreen({
     super.key,
     required this.viewModel,
     required this.personalViewModel,
     this.studyViewModel,
+    this.arenaViewModel,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel personalViewModel;
   final StudyFocusViewModel? studyViewModel;
+  final SoloArenaViewModel? arenaViewModel;
 
   @override
   State<MindClockShellScreen> createState() => _MindClockShellScreenState();
@@ -58,10 +62,15 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   bool _syncedInitialRoute = false;
   bool _activeAlarmPlayingInQuestion = false;
   String? _activeAlarmIdInQuestion;
+  late final SoloArenaViewModel _ownedArenaViewModel;
+
+  SoloArenaViewModel get _arenaVm =>
+      widget.arenaViewModel ?? _ownedArenaViewModel;
 
   @override
   void initState() {
     super.initState();
+    _ownedArenaViewModel = SoloArenaViewModel();
     WidgetsBinding.instance.addObserver(this);
     widget.viewModel.addListener(_onViewModelChanged);
     widget.personalViewModel.addListener(_onViewModelChanged);
@@ -75,6 +84,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     widget.viewModel.removeListener(_onViewModelChanged);
     widget.personalViewModel.removeListener(_onViewModelChanged);
     widget.studyViewModel?.removeListener(_onViewModelChanged);
+    _ownedArenaViewModel.dispose();
     super.dispose();
   }
 
@@ -352,6 +362,11 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                   : null,
             );
           case 2:
+            body = ArenaScreen(
+              guestViewModel: widget.viewModel,
+              arenaViewModel: _arenaVm,
+            );
+          case 3:
             body = MeGuestScreen(
               viewModel: widget.viewModel,
               personalViewModel: widget.personalViewModel,
@@ -498,11 +513,20 @@ class _MindClockThreeTabBar extends StatelessWidget {
             ),
             Expanded(
               child: _TabItem(
+                key: const ValueKey<String>('nav-arena'),
+                label: AppStrings.navArena,
+                icon: MindClockIconKind.arena,
+                selected: selectedIndex == 2,
+                onTap: () => onSelect(2),
+              ),
+            ),
+            Expanded(
+              child: _TabItem(
                 key: const ValueKey<String>('nav-me'),
                 label: AppStrings.navMe,
                 icon: MindClockIconKind.user,
-                selected: selectedIndex == 2,
-                onTap: () => onSelect(2),
+                selected: selectedIndex == 3,
+                onTap: () => onSelect(3),
               ),
             ),
           ],
@@ -547,6 +571,8 @@ class _TabItem extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               softWrap: true,
               style: mc.chipLabelStyle.copyWith(color: color),
             ),
