@@ -34,4 +34,4 @@
   - Chưa chạy APK/live Firebase Auth Email-Password thật trên máy Android vật lý (cần bật provider trên Firebase Console và chạy smoke test trên máy thật ở lát R6/R8).
   - R5 (`Học sâu` + server EXP ledger) vẫn cần triển khai ở task kế tiếp `T052`.
 - **Điểm tiếp tục chính xác:** Mở task `T052` cho lát R5 (nối `StudyFocusViewModel` với `/v1/study/sessions`, `/help`, `/finish` + server EXP ledger & xác minh DB PostgreSQL 16).
-- **Git:** Đang chuẩn bị commit & push lên `origin/main` (sẽ cập nhật SHA sau push).
+- **Git:** Commit chính `24ca190` (`24ca190273282aa6a077c5e5701919ee1b007c0a`) đã push lên nhánh `origin/main`; cập nhật xác nhận SHA remote trong `handoff.md`.
