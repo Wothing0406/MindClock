@@ -1,10 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mindclock_app/app.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
 import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
+import 'package:mindclock_app/data/services/personal_api_client.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
 
 void main() {
@@ -93,4 +98,36 @@ void main() {
       expect(find.textContaining('Đã cập nhật thời khóa biểu từ AI thành công'), findsOneWidget);
     },
   );
+
+  test(
+    'TC-OCR-02 (T050): PersonalApiClient.parseTimetableImage gửi đúng POST /v1/timetable/parse-image (không bị /v1/v1/)',
+    () async {
+      final HttpServer server =
+          await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(server.close);
+
+      final List<String> recordedPaths = <String>[];
+      server.listen((HttpRequest req) async {
+        recordedPaths.add('${req.method} ${req.uri.path}');
+        req.response.statusCode = HttpStatus.ok;
+        req.response.headers.contentType = ContentType.json;
+        req.response.write(jsonEncode(<String, dynamic>{'days': <dynamic>[]}));
+        await req.response.close();
+      });
+
+      final DebugFixtureAuthGateway auth = DebugFixtureAuthGateway();
+      await auth.signInWithEmail(email: 'student@school.edu.vn', password: 'Password123');
+      final PersonalApiClient client = PersonalApiClient(
+        baseUri: Uri.parse('http://127.0.0.1:${server.port}'),
+        authGateway: auth,
+        httpClientFactory: () =>
+            HttpOverrides.runWithHttpOverrides(HttpClient.new, _PassthroughHttpOverrides()),
+      );
+
+      await client.parseTimetableImage(imageBase64: 'ZmFrZV9pbWFnZQ==');
+      expect(recordedPaths, <String>['POST /v1/timetable/parse-image']);
+    },
+  );
 }
+
+class _PassthroughHttpOverrides extends HttpOverrides {}

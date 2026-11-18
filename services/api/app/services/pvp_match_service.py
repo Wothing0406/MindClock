@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import json
 import random
 from typing import Any
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -22,8 +21,8 @@ from app.db.models import (
 )
 from app.game.combat_catalog import (
     ActionType,
-    ChampionId,
     COMBAT_RULE_VERSION,
+    MAX_ROUNDS,
     normalize_champion_id,
 )
 from app.game.combat_engine import (
@@ -540,11 +539,14 @@ class PvpMatchService:
             .first()
         )
         if existing_sub:
+            reveal_allowed = current_round is None or current_round.state != 'answering'
             return {
                 'submitted': True,
-                'grade_status': existing_sub.grade_status,
+                'grade_status': (
+                    existing_sub.grade_status if reveal_allowed else 'grading_pending'
+                ),
                 'round_state': current_round.state if current_round else 'settled',
-                'feedback_vi': existing_sub.feedback_vi,
+                'feedback_vi': existing_sub.feedback_vi if reveal_allowed else '',
                 'is_duplicate': True,
             }
 
@@ -641,6 +643,28 @@ class PvpMatchService:
                         },
                     )
                 )
+                self._db.flush()
+                # Không để trận treo chết ở round void: mở round kế tiếp (hoặc kết thúc gọn nếu đã round cuối)
+                if round_no >= MAX_ROUNDS:
+                    match.status = 'completed'
+                    match.winner_user_id = None
+                    match.finish_reason = 'draw_after_void_round'
+                    seq_fin = self._next_event_sequence(match_id)
+                    self._db.add(
+                        MatchEvent(
+                            match_id=match_id,
+                            sequence=seq_fin,
+                            event_type='match_finished',
+                            payload_json={
+                                'match_id': match_id,
+                                'rule_version': match.rule_version,
+                                'winner_user_id': None,
+                                'finish_reason': match.finish_reason,
+                            },
+                        )
+                    )
+                else:
+                    self._advance_to_next_round(match=match, next_round_no=round_no + 1)
             else:
                 current_round.state = 'action_window'
                 seq = self._next_event_sequence(match_id)
@@ -658,7 +682,7 @@ class PvpMatchService:
                     )
                 )
         else:
-            # Một bên nộp -> ghi nhận sự kiện nộp bài an toàn
+            # Một bên nộp -> ghi nhận sự kiện nộp bài an toàn, chưa tiết lộ grade_status trước reveal
             seq = self._next_event_sequence(match_id)
             self._db.add(
                 MatchEvent(
@@ -670,12 +694,79 @@ class PvpMatchService:
             )
 
         self._db.commit()
+        reveal_now = len(all_subs) >= 2
         return {
             'submitted': True,
-            'grade_status': grade_status,
+            'grade_status': grade_status if reveal_now else 'grading_pending',
             'round_state': current_round.state,
-            'feedback_vi': feedback_vi,
+            'feedback_vi': feedback_vi if reveal_now else '',
         }
+
+    def _advance_to_next_round(self, *, match: Match, next_round_no: int) -> None:
+        """Tạo round kế tiếp cùng câu đã duyệt (tránh lặp), hoặc void trận nếu hết ngân hàng."""
+        match.current_round = next_round_no
+        approved_questions = self._get_eligible_questions(
+            subject_code=match.subject_code,
+            grade_band=match.grade_band,
+            curriculum=match.curriculum,
+        )
+        if not approved_questions:
+            match.status = 'void'
+            match.finish_reason = 'question_pool_unavailable'
+            seq_void = self._next_event_sequence(match.id)
+            self._db.add(
+                MatchEvent(
+                    match_id=match.id,
+                    sequence=seq_void,
+                    event_type='match_voided',
+                    payload_json={
+                        'match_id': match.id,
+                        'reason': 'question_pool_unavailable',
+                    },
+                )
+            )
+            return
+
+        used_q_ids = {
+            r.question_id
+            for r in self._db.query(MatchRound).filter(MatchRound.match_id == match.id).all()
+        }
+        avail_questions = [q for q in approved_questions if q.id not in used_q_ids]
+        next_q = avail_questions[0] if avail_questions else approved_questions[0]
+
+        next_deadline = utc_now() + timedelta(seconds=75)
+        next_round = MatchRound(
+            match_id=match.id,
+            round_no=next_round_no,
+            question_id=next_q.id,
+            question_revision=next_q.revision,
+            rubric_revision=next_q.rubric_revision,
+            prompt=next_q.prompt,
+            reasoning_prompt_vi=next_q.reasoning_prompt_vi,
+            rubric_json=next_q.rubric_json or {},
+            deadline_at=next_deadline,
+            state='answering',
+        )
+        self._db.add(next_round)
+
+        seq_next = self._next_event_sequence(match.id)
+        self._db.add(
+            MatchEvent(
+                match_id=match.id,
+                sequence=seq_next,
+                event_type='round_started',
+                payload_json={
+                    'round_no': next_round_no,
+                    'question_id': next_q.id,
+                    'question_revision': next_q.revision,
+                    'rubric_revision': next_q.rubric_revision,
+                    'prompt': next_q.prompt,
+                    'reasoning_prompt_vi': next_q.reasoning_prompt_vi,
+                    'deadline_at': _iso_utc(next_deadline),
+                    'is_secret_round': (match.secret_round_no == next_round_no),
+                },
+            )
+        )
 
     def choose_round_action(
         self,
@@ -943,69 +1034,7 @@ class PvpMatchService:
                     )
                 )
             else:
-                next_round_no = round_no + 1
-                match.current_round = next_round_no
-                approved_questions = self._get_eligible_questions(
-                    subject_code=match.subject_code,
-                    grade_band=match.grade_band,
-                    curriculum=match.curriculum,
-                )
-                if not approved_questions:
-                    match.status = 'void'
-                    match.finish_reason = 'question_pool_unavailable'
-                    seq_void = self._next_event_sequence(match_id)
-                    self._db.add(
-                        MatchEvent(
-                            match_id=match_id,
-                            sequence=seq_void,
-                            event_type='match_voided',
-                            payload_json={
-                                'match_id': match_id,
-                                'reason': 'question_pool_unavailable',
-                            },
-                        )
-                    )
-                else:
-                    used_q_ids = {
-                        r.question_id
-                        for r in self._db.query(MatchRound).filter(MatchRound.match_id == match_id).all()
-                    }
-                    avail_questions = [q for q in approved_questions if q.id not in used_q_ids]
-                    next_q = avail_questions[0] if avail_questions else approved_questions[0]
-
-                    next_deadline = utc_now() + timedelta(seconds=75)
-                    next_round = MatchRound(
-                        match_id=match_id,
-                        round_no=next_round_no,
-                        question_id=next_q.id,
-                        question_revision=next_q.revision,
-                        rubric_revision=next_q.rubric_revision,
-                        prompt=next_q.prompt,
-                        reasoning_prompt_vi=next_q.reasoning_prompt_vi,
-                        rubric_json=next_q.rubric_json or {},
-                        deadline_at=next_deadline,
-                        state='answering',
-                    )
-                    self._db.add(next_round)
-
-                    seq_next = self._next_event_sequence(match_id)
-                    self._db.add(
-                        MatchEvent(
-                            match_id=match_id,
-                            sequence=seq_next,
-                            event_type='round_started',
-                            payload_json={
-                                'round_no': next_round_no,
-                                'question_id': next_q.id,
-                                'question_revision': next_q.revision,
-                                'rubric_revision': next_q.rubric_revision,
-                                'prompt': next_q.prompt,
-                                'reasoning_prompt_vi': next_q.reasoning_prompt_vi,
-                                'deadline_at': _iso_utc(next_deadline),
-                                'is_secret_round': (match.secret_round_no == next_round_no),
-                            },
-                        )
-                    )
+                self._advance_to_next_round(match=match, next_round_no=round_no + 1)
 
             settle_result_data = {
                 'round_settled': True,

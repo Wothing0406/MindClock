@@ -4,11 +4,14 @@ from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
+import uuid
 
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 import pytest
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
 from app.config import Settings
@@ -338,15 +341,28 @@ def test_pvp_submission_requires_reasoning_and_rejects_client_authoritative_fiel
         )
         assert res_tamper_act.status_code == 422
 
-        # Nộp đáp án nhưng không có bước trình bày -> incorrect
+        # Nộp đáp án nhưng không có bước trình bày: trước khi đối thủ nộp chỉ trả grading_pending
         res_sub_empty = client.post(
             f'/v1/pvp/matches/{match_id}/rounds/1/submit',
             headers=_auth_headers('usr_a'),
             json={'answerText': 'x=0', 'reasoningText': ''},
         )
         assert res_sub_empty.status_code == 200
-        assert res_sub_empty.json()['grade_status'] == 'incorrect'
-        assert 'bước trình bày' in res_sub_empty.json()['feedback_vi']
+        assert res_sub_empty.json()['grade_status'] == 'grading_pending'
+
+        # Sau khi đối thủ B nộp bài -> reveal cho phép đọc đúng grade_status='incorrect' của A
+        res_sub_b = client.post(
+            f'/v1/pvp/matches/{match_id}/rounds/1/submit',
+            headers=_auth_headers('usr_b'),
+            json={'answerText': 'x=0', 'reasoningText': 'Bước giải hợp lệ của B'},
+        )
+        assert res_sub_b.status_code == 200
+        snap_a = client.get(
+            f'/v1/pvp/matches/{match_id}',
+            headers=_auth_headers('usr_a'),
+        ).json()
+        assert snap_a['current_round_info']['my_submission']['grade_status'] == 'incorrect'
+        assert 'bước trình bày' in snap_a['current_round_info']['my_submission']['feedback_vi']
 
 
 def _run_full_lifecycle_duplicate_and_reconnect_assertions(
@@ -395,7 +411,7 @@ def _run_full_lifecycle_duplicate_and_reconnect_assertions(
         },
     )
     assert sub_a.status_code == 200
-    assert sub_a.json()['grade_status'] == 'correct'
+    assert sub_a.json()['grade_status'] == 'grading_pending'
     assert sub_a.json()['round_state'] == 'answering'
 
     sub_b = client.post(
@@ -533,7 +549,7 @@ def test_pvp_uncertain_submission_voids_round_without_hp_change(tmp_path: Path) 
             json={'answerText': 'x=0', 'reasoningText': 'Bước giải hợp lệ của A'},
         )
         assert sub_a.status_code == 200
-        assert sub_a.json()['grade_status'] == 'uncertain'
+        assert sub_a.json()['grade_status'] == 'grading_pending'
 
         sub_b = client.post(
             f'/v1/pvp/matches/{match_id}/rounds/1/submit',
@@ -544,29 +560,56 @@ def test_pvp_uncertain_submission_voids_round_without_hp_change(tmp_path: Path) 
         assert sub_b.json()['grade_status'] == 'uncertain'
         assert sub_b.json()['round_state'] == 'void'
 
-        # Snapshot tiết lộ state='void', HP/armor/qi giữ nguyên ban đầu
+        # Round 1 bị void (HP/armor/qi giữ nguyên) VÀ trận tự chuyển sang round 2 không bị treo chết
         snap = client.get(f'/v1/pvp/matches/{match_id}', headers=_auth_headers('usr_a')).json()
-        assert snap['current_round_info']['state'] == 'void'
-        assert snap['current_round_info']['my_submission']['grade_status'] == 'uncertain'
+        assert snap['current_round'] == 2
+        assert snap['current_round_info']['round_no'] == 2
+        assert snap['current_round_info']['state'] == 'answering'
         for player in snap['players']:
             assert player['hp'] == 100
             assert player['armor'] == 50
             assert player['qi'] == 0
 
-        # Không được phép chọn action trên round đã void
+        # Không được phép chọn action trên round 1 đã void
         act_void = client.post(
             f'/v1/pvp/matches/{match_id}/rounds/1/action',
             headers=_auth_headers('usr_a'),
             json={'actionType': 'basic'},
         )
         assert act_void.status_code == 400
-        assert act_void.json()['error']['code'] == 'ACTION_WINDOW_CLOSED'
+        assert act_void.json()['error']['code'] in {'INVALID_ROUND', 'ACTION_WINDOW_CLOSED'}
 
         evs = client.get(
             f'/v1/pvp/matches/{match_id}/events?after_sequence=0',
             headers=_auth_headers('usr_a'),
         ).json()
         assert any(ev['event_type'] == 'round_voided' for ev in evs)
+        assert any(
+            ev['event_type'] == 'round_started' and ev['payload'].get('round_no') == 2
+            for ev in evs
+        )
+
+
+@contextmanager
+def _isolated_postgres_db(base_pg_url: str):
+    """Tạo DB tạm cô lập trên PostgreSQL để test live không đụng vào DB dev mindclock."""
+    parsed = make_url(base_pg_url)
+    temp_db = f'mindclock_pytest_pvp_{uuid.uuid4().hex[:8]}'
+    admin_url = parsed.set(database='postgres')
+    temp_url = parsed.set(database=temp_db).render_as_string(hide_password=False)
+
+    admin_engine = create_engine(admin_url, isolation_level='AUTOCOMMIT')
+    created = False
+    try:
+        with admin_engine.connect() as conn:
+            conn.execute(text(f'CREATE DATABASE "{temp_db}"'))
+            created = True
+        yield temp_url
+    finally:
+        if created:
+            with admin_engine.connect() as conn:
+                conn.execute(text(f'DROP DATABASE IF EXISTS "{temp_db}" WITH (FORCE)'))
+        admin_engine.dispose()
 
 
 def test_pvp_live_postgresql_two_accounts_when_configured() -> None:
@@ -577,31 +620,31 @@ def test_pvp_live_postgresql_two_accounts_when_configured() -> None:
             '(cần bật PostgreSQL/Docker local hoặc chạy trên CI backend-api-postgres).'
         )
 
-    alembic_cfg = _make_alembic_config(pg_url)
-    command.downgrade(alembic_cfg, 'base')
-    command.upgrade(alembic_cfg, '0002_align_question_indexes')
-    command.upgrade(alembic_cfg, 'head')
+    with _isolated_postgres_db(pg_url) as isolated_pg_url:
+        alembic_cfg = _make_alembic_config(isolated_pg_url)
+        command.upgrade(alembic_cfg, '0002_align_question_indexes')
+        command.upgrade(alembic_cfg, 'head')
 
-    with _pvp_client_context(pg_url) as (client, session_factory):
-        with session_factory() as db:
-            _seed_user(db, 'pg_usr_a', 'PG Hà Nhân A', 'Lớp 10')
-            _seed_user(db, 'pg_usr_b', 'PG Tuyệt Đỉnh B', 'Lớp 10')
-            _seed_user(db, 'pg_usr_c', 'PG Outsider C', 'Lớp 10')
-            _seed_questions(db, subject='TOAN', grade='Lớp 10', count=8, id_prefix='pgq')
+        with _pvp_client_context(isolated_pg_url) as (client, session_factory):
+            with session_factory() as db:
+                _seed_user(db, 'pg_usr_a', 'PG Hà Nhân A', 'Lớp 10')
+                _seed_user(db, 'pg_usr_b', 'PG Tuyệt Đỉnh B', 'Lớp 10')
+                _seed_user(db, 'pg_usr_c', 'PG Outsider C', 'Lớp 10')
+                _seed_questions(db, subject='TOAN', grade='Lớp 10', count=8, id_prefix='pgq')
 
-        match_id = _run_full_lifecycle_duplicate_and_reconnect_assertions(
-            client,
-            session_factory,
-            uid_a='pg_usr_a',
-            uid_b='pg_usr_b',
-            uid_c='pg_usr_c',
-        )
-        with session_factory() as db:
-            m = db.get(Match, match_id)
-            assert m is not None and m.mode == 'duel_1v1'
-            r1 = (
-                db.query(MatchRound)
-                .filter(MatchRound.match_id == match_id, MatchRound.round_no == 1)
-                .first()
+            match_id = _run_full_lifecycle_duplicate_and_reconnect_assertions(
+                client,
+                session_factory,
+                uid_a='pg_usr_a',
+                uid_b='pg_usr_b',
+                uid_c='pg_usr_c',
             )
-            assert r1 is not None and r1.state == 'settled'
+            with session_factory() as db:
+                m = db.get(Match, match_id)
+                assert m is not None and m.mode == 'duel_1v1'
+                r1 = (
+                    db.query(MatchRound)
+                    .filter(MatchRound.match_id == match_id, MatchRound.round_no == 1)
+                    .first()
+                )
+                assert r1 is not None and r1.state == 'settled'

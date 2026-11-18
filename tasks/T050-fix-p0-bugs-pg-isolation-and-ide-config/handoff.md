@@ -1,0 +1,29 @@
+# Bàn giao nhiệm vụ T050
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Khắc phục triệt để lỗi `DependentObjectsStillExist` khi chạy pytest live PostgreSQL trên `POSTGRES_TEST_URL=.../mindclock`: guard `Base.metadata.create_all` trong `services/api/app/main.py` khi đã có `alembic_version`, và cô lập 2 ca live PG vào DB tạm `mindclock_pytest_<hex>` (tự tạo & xóa `WITH (FORCE)` trong `finally:`) để không bao giờ phá DB dev đang chạy.
+  - Sửa bug 404 thật `POST /v1/v1/timetable/parse-image` → `POST /v1/timetable/parse-image` trong `app/lib/data/services/personal_api_client.dart` kèm unit test loopback `TC-OCR-02`.
+  - Sửa 3 bug thật trong `services/api/app/services/pvp_match_service.py`: round `void` do `uncertain` tự mở round kế tiếp (hoặc kết thúc gọn nếu đã ở round 6) tránh treo trận; `submit_round_answer` trả `grading_pending` và giấu `feedback_vi` trước khi cả 2 bên nộp; xóa 4 import thừa (`dataclass`, `and_`, `or_`, `ChampionId`).
+  - Xóa màu hardcode cuối cùng `Color(0xFF22C55E)` trong `app/lib/ui/features/guest_shell/views/today_screen.dart` sang `mc.primary`.
+  - Thêm `.vscode/settings.json` cấu hình đúng `services/api/.venv/Scripts/python.exe`, `extraPaths: ["services/api"]` và `.local-sdk/flutter` để IDE không còn báo hàng loạt lỗi giả trong bảng Problems.
+- **File/code/docs thay đổi:**
+  - `services/api/app/main.py`
+  - `services/api/app/services/pvp_match_service.py`
+  - `services/api/tests/test_migrations_and_data_invariants.py`
+  - `services/api/tests/test_pvp_matchmaking.py`
+  - `app/lib/data/services/personal_api_client.dart`
+  - `app/lib/ui/features/guest_shell/views/today_screen.dart`
+  - `app/test/timetable_ocr_and_realtime_clock_test.dart`
+  - `.vscode/settings.json` (mới)
+  - `tasks/T050-fix-p0-bugs-pg-isolation-and-ide-config/{README,spec,plan,tests,worklog,handoff}.md`
+- **Test đã chạy (2026-11-18):**
+  - Đúng lệnh người dùng gặp lỗi với `POSTGRES_TEST_URL=postgresql+psycopg://mindclock:mindclock_local_dev@127.0.0.1:5432/mindclock`: **12 passed, 0 skipped in 12.25s**.
+  - Toàn bộ tracked backend suite với live PostgreSQL 16: **49 passed, 0 skipped in 30.52s**.
+  - Toàn bộ Flutter suite: **70/70 PASSED** (14s), `flutter analyze --no-pub`: **No issues found!**, `RAW_COLOR_HITS: []`.
+  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py`: **PASS**.
+- **Rủi ro còn lại:**
+  - DB dev cũ đang chạy trong `api-postgres-1` (`mindclock`) vẫn có `alembic_version = 0002` + 7 bảng PvP do phiên bản `api-api-1` cũ tạo ra; nếu cần chạy `alembic upgrade head` trực tiếp trên DB dev đó, có thể chạy `alembic stamp 0003_add_pvp_match_tables` hoặc rebuild container `docker compose up -d --build`.
+  - Còn lại các hạng mục P1 trong báo cáo rà soát (`T051` đồng bộ `PATCH /v1/me` / `DELETE /v1/me` + seed THPT 10–12; `T052` Không gian học `Học sâu` + EXP thời gian học).
+- **Điểm tiếp tục chính xác:** Chọn làm tiếp `T051` (R2/R3 backend THPT 10–12 + đồng bộ hồ sơ/TKB/xóa tài khoản) hoặc `T052` (R5 Không gian học `Học sâu` im lặng + server EXP ledger).
+- **Git:** Đang chuẩn bị commit & push nhánh `main` (`origin/main`).

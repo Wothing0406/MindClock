@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 import os
 from pathlib import Path
+import uuid
 
 from alembic import command
 from alembic.autogenerate import compare_metadata
@@ -9,8 +11,9 @@ from alembic.config import Config
 from alembic.migration import MigrationContext
 from fastapi.testclient import TestClient
 import pytest
-from sqlalchemy import inspect, select
+from sqlalchemy import create_engine, inspect, select, text
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.schema import CreateIndex, CreateTable
 
@@ -581,6 +584,28 @@ def test_backup_and_restore_rehearsal(tmp_path: Path) -> None:
         dst_engine.dispose()
 
 
+@contextmanager
+def _isolated_postgres_db(base_pg_url: str):
+    """Tạo DB PostgreSQL tạm cô lập để test upgrade/downgrade mà không phá DB dev đang chạy."""
+    parsed = make_url(base_pg_url)
+    temp_db = f'mindclock_pytest_{uuid.uuid4().hex[:8]}'
+    admin_url = parsed.set(database='postgres')
+    temp_url = parsed.set(database=temp_db).render_as_string(hide_password=False)
+
+    admin_engine = create_engine(admin_url, isolation_level='AUTOCOMMIT')
+    created = False
+    try:
+        with admin_engine.connect() as conn:
+            conn.execute(text(f'CREATE DATABASE "{temp_db}"'))
+            created = True
+        yield temp_url
+    finally:
+        if created:
+            with admin_engine.connect() as conn:
+                conn.execute(text(f'DROP DATABASE IF EXISTS "{temp_db}" WITH (FORCE)'))
+        admin_engine.dispose()
+
+
 def test_live_postgresql_migration_and_health_when_configured() -> None:
     pg_url = os.environ.get('POSTGRES_TEST_URL', '').strip()
     if not pg_url.startswith('postgresql'):
@@ -589,46 +614,48 @@ def test_live_postgresql_migration_and_health_when_configured() -> None:
     if not pg_url:
         pytest.skip('POSTGRES_TEST_URL / DATABASE_URL PostgreSQL chưa được cấu hình (Docker daemon tắt trên máy local; chạy trên CI postgres service).')
 
-    alembic_cfg = _make_alembic_config(pg_url)
-    # 1. DB trống -> upgrade head (0003) + kiểm parity Base.metadata
-    command.downgrade(alembic_cfg, 'base')
-    command.upgrade(alembic_cfg, 'head')
+    with _isolated_postgres_db(pg_url) as isolated_pg_url:
+        alembic_cfg = _make_alembic_config(isolated_pg_url)
+        # 1. DB trống -> upgrade head (0003) + kiểm parity Base.metadata
+        command.upgrade(alembic_cfg, 'head')
 
-    pg_engine = build_engine(Settings(app_env='test', database_url=pg_url))
-    try:
-        with pg_engine.connect() as conn:
-            mc = MigrationContext.configure(conn)
-            assert compare_metadata(mc, Base.metadata) == []
-    finally:
-        pg_engine.dispose()
+        pg_engine = build_engine(Settings(app_env='test', database_url=isolated_pg_url))
+        try:
+            with pg_engine.connect() as conn:
+                mc = MigrationContext.configure(conn)
+                assert compare_metadata(mc, Base.metadata) == []
+        finally:
+            pg_engine.dispose()
 
-    # 2. Downgrade về 0002_align_question_indexes -> nâng cấp lại lên head (0003)
-    command.downgrade(alembic_cfg, '0002_align_question_indexes')
-    pg_engine_check = build_engine(Settings(app_env='test', database_url=pg_url))
-    try:
-        assert 'matches' not in set(inspect(pg_engine_check).get_table_names())
-    finally:
-        pg_engine_check.dispose()
+        # 2. Downgrade về 0002_align_question_indexes -> nâng cấp lại lên head (0003) -> downgrade base -> upgrade head
+        command.downgrade(alembic_cfg, '0002_align_question_indexes')
+        pg_engine_check = build_engine(Settings(app_env='test', database_url=isolated_pg_url))
+        try:
+            assert 'matches' not in set(inspect(pg_engine_check).get_table_names())
+        finally:
+            pg_engine_check.dispose()
 
-    command.upgrade(alembic_cfg, 'head')
-    pg_engine_reup = build_engine(Settings(app_env='test', database_url=pg_url))
-    try:
-        assert 'matches' in set(inspect(pg_engine_reup).get_table_names())
-    finally:
-        pg_engine_reup.dispose()
+        command.upgrade(alembic_cfg, 'head')
+        command.downgrade(alembic_cfg, 'base')
+        command.upgrade(alembic_cfg, 'head')
+        pg_engine_reup = build_engine(Settings(app_env='test', database_url=isolated_pg_url))
+        try:
+            assert 'matches' in set(inspect(pg_engine_reup).get_table_names())
+        finally:
+            pg_engine_reup.dispose()
 
-    settings = Settings(
-        app_env='test',
-        database_url=pg_url,
-        gemini_mock_mode=True,
-        local_dev_bearer_uid_fallback=True,
-        firebase_project_id='',
-    )
-    app = create_app(settings)
-    with TestClient(app) as client:
-        res = client.get('/v1/health')
-        assert res.status_code == 200
-        body = res.json()
-        assert body['status'] == 'ok'
-        assert body['dbReady'] is True
-        assert body['dbDialect'] == 'postgresql'
+        settings = Settings(
+            app_env='test',
+            database_url=isolated_pg_url,
+            gemini_mock_mode=True,
+            local_dev_bearer_uid_fallback=True,
+            firebase_project_id='',
+        )
+        app = create_app(settings)
+        with TestClient(app) as client:
+            res = client.get('/v1/health')
+            assert res.status_code == 200
+            body = res.json()
+            assert body['status'] == 'ok'
+            assert body['dbReady'] is True
+            assert body['dbDialect'] == 'postgresql'

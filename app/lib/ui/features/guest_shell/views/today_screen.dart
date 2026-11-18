@@ -197,8 +197,8 @@ class _TodayScreenState extends State<TodayScreen> {
                             Container(
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF22C55E),
+                              decoration: BoxDecoration(
+                                color: mc.primary,
                                 shape: BoxShape.circle,
                               ),
                             ),

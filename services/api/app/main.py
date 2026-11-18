@@ -4,6 +4,7 @@ from typing import Callable
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import sessionmaker, Session
 
 from app.auth.verify_token import build_auth_dependency
@@ -38,9 +39,10 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
-        # Đảm bảo DB local phát triển khởi tạo sẵn bảng & seed câu đã duyệt khi chạy trực tiếp.
+        # Chỉ tự create_all khi DB chưa do Alembic quản lý (tránh tạo bảng vượt trước alembic_version trên PostgreSQL).
         if cfg.app_env.lower() in {'development', 'test', 'local'}:
-            Base.metadata.create_all(bind=engine)
+            if not sa_inspect(engine).has_table('alembic_version'):
+                Base.metadata.create_all(bind=engine)
             with session_factory() as db:
                 seed_approved_questions(db)
         yield

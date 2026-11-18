@@ -91,7 +91,7 @@ class PersonalApiClient {
     String? idempotencyKey,
   }) {
     return postJson(
-      '/v1/timetable/parse-image',
+      '/timetable/parse-image',
       idempotencyKey:
           idempotencyKey ?? 'ocr_${DateTime.now().microsecondsSinceEpoch}',
       body: <String, dynamic>{
