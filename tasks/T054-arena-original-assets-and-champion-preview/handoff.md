@@ -19,4 +19,4 @@
   - Quét `Color(0x` ngoài `MindClockTheme`: **RAW_COLOR_HITS: 0**
 - **Rủi ro còn lại:** Đồ họa đã chạy sạch qua asset bundle trong widget test; cần xem thực tế trên APK máy Android vật lý ở G1/R6.
 - **Điểm tiếp tục chính xác:** Chuyển sang `T055` (tạo bộ avatar học sinh minh họa + chức năng chọn avatar ảnh/nhạc nền cục bộ).
-- **Git:** Đang chuẩn bị commit & push `origin/main`.
+- **Git:** Commit chính `ee3dea8` (`ee3dea8c1ac2272c9ebb2d87c300f11586462b9b`) đã push lên `origin/main`; cập nhật xác nhận SHA remote trong `handoff.md`.
