@@ -25,6 +25,7 @@ enum AlarmSoundOption {
   gentleDawn('gentle_dawn', 'Chuông sáng dịu'),
   clearBell('clear_bell', 'Chuông rõ'),
   bermudaAlarm('bermuda_alarm', 'Nhạc chuông Bermuda'),
+  customLocal('custom_local', 'Nhạc từ máy của bạn'),
   silentVibrateOnly('vibrate_only', 'Chỉ rung (không âm)');
 
   const AlarmSoundOption(this.id, this.labelVi);
@@ -84,6 +85,8 @@ class AlarmConfig {
     this.enabled = true,
     this.soundEnabled = true,
     this.soundOption = AlarmSoundOption.gentleDawn,
+    this.customSoundPath,
+    this.customSoundLabel,
     this.vibrateEnabled = true,
     this.mode = AlarmMode.normal,
     this.subjectRule = AlarmSubjectRule.todaySchedule,
@@ -104,6 +107,8 @@ class AlarmConfig {
   final bool enabled;
   final bool soundEnabled;
   final AlarmSoundOption soundOption;
+  final String? customSoundPath;
+  final String? customSoundLabel;
   final bool vibrateEnabled;
   final AlarmMode mode;
   final AlarmSubjectRule subjectRule;
@@ -131,6 +136,9 @@ class AlarmConfig {
     bool? enabled,
     bool? soundEnabled,
     AlarmSoundOption? soundOption,
+    String? customSoundPath,
+    String? customSoundLabel,
+    bool clearCustomSound = false,
     bool? vibrateEnabled,
     AlarmMode? mode,
     AlarmSubjectRule? subjectRule,
@@ -156,6 +164,12 @@ class AlarmConfig {
       enabled: enabled ?? this.enabled,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       soundOption: soundOption ?? this.soundOption,
+      customSoundPath: clearCustomSound
+          ? null
+          : (customSoundPath ?? this.customSoundPath),
+      customSoundLabel: clearCustomSound
+          ? null
+          : (customSoundLabel ?? this.customSoundLabel),
       vibrateEnabled: vibrateEnabled ?? this.vibrateEnabled,
       mode: mode ?? this.mode,
       subjectRule: subjectRule ?? this.subjectRule,
@@ -184,6 +198,8 @@ class AlarmConfig {
         'enabled': enabled,
         'soundEnabled': soundEnabled,
         'soundOption': soundOption.id,
+        'customSoundPath': customSoundPath,
+        'customSoundLabel': customSoundLabel,
         'vibrateEnabled': vibrateEnabled,
         'mode': mode.name,
         'subjectRule': subjectRule.id,
@@ -215,6 +231,8 @@ class AlarmConfig {
       enabled: json['enabled'] as bool? ?? true,
       soundEnabled: json['soundEnabled'] as bool? ?? true,
       soundOption: AlarmSoundOption.fromId(json['soundOption'] as String?),
+      customSoundPath: json['customSoundPath'] as String?,
+      customSoundLabel: json['customSoundLabel'] as String?,
       vibrateEnabled: json['vibrateEnabled'] as bool? ?? true,
       mode: AlarmMode.values.firstWhere(
         (AlarmMode m) => m.name == rawMode,

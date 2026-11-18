@@ -18,6 +18,7 @@ data class NativeAlarmRecord(
     val mode: String,
     val subjectCode: String?,
     val label: String,
+    val customSoundPath: String? = null,
 ) {
     val isChallengeMode: Boolean
         get() = mode == MODE_CHALLENGE
@@ -40,6 +41,7 @@ data class NativeAlarmRecord(
             put("enabled", enabled)
             put("soundEnabled", soundEnabled)
             put("soundOption", soundOption)
+            put("customSoundPath", customSoundPath ?: JSONObject.NULL)
             put("vibrateEnabled", vibrateEnabled)
             put("mode", mode)
             put("subjectCode", subjectCode ?: JSONObject.NULL)
@@ -81,6 +83,7 @@ data class NativeAlarmRecord(
                 mode = mode,
                 subjectCode = (map["subjectCode"] as? String)?.takeIf { it.isNotBlank() },
                 label = (map["label"] as? String)?.takeIf { it.isNotBlank() } ?: "Báo thức buổi sáng",
+                customSoundPath = (map["customSoundPath"] as? String)?.takeIf { it.isNotBlank() },
             )
         }
 
@@ -104,6 +107,8 @@ data class NativeAlarmRecord(
             weekdays.sort()
 
             val rawSubject = if (json.isNull("subjectCode")) null else json.optString("subjectCode", "")
+            val rawCustomSoundPath =
+                if (json.isNull("customSoundPath")) null else json.optString("customSoundPath", "")
             val mode = if (json.optString("mode") == MODE_CHALLENGE) MODE_CHALLENGE else MODE_NORMAL
 
             return NativeAlarmRecord(
@@ -118,6 +123,7 @@ data class NativeAlarmRecord(
                 mode = mode,
                 subjectCode = rawSubject?.takeIf { it.isNotBlank() },
                 label = json.optString("label", "Báo thức buổi sáng").ifBlank { "Báo thức buổi sáng" },
+                customSoundPath = rawCustomSoundPath?.takeIf { it.isNotBlank() },
             )
         }
     }

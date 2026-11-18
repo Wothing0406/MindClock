@@ -1,8 +1,12 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
@@ -17,11 +21,13 @@ class MeGuestScreen extends StatefulWidget {
     required this.onEditProfileAndTimetable,
     required this.onResetGuestData,
     this.personalViewModel,
+    this.mediaPickerGateway,
     this.onDeleteAccount,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel? personalViewModel;
+  final MediaPickerGateway? mediaPickerGateway;
   final VoidCallback onEditProfileAndTimetable;
   final VoidCallback onResetGuestData;
   final Future<void> Function()? onDeleteAccount;
@@ -33,6 +39,49 @@ class MeGuestScreen extends StatefulWidget {
 class _MeGuestScreenState extends State<MeGuestScreen> {
   bool _confirmingDeleteAccount = false;
   bool _deletingAccount = false;
+  bool _pickingAvatar = false;
+  String? _avatarFeedbackVi;
+
+  Future<void> _pickAvatarFromDevice() async {
+    if (_pickingAvatar) return;
+    setState(() {
+      _pickingAvatar = true;
+      _avatarFeedbackVi = null;
+    });
+    final MediaPickerGateway gateway =
+        widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
+    final MediaPickResult res = await gateway.pickAvatarImage();
+    if (!mounted) return;
+    if (res.picked && res.localPath != null) {
+      final StudyProfile next = viewModel.profile.copyWith(
+        customAvatarPath: res.localPath,
+      );
+      await viewModel.saveStudyProfile(next);
+      if (!mounted) return;
+      setState(() {
+        _pickingAvatar = false;
+        _avatarFeedbackVi = 'Đã cập nhật ảnh đại diện từ máy (lưu cục bộ).';
+      });
+      return;
+    }
+    setState(() {
+      _pickingAvatar = false;
+      if (!res.cancelled && res.errorMessageVi != null) {
+        _avatarFeedbackVi = res.errorMessageVi;
+      }
+    });
+  }
+
+  Future<void> _clearCustomAvatar() async {
+    final StudyProfile next = viewModel.profile.copyWith(
+      clearCustomAvatarPath: true,
+    );
+    await viewModel.saveStudyProfile(next);
+    if (!mounted) return;
+    setState(() {
+      _avatarFeedbackVi = 'Đã chuyển về avatar minh họa MindClock.';
+    });
+  }
 
   GuestWorkspaceViewModel get viewModel => widget.viewModel;
   PersonalFlowViewModel? get personalViewModel => widget.personalViewModel;
@@ -62,11 +111,61 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
         children: <Widget>[
           Text(AppStrings.navMe, style: mc.screenTitleStyle),
           SizedBox(height: mc.space12),
-          MindClockStatusPill(
-            label: viewModel.profile.alias.isNotEmpty
-                ? '${viewModel.profile.alias} · ${viewModel.profile.gradeLevel ?? "Lớp 11"}'
-                : 'Học sinh THPT',
-            accentWarm: true,
+          MindClockCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    MindClockAvatarView(
+                      avatarId: viewModel.profile.avatarId,
+                      customAvatarPath: viewModel.profile.customAvatarPath,
+                      size: 56,
+                      selected: true,
+                    ),
+                    SizedBox(width: mc.space12),
+                    Expanded(
+                      child: MindClockStatusPill(
+                        label: viewModel.profile.alias.isNotEmpty
+                            ? '${viewModel.profile.alias} · ${viewModel.profile.gradeLevel ?? "Lớp 11"}'
+                            : 'Học sinh THPT',
+                        accentWarm: true,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    MindClockButton(
+                      key: const ValueKey<String>('me-pick-avatar-btn'),
+                      label: _pickingAvatar
+                          ? 'Đang mở thư viện...'
+                          : 'Đổi ảnh đại diện từ máy',
+                      icon: MindClockIconKind.edit,
+                      variant: MindClockButtonVariant.secondary,
+                      expand: false,
+                      onPressed: _pickingAvatar ? null : _pickAvatarFromDevice,
+                    ),
+                    if (viewModel.profile.customAvatarPath != null)
+                      MindClockButton(
+                        key: const ValueKey<String>('me-clear-avatar-btn'),
+                        label: 'Dùng avatar mặc định',
+                        icon: MindClockIconKind.trash,
+                        variant: MindClockButtonVariant.subtle,
+                        expand: false,
+                        onPressed: _clearCustomAvatar,
+                      ),
+                  ],
+                ),
+                if (_avatarFeedbackVi != null) ...<Widget>[
+                  SizedBox(height: mc.space8),
+                  Text(_avatarFeedbackVi!, style: mc.captionStyle),
+                ],
+              ],
+            ),
           ),
           if (personalViewModel != null) ...<Widget>[
             SizedBox(height: mc.space16),

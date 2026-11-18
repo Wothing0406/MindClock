@@ -358,6 +358,7 @@ class AlarmSchedulerImpl(private val context: Context) : AlarmSchedulerBridgeCon
             putExtra(AlarmRingService.EXTRA_SOUND_ENABLED, record.soundEnabled)
             putExtra(AlarmRingService.EXTRA_VIBRATE_ENABLED, record.vibrateEnabled)
             putExtra(AlarmRingService.EXTRA_SOUND_OPTION, record.soundOption)
+            putExtra(AlarmRingService.EXTRA_CUSTOM_SOUND_PATH, record.customSoundPath)
             putExtra(AlarmFireReceiver.EXTRA_IS_SNOOZE, isSnooze)
         }
         return PendingIntent.getBroadcast(

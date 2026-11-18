@@ -41,6 +41,8 @@ class AlarmFireReceiver : BroadcastReceiver() {
         val soundOption = intent.getStringExtra(AlarmRingService.EXTRA_SOUND_OPTION)
             ?: record?.soundOption
             ?: "gentle_dawn"
+        val customSoundPath = intent.getStringExtra(AlarmRingService.EXTRA_CUSTOM_SOUND_PATH)
+            ?: record?.customSoundPath
 
         val serviceIntent = Intent(context, AlarmRingService::class.java).apply {
             action = AlarmRingService.ACTION_START_RING
@@ -52,6 +54,7 @@ class AlarmFireReceiver : BroadcastReceiver() {
             putExtra(AlarmRingService.EXTRA_SOUND_ENABLED, soundEnabled)
             putExtra(AlarmRingService.EXTRA_VIBRATE_ENABLED, vibrateEnabled)
             putExtra(AlarmRingService.EXTRA_SOUND_OPTION, soundOption)
+            putExtra(AlarmRingService.EXTRA_CUSTOM_SOUND_PATH, customSoundPath)
         }
 
         try {

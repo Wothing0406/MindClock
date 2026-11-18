@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -42,12 +44,14 @@ class MindClockShellScreen extends StatefulWidget {
     required this.personalViewModel,
     this.studyViewModel,
     this.arenaViewModel,
+    this.mediaPickerGateway,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel personalViewModel;
   final StudyFocusViewModel? studyViewModel;
   final SoloArenaViewModel? arenaViewModel;
+  final MediaPickerGateway? mediaPickerGateway;
 
   @override
   State<MindClockShellScreen> createState() => _MindClockShellScreenState();
@@ -285,6 +289,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           backgroundColor: mc.paper,
           body: OnboardingSetupScreen(
             initialProfile: widget.viewModel.profile,
+            mediaPickerGateway:
+                widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
             onSaveProfile: (StudyProfile nextProfile) async {
               await widget.viewModel.saveStudyProfile(nextProfile);
               if (widget.personalViewModel.authSession.isAuthenticated) {
@@ -325,6 +331,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return AlarmConfigScreen(
           viewModel: widget.viewModel,
           editingAlarm: _editingAlarm,
+          mediaPickerGateway:
+              widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
           onSaved: (String message) {
             setState(() {
               _editingAlarm = null;
@@ -364,6 +372,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return StudySpaceScreen(
           guestViewModel: widget.viewModel,
           studyViewModel: studyVm,
+          mediaPickerGateway:
+              widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
           onClose: () {
             setState(() {
               _stage = _GuestFlowStage.mainTabs;
@@ -395,6 +405,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             body = MeGuestScreen(
               viewModel: widget.viewModel,
               personalViewModel: widget.personalViewModel,
+              mediaPickerGateway:
+                  widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
               onEditProfileAndTimetable: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },

@@ -38,6 +38,7 @@ class StudyProfile {
   const StudyProfile({
     this.alias = '',
     this.avatarId = 'sunrise',
+    this.customAvatarPath,
     this.gradeLevel,
     this.selectedSubjectCodes = const <String>[],
     this.prioritySubjects = const <PrioritySubject>[],
@@ -51,6 +52,7 @@ class StudyProfile {
 
   final String alias;
   final String avatarId;
+  final String? customAvatarPath;
   final String? gradeLevel;
   final List<String> selectedSubjectCodes;
   final List<PrioritySubject> prioritySubjects;
@@ -80,6 +82,8 @@ class StudyProfile {
   StudyProfile copyWith({
     String? alias,
     String? avatarId,
+    String? customAvatarPath,
+    bool clearCustomAvatarPath = false,
     String? gradeLevel,
     bool clearGradeLevel = false,
     List<String>? selectedSubjectCodes,
@@ -93,6 +97,9 @@ class StudyProfile {
     return StudyProfile(
       alias: alias ?? this.alias,
       avatarId: avatarId ?? this.avatarId,
+      customAvatarPath: clearCustomAvatarPath
+          ? null
+          : (customAvatarPath ?? this.customAvatarPath),
       gradeLevel: clearGradeLevel ? null : (gradeLevel ?? this.gradeLevel),
       selectedSubjectCodes: selectedSubjectCodes ?? this.selectedSubjectCodes,
       prioritySubjects: prioritySubjects ?? this.prioritySubjects,
@@ -107,6 +114,7 @@ class StudyProfile {
   Map<String, dynamic> toJson() => <String, dynamic>{
         'alias': alias,
         'avatarId': avatarId,
+        'customAvatarPath': customAvatarPath,
         'gradeLevel': gradeLevel,
         'selectedSubjectCodes': selectedSubjectCodes,
         'prioritySubjects':
@@ -138,6 +146,7 @@ class StudyProfile {
     return StudyProfile(
       alias: json['alias'] as String? ?? '',
       avatarId: json['avatarId'] as String? ?? 'sunrise',
+      customAvatarPath: json['customAvatarPath'] as String?,
       gradeLevel: json['gradeLevel'] as String?,
       selectedSubjectCodes:
           rawSubjects.whereType<String>().toList(growable: false),

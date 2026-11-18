@@ -14,12 +14,14 @@ class MainActivity : FlutterActivity() {
     private lateinit var schedulerBridge: AlarmSchedulerBridgeContract
     private lateinit var cameraBridge: CameraBridgeHandler
     private lateinit var studyFocusBridge: StudyFocusBridgeHandler
+    private lateinit var mediaPickerBridge: MediaPickerBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         schedulerBridge = AlarmSchedulerImpl(this)
         cameraBridge = CameraBridgeHandler(this)
         studyFocusBridge = StudyFocusBridgeHandler(this)
+        mediaPickerBridge = MediaPickerBridgeHandler(this)
         AlarmRingService.ensureNotificationChannel(this)
 
         MethodChannel(
@@ -45,6 +47,13 @@ class MainActivity : FlutterActivity() {
             StudyFocusBridgeHandler.CHANNEL_NAME,
         ).setMethodCallHandler { call, result ->
             studyFocusBridge.handleMethodCall(call, result)
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            MediaPickerBridgeHandler.CHANNEL_NAME,
+        ).setMethodCallHandler { call, result ->
+            mediaPickerBridge.handleMethodCall(call, result)
         }
     }
 
@@ -73,7 +82,19 @@ class MainActivity : FlutterActivity() {
         ) {
             return
         }
+        if (::mediaPickerBridge.isInitialized &&
+            mediaPickerBridge.onActivityResult(requestCode, resultCode, data)
+        ) {
+            return
+        }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onDestroy() {
+        if (::mediaPickerBridge.isInitialized) {
+            mediaPickerBridge.stopPreviewAudio()
+        }
+        super.onDestroy()
     }
 
     private fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {

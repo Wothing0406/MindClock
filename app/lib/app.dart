@@ -13,6 +13,7 @@ import 'data/repositories/remote_study_ai_gateway.dart';
 import 'data/services/firebase_auth_gateway.dart';
 import 'data/services/local_key_value_store.dart';
 import 'data/services/method_channel_camera_gateway.dart';
+import 'data/services/method_channel_media_picker_gateway.dart';
 import 'data/services/method_channel_study_focus_bridge.dart';
 import 'data/services/offline_text_draft_store.dart';
 import 'data/services/pending_alarm_event_store.dart';
@@ -21,6 +22,7 @@ import 'domain/services/alarm_scheduler_service.dart';
 import 'domain/services/alarm_sync_gateway.dart';
 import 'domain/services/auth_session_gateway.dart';
 import 'domain/services/camera_capture_gateway.dart';
+import 'domain/services/media_picker_gateway.dart';
 import 'domain/services/personal_flow_repository.dart';
 import 'domain/services/study_ai_gateway.dart';
 import 'domain/services/study_focus_bridge.dart';
@@ -49,6 +51,7 @@ class MindClockApp extends StatefulWidget {
     this.authGateway,
     this.personalRepository,
     this.cameraGateway,
+    this.mediaPickerGateway,
     this.draftStore,
     this.studyFocusBridge,
     this.studyAiGateway,
@@ -63,6 +66,7 @@ class MindClockApp extends StatefulWidget {
   final AuthSessionGateway? authGateway;
   final PersonalFlowRepository? personalRepository;
   final CameraCaptureGateway? cameraGateway;
+  final MediaPickerGateway? mediaPickerGateway;
   final OfflineTextDraftStore? draftStore;
   final StudyFocusBridge? studyFocusBridge;
   final StudyAiGateway? studyAiGateway;
@@ -77,10 +81,13 @@ class _MindClockAppState extends State<MindClockApp> {
   late final GuestWorkspaceViewModel _viewModel;
   late final PersonalFlowViewModel _personalViewModel;
   late final StudyFocusViewModel _studyFocusViewModel;
+  late final MediaPickerGateway _mediaPickerGateway;
 
   @override
   void initState() {
     super.initState();
+    _mediaPickerGateway =
+        widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
     final LocalKeyValueStore kvStore = widget.repository.store;
     final AuthSessionGateway authGateway = widget.authGateway ??
         createDefaultAuthGateway(store: kvStore);
@@ -164,6 +171,7 @@ class _MindClockAppState extends State<MindClockApp> {
         viewModel: _viewModel,
         personalViewModel: _personalViewModel,
         studyViewModel: _studyFocusViewModel,
+        mediaPickerGateway: _mediaPickerGateway,
       ),
     );
   }

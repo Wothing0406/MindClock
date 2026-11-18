@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -23,11 +25,13 @@ class StudySpaceScreen extends StatefulWidget {
     required this.guestViewModel,
     required this.studyViewModel,
     required this.onClose,
+    this.mediaPickerGateway,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final StudyFocusViewModel studyViewModel;
   final VoidCallback onClose;
+  final MediaPickerGateway? mediaPickerGateway;
 
   @override
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
@@ -41,6 +45,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   final TextEditingController _personalizedTopicController =
       TextEditingController();
   String? _selectedPersonalizedSubject;
+  String? _ambientAudioPath;
+  String? _ambientAudioLabel;
+  bool _ambientAudioPlaying = false;
+  bool _pickingAmbientAudio = false;
+  String? _ambientAudioStatusVi;
+
+  MediaPickerGateway get _mediaPicker =>
+      widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
 
   @override
   void initState() {
@@ -53,12 +65,126 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
 
   @override
   void dispose() {
+    if (_ambientAudioPlaying) {
+      _mediaPicker.stopAudioPreview();
+    }
     _customTaskController.dispose();
     _doneController.dispose();
     _stuckController.dispose();
     _aiInputController.dispose();
     _personalizedTopicController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAmbientAudio() async {
+    if (_pickingAmbientAudio) return;
+    setState(() {
+      _pickingAmbientAudio = true;
+      _ambientAudioStatusVi = null;
+    });
+    final MediaPickResult res = await _mediaPicker.pickAlarmAudio();
+    if (!mounted) return;
+    setState(() {
+      _pickingAmbientAudio = false;
+      if (res.picked && res.localPath != null) {
+        _ambientAudioPath = res.localPath;
+        _ambientAudioLabel = res.displayName ?? 'Nhạc nền tập trung';
+        _ambientAudioStatusVi = 'Đã chọn tệp nhạc: $_ambientAudioLabel.';
+      } else if (!res.cancelled && res.errorMessageVi != null) {
+        _ambientAudioStatusVi = res.errorMessageVi;
+      }
+    });
+  }
+
+  Future<void> _toggleAmbientAudio() async {
+    if (_ambientAudioPlaying) {
+      await _mediaPicker.stopAudioPreview();
+      if (!mounted) return;
+      setState(() {
+        _ambientAudioPlaying = false;
+        _ambientAudioStatusVi = 'Đã tắt nhạc nền tập trung.';
+      });
+      return;
+    }
+    if (_ambientAudioPath == null || _ambientAudioPath!.isEmpty) {
+      setState(() {
+        _ambientAudioStatusVi = 'Hãy chọn tệp nhạc trên máy trước khi phát.';
+      });
+      return;
+    }
+    final bool started = await _mediaPicker.previewAudio(
+      soundOption: 'custom_local',
+      customSoundPath: _ambientAudioPath,
+      loop: true,
+    );
+    if (!mounted) return;
+    setState(() {
+      _ambientAudioPlaying = started;
+      _ambientAudioStatusVi = started
+          ? 'Đang phát lặp nhạc nền từ máy...'
+          : 'Không phát được nhạc nền trên môi trường này.';
+    });
+  }
+
+  Widget _buildAmbientAudioCard(
+    MindClockTheme mc, {
+    required bool lockedByDeepSilent,
+  }) {
+    return MindClockCard(
+      key: const ValueKey<String>('study-ambient-audio-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Nhạc nền tập trung (từ máy · mặc định tắt)',
+              style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space8),
+          Text(
+            lockedByDeepSilent
+                ? 'Đang khóa im lặng hoàn toàn theo chế độ Học sâu (im lặng).'
+                : (_ambientAudioLabel != null
+                    ? 'Tệp đang chọn: $_ambientAudioLabel'
+                    : 'Mặc định tắt. Bạn có thể chọn 1 file MP3/âm thanh trên máy để nghe nhẹ khi Học ngắt quãng.'),
+            style: mc.captionStyle,
+          ),
+          if (!lockedByDeepSilent) ...<Widget>[
+            SizedBox(height: mc.space12),
+            Wrap(
+              spacing: mc.space8,
+              runSpacing: mc.space8,
+              children: <Widget>[
+                MindClockButton(
+                  key: const ValueKey<String>('study-pick-ambient-audio-btn'),
+                  label: _pickingAmbientAudio
+                      ? 'Đang mở tệp...'
+                      : 'Chọn nhạc nền từ máy',
+                  icon: MindClockIconKind.edit,
+                  variant: MindClockButtonVariant.secondary,
+                  expand: false,
+                  onPressed: _pickingAmbientAudio ? null : _pickAmbientAudio,
+                ),
+                if (_ambientAudioPath != null)
+                  MindClockButton(
+                    key: const ValueKey<String>('study-toggle-ambient-audio-btn'),
+                    label: _ambientAudioPlaying
+                        ? 'Dừng nhạc nền'
+                        : 'Phát nhạc nền',
+                    icon: _ambientAudioPlaying
+                        ? MindClockIconKind.stop
+                        : MindClockIconKind.volumeOn,
+                    variant: MindClockButtonVariant.subtle,
+                    expand: false,
+                    onPressed: _toggleAmbientAudio,
+                  ),
+              ],
+            ),
+          ],
+          if (_ambientAudioStatusVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            Text(_ambientAudioStatusVi!, style: mc.captionStyle),
+          ],
+        ],
+      ),
+    );
   }
 
   String _headerScopeLabel(StudyFocusViewModel vm) {
@@ -107,8 +233,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         final MindClockTheme mc = context.mc;
         final StudyFocusViewModel vm = widget.studyViewModel;
         final StudyFocusSessionSnapshot? snapshot = vm.activeSnapshot;
-        final bool reduceMotion =
-            vm.reduceMotionStaticMode || MediaQuery.disableAnimationsOf(context);
+        final bool reduceMotion = vm.reduceMotionStaticMode ||
+            MediaQuery.disableAnimationsOf(context);
 
         return Scaffold(
           backgroundColor: mc.paper,
@@ -124,7 +250,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     alignment: WrapAlignment.spaceBetween,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: <Widget>[
-                      Text(AppStrings.studySpaceTitle, style: mc.screenTitleStyle),
+                      Text(AppStrings.studySpaceTitle,
+                          style: mc.screenTitleStyle),
                       MindClockButton(
                         key: const ValueKey<String>('study-space-back'),
                         label: 'Về Hôm nay',
@@ -152,7 +279,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                   else if (snapshot.status.isTerminal)
                     _buildSummaryAndSave(context, mc, vm, snapshot)
                   else
-                    _buildActiveSession(context, mc, vm, snapshot, reduceMotion),
+                    _buildActiveSession(
+                        context, mc, vm, snapshot, reduceMotion),
                 ],
               ),
             ),
@@ -217,7 +345,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                             children: <Widget>[
                               Text(mode.labelVi, style: mc.bodyStrongStyle),
                               if (mode == StudyRoomMode.withAi)
-                                const MindClockStatusPill(label: 'MindClock AI'),
+                                const MindClockStatusPill(
+                                    label: 'MindClock AI'),
                             ],
                           ),
                           SizedBox(height: mc.space4),
@@ -284,13 +413,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('2. Chọn thời lượng (5–120 phút)', style: mc.sectionTitleStyle),
+              Text('2. Chọn thời lượng (5–120 phút)',
+                  style: mc.sectionTitleStyle),
               SizedBox(height: mc.space12),
               Wrap(
                 spacing: mc.space8,
                 runSpacing: mc.space8,
-                children: StudyFocusSessionSnapshot.presetMinutes
-                    .map((int minutes) {
+                children:
+                    StudyFocusSessionSnapshot.presetMinutes.map((int minutes) {
                   return _SelectableChip(
                     key: ValueKey<String>('study-duration-$minutes'),
                     label: '$minutes phút',
@@ -319,7 +449,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                         : null,
                   ),
                   Semantics(
-                    label: 'Thời lượng đang chọn ${vm.draftDurationMinutes} phút',
+                    label:
+                        'Thời lượng đang chọn ${vm.draftDurationMinutes} phút',
                     child: Text(
                       '${vm.draftDurationMinutes} phút',
                       key: const ValueKey<String>('study-duration-display'),
@@ -407,7 +538,17 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     key: ValueKey<String>(keyName),
                     label: cadence.labelVi,
                     selected: vm.draftCadence == cadence,
-                    onTap: () => vm.setCadence(cadence),
+                    onTap: () {
+                      if (cadence == StudyCadence.deepSilent && _ambientAudioPlaying) {
+                        _mediaPicker.stopAudioPreview();
+                        setState(() {
+                          _ambientAudioPlaying = false;
+                          _ambientAudioStatusVi =
+                              'Đã dừng nhạc nền khi chuyển sang Học sâu (im lặng).';
+                        });
+                      }
+                      vm.setCadence(cadence);
+                    },
                   );
                 }).toList(growable: false),
               ),
@@ -437,7 +578,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 key: const ValueKey<String>('study-toggle-reduce-motion'),
                 label: 'Chế độ số tĩnh (Giảm chuyển động / Reduce Motion)',
                 value: reduceMotion,
-                onToggle: () => vm.setReduceMotionStaticMode(!vm.reduceMotionStaticMode),
+                onToggle: () =>
+                    vm.setReduceMotionStaticMode(!vm.reduceMotionStaticMode),
               ),
             ],
           ),
@@ -450,6 +592,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             _buildGeminiLiveOptInCard(context, mc, vm),
           ],
         ],
+        SizedBox(height: mc.space16),
+        _buildAmbientAudioCard(mc, lockedByDeepSilent: vm.isDeepSilentDraft),
         SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
         SizedBox(height: mc.space16),
@@ -683,6 +827,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           ],
         ],
         SizedBox(height: mc.space16),
+        _buildAmbientAudioCard(
+          mc,
+          lockedByDeepSilent: snapshot.cadence == StudyCadence.deepSilent,
+        ),
+        SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
       ],
     );
@@ -695,11 +844,12 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     StudyFocusSessionSnapshot snapshot,
   ) {
     final bool isLoading = vm.aiStatus == StudyAiRequestStatus.loading;
-    final bool hasRetryableError = vm.aiStatus == StudyAiRequestStatus.timeout ||
-        vm.aiStatus == StudyAiRequestStatus.rateLimited ||
-        vm.aiStatus == StudyAiRequestStatus.offline ||
-        vm.aiStatus == StudyAiRequestStatus.authExpired ||
-        vm.aiStatus == StudyAiRequestStatus.error;
+    final bool hasRetryableError =
+        vm.aiStatus == StudyAiRequestStatus.timeout ||
+            vm.aiStatus == StudyAiRequestStatus.rateLimited ||
+            vm.aiStatus == StudyAiRequestStatus.offline ||
+            vm.aiStatus == StudyAiRequestStatus.authExpired ||
+            vm.aiStatus == StudyAiRequestStatus.error;
 
     return MindClockCard(
       child: Column(
@@ -775,7 +925,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             SizedBox(height: mc.space8),
             const MindClockNoticeBanner(
               key: ValueKey<String>('study-ai-loading-banner'),
-              message: 'Đang gửi câu hỏi tới MindClock qua backend (/v1/study/help)...',
+              message:
+                  'Đang gửi câu hỏi tới MindClock qua backend (/v1/study/help)...',
               isWarm: false,
             ),
           ] else if (hasRetryableError && vm.aiErrorVi != null) ...<Widget>[
@@ -854,7 +1005,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             style: mc.sectionTitleStyle,
           ),
           SizedBox(height: mc.space8),
-          Text('Việc đã chọn: ${snapshot.taskTitle}', style: mc.bodyStrongStyle),
+          Text('Việc đã chọn: ${snapshot.taskTitle}',
+              style: mc.bodyStrongStyle),
           SizedBox(height: mc.space8),
           Text(
             'Thời gian thực tế: ${formatDurationClock(wallSec)}',
@@ -946,11 +1098,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     StudyFocusViewModel vm,
   ) {
     final List<String> subjects = _availablePersonalSubjects(vm);
-    final String effectiveSubject =
-        (_selectedPersonalizedSubject != null &&
-                subjects.contains(_selectedPersonalizedSubject))
-            ? _selectedPersonalizedSubject!
-            : subjects.first;
+    final String effectiveSubject = (_selectedPersonalizedSubject != null &&
+            subjects.contains(_selectedPersonalizedSubject))
+        ? _selectedPersonalizedSubject!
+        : subjects.first;
     final String gradeLabel =
         widget.guestViewModel.profile.gradeLevel ?? 'Lớp 11';
     final bool isLoading =
@@ -991,7 +1142,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 key: ValueKey<String>('study-personalized-subject-$code'),
                 label: SubjectCatalog.nameFor(code),
                 selected: code == effectiveSubject,
-                onTap: () => setState(() => _selectedPersonalizedSubject = code),
+                onTap: () =>
+                    setState(() => _selectedPersonalizedSubject = code),
               );
             }).toList(growable: false),
           ),
@@ -1002,7 +1154,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             enabled: !isLoading,
             decoration: InputDecoration(
               labelText: 'Chủ đề muốn ôn (tùy chọn)',
-              hintText: 'Ví dụ: Phương trình bậc nhất, Thì hiện tại hoàn thành...',
+              hintText:
+                  'Ví dụ: Phương trình bậc nhất, Thì hiện tại hoàn thành...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(mc.radiusControl),
               ),
@@ -1085,8 +1238,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         vm.draftSubjectCode ?? _selectedPersonalizedSubject ?? subjects.first;
     final String gradeLabel =
         widget.guestViewModel.profile.gradeLevel ?? 'Lớp 11';
-    final bool isLoading =
-        vm.liveTokenStatus == StudyAiRequestStatus.loading;
+    final bool isLoading = vm.liveTokenStatus == StudyAiRequestStatus.loading;
     final GeminiLiveSessionToken? token = vm.liveToken;
 
     return MindClockCard(
@@ -1256,7 +1408,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                       key: ValueKey<String>(
                           'study-history-sync-${item.sessionId}'),
                       style: mc.captionStyle.copyWith(
-                        color: item.remoteFinishSynced ? mc.primary : mc.inkMuted,
+                        color:
+                            item.remoteFinishSynced ? mc.primary : mc.inkMuted,
                       ),
                     ),
                     if (!item.remoteFinishSynced &&

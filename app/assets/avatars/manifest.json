@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "task": "T055",
+  "origin": "original_team_generated_and_cropped",
+  "license": "project_owned_release_ready",
+  "assets": [
+    {
+      "id": "sunrise",
+      "file": "avatar_sunrise.png",
+      "size": "256x256",
+      "description": "MindClock original warm dawn student portrait"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/models/wake_suggestion.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -17,12 +19,14 @@ class AlarmConfigScreen extends StatefulWidget {
     super.key,
     required this.viewModel,
     this.editingAlarm,
+    this.mediaPickerGateway,
     required this.onSaved,
     required this.onCancel,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final AlarmConfig? editingAlarm;
+  final MediaPickerGateway? mediaPickerGateway;
   final ValueChanged<String> onSaved;
   final VoidCallback onCancel;
 
@@ -37,6 +41,11 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   late bool _enabled;
   late bool _soundEnabled;
   late AlarmSoundOption _soundOption;
+  String? _customSoundPath;
+  String? _customSoundLabel;
+  bool _pickingCustomSound = false;
+  bool _isPreviewPlaying = false;
+  String? _soundStatusVi;
   late bool _vibrateEnabled;
   late AlarmMode _mode;
   late AlarmSubjectRule _subjectRule;
@@ -59,6 +68,8 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _enabled = existing.enabled;
       _soundEnabled = existing.soundEnabled;
       _soundOption = existing.soundOption;
+      _customSoundPath = existing.customSoundPath;
+      _customSoundLabel = existing.customSoundLabel;
       _vibrateEnabled = existing.vibrateEnabled;
       _mode = existing.mode;
       _subjectRule = existing.subjectRule;
@@ -89,10 +100,69 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
 
   @override
   void dispose() {
+    if (_isPreviewPlaying) {
+      _mediaPicker.stopAudioPreview();
+    }
     _commuteController.dispose();
     _prepController.dispose();
     _bufferController.dispose();
     super.dispose();
+  }
+
+  MediaPickerGateway get _mediaPicker =>
+      widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
+
+  Future<void> _pickCustomAlarmAudio() async {
+    if (_pickingCustomSound) return;
+    await _mediaPicker.stopAudioPreview();
+    setState(() {
+      _isPreviewPlaying = false;
+      _pickingCustomSound = true;
+      _soundStatusVi = null;
+    });
+    final MediaPickResult res = await _mediaPicker.pickAlarmAudio();
+    if (!mounted) return;
+    setState(() {
+      _pickingCustomSound = false;
+      if (res.picked && res.localPath != null) {
+        _soundOption = AlarmSoundOption.customLocal;
+        _soundEnabled = true;
+        _customSoundPath = res.localPath;
+        _customSoundLabel = res.displayName ?? 'Nhạc báo thức đã chọn';
+        _soundStatusVi = 'Đã lưu nhạc cục bộ: $_customSoundLabel.';
+      } else if (!res.cancelled && res.errorMessageVi != null) {
+        _soundStatusVi = res.errorMessageVi;
+      }
+    });
+  }
+
+  Future<void> _togglePreviewSound() async {
+    if (_isPreviewPlaying) {
+      await _mediaPicker.stopAudioPreview();
+      if (!mounted) return;
+      setState(() => _isPreviewPlaying = false);
+      return;
+    }
+    if (_soundOption == AlarmSoundOption.silentVibrateOnly) return;
+    if (_soundOption == AlarmSoundOption.customLocal &&
+        (_customSoundPath == null || _customSoundPath!.isEmpty)) {
+      setState(() {
+        _soundStatusVi = 'Chưa chọn tệp nhạc trên máy — hãy chọn tệp trước khi nghe thử.';
+      });
+      return;
+    }
+    final bool started = await _mediaPicker.previewAudio(
+      soundOption: _soundOption.id,
+      customSoundPath: _customSoundPath,
+      loop: false,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isPreviewPlaying = started;
+      _soundStatusVi = started
+          ? 'Đang phát thử âm báo...'
+          : 'Thiết bị chưa hỗ trợ phát thử âm báo trực tiếp tại đây.';
+    });
   }
 
   void _adjustTime({int deltaHours = 0, int deltaMinutes = 0}) {
@@ -140,6 +210,9 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   }
 
   Future<void> _save() async {
+    if (_isPreviewPlaying) {
+      await _mediaPicker.stopAudioPreview();
+    }
     final List<int> sortedWeekdays = _repeatWeekdays.toList()..sort();
     final String alarmId = widget.editingAlarm?.id ??
         'alarm_${DateTime.now().microsecondsSinceEpoch}';
@@ -151,6 +224,12 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       enabled: _enabled,
       soundEnabled: _soundEnabled && _soundOption != AlarmSoundOption.silentVibrateOnly,
       soundOption: _soundOption,
+      customSoundPath: _soundOption == AlarmSoundOption.customLocal
+          ? _customSoundPath
+          : null,
+      customSoundLabel: _soundOption == AlarmSoundOption.customLocal
+          ? _customSoundLabel
+          : null,
       vibrateEnabled: _vibrateEnabled,
       mode: _mode,
       subjectRule: _subjectRule,
@@ -507,6 +586,44 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                         );
                       }).toList(growable: false),
                     ),
+                    if (_soundOption == AlarmSoundOption.customLocal) ...<Widget>[
+                      SizedBox(height: mc.space12),
+                      Text(
+                        _customSoundLabel != null
+                            ? 'Tệp đã chọn: $_customSoundLabel'
+                            : 'Chưa chọn tệp nhạc. Nếu thiếu tệp lúc báo thức, máy tự chuyển về chuông mặc định.',
+                        style: mc.captionStyle,
+                      ),
+                      SizedBox(height: mc.space8),
+                      MindClockButton(
+                        key: const ValueKey<String>('pick-custom-alarm-audio-btn'),
+                        label: _pickingCustomSound
+                            ? 'Đang mở trình chọn tệp...'
+                            : 'Chọn nhạc MP3 / âm thanh từ máy',
+                        icon: MindClockIconKind.bell,
+                        variant: MindClockButtonVariant.secondary,
+                        expand: false,
+                        onPressed:
+                            _pickingCustomSound ? null : _pickCustomAlarmAudio,
+                      ),
+                    ],
+                    if (_soundOption != AlarmSoundOption.silentVibrateOnly) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      MindClockButton(
+                        key: const ValueKey<String>('preview-alarm-audio-btn'),
+                        label: _isPreviewPlaying ? 'Dừng nghe thử' : 'Nghe thử chuông',
+                        icon: _isPreviewPlaying
+                            ? MindClockIconKind.stop
+                            : MindClockIconKind.volumeOn,
+                        variant: MindClockButtonVariant.subtle,
+                        expand: false,
+                        onPressed: _togglePreviewSound,
+                      ),
+                    ],
+                    if (_soundStatusVi != null) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      Text(_soundStatusVi!, style: mc.captionStyle),
+                    ],
                     SizedBox(height: mc.space12),
                     _ToggleRow(
                       toggleKey: const ValueKey<String>('alarm-vibrate-toggle'),

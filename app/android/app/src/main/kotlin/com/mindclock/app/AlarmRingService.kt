@@ -17,6 +17,7 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import java.io.File
 
 /**
  * ForegroundService (`mediaPlayback`) phát âm thanh kênh báo thức và rung cục bộ.
@@ -69,6 +70,7 @@ class AlarmRingService : Service() {
         val soundEnabled = intent.getBooleanExtra(EXTRA_SOUND_ENABLED, true)
         val vibrateEnabled = intent.getBooleanExtra(EXTRA_VIBRATE_ENABLED, true)
         val soundOption = intent.getStringExtra(EXTRA_SOUND_OPTION) ?: "gentle_dawn"
+        val customSoundPath = intent.getStringExtra(EXTRA_CUSTOM_SOUND_PATH)
 
         currentAlarmId = alarmId
         val payload = RingPayloadRecord(
@@ -97,8 +99,9 @@ class AlarmRingService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
-        if (resolveSoundTarget(soundEnabled, soundOption) != AlarmSoundTarget.SILENT) {
-            startAlarmSound(soundOption)
+        val customExists = !customSoundPath.isNullOrBlank() && File(customSoundPath).isFile
+        if (resolveSoundTarget(soundEnabled, soundOption, customSoundPath, customExists) != AlarmSoundTarget.SILENT) {
+            startAlarmSound(soundOption, customSoundPath)
         }
         if (vibrateEnabled) {
             startAlarmVibration()
@@ -147,23 +150,39 @@ class AlarmRingService : Service() {
         stopSelf()
     }
 
-    private fun startAlarmSound(soundOption: String) {
+    private fun startAlarmSound(soundOption: String, customSoundPath: String? = null) {
         stopSoundOnly()
-        val target = resolveSoundTarget(soundEnabled = true, soundOption = soundOption)
-        val primaryUri = resolveSoundUri(target) ?: return
-        val fallbackUri = resolveSoundUri(AlarmSoundTarget.SYSTEM_DEFAULT)
+        val customExists = !customSoundPath.isNullOrBlank() && File(customSoundPath).isFile
+        val target = resolveSoundTarget(
+            soundEnabled = true,
+            soundOption = soundOption,
+            customSoundPath = customSoundPath,
+            customSoundExists = customExists,
+        )
+        val primaryUri = resolveSoundUri(target, customSoundPath)
+        val bundledFallbackUri = resolveSoundUri(AlarmSoundTarget.BUNDLED_BERMUDA, null)
+        val systemFallbackUri = resolveSoundUri(AlarmSoundTarget.SYSTEM_DEFAULT, null)
 
-        if (!startMediaPlayerLoop(primaryUri) &&
-            fallbackUri != null &&
-            fallbackUri != primaryUri
+        if (primaryUri != null && startMediaPlayerLoop(primaryUri)) {
+            return
+        }
+        if (target == AlarmSoundTarget.CUSTOM_LOCAL_FILE &&
+            bundledFallbackUri != null &&
+            startMediaPlayerLoop(bundledFallbackUri)
         ) {
-            startMediaPlayerLoop(fallbackUri)
+            return
+        }
+        if (systemFallbackUri != null && systemFallbackUri != primaryUri) {
+            startMediaPlayerLoop(systemFallbackUri)
         }
     }
 
-    private fun resolveSoundUri(target: AlarmSoundTarget): Uri? {
+    private fun resolveSoundUri(target: AlarmSoundTarget, customSoundPath: String?): Uri? {
         return when (target) {
             AlarmSoundTarget.SILENT -> null
+            AlarmSoundTarget.CUSTOM_LOCAL_FILE -> {
+                if (customSoundPath.isNullOrBlank()) null else Uri.fromFile(File(customSoundPath))
+            }
             AlarmSoundTarget.BUNDLED_BERMUDA ->
                 Uri.parse("android.resource://$packageName/${R.raw.alarm_bermuda}")
             AlarmSoundTarget.SYSTEM_DEFAULT ->
@@ -255,11 +274,13 @@ class AlarmRingService : Service() {
     enum class AlarmSoundTarget {
         SILENT,
         BUNDLED_BERMUDA,
+        CUSTOM_LOCAL_FILE,
         SYSTEM_DEFAULT,
     }
 
     companion object {
         const val SOUND_OPTION_BERMUDA = "bermuda_alarm"
+        const val SOUND_OPTION_CUSTOM_LOCAL = "custom_local"
         const val SOUND_OPTION_VIBRATE_ONLY = "vibrate_only"
 
         const val CHANNEL_ID = "mindclock_alarm_ring_channel"
@@ -267,9 +288,17 @@ class AlarmRingService : Service() {
         fun resolveSoundTarget(
             soundEnabled: Boolean,
             soundOption: String,
+            customSoundPath: String? = null,
+            customSoundExists: Boolean = false,
         ): AlarmSoundTarget {
             if (!soundEnabled || soundOption == SOUND_OPTION_VIBRATE_ONLY) {
                 return AlarmSoundTarget.SILENT
+            }
+            if (soundOption == SOUND_OPTION_CUSTOM_LOCAL &&
+                !customSoundPath.isNullOrBlank() &&
+                customSoundExists
+            ) {
+                return AlarmSoundTarget.CUSTOM_LOCAL_FILE
             }
             if (soundOption == SOUND_OPTION_BERMUDA) {
                 return AlarmSoundTarget.BUNDLED_BERMUDA
@@ -292,6 +321,7 @@ class AlarmRingService : Service() {
         const val EXTRA_SOUND_ENABLED = "extra_sound_enabled"
         const val EXTRA_VIBRATE_ENABLED = "extra_vibrate_enabled"
         const val EXTRA_SOUND_OPTION = "extra_sound_option"
+        const val EXTRA_CUSTOM_SOUND_PATH = "extra_custom_sound_path"
 
         fun ensureNotificationChannel(context: Context) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return

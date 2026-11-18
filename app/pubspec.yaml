@@ -22,3 +22,4 @@ flutter:
   uses-material-design: false
   assets:
     - assets/arena/
+    - assets/avatars/

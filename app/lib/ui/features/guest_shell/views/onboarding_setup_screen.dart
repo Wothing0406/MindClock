@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/daily_study_plan.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../../domain/services/rule_based_plan_generator.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -18,12 +21,14 @@ class OnboardingSetupScreen extends StatefulWidget {
     required this.onSaveProfile,
     required this.onSkipLater,
     required this.onAlarmOnly,
+    this.mediaPickerGateway,
   });
 
   final StudyProfile initialProfile;
   final ValueChanged<StudyProfile> onSaveProfile;
   final VoidCallback onSkipLater;
   final VoidCallback onAlarmOnly;
+  final MediaPickerGateway? mediaPickerGateway;
 
   @override
   State<OnboardingSetupScreen> createState() => _OnboardingSetupScreenState();
@@ -32,34 +37,14 @@ class OnboardingSetupScreen extends StatefulWidget {
 class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   late TextEditingController _aliasController;
   late String _avatarId;
+  String? _customAvatarPath;
+  String? _avatarStatusVi;
+  bool _pickingAvatar = false;
   String? _selectedGrade;
   late Set<String> _selectedSubjects;
   late Map<String, PriorityLevel> _priorities;
   late Map<String, SubjectSelfAssessment> _selfAssessments;
   late TextEditingController _goalController;
-
-  static const List<Map<String, dynamic>> _availableAvatars = <Map<String, dynamic>>[
-    <String, dynamic>{
-      'id': 'sunrise',
-      'label': 'Bình minh',
-      'icon': MindClockIconKind.sunrise,
-    },
-    <String, dynamic>{
-      'id': 'book',
-      'label': 'Trang sách',
-      'icon': MindClockIconKind.book,
-    },
-    <String, dynamic>{
-      'id': 'clock',
-      'label': 'Kỷ luật',
-      'icon': MindClockIconKind.clock,
-    },
-    <String, dynamic>{
-      'id': 'user',
-      'label': 'Học sinh',
-      'icon': MindClockIconKind.user,
-    },
-  ];
 
   @override
   void initState() {
@@ -68,6 +53,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _avatarId = widget.initialProfile.avatarId.isNotEmpty
         ? widget.initialProfile.avatarId
         : 'sunrise';
+    _customAvatarPath = widget.initialProfile.customAvatarPath;
     _selectedGrade = widget.initialProfile.gradeLevel;
     _selectedSubjects = Set<String>.from(widget.initialProfile.selectedSubjectCodes);
     _priorities = <String, PriorityLevel>{
@@ -148,6 +134,28 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     );
   }
 
+  Future<void> _pickCustomAvatar() async {
+    if (_pickingAvatar) return;
+    setState(() {
+      _pickingAvatar = true;
+      _avatarStatusVi = null;
+    });
+    final MediaPickerGateway gateway =
+        widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
+    final MediaPickResult res = await gateway.pickAvatarImage();
+    if (!mounted) return;
+    setState(() {
+      _pickingAvatar = false;
+      if (res.picked && res.localPath != null) {
+        _customAvatarPath = res.localPath;
+        _avatarStatusVi =
+            'Đã chọn ảnh từ máy (lưu cục bộ trên thiết bị${res.displayName != null ? ': ${res.displayName}' : ''}).';
+      } else if (!res.cancelled && res.errorMessageVi != null) {
+        _avatarStatusVi = res.errorMessageVi;
+      }
+    });
+  }
+
   void _submit({required bool confirmPlan}) {
     final List<PrioritySubject> priorityList = _priorities.entries
         .map(
@@ -164,6 +172,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       StudyProfile(
         alias: _aliasController.text.trim(),
         avatarId: _avatarId,
+        customAvatarPath: _customAvatarPath,
         gradeLevel: _selectedGrade,
         selectedSubjectCodes: _selectedSubjects.toList(growable: false),
         prioritySubjects: priorityList,
@@ -243,22 +252,44 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                       ),
                     ),
                     SizedBox(height: mc.space12),
-                    Text('Chọn biểu tượng đại diện:', style: mc.captionStyle),
-                    SizedBox(height: mc.space8),
+                    Row(
+                      children: <Widget>[
+                        MindClockAvatarView(
+                          avatarId: _avatarId,
+                          customAvatarPath: _customAvatarPath,
+                          size: 52,
+                          selected: true,
+                        ),
+                        SizedBox(width: mc.space12),
+                        Expanded(
+                          child: Text(
+                            _customAvatarPath != null
+                                ? 'Đang dùng ảnh đại diện từ máy (lưu riêng trên thiết bị).'
+                                : 'Chọn ảnh minh họa có sẵn hoặc tải ảnh từ máy:',
+                            style: mc.captionStyle,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: mc.space12),
                     Wrap(
-                      spacing: mc.space12,
-                      children: _availableAvatars.map((Map<String, dynamic> av) {
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      children: MindClockAvatarCatalog.presets.map((Map<String, dynamic> av) {
                         final String id = av['id'] as String;
                         final String label = av['label'] as String;
-                        final MindClockIconKind iconKind =
-                            av['icon'] as MindClockIconKind;
-                        final bool selected = _avatarId == id;
+                        final bool selected =
+                            _customAvatarPath == null && _avatarId == id;
 
                         return MindClockPressable(
                           key: ValueKey<String>('avatar-$id'),
                           selected: selected,
                           semanticLabel: label,
-                          onPressed: () => setState(() => _avatarId = id),
+                          onPressed: () => setState(() {
+                            _avatarId = id;
+                            _customAvatarPath = null;
+                            _avatarStatusVi = null;
+                          }),
                           child: Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: mc.space12,
@@ -275,10 +306,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                MindClockIcon(
-                                  iconKind,
-                                  color: selected ? mc.primary : mc.ink,
-                                  size: 18,
+                                MindClockAvatarView(
+                                  avatarId: id,
+                                  size: 26,
+                                  selected: selected,
                                 ),
                                 SizedBox(width: mc.space8),
                                 Text(
@@ -293,6 +324,39 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         );
                       }).toList(growable: false),
                     ),
+                    SizedBox(height: mc.space12),
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      children: <Widget>[
+                        MindClockButton(
+                          key: const ValueKey<String>('pick-custom-avatar-btn'),
+                          label: _pickingAvatar
+                              ? 'Đang mở thư viện...'
+                              : 'Chọn ảnh từ máy',
+                          icon: MindClockIconKind.edit,
+                          variant: MindClockButtonVariant.secondary,
+                          expand: false,
+                          onPressed: _pickingAvatar ? null : _pickCustomAvatar,
+                        ),
+                        if (_customAvatarPath != null)
+                          MindClockButton(
+                            key: const ValueKey<String>('clear-custom-avatar-btn'),
+                            label: 'Dùng ảnh minh họa',
+                            icon: MindClockIconKind.trash,
+                            variant: MindClockButtonVariant.subtle,
+                            expand: false,
+                            onPressed: () => setState(() {
+                              _customAvatarPath = null;
+                              _avatarStatusVi = 'Đã chuyển về avatar minh họa MindClock.';
+                            }),
+                          ),
+                      ],
+                    ),
+                    if (_avatarStatusVi != null) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      Text(_avatarStatusVi!, style: mc.captionStyle),
+                    ],
                   ],
                 ),
               ),

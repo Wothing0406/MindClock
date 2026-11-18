@@ -10,6 +10,7 @@ import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/morning_question_selector.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -127,6 +128,12 @@ class _TodayScreenState extends State<TodayScreen> {
             runSpacing: mc.space8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
+              MindClockAvatarView(
+                avatarId: profile.avatarId,
+                customAvatarPath: profile.customAvatarPath,
+                size: 36,
+                selected: true,
+              ),
               Text(AppStrings.navToday, style: mc.screenTitleStyle),
               MindClockStatusPill(
                 label:

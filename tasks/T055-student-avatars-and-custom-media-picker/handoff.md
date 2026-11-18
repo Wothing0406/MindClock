@@ -1,0 +1,28 @@
+# Bàn giao nhiệm vụ T055
+
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  - Crop sạch viền trắng & đóng gói `app/assets/avatars/avatar_sunrise.png` + `manifest.json`, khai báo `assets/avatars/` trong `app/pubspec.yaml`.
+  - Tạo `MindClockAvatarView` & `MindClockAvatarCatalog` (`avatar_sunrise.png`, 3 chân dung gốc `champ_*.png`, 3 icon vector tương thích ngược `book`/`clock`/`user`, ưu tiên `customAvatarPath` nếu tồn tại trên thiết bị) và tích hợp vào `OnboardingSetupScreen`, `MeGuestScreen`, `TodayScreen`.
+  - Thêm `MediaPickerGateway` / `MethodChannelMediaPickerGateway` (`mindclock/media_picker`) nối `MediaPickerBridgeHandler.kt` (`ACTION_OPEN_DOCUMENT` copy riêng vào `filesDir/avatars/` & `filesDir/sounds/`, nghe thử/dừng `MediaPlayer`).
+  - Hỗ trợ `AlarmSoundOption.customLocal` (`customSoundPath`, `customSoundLabel`) trên `AlarmConfig`, `AlarmConfigScreen`, `NativeAlarmModels.kt`, `AlarmSchedulerImpl.kt`, `AlarmFireReceiver.kt`, `AlarmRingService.kt` với fallback an toàn về `BUNDLED_BERMUDA` / `SYSTEM_DEFAULT` khi file tùy chỉnh thiếu/hỏng.
+  - Bổ sung card chọn/nghe nhạc nền từ máy (mặc định tắt, khóa cứng khi `Học sâu (im lặng)`) trong `StudySpaceScreen`.
+- **File/code/docs thay đổi:**
+  - `app/assets/avatars/{avatar_sunrise.png,manifest.json}`, `app/pubspec.yaml`, `app/lib/app.dart`
+  - `app/lib/domain/models/{study_profile.dart,alarm_config.dart}`
+  - `app/lib/domain/services/media_picker_gateway.dart`, `app/lib/data/services/method_channel_media_picker_gateway.dart`
+  - `app/lib/ui/core/widgets/mindclock_avatar_view.dart`
+  - `app/lib/ui/features/guest_shell/views/{onboarding_setup_screen.dart,me_guest_screen.dart,today_screen.dart,alarm_config_screen.dart,mindclock_shell_screen.dart}`
+  - `app/lib/ui/features/study_focus/views/study_space_screen.dart`
+  - `app/android/app/src/main/kotlin/com/mindclock/app/{MediaPickerBridgeHandler.kt,MainActivity.kt,NativeAlarmModels.kt,AlarmSchedulerImpl.kt,AlarmFireReceiver.kt,AlarmRingService.kt}`
+  - `app/android/app/src/test/kotlin/com/mindclock/app/AlarmSoundResolverTest.kt`
+  - `app/test/custom_avatar_and_audio_picker_test.dart`
+  - `docs/00-start/01-hien-trang.md`, `tasks/T055-student-avatars-and-custom-media-picker/*`
+- **Test đã chạy (2026-11-18):**
+  - `.\gradlew.bat testDebugUnitTest --no-daemon` (Studio JBR JDK): `BUILD SUCCESSFUL` (`:app:testDebugUnitTest` 10/10 PASS).
+  - `flutter analyze --no-pub`: `No issues found!`.
+  - `flutter test --no-pub -j 1`: **82/82 PASS**.
+  - `RAW_COLOR_HITS: 0`; `python scripts/check_docs_links.py` (543 files PASS); `python scripts/check_task_records.py` OK.
+- **Rủi ro còn lại:** Chưa cài APK lên 2 máy Android vật lý để test hộp thoại SAF `ACTION_OPEN_DOCUMENT` & đổ chuông MP3 tùy chọn khi tắt màn hình/khởi động lại máy.
+- **Điểm tiếp tục chính xác:** Kiểm thử thực tế trên 2 máy Android thật (SAF chọn ảnh/nhạc + chuông màn khóa) và triển khai Firebase Auth + PostgreSQL thật cho giai đoạn pilot.
+- **Git:** Đang chuẩn bị commit & push lên `origin/main`.
