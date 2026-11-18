@@ -32,4 +32,4 @@
   - Chưa test đầu-cuối trên **2 máy Android vật lý** (chuông màn khóa, Dừng khẩn cấp offline, Firebase Auth Email/Password thật trên Firebase Console).
   - Phòng bạn bè qua QR/link (`R7`), avatar AI Live Audio (`R7`) và Đấu trường G2–G4 (`R8`) vẫn nằm ở các lát tiếp theo sau cổng R6.
 - **Điểm tiếp tục chính xác:** Bật Email/Password trên Firebase Console + kiểm thiết bị Android vật lý (`R6`: B02/ON-01..06/FOCUS-09..10) hoặc triển khai client G2 Đấu trường 1v1 online (`R8`).
-- **Git:** Đang chuẩn bị commit & push lên `origin/main` (cập nhật SHA sau push).
+- **Git:** Commit chính `c019155` (`c019155c3f2d16a37fdfeaf2752e41b3fea42e96`) đã push lên nhánh `origin/main`; cập nhật xác nhận SHA remote trong `handoff.md`.
