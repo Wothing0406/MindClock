@@ -15,6 +15,7 @@ import '../../../../domain/services/morning_question_selector.dart';
 import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/math_formula_text.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -834,7 +835,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                                     ],
                                   ),
                                   SizedBox(height: mc.space8),
-                                  Text(previewPrompt, style: mc.bodyStyle),
+                                  MathFormulaText(previewPrompt, style: mc.bodyStyle),
                                   if (_aiPreviewStatusVi != null) ...<Widget>[
                                     SizedBox(height: mc.space8),
                                     Text(

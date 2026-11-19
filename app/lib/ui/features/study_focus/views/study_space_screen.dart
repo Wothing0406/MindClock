@@ -10,6 +10,7 @@ import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/math_formula_text.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -1402,7 +1403,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     style: mc.chipLabelStyle,
                   ),
                   SizedBox(height: mc.space4),
-                  Text(question.prompt, style: mc.bodyStrongStyle),
+                  MathFormulaText(question.prompt, style: mc.bodyStrongStyle),
                   if (question.reasoningPromptVi.isNotEmpty) ...<Widget>[
                     SizedBox(height: mc.space4),
                     Text(question.reasoningPromptVi, style: mc.captionStyle),

@@ -146,6 +146,17 @@ def _canonicalize_unit(raw_unit: str) -> str:
     return UNIT_SYNONYMS.get(cleaned, cleaned)
 
 
+def _canonicalize_symbolic_expr(text: str) -> str:
+    """Chuẩn hóa ký hiệu Toán/Lý/Hóa phổ biến để so khớp biểu thức đại số & đạo hàm."""
+    out = text.strip().lower()
+    out = out.replace('²', '^2').replace('³', '^3')
+    out = out.replace(r'\cdot', '*').replace('·', '*').replace('×', '*')
+    out = re.sub(r'\\sqrt\{([^{}]+)\}', r'√(\1)', out)
+    out = re.sub(r'(\d)\s+([a-z(√])', r'\1\2', out)
+    out = re.sub(r'\s*([+\-*/^=()])\s*', r'\1', out)
+    return re.sub(r'\s+', ' ', out).strip()
+
+
 def _simplify_fraction(num: int, den: int) -> tuple[int, int]:
     if den < 0:
         num, den = -num, -den
@@ -163,6 +174,7 @@ def parse_answer(text: Any) -> ParsedAnswer:
         return ParsedAnswer(raw='', cleaned='')
 
     cleaned = raw_str.strip().lower()
+    cleaned = cleaned.replace('²', '^2').replace('³', '^3')
 
     # 1. Bóc tách LaTeX phân số: \frac{a}{b} -> a/b
     cleaned = re.sub(r'\\frac\{([+-]?\d+)\}\{([+-]?\d+)\}', r'\1/\2', cleaned)
@@ -260,12 +272,13 @@ def is_answer_accepted(
     if not sub_clean:
         return False
 
-    # 1. So khớp chuỗi trực tiếp (cho các câu hỏi trắc nghiệm, từ vựng, ngữ pháp)
+    # 1. So khớp chuỗi trực tiếp & biểu thức đại số chuẩn hóa (cho trắc nghiệm, đạo hàm, lũy thừa)
+    sub_symbolic = _canonicalize_symbolic_expr(sub_clean)
     for raw_acc in accepted_answers:
         if raw_acc is None:
             continue
         acc_str = str(raw_acc).strip().lower()
-        if sub_clean == acc_str:
+        if sub_clean == acc_str or sub_symbolic == _canonicalize_symbolic_expr(parse_answer(raw_acc).cleaned):
             return True
 
     # 2. So khớp số học & đơn vị đo lường

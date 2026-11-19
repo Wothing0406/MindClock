@@ -27,9 +27,9 @@ class Settings(BaseSettings):
 
     gemini_api_key: SecretStr = Field(default=SecretStr(''))
     gemini_api_base_url: str = 'https://generativelanguage.googleapis.com'
-    gemini_primary_model: str = 'gemini-3.8-flash'
-    gemini_fast_model: str = 'gemini-3.5-flash-lite'
-    gemini_live_model: str = 'gemini-3.8-live'
+    gemini_primary_model: str = 'gemini-3.1-flash-lite'
+    gemini_fast_model: str = 'gemini-3-flash-preview'
+    gemini_live_model: str = 'gemini-3.1-flash-live-preview'
     gemini_live_api_version: str = 'v1alpha'
     gemini_live_token_ttl_seconds: int = 600
     gemini_timeout_seconds: float = 15.0

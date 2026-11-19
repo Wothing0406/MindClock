@@ -6,6 +6,8 @@ import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/math_formula_text.dart';
+import '../../../core/widgets/math_input_keypad.dart';
 import '../../../core/widgets/mindclock_brand_mark.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
@@ -897,7 +899,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                     ],
                   ),
                   SizedBox(height: mc.space12),
-                  Text(
+                  MathFormulaText(
                     q.prompt,
                     key: const ValueKey<String>('arena-question-prompt'),
                     style: mc.sectionTitleStyle,
@@ -916,7 +918,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                       controller: _answerController,
                       decoration: InputDecoration(
                         hintText:
-                            'Nhập đáp án (ví dụ: 8, 0,5, 2 A, has lived...)',
+                            'Nhập đáp án (ví dụ: 8, 0,5, 2 A, x^2, 3/4, 25%)',
                         filled: true,
                         fillColor: mc.surface,
                         border: OutlineInputBorder(
@@ -924,6 +926,11 @@ class _ArenaScreenState extends State<ArenaScreen>
                           borderSide: BorderSide(color: mc.outline),
                         ),
                       ),
+                    ),
+                    SizedBox(height: mc.space8),
+                    MathInputKeypad(
+                      controller: _answerController,
+                      compact: true,
                     ),
                     SizedBox(height: mc.space12),
                     Text(

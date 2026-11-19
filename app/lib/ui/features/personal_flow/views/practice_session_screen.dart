@@ -5,6 +5,8 @@ import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/math_formula_text.dart';
+import '../../../core/widgets/math_input_keypad.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
@@ -272,7 +274,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                     ),
                     SizedBox(height: mc.space12),
                   ],
-                  Text(
+                  MathFormulaText(
                     question.prompt,
                     key: const ValueKey<String>('practice-question-prompt'),
                     style: mc.sectionTitleStyle,
@@ -292,6 +294,11 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                       labelText: 'Đáp án cuối cùng',
                       border: OutlineInputBorder(),
                     ),
+                  ),
+                  SizedBox(height: mc.space8),
+                  MathInputKeypad(
+                    controller: _answerController,
+                    compact: true,
                   ),
                   SizedBox(height: mc.space12),
                   TextField(

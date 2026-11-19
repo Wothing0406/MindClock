@@ -123,6 +123,8 @@ class PersonalizedQuestionRequest(ApiModel):
     grade_level: str | None = Field(default=None, alias='gradeLevel')
     topic_hint: str | None = Field(default=None, alias='topicHint', max_length=120)
     difficulty: int = Field(default=1, ge=1, le=3)
+    stage: str = Field(default='applied', pattern=r'^(foundational|applied|advanced)$')
+    seed_question_id: str | None = Field(default=None, alias='seedQuestionId', max_length=64)
     save_to_bank: bool = Field(default=True, alias='saveToBank')
 
 

@@ -112,13 +112,21 @@ def _alarm_to_wire(alarm: Alarm) -> dict[str, Any]:
     }
 
 
-def _question_to_personalized_wire(q: Question, *, fallback_used: bool = False) -> dict[str, Any]:
+def _question_to_personalized_wire(
+    q: Question,
+    *,
+    fallback_used: bool = False,
+    stage: str | None = None,
+    seed_question_id: str | None = None,
+) -> dict[str, Any]:
     return {
         'questionId': q.id,
         'subjectCode': q.subject_code,
         'gradeBand': q.grade_band,
         'topicId': q.topic_id,
         'difficulty': q.difficulty,
+        'stage': stage or 'applied',
+        'seedQuestionId': seed_question_id,
         'prompt': q.prompt,
         'reasoningPromptVi': q.reasoning_prompt_vi,
         'steps': (q.rubric_json or {}).get('steps', []),
@@ -744,6 +752,19 @@ def create_v1_router(
             )
         )
 
+        seed_q: Question | None = None
+        if payload.seed_question_id:
+            candidate_seed = db.get(Question, payload.seed_question_id)
+            if candidate_seed and candidate_seed.status in {'published', 'approved'}:
+                seed_q = candidate_seed
+        if seed_q is None:
+            seed_q = _select_published_question(
+                db,
+                user_id=u.id,
+                subject_code=clean_subject,
+                grade_band=effective_grade,
+            )
+
         gemini = _get_gemini(settings)
         # Gọi Gemini ngoài DB transaction theo docs/28 §3.
         try:
@@ -754,9 +775,13 @@ def create_v1_router(
                 weak_topics=weak_topics,
                 topic_hint=payload.topic_hint,
                 difficulty=payload.difficulty,
+                stage=payload.stage,
+                seed_question_id=seed_q.id if seed_q else payload.seed_question_id,
+                seed_prompt=seed_q.prompt if seed_q else None,
+                seed_steps=(seed_q.rubric_json or {}).get('steps', []) if seed_q else None,
             )
         except GeminiServiceError:
-            fallback_q = _select_published_question(
+            fallback_q = seed_q or _select_published_question(
                 db,
                 user_id=u.id,
                 subject_code=clean_subject,
@@ -769,7 +794,12 @@ def create_v1_router(
                     'Không tạo được câu hỏi cá nhân hóa lúc này.',
                     retryable=True,
                 )
-            return _question_to_personalized_wire(fallback_q, fallback_used=True)
+            return _question_to_personalized_wire(
+                fallback_q,
+                fallback_used=True,
+                stage=payload.stage,
+                seed_question_id=fallback_q.id,
+            )
 
         question = Question(
             id=f'ai_q_{uuid.uuid4().hex[:12]}',
@@ -792,7 +822,12 @@ def create_v1_router(
             db.add(question)
             db.commit()
             db.refresh(question)
-        return _question_to_personalized_wire(question, fallback_used=False)
+        return _question_to_personalized_wire(
+            question,
+            fallback_used=False,
+            stage=draft.stage,
+            seed_question_id=draft.seed_question_id,
+        )
 
     @router.get('/questions/personalized')
     def list_personalized_questions(
