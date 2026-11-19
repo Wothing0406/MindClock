@@ -16,4 +16,4 @@
   - `.\scripts\build_android_apk.ps1 -Mode debug`: `dist/mindclock-debug.apk` (**152.37 MB**).
 - **Test chưa chạy/giới hạn:** Chưa test chuông OS trên máy Android vật lý thực tế qua Doze qua đêm (đã test logic `AlarmRingPayload` -> `PracticeSessionScreen` bằng widget test và E2E emulator trước đó).
 - **Điểm tiếp tục chính xác:** Kiểm thử trực tiếp `dist/mindclock-debug.apk` trên 2 máy Android vật lý (báo thức màn khóa, chụp/chọn ảnh TKB thật, và ghép PvP 1v1 nối staging HTTPS).
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T062`.
+- **Git:** Nhánh `main` — đã push `29b39e47202091c3970f630ee281629e03eddde2` (`origin/main`).
