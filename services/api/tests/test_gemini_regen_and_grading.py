@@ -182,3 +182,119 @@ def test_t060_grading_symbolic_math_fractions_percentages_and_three_states(tmp_p
                 assert wrong['hint'] is None
             else:
                 assert wrong['hint'] is not None
+
+
+def test_t062_tkb_vision_model_and_challenges_next_ai_regen(tmp_path: Path) -> None:
+    import base64
+
+    called_urls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        called_urls.append(str(request.url))
+        if 'parse' in json.dumps(json.loads(request.content.decode('utf-8'))).lower() or any(
+            'inlineData' in p for p in json.loads(request.content.decode('utf-8'))['contents'][0]['parts']
+        ):
+            return httpx.Response(
+                200,
+                json={
+                    'candidates': [
+                        {
+                            'content': {
+                                'parts': [
+                                    {
+                                        'text': json.dumps(
+                                            {
+                                                'slots': [
+                                                    {'weekday': 1, 'position': 1, 'subject_code': 'Chào cờ'},
+                                                    {'weekday': 1, 'position': 2, 'subject_code': 'Hóa học'},
+                                                    {'weekday': 3, 'position': 5, 'subject_code': 'ND GDĐP'},
+                                                    {'weekday': 4, 'position': 8, 'subject_code': 'HĐTN-HN'},
+                                                    {'weekday': 5, 'position': 5, 'subject_code': 'SHL'},
+                                                ],
+                                                'note_vi': 'Đọc đủ 5 ô đặc thù.',
+                                            },
+                                            ensure_ascii=False,
+                                        )
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                'candidates': [
+                    {
+                        'content': {
+                            'parts': [
+                                {
+                                    'text': json.dumps(
+                                        {
+                                            'topic_id': 'linear_eq_regen',
+                                            'prompt': 'Tìm x biết 3x - 5 = 16.',
+                                            'reasoning_prompt_vi': 'Chuyển -5 sang vế phải rồi chia 3.',
+                                            'accepted_answers': ['7', 'x=7', 'x = 7'],
+                                            'steps': ['3x = 21', 'x = 7'],
+                                            'hint_vi': 'Cộng hai vế với 5.',
+                                        },
+                                        ensure_ascii=False,
+                                    )
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    app = create_app(
+        _settings(tmp_path),
+        gemini_factory=lambda s: GeminiService(s, transport=httpx.MockTransport(handler)),
+    )
+    with TestClient(app) as client:
+        # 1. Vision TKB ưu tiên gemini-3-flash-preview và map được Chào cờ, SHL, HĐTN-HN, ND GDĐP
+        tiny_img = base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'0' * 32).decode('ascii')
+        ocr = client.post(
+            '/v1/timetable/parse-image',
+            headers=_headers('user_t062_a'),
+            json={'imageBase64': tiny_img, 'mimeType': 'image/png'},
+        )
+        assert ocr.status_code == 200
+        slots = ocr.json()['slots']
+        codes = [s['subjectCode'] for s in slots]
+        assert codes == ['activity', 'chemistry', 'civic_econ', 'activity', 'activity']
+        assert 'gemini-3-flash-preview' in called_urls[0]
+
+        # 2. /v1/challenges/next?mode=ai_regen sinh câu mới từ seed & chấm trực tiếp qua /v1/sessions
+        regen_next = client.get(
+            '/v1/challenges/next?subject=TOAN&mode=ai_regen',
+            headers=_headers('user_t062_a'),
+        )
+        assert regen_next.status_code == 200
+        q_data = regen_next.json()
+        assert q_data['aiGenerated'] is True
+        assert q_data['questionId'].startswith('ai_q_')
+        assert q_data['seedQuestionId']
+
+        started = client.post(
+            '/v1/sessions',
+            headers=_headers('user_t062_a'),
+            json={
+                'localSessionId': 'local_t062_ai_sess',
+                'alarmId': 'alarm_morning',
+                'questionId': q_data['questionId'],
+            },
+        )
+        assert started.status_code == 200
+        sid = started.json()['sessionId']
+
+        graded = client.post(
+            f'/v1/sessions/{sid}/answers',
+            headers=_headers('user_t062_a'),
+            json={'answerValue': '7', 'reasoningText': '3x = 21 => x = 7'},
+        )
+        assert graded.status_code == 200
+        assert graded.json()['result'] == 'correct'
+        assert graded.json()['xpAwarded'] == 10

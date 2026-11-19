@@ -142,10 +142,10 @@ class _ArenaScreenState extends State<ArenaScreen>
       return ArenaPvpLobby(
         viewModel: _pvpVm,
         profile: widget.guestViewModel.profile,
-        userId: (widget.currentUserId != null &&
-                widget.currentUserId!.isNotEmpty)
-            ? widget.currentUserId!
-            : 'debug_user_a',
+        userId:
+            (widget.currentUserId != null && widget.currentUserId!.isNotEmpty)
+                ? widget.currentUserId!
+                : 'debug_user_a',
         onBackToHub: () => setState(() => _showPvp1v1 = false),
       );
     }
@@ -644,10 +644,20 @@ class _ArenaScreenState extends State<ArenaScreen>
                       key: const ValueKey<String>('arena-toggle-no-timer'),
                       label: vm.noTimeLimit
                           ? 'Không giới hạn thời gian: Bật'
-                          : 'Không giới hạn thời gian: Tắt',
+                          : 'Giới hạn ${vm.roundTimeLimitSeconds}s/lượt',
                       active: vm.noTimeLimit,
                       onTap: vm.toggleNoTimeLimit,
                     ),
+                    ...SoloArenaViewModel.timePresetSeconds.map((int sec) {
+                      final bool active =
+                          !vm.noTimeLimit && vm.roundTimeLimitSeconds == sec;
+                      return _ToggleChip(
+                        key: ValueKey<String>('arena-timer-$sec'),
+                        label: '${sec}s/lượt',
+                        active: active,
+                        onTap: () => vm.selectRoundTimeLimit(sec),
+                      );
+                    }),
                     _ToggleChip(
                       key: const ValueKey<String>('arena-toggle-reduce-motion'),
                       label: vm.reduceMotionOverride
@@ -930,6 +940,15 @@ class _ArenaScreenState extends State<ArenaScreen>
                       if (vm.noTimeLimit)
                         const MindClockStatusPill(
                           label: 'Không giới hạn thời gian',
+                        )
+                      else
+                        MindClockStatusPill(
+                          key: const ValueKey<String>('arena-round-countdown'),
+                          label:
+                              'Thời gian còn: ${vm.remainingRoundSeconds ?? vm.roundTimeLimitSeconds}s',
+                          accentWarm: (vm.remainingRoundSeconds ??
+                                  vm.roundTimeLimitSeconds) <=
+                              10,
                         ),
                     ],
                   ),

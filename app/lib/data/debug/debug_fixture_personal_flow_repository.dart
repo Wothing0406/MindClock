@@ -37,15 +37,19 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   Future<ChallengeQuestion> fetchNextChallenge({
     required String localDate,
     String? subjectCode,
+    String mode = 'bank',
   }) async {
+    final bool aiRegen = mode.trim().toLowerCase() == 'ai_regen';
     return ChallengeQuestion(
-      questionId: 'fixture-math9-linear-001',
-      questionRevision: 3,
+      questionId: aiRegen ? 'fixture-ai-regen-002' : 'fixture-math9-linear-001',
+      questionRevision: aiRegen ? 1 : 3,
       validForDate: localDate,
       subjectCode: subjectCode ?? 'TOAN',
       topicId: 'linear_equation_1var',
-      difficulty: 1,
-      prompt: 'Giải phương trình 2(x − 3) = 10.',
+      difficulty: aiRegen ? 2 : 1,
+      prompt: aiRegen
+          ? 'Giải phương trình 3(x - 2) = 15 (tái tạo từ đề gốc).'
+          : 'Giải phương trình 2(x − 3) = 10.',
       reasoningPromptVi: 'Viết 1–2 bước biến đổi bạn đã làm.',
       offlinePolicy: 'ungraded_only',
       estimatedSeconds: 75,

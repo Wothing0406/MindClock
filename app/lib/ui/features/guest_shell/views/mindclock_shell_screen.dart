@@ -6,6 +6,7 @@ import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
+import '../../../../domain/services/morning_question_selector.dart';
 import '../../../../domain/services/pvp_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
@@ -200,10 +201,38 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           payload: activeRing,
           onOpenQuestion: () {
             final String alarmId = activeRing.alarmId;
+            String? resolvedSubject = activeRing.subjectCode;
+            if (resolvedSubject == null || resolvedSubject.trim().isEmpty) {
+              AlarmConfig? matchedAlarm;
+              for (final AlarmConfig a in widget.viewModel.alarms) {
+                if (a.id == alarmId) {
+                  matchedAlarm = a;
+                  break;
+                }
+              }
+              matchedAlarm ??= AlarmConfig(
+                id: alarmId,
+                hour: 6,
+                minute: 0,
+                mode: activeRing.mode,
+                subjectRule: AlarmSubjectRule.todaySchedule,
+              );
+              final MorningQuestionProposal proposal =
+                  MorningQuestionSelector.resolveForAlarm(
+                alarm: matchedAlarm,
+                profile: widget.viewModel.profile,
+                timetable: widget.viewModel.timetable,
+                weekday: DateTime.now().weekday,
+              );
+              if (proposal.subjectCode.trim().isNotEmpty) {
+                resolvedSubject = proposal.subjectCode;
+              }
+            }
             widget.viewModel.dismissActiveRingUi();
             widget.personalViewModel.startSession(
               alarmId: alarmId,
-              subjectCode: activeRing.subjectCode,
+              subjectCode: resolvedSubject,
+              gradeLevel: widget.viewModel.profile.gradeLevel,
               challengeMode: activeRing.mode == AlarmMode.challenge,
             );
             setState(() {

@@ -28,6 +28,7 @@ abstract interface class PersonalFlowRepository {
   Future<ChallengeQuestion> fetchNextChallenge({
     required String localDate,
     String? subjectCode,
+    String mode = 'bank',
   });
 
   Future<StudySessionRecord> createOrSyncSession({

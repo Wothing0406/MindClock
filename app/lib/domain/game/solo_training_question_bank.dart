@@ -585,6 +585,203 @@ class SoloTrainingQuestionBank {
       ],
       explanationAfterRevealVi: 'Prôtêin được cấu tạo từ các đơn phân amino acid (axit amin).',
     ),
+    // --- HÓA HỌC (chemistry) ---
+    SoloApprovedQuestion(
+      id: 'g1-chem-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'chemistry',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Este etyl axetat (CH3COOC2H5) có phân tử khối bằng bao nhiêu g/mol?',
+      reasoningPromptVi: 'Tính tổng khối lượng nguyên tử theo công thức C4H8O2.',
+      acceptedAnswers: <String>['88', '88 g/mol', '88g/mol'],
+      reasoningKeywords: <String>['12', '48', '32', 'c4h8o2', '88'],
+      oneStepHintVi: 'Cộng 4*12 + 8*1 + 2*16 để ra phân tử khối.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: CH3COOC2H5 có công thức phân tử C4H8O2.',
+        'Bước 2: M = 4*12 + 8*1 + 2*16 = 88 g/mol.',
+      ],
+      explanationAfterRevealVi: 'M(CH3COOC2H5) = 4*12 + 8 + 32 = 88 g/mol.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-chem-002',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'chemistry',
+      gradeBand: 'Lớp 11',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Dung dịch HCl 0,01 M có độ pH bằng bao nhiêu?',
+      reasoningPromptVi: 'Nêu công thức tính pH từ nồng độ ion H+.',
+      acceptedAnswers: <String>['2', 'ph=2', 'ph = 2'],
+      reasoningKeywords: <String>['-lg', 'log', '0,01', '0.01', '10^-2'],
+      oneStepHintVi: 'HCl là axit mạnh điện li hoàn toàn nên [H+] = 10^-2 M, áp dụng pH = -lg[H+].',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: [H+] = 0,01 = 10^-2 M.',
+        'Bước 2: pH = -lg(10^-2) = 2.',
+      ],
+      explanationAfterRevealVi: 'pH = -lg(0,01) = 2.',
+    ),
+    // --- NGỮ VĂN (literature) ---
+    SoloApprovedQuestion(
+      id: 'g1-lit-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'literature',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Tác phẩm "Tuyên ngôn Độc lập" (2/9/1945) do ai là tác giả?',
+      reasoningPromptVi: 'Nêu ngắn gọn hoàn cảnh ra đời hoặc mục đích chính của văn bản.',
+      acceptedAnswers: <String>['hồ chí minh', 'ho chi minh', 'chủ tịch hồ chí minh', 'bác hồ'],
+      reasoningKeywords: <String>['ba đình', '1945', 'độc lập', 'tuyên ngôn', 'bác', 'người'],
+      oneStepHintVi: 'Đây là văn bản chính luận bất hủ đọc tại Quảng trường Ba Đình ngày 2/9/1945.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Văn bản đọc tại Quảng trường Ba Đình khai sinh nước Việt Nam Dân chủ Cộng hòa.',
+        'Bước 2: Tác giả là Chủ tịch Hồ Chí Minh.',
+      ],
+      explanationAfterRevealVi: 'Tác giả bản Tuyên ngôn Độc lập (2/9/1945) là Chủ tịch Hồ Chí Minh.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-lit-002',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'literature',
+      gradeBand: 'Lớp 11',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Biện pháp tu từ so sánh gồm hai vế nối với nhau thường gặp qua từ ngữ nào phổ biến nhất?',
+      reasoningPromptVi: 'Viết 1 ví dụ ngắn câu có dùng từ so sánh.',
+      acceptedAnswers: <String>['như', 'tựa', 'giống như', 'là'],
+      reasoningKeywords: <String>['như', 'tựa', 'ví dụ', 'đối chiếu', 'giống'],
+      oneStepHintVi: 'Ví dụ: "Trẻ em ___ búp trên cành".',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: So sánh đối chiếu hai sự vật có nét tương đồng.',
+        'Bước 2: Từ so sánh tiêu biểu: "như", "tựa", "giống như", "là".',
+      ],
+      explanationAfterRevealVi: 'Từ so sánh phổ biến nhất là "như" (ngoài ra có "tựa", "là", "giống như").',
+    ),
+    // --- LỊCH SỬ (history) ---
+    SoloApprovedQuestion(
+      id: 'g1-his-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'history',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Chiến dịch Điện Biên Phủ kết thúc thắng lợi vào ngày, tháng, năm nào (định dạng DD/MM/YYYY)?',
+      reasoningPromptVi: 'Nêu ngắn gọn ý nghĩa quyết định của chiến thắng này đối với Hiệp định Giơ-ne-vơ.',
+      acceptedAnswers: <String>['07/05/1954', '7/5/1954', '7-5-1954', '07-05-1954'],
+      reasoningKeywords: <String>['1954', 'giơ-ne-vơ', 'geneva', 'pháp', 'đờ cát', '56 ngày'],
+      oneStepHintVi: 'Chiến dịch kéo dài 56 ngày đêm và kết thúc đầu tháng 5 năm 1954.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Chiều 07/05/1954, quân ta bắt sống tướng Đờ Cát-tơ-ri.',
+        'Bước 2: Thắng lợi buộc Pháp ký Hiệp định Giơ-ne-vơ 1954.',
+      ],
+      explanationAfterRevealVi: 'Chiến thắng Điện Biên Phủ diễn ra ngày 07/05/1954.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-his-002',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'history',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'ASEAN được thành lập vào năm nào tại Băng Cốc (Thái Lan)?',
+      reasoningPromptVi: 'Kể tên ít nhất 2 quốc gia sáng lập ASEAN.',
+      acceptedAnswers: <String>['1967'],
+      reasoningKeywords: <String>['thái lan', 'indonesia', 'malaysia', 'singapore', 'philippines', 'băng cốc'],
+      oneStepHintVi: 'Tuyên bố Băng Cốc được 5 nước Đông Nam Á ký vào tháng 8 thập niên 1960.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Ngày 08/08/1967 tại Băng Cốc, 5 nước ký Tuyên bố ASEAN.',
+        'Bước 2: Năm thành lập là 1967.',
+      ],
+      explanationAfterRevealVi: 'ASEAN thành lập ngày 08/08/1967.',
+    ),
+    // --- ĐỊA LÍ (geography) ---
+    SoloApprovedQuestion(
+      id: 'g1-geo-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'geography',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Nước ta nằm trong múi giờ thứ mấy theo giờ quốc tế GMT?',
+      reasoningPromptVi: 'Giải thích vì sao múi giờ chuẩn Việt Nam sớm hơn giờ GMT 7 tiếng.',
+      acceptedAnswers: <String>['7', 'gmt+7', 'múi giờ 7', 'múi giờ số 7', '+7'],
+      reasoningKeywords: <String>['kinh tuyến', '105', '15', 'đông', 'gmt'],
+      oneStepHintVi: 'Kinh tuyến trục 105°Đ chia cho 15° mỗi múi giờ sẽ ra số thứ tự múi giờ.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Kinh tuyến 105°Đ / 15° = múi giờ số 7.',
+        'Bước 2: Việt Nam thuộc múi giờ GMT+7.',
+      ],
+      explanationAfterRevealVi: 'Việt Nam nằm trọn trong múi giờ số 7 (GMT+7).',
+    ),
+    // --- TIN HỌC (informatics) ---
+    SoloApprovedQuestion(
+      id: 'g1-inf-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'informatics',
+      gradeBand: 'Lớp 11',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Số nhị phân 1010 đổi sang hệ thập phân bằng bao nhiêu?',
+      reasoningPromptVi: 'Viết khai triển tổng các lũy thừa của 2.',
+      acceptedAnswers: <String>['10'],
+      reasoningKeywords: <String>['2^3', '2^1', '8 + 2', '8+2', 'lũy thừa'],
+      oneStepHintVi: 'Tính 1*2^3 + 0*2^2 + 1*2^1 + 0*2^0.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: 1010_2 = 1*8 + 0*4 + 1*2 + 0*1.',
+        'Bước 2: Kết quả bằng 10.',
+      ],
+      explanationAfterRevealVi: '1010 trong hệ nhị phân bằng 8 + 2 = 10 trong hệ thập phân.',
+    ),
+    // --- GDKT&PL / GDCD (civic_econ) ---
+    SoloApprovedQuestion(
+      id: 'g1-civ-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'civic_econ',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Khi cầu tăng mà cung không đổi, giá cả thị trường có xu hướng tăng hay giảm?',
+      reasoningPromptVi: 'Nêu ngắn gọn mối quan hệ giữa cung - cầu và giá cả.',
+      acceptedAnswers: <String>['tăng', 'tăng lên', 'giá tăng'],
+      reasoningKeywords: <String>['cầu', 'lớn hơn', 'khan hiếm', 'cung', 'tăng'],
+      oneStepHintVi: 'Khi lượng người mua vượt lượng hàng hóa sẵn có thì giá biến động ra sao?',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Cầu > Cung tạo áp lực cạnh tranh mua.',
+        'Bước 2: Giá cả thị trường có xu hướng tăng.',
+      ],
+      explanationAfterRevealVi: 'Theo quy luật cung - cầu, khi cầu tăng mà cung giữ nguyên thì giá cả tăng.',
+    ),
+    // --- CÔNG NGHỆ (technology) ---
+    SoloApprovedQuestion(
+      id: 'g1-tech-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'technology',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Mạch điện xoay chiều 3 pha có điện áp dây 380V thì điện áp pha (tải nối sao) bằng bao nhiêu V?',
+      reasoningPromptVi: 'Nêu công thức liên hệ giữa Ud và Up khi mắc hình sao.',
+      acceptedAnswers: <String>['220', '220v', '220 v'],
+      reasoningKeywords: <String>['căn 3', 'sqrt(3)', '1.73', '1,73', 'ud /', '380'],
+      oneStepHintVi: 'Với tải nối hình sao, Ud = √3 * Up => Up = 380 / 1,732.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Up = Ud / √3 = 380 / √3.',
+        'Bước 2: Up ≈ 220 V.',
+      ],
+      explanationAfterRevealVi: 'Up = 380 / √3 ≈ 220 V.',
+    ),
   ];
 
   static const List<String> supportedSubjectCodes = <String>[
@@ -594,11 +791,97 @@ class SoloTrainingQuestionBank {
     'biology',
   ];
 
+  static String normalizeSubjectKey(String? rawCode) {
+    final String c = (rawCode ?? '').trim().toLowerCase();
+    switch (c) {
+      case 'toan':
+      case 'math':
+        return 'math';
+      case 'vat_ly':
+      case 'vat_li':
+      case 'physics':
+        return 'physics';
+      case 'tieng_anh':
+      case 'english':
+        return 'english';
+      case 'sinh_hoc':
+      case 'biology':
+        return 'biology';
+      case 'hoa_hoc':
+      case 'chemistry':
+        return 'chemistry';
+      case 'ngu_van':
+      case 'literature':
+        return 'literature';
+      case 'lich_su':
+      case 'history':
+        return 'history';
+      case 'dia_ly':
+      case 'dia_li':
+      case 'geography':
+        return 'geography';
+      case 'tin_hoc':
+      case 'informatics':
+        return 'informatics';
+      case 'gdcd':
+      case 'ktpl':
+      case 'civics':
+      case 'civic_econ':
+        return 'civic_econ';
+      case 'cong_nghe':
+      case 'technology':
+        return 'technology';
+      default:
+        return c.isEmpty ? 'math' : c;
+    }
+  }
+
   static List<SoloApprovedQuestion> questionsForSubject(String subjectCode) {
-    final String norm = subjectCode.trim().toLowerCase();
+    final String norm = normalizeSubjectKey(subjectCode);
     return allCachedApprovedQuestions
         .where((SoloApprovedQuestion q) => q.subjectCode == norm)
         .toList(growable: false);
+  }
+
+  static SoloApprovedQuestion? findById(String questionId) {
+    for (final SoloApprovedQuestion q in allCachedApprovedQuestions) {
+      if (q.id == questionId) return q;
+    }
+    return null;
+  }
+
+  /// Chọn câu hỏi có sẵn đáp án & rubric trên máy cho chế độ offline/báo thức,
+  /// ưu tiên đúng môn + khối lớp và xoay vòng để không lặp lại 1 câu cố định.
+  static SoloApprovedQuestion pickOfflineQuestion({
+    String? subjectCode,
+    String? gradeLevel,
+    String? excludeQuestionId,
+    int rotationOffset = 0,
+  }) {
+    final String normSubject = normalizeSubjectKey(subjectCode);
+    List<SoloApprovedQuestion> pool = questionsForSubject(normSubject);
+    if (pool.isEmpty) {
+      pool = questionsForSubject('math');
+    }
+    if (gradeLevel != null && gradeLevel.trim().isNotEmpty) {
+      final String targetGrade = gradeLevel.trim().toLowerCase();
+      final List<SoloApprovedQuestion> gradeMatches = pool
+          .where((SoloApprovedQuestion q) => q.gradeBand.toLowerCase() == targetGrade)
+          .toList(growable: false);
+      if (gradeMatches.isNotEmpty) {
+        pool = gradeMatches;
+      }
+    }
+    if (pool.length > 1 && excludeQuestionId != null) {
+      final List<SoloApprovedQuestion> nonRepeat = pool
+          .where((SoloApprovedQuestion q) => q.id != excludeQuestionId)
+          .toList(growable: false);
+      if (nonRepeat.isNotEmpty) {
+        pool = nonRepeat;
+      }
+    }
+    final int safeIndex = (rotationOffset < 0 ? 0 : rotationOffset) % pool.length;
+    return pool[safeIndex];
   }
 
   static bool hasApprovedCacheFor(String subjectCode) =>

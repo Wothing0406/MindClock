@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../../domain/game/combat_catalog.dart';
@@ -44,9 +46,13 @@ class SoloRoundHistoryItem {
 class SoloArenaViewModel extends ChangeNotifier {
   SoloArenaViewModel({
     int initialSeed = 20261118,
+    this.enableRoundTimer = true,
   }) : _seed = initialSeed;
 
   static const int defaultSecretRoundNo = 3;
+  static const List<int> timePresetSeconds = <int>[30, 45, 60, 90];
+
+  final bool enableRoundTimer;
 
   ArenaSection _section = ArenaSection.hub;
   SoloBattlePhase _phase = SoloBattlePhase.answering;
@@ -56,7 +62,16 @@ class SoloArenaViewModel extends ChangeNotifier {
   ChampionId _botChampion = ChampionId.hanBoiPhap;
   BotDifficulty _botDifficulty = BotDifficulty.tieuChuan;
   bool _noTimeLimit = true;
+  int _roundTimeLimitSeconds = 60;
+  int? _remainingRoundSeconds;
+  bool _roundTimedOut = false;
+  Timer? _roundTimer;
   int _seed;
+  Future<SoloApprovedQuestion?> Function({
+    required String subjectCode,
+    required String seedQuestionId,
+    required int roundNo,
+  })? _continuousQuestionProvider;
 
   bool _reduceMotionOverride = false;
   bool _skipEffects = false;
@@ -100,6 +115,9 @@ class SoloArenaViewModel extends ChangeNotifier {
   ChampionId get botChampion => _botChampion;
   BotDifficulty get botDifficulty => _botDifficulty;
   bool get noTimeLimit => _noTimeLimit;
+  int get roundTimeLimitSeconds => _roundTimeLimitSeconds;
+  int? get remainingRoundSeconds => _remainingRoundSeconds;
+  bool get roundTimedOut => _roundTimedOut;
   int get seed => _seed;
 
   bool get reduceMotionOverride => _reduceMotionOverride;
@@ -139,12 +157,13 @@ class SoloArenaViewModel extends ChangeNotifier {
   void openSoloSetup({StudyProfile? profile}) {
     _setupErrorVi = null;
     if (profile != null && profile.selectedSubjectCodes.isNotEmpty) {
-      final String? preferred = profile.selectedSubjectCodes.cast<String?>().firstWhere(
-            (String? code) =>
-                code != null &&
-                SoloTrainingQuestionBank.hasApprovedCacheFor(code),
-            orElse: () => null,
-          );
+      final String? preferred =
+          profile.selectedSubjectCodes.cast<String?>().firstWhere(
+                (String? code) =>
+                    code != null &&
+                    SoloTrainingQuestionBank.hasApprovedCacheFor(code),
+                orElse: () => null,
+              );
       if (preferred != null) {
         _selectedSubjectCode = preferred;
       }
@@ -154,6 +173,7 @@ class SoloArenaViewModel extends ChangeNotifier {
   }
 
   void backToHub() {
+    _stopRoundTimer();
     _setupErrorVi = null;
     _section = ArenaSection.hub;
     notifyListeners();
@@ -189,7 +209,35 @@ class SoloArenaViewModel extends ChangeNotifier {
 
   void toggleNoTimeLimit() {
     _noTimeLimit = !_noTimeLimit;
+    if (_noTimeLimit) {
+      _stopRoundTimer();
+      _remainingRoundSeconds = null;
+    }
     notifyListeners();
+  }
+
+  /// Đặt thời gian đếm ngược mỗi lượt (30/45/60/90s hoặc null = Không giới hạn).
+  void selectRoundTimeLimit(int? seconds) {
+    if (seconds == null || seconds <= 0) {
+      _noTimeLimit = true;
+      _stopRoundTimer();
+      _remainingRoundSeconds = null;
+    } else {
+      _noTimeLimit = false;
+      _roundTimeLimitSeconds = seconds;
+    }
+    notifyListeners();
+  }
+
+  /// Gắn nguồn nạp câu hỏi liên tục (ví dụ gọi AI tạo biến thể từ đề gốc khi có mạng).
+  void setContinuousQuestionProvider(
+    Future<SoloApprovedQuestion?> Function({
+      required String subjectCode,
+      required String seedQuestionId,
+      required int roundNo,
+    })? provider,
+  ) {
+    _continuousQuestionProvider = provider;
   }
 
   void setSeed(int nextSeed) {
@@ -274,6 +322,12 @@ class SoloArenaViewModel extends ChangeNotifier {
 
     _phase = SoloBattlePhase.answering;
     _section = showLoadingScreen ? ArenaSection.loading : ArenaSection.battle;
+    if (!showLoadingScreen) {
+      _startRoundTimer();
+      _prefetchNextContinuousQuestion();
+    } else {
+      _stopRoundTimer();
+    }
     notifyListeners();
     return true;
   }
@@ -281,11 +335,14 @@ class SoloArenaViewModel extends ChangeNotifier {
   void completeArenaLoading() {
     if (_section != ArenaSection.loading) return;
     _section = ArenaSection.battle;
+    _startRoundTimer();
+    _prefetchNextContinuousQuestion();
     notifyListeners();
   }
 
   void cancelArenaLoading() {
     if (_section != ArenaSection.loading) return;
+    _stopRoundTimer();
     _section = ArenaSection.setup;
     notifyListeners();
   }
@@ -303,13 +360,107 @@ class SoloArenaViewModel extends ChangeNotifier {
   SoloApprovedQuestion _drawNextQuestion() {
     if (_deck.isEmpty) {
       _deck = SoloTrainingQuestionBank.selectDeterministicDeck(
-        subjectCode: 'math',
+        subjectCode: _selectedSubjectCode,
         seed: _seed,
       );
+      if (_deck.isEmpty) {
+        _deck = SoloTrainingQuestionBank.selectDeterministicDeck(
+          subjectCode: 'math',
+          seed: _seed,
+        );
+      }
     }
-    final SoloApprovedQuestion q = _deck[_deckCursor % _deck.length];
+    if (_deckCursor >= _deck.length) {
+      final List<SoloApprovedQuestion> fresh =
+          SoloTrainingQuestionBank.selectDeterministicDeck(
+        subjectCode: _selectedSubjectCode,
+        seed: _seed + _deckCursor + 17,
+      );
+      _deck.addAll(fresh.isNotEmpty
+          ? fresh
+          : SoloTrainingQuestionBank.selectDeterministicDeck(
+              subjectCode: 'math',
+              seed: _seed + _deckCursor + 17,
+            ));
+    }
+    SoloApprovedQuestion q = _deck[_deckCursor];
+    if (_deck.length > 1 &&
+        _currentQuestion?.id == q.id &&
+        _deckCursor + 1 < _deck.length) {
+      _deckCursor++;
+      q = _deck[_deckCursor];
+    }
     _deckCursor++;
     return q;
+  }
+
+  void _prefetchNextContinuousQuestion() {
+    final provider = _continuousQuestionProvider;
+    final SoloApprovedQuestion? current = _currentQuestion;
+    if (provider == null || current == null) return;
+    provider(
+      subjectCode: _selectedSubjectCode,
+      seedQuestionId: current.id,
+      roundNo: _currentRound + 1,
+    ).then((SoloApprovedQuestion? generated) {
+      if (generated == null) return;
+      final bool duplicate =
+          _deck.any((SoloApprovedQuestion e) => e.id == generated.id);
+      if (!duplicate) {
+        _deck.insert(_deckCursor.clamp(0, _deck.length), generated);
+        notifyListeners();
+      }
+    }).catchError((Object _) {});
+  }
+
+  void _startRoundTimer() {
+    _stopRoundTimer();
+    _roundTimedOut = false;
+    if (_noTimeLimit) {
+      _remainingRoundSeconds = null;
+      return;
+    }
+    _remainingRoundSeconds = _roundTimeLimitSeconds;
+    if (!enableRoundTimer) return;
+    _roundTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_section != ArenaSection.battle ||
+          _phase != SoloBattlePhase.answering) {
+        _stopRoundTimer();
+        return;
+      }
+      final int next = (_remainingRoundSeconds ?? 0) - 1;
+      if (next <= 0) {
+        triggerRoundTimeout();
+      } else {
+        _remainingRoundSeconds = next;
+        notifyListeners();
+      }
+    });
+  }
+
+  void _stopRoundTimer() {
+    _roundTimer?.cancel();
+    _roundTimer = null;
+  }
+
+  /// Khi hết giờ của round: chốt trạng thái uncertain (không trừ HP/uy tín oan) để trận đấu đi tiếp liên tục.
+  void triggerRoundTimeout() {
+    if (_phase != SoloBattlePhase.answering) return;
+    _stopRoundTimer();
+    _remainingRoundSeconds = 0;
+    _roundTimedOut = true;
+    _lastSubmittedAnswer = '';
+    _lastSubmittedReasoning = '';
+    _lastGrading = const SoloGradingFeedback(
+      status: SoloGradeStatus.uncertain,
+      feedbackVi:
+          'Hết thời gian lượt này! Bạn không bị phạt HP và có thể chuyển ngay sang câu tiếp theo.',
+      canRetry: false,
+      canSwapQuestion: true,
+      canRevealRubric: false,
+    );
+    _phase = SoloBattlePhase.gradedUncertain;
+    notifyListeners();
   }
 
   /// Chấm bài làm 3 trạng thái (`correct | incorrect | uncertain`).
@@ -331,8 +482,10 @@ class SoloArenaViewModel extends ChangeNotifier {
 
     switch (grading.status) {
       case SoloGradeStatus.correct:
+        _stopRoundTimer();
         _phase = SoloBattlePhase.choosingAction;
       case SoloGradeStatus.uncertain:
+        _stopRoundTimer();
         _phase = SoloBattlePhase.gradedUncertain;
       case SoloGradeStatus.incorrect:
         _phase = SoloBattlePhase.gradedIncorrect;
@@ -347,12 +500,17 @@ class SoloArenaViewModel extends ChangeNotifier {
         _phase != SoloBattlePhase.gradedIncorrect) {
       return;
     }
+    if (_roundTimedOut) {
+      swapQuestionOnUncertain();
+      return;
+    }
     _phase = SoloBattlePhase.answering;
     _showRubricReveal = false;
+    _startRoundTimer();
     notifyListeners();
   }
 
-  /// Khi `uncertain`, người học có thể đổi sang câu approved khác mà không bị phạt HP/lượt.
+  /// Khi `uncertain` hoặc hết giờ, chuyển sang câu mới liên tục mà không bị phạt HP/lượt.
   void swapQuestionOnUncertain() {
     if (_phase != SoloBattlePhase.gradedUncertain) return;
     _currentQuestion = _drawNextQuestion();
@@ -361,6 +519,8 @@ class SoloArenaViewModel extends ChangeNotifier {
     _lastGrading = null;
     _showRubricReveal = false;
     _phase = SoloBattlePhase.answering;
+    _startRoundTimer();
+    _prefetchNextContinuousQuestion();
     notifyListeners();
   }
 
@@ -457,7 +617,15 @@ class SoloArenaViewModel extends ChangeNotifier {
     _showRubricReveal = false;
     _lastResolution = null;
     _phase = SoloBattlePhase.answering;
+    _startRoundTimer();
+    _prefetchNextContinuousQuestion();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _stopRoundTimer();
+    super.dispose();
   }
 
   String summaryOutcomeTitleVi() {
@@ -475,7 +643,8 @@ class SoloArenaViewModel extends ChangeNotifier {
       'ko' => 'Hạ gục (HP đối thủ về 0)',
       'double_ko' => 'Đồng thời hạ gục (Cả hai về 0 HP → Hòa)',
       'hp_tiebreak' => 'Hết 6 round · Phân định theo HP còn lại',
-      'armor_tiebreak' => 'Hết 6 round · HP bằng nhau, phân định theo Giáp còn lại',
+      'armor_tiebreak' =>
+        'Hết 6 round · HP bằng nhau, phân định theo Giáp còn lại',
       'draw_tiebreak' => 'Hết 6 round · HP và Giáp bằng nhau → Hòa',
       _ => 'Kết thúc lượt luyện cục bộ',
     };

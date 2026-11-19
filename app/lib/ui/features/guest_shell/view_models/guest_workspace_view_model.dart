@@ -198,7 +198,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     switch (alarm.serverSyncStatus) {
       case AlarmServerSyncStatus.synced:
         return isAlarmSyncDebugFixture
-            ? 'Đồng bộ mẫu (debug)'
+            ? 'Lưu trên máy (ngoại tuyến)'
             : 'Đã đồng bộ server';
       case AlarmServerSyncStatus.syncing:
         return 'Đang đồng bộ server';
@@ -733,7 +733,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       _workspace = _workspace.copyWith(alarms: next);
       _workspace = await _repository.save(_workspace);
       _serverSyncMessageVi = gateway.isDebugFixture
-          ? 'Đã đồng bộ cấu hình báo thức (mẫu debug).'
+          ? 'Đã lưu cấu hình báo thức trên máy.'
           : 'Đã đồng bộ cấu hình báo thức lên server.';
       notifyListeners();
     } on PersonalApiException catch (error) {

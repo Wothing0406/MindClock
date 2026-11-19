@@ -851,7 +851,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                               key: const ValueKey<String>(
                                   'alarm-regenerate-challenge'),
                               label: _loadingAiPreview
-                                  ? 'Đang tạo câu mẫu...'
+                                  ? 'Đang tạo câu hỏi theo TKB...'
                                   : 'Tạo lại câu AI theo TKB',
                               icon: MindClockIconKind.sunrise,
                               variant: MindClockButtonVariant.secondary,

@@ -1170,7 +1170,7 @@ class StudyFocusViewModel extends ChangeNotifier {
       _history = await _repository.saveRecordIdempotent(synced);
       final int confirmedXp = synced.confirmedXpAwarded ?? 0;
       _statusBannerVi = gateway.isDebugFixture
-          ? 'Đã đồng bộ phiên học kết thúc (mẫu debug, $confirmedXp XP).'
+          ? 'Đã lưu phiên học kết thúc trên máy ($confirmedXp XP tạm tính).'
           : 'Đã đồng bộ phiên học lên máy chủ · EXP đã xác nhận: $confirmedXp XP.';
       if (!gateway.isDebugFixture && confirmedXp > 0) {
         onStudyXpSynced?.call();

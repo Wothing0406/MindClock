@@ -82,26 +82,25 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
       }
 
       final PersonalFlowViewModel? pvm = widget.personalViewModel;
+      if (pvm == null || !pvm.authSession.isAuthenticated) {
+        if (!mounted) return;
+        setState(() {
+          _isScanningAi = false;
+          _feedbackMessage =
+              'Cần đăng nhập tài khoản để gửi ảnh thời khóa biểu cho AI phân tích.';
+        });
+        return;
+      }
       final List<Map<String, dynamic>> slots =
-          (pvm != null && pvm.authSession.isAuthenticated)
-              ? await pvm.parseTimetableImage(imageBase64: photoBase64)
-              : const <Map<String, dynamic>>[
-                  <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
-                  <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'math'},
-                  <String, dynamic>{'weekday': 1, 'position': 3, 'subjectCode': 'literature'},
-                  <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
-                  <String, dynamic>{'weekday': 2, 'position': 2, 'subjectCode': 'chemistry'},
-                  <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'literature'},
-                  <String, dynamic>{'weekday': 3, 'position': 2, 'subjectCode': 'english'},
-                  <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'math'},
-                  <String, dynamic>{'weekday': 4, 'position': 2, 'subjectCode': 'biology'},
-                  <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
-                  <String, dynamic>{'weekday': 5, 'position': 2, 'subjectCode': 'geography'},
-                ];
+          await pvm.parseTimetableImage(imageBase64: photoBase64);
       if (!mounted) return;
       setState(() {
         _isScanningAi = false;
         _aiParsedDraftSlots = slots;
+        if (slots.isEmpty) {
+          _feedbackMessage =
+              'Không trích xuất được tiết học nào từ ảnh này. Vui lòng chụp lại bảng thời khóa biểu rõ nét hơn.';
+        }
       });
     } catch (e) {
       if (!mounted) return;

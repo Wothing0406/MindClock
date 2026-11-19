@@ -85,7 +85,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
               Text(AppStrings.navPractice, style: mc.screenTitleStyle),
               if (pvm.isDebugFixture)
                 const MindClockStatusPill(
-                  label: 'Fixture debug · Không phải dịch vụ thật',
+                  label: 'Chế độ cục bộ · Chưa kết nối máy chủ',
                   accentWarm: true,
                 ),
             ],
@@ -126,7 +126,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                 else if (!progress.isServerAuthoritative ||
                     progress.isDebugFixture)
                   Text(
-                    '0 XP · Chế độ Fixture debug (không tự cộng XP thật).',
+                    '0 XP · Chế độ ngoại tuyến (chưa kết nối máy chủ).',
                     key: const ValueKey<String>('progress-fixture-xp'),
                     style: mc.bodyStyle,
                   )
@@ -221,12 +221,29 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                           ? null
                           : () => pvm.startSession(
                                 subjectCode: primarySubject,
+                                gradeLevel: profile.gradeLevel,
                                 challengeMode: false,
                               ),
                     ),
+                    if (pvm.authSession.isAuthenticated)
+                      MindClockButton(
+                        key: const ValueKey<String>('practice-start-ai-regen'),
+                        label: 'Tạo câu mới từ đề gốc (AI)',
+                        icon: MindClockIconKind.sunrise,
+                        variant: MindClockButtonVariant.secondary,
+                        expand: false,
+                        onPressed: pvm.isBusy
+                            ? null
+                            : () => pvm.startSession(
+                                  subjectCode: primarySubject,
+                                  gradeLevel: profile.gradeLevel,
+                                  challengeMode: false,
+                                  preferAiRegen: true,
+                                ),
+                      ),
                     MindClockButton(
                       key: const ValueKey<String>('practice-start-challenge'),
-                      label: 'Thử phiên báo thức thử thách',
+                      label: 'Mở câu thử thách buổi sáng',
                       icon: MindClockIconKind.bell,
                       variant: MindClockButtonVariant.secondary,
                       expand: false,
@@ -234,6 +251,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                           ? null
                           : () => pvm.startSession(
                                 subjectCode: primarySubject,
+                                gradeLevel: profile.gradeLevel,
                                 challengeMode: true,
                               ),
                     ),
@@ -324,6 +342,22 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                               reasoningText: _reasoningController.text,
                             ),
                   ),
+                  if ((pvm.activeSession?.isOfflineLocal ?? false) &&
+                      pvm.hasOfflineAnswerKey) ...<Widget>[
+                    SizedBox(height: mc.space8),
+                    MindClockButton(
+                      key: const ValueKey<String>('practice-check-offline-bank'),
+                      label: 'Kiểm tra đáp án có sẵn (ngoại tuyến)',
+                      icon: MindClockIconKind.book,
+                      variant: MindClockButtonVariant.secondary,
+                      onPressed: pvm.isBusy
+                          ? null
+                          : () => pvm.checkOfflineBankAnswer(
+                                answerValue: _answerController.text,
+                                reasoningText: _reasoningController.text,
+                              ),
+                    ),
+                  ],
                   SizedBox(height: mc.space8),
                   MindClockButton(
                     key: const ValueKey<String>('practice-save-draft'),

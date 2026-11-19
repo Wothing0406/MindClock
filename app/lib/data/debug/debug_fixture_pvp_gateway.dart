@@ -9,7 +9,7 @@ class DebugFixturePvpGateway implements PvpGateway {
   DebugFixturePvpGateway({
     this.selfUserId = 'debug_user_a',
     this.opponentUserId = 'debug_user_b',
-    this.opponentAlias = 'Gia Bảo (Demo)',
+    this.opponentAlias = 'Gia Bảo (Đấu tập)',
   });
 
   final String selfUserId;
@@ -63,7 +63,7 @@ class DebugFixturePvpGateway implements PvpGateway {
       _status = 'in_progress';
       return const PvpMatchmakeResponse(
         isWaiting: true,
-        messageVi: 'Mẫu debug: Đang tìm đối thủ cùng môn (bấm Kiểm tra lại để ghép)...',
+        messageVi: 'Đang tìm đối thủ cùng môn (bấm Kiểm tra lại để ghép)...',
       );
     }
     _queuedOnce = false;

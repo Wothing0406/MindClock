@@ -957,7 +957,7 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
                         ),
                         if (widget.repository.isDebugFixture)
                           const MindClockStatusPill(
-                            label: 'Dữ liệu mẫu offline',
+                            label: 'Danh sách ngoại tuyến',
                           ),
                       ],
                     ),

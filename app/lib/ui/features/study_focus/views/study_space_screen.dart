@@ -1511,7 +1511,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Đã cấp phiên ${token.model} (${token.isMock ? "mẫu mock" : "ephemeral token"})',
+                    'Đã cấp phiên ${token.model} (${token.isMock ? "ngoại tuyến" : "ephemeral token"})',
                     style: mc.bodyStrongStyle,
                   ),
                   SizedBox(height: mc.space4),

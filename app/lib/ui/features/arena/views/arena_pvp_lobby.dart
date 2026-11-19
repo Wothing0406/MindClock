@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../domain/game/combat_catalog.dart';
@@ -36,6 +38,7 @@ class ArenaPvpLobby extends StatefulWidget {
 class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
   final TextEditingController _answerController = TextEditingController();
   final TextEditingController _reasoningController = TextEditingController();
+  Timer? _countdownTicker;
 
   @override
   void initState() {
@@ -50,10 +53,21 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
       subjectCode: subj,
       gradeBand: grade,
     );
+    if (widget.viewModel.enableAutoPolling) {
+      _countdownTicker = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) {
+          if (mounted && widget.viewModel.stage == PvpUiStage.inMatch) {
+            setState(() {});
+          }
+        },
+      );
+    }
   }
 
   @override
   void dispose() {
+    _countdownTicker?.cancel();
     _answerController.dispose();
     _reasoningController.dispose();
     super.dispose();
@@ -79,7 +93,9 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                 children: <Widget>[
                   Text('Đấu đơn 1v1 (Giao hữu)', style: mc.screenTitleStyle),
                   MindClockStatusPill(
-                    label: vm.isDebugFixture ? 'Mẫu PvP offline' : '0 RP · Công bằng',
+                    label: vm.isDebugFixture
+                        ? 'Đấu tập offline · 0 RP'
+                        : '0 RP · Công bằng',
                     accentWarm: vm.isDebugFixture,
                   ),
                 ],
@@ -99,7 +115,8 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
               ),
               if (vm.statusMessageVi != null) ...<Widget>[
                 SizedBox(height: mc.space12),
-                MindClockNoticeBanner(message: vm.statusMessageVi!, isWarm: false),
+                MindClockNoticeBanner(
+                    message: vm.statusMessageVi!, isWarm: false),
               ],
               if (vm.errorVi != null) ...<Widget>[
                 SizedBox(height: mc.space12),
@@ -137,7 +154,8 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
             style: mc.bodyStyle,
           ),
           SizedBox(height: mc.space12),
-          Text('Chọn môn ghép trận (${vm.gradeBand})', style: mc.bodyStrongStyle),
+          Text('Chọn môn ghép trận (${vm.gradeBand})',
+              style: mc.bodyStrongStyle),
           SizedBox(height: mc.space8),
           Wrap(
             spacing: mc.space8,
@@ -318,6 +336,26 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                       },
                       accentWarm: round.state == 'void',
                     ),
+                    if (round.state == 'answering' &&
+                        round.deadlineAtIso.trim().isNotEmpty)
+                      Builder(
+                        builder: (BuildContext context) {
+                          final DateTime? dl =
+                              DateTime.tryParse(round.deadlineAtIso);
+                          final int remain = dl == null
+                              ? 75
+                              : dl
+                                  .toUtc()
+                                  .difference(DateTime.now().toUtc())
+                                  .inSeconds
+                                  .clamp(0, 999);
+                          return MindClockStatusPill(
+                            key: const ValueKey<String>('pvp-round-countdown'),
+                            label: 'Còn ${remain}s',
+                            accentWarm: remain <= 10,
+                          );
+                        },
+                      ),
                   ],
                 ),
                 SizedBox(height: mc.space12),
@@ -380,8 +418,9 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                     key: const ValueKey<String>('pvp-action-basic'),
                     label: 'Đánh thường (28 ST · 0 Qi · Tích +1 Qi)',
                     icon: MindClockIconKind.arena,
-                    onPressed:
-                        vm.isBusy ? null : () => vm.chooseAction(CombatActionType.basic),
+                    onPressed: vm.isBusy
+                        ? null
+                        : () => vm.chooseAction(CombatActionType.basic),
                   ),
                   SizedBox(height: mc.space8),
                   MindClockButton(

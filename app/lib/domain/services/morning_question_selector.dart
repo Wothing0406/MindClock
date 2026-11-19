@@ -73,9 +73,11 @@ class MorningQuestionSelector {
         hasApprovedQuestions: false,
         difficultyBand: 1,
         estimatedMinutes: 0,
-        learningOutcomeVi: 'Báo thức âm thanh / rung thuần túy, không có câu hỏi mở màn.',
+        learningOutcomeVi:
+            'Báo thức âm thanh / rung thuần túy, không có câu hỏi mở màn.',
         ruleApplied: AlarmSubjectRule.none,
-        explanationVi: 'Chế độ chỉ báo thức: Chuông reo bình thường, không yêu cầu làm câu hỏi.',
+        explanationVi:
+            'Chế độ chỉ báo thức: Chuông reo bình thường, không yêu cầu làm câu hỏi.',
       );
     }
 
@@ -88,18 +90,25 @@ class MorningQuestionSelector {
               (DaySchedule? d) => d?.weekday == weekday,
               orElse: () => null,
             );
-        final List<TimetableEntry> entries = day?.sortedEntries ?? <TimetableEntry>[];
-        if (entries.isNotEmpty) {
-          final TimetableEntry firstEntry = entries.first;
-          resolvedSubject = firstEntry.subjectCode;
+        final List<TimetableEntry> entries =
+            day?.sortedEntries ?? <TimetableEntry>[];
+        TimetableEntry? academicEntry;
+        for (final TimetableEntry item in entries) {
+          if (item.subjectCode.trim().toLowerCase() != 'activity') {
+            academicEntry = item;
+            break;
+          }
+        }
+        if (academicEntry != null) {
+          resolvedSubject = academicEntry.subjectCode;
           final String dayLabel = _weekdayLabel(weekday);
           explanation =
-              'Theo lịch học $dayLabel: Tiết đầu lúc ${firstEntry.formattedStartTime} là môn ${SubjectCatalog.nameFor(resolvedSubject)}.';
+              'Theo lịch học $dayLabel: Tiết đầu lúc ${academicEntry.formattedStartTime} là môn ${SubjectCatalog.nameFor(resolvedSubject)}.';
         } else {
           resolvedSubject = _findTopPrioritySubject(profile);
           final String dayLabel = _weekdayLabel(weekday);
           explanation =
-              '$dayLabel không có tiết trên TKB: Tự động ôn môn ưu tiên trong hồ sơ (${SubjectCatalog.nameFor(resolvedSubject)}).';
+              '$dayLabel không có tiết môn chính trên TKB: Tự động ôn môn ưu tiên trong hồ sơ (${SubjectCatalog.nameFor(resolvedSubject)}).';
         }
         break;
 
@@ -134,7 +143,8 @@ class MorningQuestionSelector {
         hasApprovedQuestions: false,
         difficultyBand: 1,
         estimatedMinutes: 1,
-        learningOutcomeVi: 'Ngân hàng đề đang cập nhật chuẩn Bộ GD&ĐT cho môn $subjectName.',
+        learningOutcomeVi:
+            'Ngân hàng đề đang cập nhật chuẩn Bộ GD&ĐT cho môn $subjectName.',
         ruleApplied: alarm.subjectRule,
         explanationVi:
             'Môn $subjectName chưa có bộ câu hỏi được kiểm duyệt trong ngân hàng. App sẽ báo thức chuông bình thường hoặc bạn có thể đổi sang ôn ${SubjectCatalog.nameFor(fallbackApproved)}.',
@@ -207,8 +217,11 @@ class MorningQuestionSelector {
         return MorningQuestionProposal(
           subjectCode: 'math',
           subjectNameVi: subjectName,
-          topicId: pickSecond ? 'anti_derivative_integral' : 'function_monotonicity',
-          topicNameVi: pickSecond ? 'Nguyên hàm & Tích phân' : 'Tính đơn điệu của hàm số',
+          topicId:
+              pickSecond ? 'anti_derivative_integral' : 'function_monotonicity',
+          topicNameVi: pickSecond
+              ? 'Nguyên hàm & Tích phân'
+              : 'Tính đơn điệu của hàm số',
           hasApprovedQuestions: true,
           difficultyBand: 2,
           estimatedMinutes: 2,
@@ -231,11 +244,13 @@ class MorningQuestionSelector {
           hasApprovedQuestions: true,
           difficultyBand: 2,
           estimatedMinutes: 2,
-          learningOutcomeVi: 'Nghiệm của phương trình sin(x) = a và cos(x) = b trên đường tròn',
+          learningOutcomeVi:
+              'Nghiệm của phương trình sin(x) = a và cos(x) = b trên đường tròn',
           ruleApplied: ruleApplied,
           explanationVi: explanationVi,
           questionId: 'mc-math-11-001',
-          sampleQuestionPrompt: 'Giải phương trình sin(x) = 1/2 trên đoạn [0; pi].',
+          sampleQuestionPrompt:
+              'Giải phương trình sin(x) = 1/2 trên đoạn [0; pi].',
         );
       } else {
         return MorningQuestionProposal(
@@ -246,7 +261,8 @@ class MorningQuestionSelector {
           hasApprovedQuestions: true,
           difficultyBand: 1,
           estimatedMinutes: 1,
-          learningOutcomeVi: 'Nhận biết toạ độ đỉnh I(-b/2a; -delta/4a) và trục đối xứng',
+          learningOutcomeVi:
+              'Nhận biết toạ độ đỉnh I(-b/2a; -delta/4a) và trục đối xứng',
           ruleApplied: ruleApplied,
           explanationVi: explanationVi,
           questionId: 'mc-math-10-001',
@@ -264,11 +280,13 @@ class MorningQuestionSelector {
         hasApprovedQuestions: true,
         difficultyBand: 1,
         estimatedMinutes: 1,
-        learningOutcomeVi: 'Phân biệt cấu trúc điều kiện có thực và giả định ở hiện tại',
+        learningOutcomeVi:
+            'Phân biệt cấu trúc điều kiện có thực và giả định ở hiện tại',
         ruleApplied: ruleApplied,
         explanationVi: explanationVi,
         questionId: 'mc-eng-10-001',
-        sampleQuestionPrompt: 'If it (rain) ______ tomorrow, we will postpone the study session.',
+        sampleQuestionPrompt:
+            'If it (rain) ______ tomorrow, we will postpone the study session.',
       );
     }
 
@@ -281,11 +299,13 @@ class MorningQuestionSelector {
         hasApprovedQuestions: true,
         difficultyBand: 2,
         estimatedMinutes: 2,
-        learningOutcomeVi: 'Xác định các giai đoạn đường phân, chu trình Krebs và chuỗi truyền e-',
+        learningOutcomeVi:
+            'Xác định các giai đoạn đường phân, chu trình Krebs và chuỗi truyền e-',
         ruleApplied: ruleApplied,
         explanationVi: explanationVi,
         questionId: 'mc-bio-10-001',
-        sampleQuestionPrompt: 'Giai đoạn nào trong hô hấp tế bào giải phóng nhiều phân tử ATP nhất?',
+        sampleQuestionPrompt:
+            'Giai đoạn nào trong hô hấp tế bào giải phóng nhiều phân tử ATP nhất?',
       );
     }
 
@@ -301,7 +321,8 @@ class MorningQuestionSelector {
       ruleApplied: ruleApplied,
       explanationVi: explanationVi,
       questionId: 'mc-$subjectCode-default',
-      sampleQuestionPrompt: 'Câu hỏi ôn tập buổi sáng 1-2 phút cho môn $subjectName.',
+      sampleQuestionPrompt:
+          'Câu hỏi ôn tập buổi sáng 1-2 phút cho môn $subjectName.',
     );
   }
 }

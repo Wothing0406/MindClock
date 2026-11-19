@@ -701,11 +701,13 @@ def create_v1_router(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     @router.get('/challenges/next')
-    def get_next_challenge(
+    async def get_next_challenge(
         subject: str = Query(default='TOAN'),
         date: str = Query(default='2026-11-14'),
+        mode: str = Query(default='bank'),
         principal: AuthenticatedPrincipal = Depends(get_current_user),
         db: Session = Depends(get_db),
+        settings: Settings = Depends(get_settings),
     ) -> dict[str, Any]:
         selected = _select_published_question(
             db,
@@ -715,19 +717,65 @@ def create_v1_router(
         )
         if selected is None:
             raise _api_error(404, 'QUESTION_NOT_FOUND', 'Chưa có câu hỏi đã duyệt.')
+
+        ai_generated = False
+        seed_question_id = selected.id
+        active_question = selected
+        if mode.strip().lower() == 'ai_regen':
+            gemini = _get_gemini(settings)
+            try:
+                draft = await gemini.generate_personalized_question(
+                    alias=principal.user.alias,
+                    grade_level=(principal.user.grade_band or 'Lớp 11').strip(),
+                    subject_code=selected.subject_code,
+                    weak_topics=[selected.topic_id] if selected.topic_id else [],
+                    topic_hint=selected.topic_id or None,
+                    difficulty=selected.difficulty,
+                    stage='applied',
+                    seed_question_id=selected.id,
+                    seed_prompt=selected.prompt,
+                    seed_steps=(selected.rubric_json or {}).get('steps', []),
+                )
+                generated = Question(
+                    id=f'ai_q_{uuid.uuid4().hex[:12]}',
+                    subject_code=selected.subject_code,
+                    grade_band=(principal.user.grade_band or selected.grade_band).strip(),
+                    topic_id=draft.topic_id,
+                    difficulty=draft.difficulty,
+                    prompt=draft.prompt,
+                    answer_spec_json={'accepted': draft.accepted_answers},
+                    reasoning_prompt_vi=draft.reasoning_prompt_vi,
+                    rubric_json={'steps': draft.steps, 'hint_vi': draft.hint_vi},
+                    rubric_revision=1,
+                    status='draft',
+                    source_type='ai_personalized_draft',
+                    target_user_id=principal.user.id,
+                    model_version=draft.model_version,
+                    revision=1,
+                )
+                db.add(generated)
+                db.commit()
+                db.refresh(generated)
+                active_question = generated
+                ai_generated = True
+            except GeminiServiceError:
+                active_question = selected
+
         return {
-            'questionId': selected.id,
-            'questionRevision': selected.revision,
+            'questionId': active_question.id,
+            'questionRevision': active_question.revision,
             'validForDate': date,
-            'subject': selected.subject_code,
-            'gradeBand': selected.grade_band,
-            'topicId': selected.topic_id,
-            'difficulty': selected.difficulty,
-            'prompt': selected.prompt,
-            'reasoningPromptVi': selected.reasoning_prompt_vi,
+            'subject': active_question.subject_code,
+            'gradeBand': active_question.grade_band,
+            'topicId': active_question.topic_id,
+            'difficulty': active_question.difficulty,
+            'prompt': active_question.prompt,
+            'reasoningPromptVi': active_question.reasoning_prompt_vi,
             'offlinePolicy': 'ungraded_only',
             'estimatedSeconds': 75,
             'fallback': False,
+            'aiGenerated': ai_generated,
+            'seedQuestionId': seed_question_id,
             'morningCard': extract_public_morning_card(selected),
         }
 
@@ -892,6 +940,8 @@ def create_v1_router(
 
         q_id = payload.question_id or 'math9-linear-001'
         q_obj = db.get(Question, q_id)
+        if q_obj is not None and q_obj.target_user_id not in (None, '', principal.user.id):
+            q_obj = None
         if q_obj is None:
             q_obj = _select_published_question(
                 db,

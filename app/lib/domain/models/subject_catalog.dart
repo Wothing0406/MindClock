@@ -49,8 +49,23 @@ class SubjectCatalog {
   ];
 
   static SubjectInfo? findByCode(String code) {
+    final String clean = code.trim().toLowerCase();
     for (final SubjectInfo subject in allSubjects) {
-      if (subject.code == code) return subject;
+      if (subject.code == clean) return subject;
+    }
+    if (clean == 'activity') {
+      return const SubjectInfo(
+        code: 'activity',
+        nameVi: 'Sinh hoạt / HĐTN',
+        hasApprovedQuestions: false,
+      );
+    }
+    if (clean == 'civics') {
+      return const SubjectInfo(
+        code: 'civic_econ',
+        nameVi: 'Giáo dục kinh tế và pháp luật',
+        hasApprovedQuestions: false,
+      );
     }
     return null;
   }

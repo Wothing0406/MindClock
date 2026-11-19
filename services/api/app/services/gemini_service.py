@@ -208,15 +208,28 @@ class GeminiService:
     async def _generate_with_fast_fallback(
         self,
         base_body: dict[str, Any],
+        *,
+        prefer_vision: bool = False,
     ) -> tuple[dict[str, Any], str]:
-        """Gọi lần lượt các model Gemini thực tế (`primary` -> `fast` -> fallback Gemini 3 đang ổn định) khi gặp timeout/503."""
+        """Gọi lần lượt các model Gemini thực tế khi gặp timeout/503."""
         candidates: list[str] = []
-        for candidate in (
-            self._settings.gemini_primary_model,
-            self._settings.gemini_fast_model,
-            'gemini-3.1-flash-lite',
-            'gemini-3-flash-preview',
-        ):
+        ordered = (
+            (
+                self._settings.gemini_fast_model,
+                'gemini-3-flash-preview',
+                self._settings.gemini_primary_model,
+                'gemini-3.1-flash-lite',
+                'gemini-3.1-pro-preview',
+            )
+            if prefer_vision
+            else (
+                self._settings.gemini_primary_model,
+                self._settings.gemini_fast_model,
+                'gemini-3.1-flash-lite',
+                'gemini-3-flash-preview',
+            )
+        )
+        for candidate in ordered:
             clean = (candidate or '').strip()
             if clean and clean not in candidates:
                 candidates.append(clean)
@@ -232,11 +245,14 @@ class GeminiService:
             req_body['generationConfig'] = gen_cfg
 
             is_last = idx == len(candidates) - 1
-            timeout_override = (
-                min(float(self._settings.gemini_timeout_seconds), 8.0)
-                if not is_last
-                else None
-            )
+            if prefer_vision:
+                timeout_override = max(float(self._settings.gemini_timeout_seconds), 25.0)
+            else:
+                timeout_override = (
+                    min(float(self._settings.gemini_timeout_seconds), 8.0)
+                    if not is_last
+                    else None
+                )
             try:
                 raw = await self._post_json(
                     f'/v1beta/models/{model_id}:generateContent',
@@ -680,23 +696,24 @@ class GeminiService:
         b64_image = base64.b64encode(image_bytes).decode('ascii')
         system_prompt = (
             'Bạn là chuyên gia số hóa thời khóa biểu học sinh THPT Việt Nam.\n'
-            'Hãy trích xuất thời khóa biểu từ ảnh và chuẩn hóa thành danh sách tiết học JSON.\n'
+            'Hãy trích xuất toàn bộ các tiết học có chữ trong bảng từ ảnh và chuẩn hóa thành danh sách JSON.\n'
             'QUY TẮC:\n'
-            '1. weekday: số nguyên 1 đến 7 (1: Thứ Hai, 2: Thứ Ba, 3: Thứ Tư, 4: Thứ Năm, 5: Thứ Sáu, 6: Thứ Bảy, 7: Chủ Nhật).\n'
-            '2. position: số nguyên tiết học (1 đến 5 buổi sáng, 6 đến 10 nếu buổi chiều).\n'
-            '3. subject_code: Chuẩn hóa về các mã sau:\n'
+            '1. weekday: số nguyên 1 đến 7 (1: Thứ Hai/T2, 2: Thứ Ba/T3, 3: Thứ Tư/T4, 4: Thứ Năm/T5, 5: Thứ Sáu/T6, 6: Thứ Bảy/T7, 7: Chủ Nhật/CN).\n'
+            '2. position: số nguyên tiết học (1 đến 5 ứng với S1..S5 buổi sáng; 6 đến 10 ứng với C1..C5 buổi chiều).\n'
+            '3. subject_code: Chuẩn hóa chính xác về các mã sau:\n'
             '   - Toán / Đại / Hình -> "math"\n'
             '   - Văn / Ngữ văn -> "literature"\n'
             '   - Anh / Tiếng Anh / Ngoại ngữ -> "english"\n'
-            '   - Lý / Vật lý -> "physics"\n'
+            '   - Lý / Vật lý / Vật lí -> "physics"\n'
             '   - Hóa / Hóa học -> "chemistry"\n'
             '   - Sinh / Sinh học -> "biology"\n'
             '   - Sử / Lịch sử -> "history"\n'
-            '   - Địa / Địa lý -> "geography"\n'
+            '   - Địa / Địa lý / Địa lí -> "geography"\n'
             '   - Tin / Tin học -> "informatics"\n'
-            '   - GDCD / KTPL -> "civics"\n'
+            '   - GDCD / KTPL / GDKT&PL / ND GDĐP / GDĐP -> "civic_econ"\n'
             '   - Công nghệ -> "technology"\n'
-            '4. Trả về DUY NHẤT 1 JSON object có dạng: {"slots": [{"weekday": int, "position": int, "subject_code": str}], "note_vi": str}.\n'
+            '   - Chào cờ / SHL / Sinh hoạt lớp / HĐTN / HĐTN-HN -> "activity"\n'
+            '4. Không bỏ sót ô tiết học nào có ghi tên môn hoặc sinh hoạt trên bảng. Trả về DUY NHẤT 1 JSON object có dạng: {"slots": [{"weekday": int, "position": int, "subject_code": str}], "note_vi": str}.\n'
             '5. Nếu ảnh mờ không đọc được gì, trả {"slots": [], "note_vi": "Ảnh mờ hoặc không nhận diện được thời khóa biểu, vui lòng chụp lại rõ nét hơn."}.'
         )
         body = {
@@ -705,25 +722,26 @@ class GeminiService:
                 {
                     'role': 'user',
                     'parts': [
-                        {'text': 'Trích xuất thời khóa biểu từ ảnh này.'},
+                        {'text': 'Trích xuất đầy đủ từng ô tiết học (kể cả Sáng S1-S5 và Chiều C1-C5, Chào cờ, SHL, GDĐP, HĐTN) từ ảnh thời khóa biểu này.'},
                         {'inlineData': {'mimeType': mime_type, 'data': b64_image}},
                     ],
                 }
             ],
             'generationConfig': {
                 'temperature': 0.1,
-                'maxOutputTokens': 1500,
+                'maxOutputTokens': 2400,
                 'responseMimeType': 'application/json',
             },
         }
         try:
-            raw, _ = await self._generate_with_fast_fallback(body)
+            raw, _ = await self._generate_with_fast_fallback(body, prefer_vision=True)
             parsed = _parse_json_object(_extract_candidate_text(raw) or '{}')
             raw_slots = parsed.get('slots') or []
             valid_slots = []
             valid_subjects = {
                 'math', 'literature', 'english', 'physics', 'chemistry', 'biology',
-                'history', 'geography', 'informatics', 'civics', 'technology',
+                'history', 'geography', 'informatics', 'civic_econ', 'technology',
+                'activity',
             }
             subject_alias_map = {
                 'toan': 'math',
@@ -731,10 +749,14 @@ class GeminiService:
                 'hinh': 'math',
                 'van': 'literature',
                 'ngu_van': 'literature',
+                'nguvan': 'literature',
                 'anh': 'english',
                 'tieng_anh': 'english',
+                'ngoai_ngu': 'english',
+                'ngoaingu': 'english',
                 'ly': 'physics',
                 'vat_ly': 'physics',
+                'vat_li': 'physics',
                 'hoa': 'chemistry',
                 'hoa_hoc': 'chemistry',
                 'sinh': 'biology',
@@ -743,23 +765,43 @@ class GeminiService:
                 'lich_su': 'history',
                 'dia': 'geography',
                 'dia_ly': 'geography',
+                'dia_li': 'geography',
                 'tin': 'informatics',
                 'tin_hoc': 'informatics',
-                'gdcd': 'civics',
-                'ktpl': 'civics',
+                'gdcd': 'civic_econ',
+                'ktpl': 'civic_econ',
+                'civics': 'civic_econ',
+                'gddp': 'civic_econ',
+                'nd_gddp': 'civic_econ',
+                'giao_duc_dia_phuong': 'civic_econ',
                 'cong_nghe': 'technology',
+                'chao_co': 'activity',
+                'shl': 'activity',
+                'sinh_hoat_lop': 'activity',
+                'hdtn': 'activity',
+                'hdtn_hn': 'activity',
+                'hoat_dong_trai_nghiem': 'activity',
             }
+            import unicodedata
+
+            def _norm_slot_token(raw_tok: str) -> str:
+                nfkd = unicodedata.normalize('NFKD', raw_tok.strip().lower().replace('đ', 'd'))
+                ascii_only = ''.join(ch for ch in nfkd if not unicodedata.combining(ch))
+                cleaned = re.sub(r'[^a-z0-9]+', '_', ascii_only).strip('_')
+                return cleaned
+
             for item in raw_slots:
                 if not isinstance(item, dict):
                     continue
                 w = item.get('weekday')
                 p = item.get('position')
-                s = str(item.get('subject_code', '')).strip().lower()
+                raw_s = str(item.get('subject_code', '')).strip()
+                norm_key = _norm_slot_token(raw_s)
                 if not (isinstance(w, int) and 1 <= w <= 7):
                     continue
                 if not (isinstance(p, int) and 1 <= p <= 10):
                     continue
-                normalized_s = subject_alias_map.get(s, s)
+                normalized_s = subject_alias_map.get(norm_key, norm_key)
                 if normalized_s in valid_subjects:
                     valid_slots.append({
                         'weekday': w,

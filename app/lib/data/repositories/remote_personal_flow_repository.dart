@@ -73,8 +73,12 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   Future<ChallengeQuestion> fetchNextChallenge({
     required String localDate,
     String? subjectCode,
+    String mode = 'bank',
   }) async {
-    final Map<String, String> query = <String, String>{'date': localDate};
+    final Map<String, String> query = <String, String>{
+      'date': localDate,
+      if (mode.trim().isNotEmpty) 'mode': mode.trim(),
+    };
     if (subjectCode != null && subjectCode.trim().isNotEmpty) {
       query['subject'] = subjectCode.trim();
     }

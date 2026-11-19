@@ -678,7 +678,7 @@ class _TodayScreenState extends State<TodayScreen> {
                           borderRadius: BorderRadius.circular(mc.radiusControl),
                         ),
                         child: Text(
-                          'Đề mẫu: "${morningProposal.sampleQuestionPrompt!}"',
+                          'Câu gợi ý sáng: "${morningProposal.sampleQuestionPrompt!}"',
                           style: mc.captionStyle.copyWith(
                             fontStyle: FontStyle.italic,
                             color: mc.ink,

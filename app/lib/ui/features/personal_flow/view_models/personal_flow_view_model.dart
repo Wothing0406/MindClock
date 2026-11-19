@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/offline_text_draft_store.dart';
+import '../../../../domain/game/solo_combat_engine.dart';
+import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/auth_session.dart';
 import '../../../../domain/models/personal_flow_models.dart';
 import '../../../../domain/models/study_profile.dart';
@@ -47,6 +49,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
   bool _challengeModeSession = false;
   bool _morningHookCompletedOrSkipped = false;
   int _clearWrongCount = 0;
+  int _offlineRotationOffset = 0;
   String? _postAttemptRevealVi;
   String? _bannerMessageVi;
   String? _errorMessageVi;
@@ -154,7 +157,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _authSession = next;
       _savedDraft = await _draftStore.loadDraft(_authSession.ownerScopeKey);
       _bannerMessageVi = isDebugFixture
-          ? '$successMessage (Đang dùng Fixture debug — không phải tài khoản thật).'
+          ? '$successMessage (Chế độ cục bộ trên máy).'
           : successMessage;
       await _loadOnlineProgressQuietly();
       return true;
@@ -228,11 +231,13 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
-  /// Tải câu hỏi từ `/v1/challenges/next` (hoặc chuyển sang câu dự phòng local khi offline/chưa đăng nhập).
+  /// Tải câu hỏi từ `/v1/challenges/next` (hoặc lấy câu hỏi + đáp án có sẵn trong kho cục bộ khi offline/mất mạng).
   Future<void> startSession({
     String alarmId = 'practice_manual',
     String? subjectCode,
+    String? gradeLevel,
     bool challengeMode = false,
+    bool preferAiRegen = false,
   }) async {
     _isBusy = true;
     _errorMessageVi = null;
@@ -252,9 +257,10 @@ class PersonalFlowViewModel extends ChangeNotifier {
     final String localSessionId = LocalIdGenerator.nextUuidV4();
 
     if (!_authSession.isAuthenticated) {
-      _currentQuestion = _bundledFallbackQuestion(
+      _currentQuestion = _offlineBankChallengeQuestion(
         localDate: localDate,
         subjectCode: subjectCode,
+        gradeLevel: gradeLevel,
       );
       _activeSession = StudySessionRecord(
         sessionId: 'local_$localSessionId',
@@ -264,7 +270,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
         isOfflineLocal: true,
       );
       _bannerMessageVi =
-          'Chưa đăng nhập: bạn vẫn làm câu dự phòng trên máy (hoàn thành không chấm, không tự cộng XP).';
+          'Đang dùng bộ câu hỏi & đáp án có sẵn trên máy (luyện tập ngoại tuyến, không cộng XP server).';
       _isBusy = false;
       notifyListeners();
       return;
@@ -274,6 +280,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       final ChallengeQuestion question = await _repository.fetchNextChallenge(
         localDate: localDate,
         subjectCode: subjectCode,
+        mode: preferAiRegen ? 'ai_regen' : 'bank',
       );
       final StudySessionRecord session = await _repository.createOrSyncSession(
         alarmId: alarmId,
@@ -288,13 +295,17 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _activeSession = session;
       if (isDebugFixture) {
         _bannerMessageVi =
-            'Đang dùng Fixture debug · Không phải AI thật hay XP server.';
+            'Chế độ cục bộ trên máy · Không phải AI/XP từ máy chủ.';
+      } else if (preferAiRegen) {
+        _bannerMessageVi =
+            'Đã nạp câu mới tạo từ đề gốc vào phiên học hiện tại.';
       }
     } on PersonalApiException catch (e) {
       await _handleApiError(e, preservePendingSubmission: false);
-      _currentQuestion = _bundledFallbackQuestion(
+      _currentQuestion = _offlineBankChallengeQuestion(
         localDate: localDate,
         subjectCode: subjectCode,
+        gradeLevel: gradeLevel,
       );
       _activeSession = StudySessionRecord(
         sessionId: 'local_$localSessionId',
@@ -303,10 +314,90 @@ class PersonalFlowViewModel extends ChangeNotifier {
         version: 1,
         isOfflineLocal: true,
       );
+      _bannerMessageVi =
+          'Mất kết nối máy chủ: đã chuyển sang bộ câu hỏi & đáp án có sẵn trên máy.';
     } finally {
       _isBusy = false;
       notifyListeners();
     }
+  }
+
+  bool get hasOfflineAnswerKey =>
+      _currentQuestion != null &&
+      SoloTrainingQuestionBank.findById(_currentQuestion!.questionId) != null;
+
+  /// Đối chiếu trực tiếp với đáp án & lời giải có sẵn trên máy khi mất mạng (luôn giữ 0 XP server).
+  GradingResult? checkOfflineBankAnswer({
+    required String answerValue,
+    required String reasoningText,
+  }) {
+    final ChallengeQuestion? question = _currentQuestion;
+    if (question == null) {
+      _errorMessageVi = 'Hãy mở câu hỏi trước khi kiểm tra đáp án.';
+      notifyListeners();
+      return null;
+    }
+    final String cleanAnswer = answerValue.trim();
+    final String cleanReasoning = reasoningText.trim();
+    if (cleanAnswer.isEmpty || cleanReasoning.isEmpty) {
+      _errorMessageVi =
+          'Vui lòng nhập đáp án và ít nhất một bước làm để đối chiếu.';
+      notifyListeners();
+      return null;
+    }
+    final SoloApprovedQuestion? offlineQ =
+        SoloTrainingQuestionBank.findById(question.questionId);
+    if (offlineQ == null) {
+      _errorMessageVi =
+          'Câu này chưa có bộ đáp án lưu cục bộ. Bạn có thể lưu bản nháp 24 giờ để gửi máy chủ khi có mạng.';
+      notifyListeners();
+      return null;
+    }
+    final SoloGradingFeedback localGrade = gradeSoloTrainingSubmission(
+      question: offlineQ,
+      answerText: cleanAnswer,
+      reasoningText: cleanReasoning,
+    );
+    final GradingVerdict mappedVerdict = switch (localGrade.status) {
+      SoloGradeStatus.correct => GradingVerdict.correct,
+      SoloGradeStatus.incorrect => GradingVerdict.incorrect,
+      SoloGradeStatus.uncertain => GradingVerdict.uncertain,
+    };
+    final int nextWrongCount = mappedVerdict == GradingVerdict.incorrect
+        ? _clearWrongCount + 1
+        : (mappedVerdict == GradingVerdict.correct ? 0 : _clearWrongCount);
+    final GradingResult offlineResult = GradingResult(
+      attemptId: 'offline_${LocalIdGenerator.nextUuidV4()}',
+      verdict: mappedVerdict,
+      observedSteps: <String>[cleanReasoning],
+      firstIssue: mappedVerdict == GradingVerdict.incorrect
+          ? 'Kiểm tra lại bước biến đổi và đáp số đối chiếu.'
+          : null,
+      feedbackVi:
+          '${localGrade.feedbackVi} (Đối chiếu bộ đáp án có sẵn · 0 XP server).',
+      hintVi: offlineQ.oneStepHintVi,
+      nextActions: mappedVerdict == GradingVerdict.correct
+          ? const <String>['finish']
+          : <String>[
+              'retry',
+              if (nextWrongCount >= 5) 'abandon',
+              'finish_ungraded',
+              'emergency_stop',
+            ],
+      xpAwarded: 0,
+      modelVersion: 'offline-bank-validator',
+      rubricRevision: offlineQ.rubricRevision,
+      isServerAuthoritative: false,
+      confirmedIncorrectCount: nextWrongCount,
+      canAbandon: mappedVerdict != GradingVerdict.correct && nextWrongCount >= 5,
+      revealVi: mappedVerdict == GradingVerdict.correct
+          ? '${offlineQ.gradingRubricStepsVi.join(" ")} Đáp án: ${offlineQ.explanationAfterRevealVi}'
+          : null,
+    );
+    _applyGradingResult(offlineResult);
+    _errorMessageVi = null;
+    notifyListeners();
+    return offlineResult;
   }
 
   /// Bảo toàn cặp `clientAttemptId` + `idempotencyKey` giữa các lần retry cùng nội dung;
@@ -369,7 +460,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
     if (!_authSession.isAuthenticated || session.isOfflineLocal) {
       _errorMessageVi =
-          'Chưa thể chấm khi ngoại tuyến hoặc chưa đăng nhập. Bạn có thể hoàn thành không chấm hoặc lưu nháp chữ (tối đa 24 giờ).';
+          'Chưa thể gửi chấm máy chủ khi ngoại tuyến hoặc chưa đăng nhập. Bạn có thể bấm "Kiểm tra đáp án có sẵn (ngoại tuyến)" hoặc lưu bản nháp chữ (tối đa 24 giờ).';
       _lastResult = null;
       notifyListeners();
       return null;
@@ -857,20 +948,28 @@ class PersonalFlowViewModel extends ChangeNotifier {
     return '$y-$m-$d';
   }
 
-  static ChallengeQuestion _bundledFallbackQuestion({
+  ChallengeQuestion _offlineBankChallengeQuestion({
     required String localDate,
     String? subjectCode,
+    String? gradeLevel,
   }) {
+    final SoloApprovedQuestion picked =
+        SoloTrainingQuestionBank.pickOfflineQuestion(
+      subjectCode: subjectCode,
+      gradeLevel: gradeLevel,
+      excludeQuestionId: _currentQuestion?.questionId,
+      rotationOffset: _offlineRotationOffset++,
+    );
     return ChallengeQuestion(
-      questionId: 'bundled-offline-math-001',
-      questionRevision: 1,
+      questionId: picked.id,
+      questionRevision: picked.revision,
       validForDate: localDate,
-      subjectCode: subjectCode ?? 'TOAN',
-      topicId: 'linear_equation_1var',
+      subjectCode: picked.subjectCode,
+      topicId: '${picked.subjectCode}_offline',
       difficulty: 1,
-      prompt: 'Tìm x biết 2x + 4 = 12 (câu dự phòng offline).',
-      reasoningPromptVi: 'Viết một bước biến đổi chính của bạn.',
-      offlinePolicy: 'ungraded_only',
+      prompt: picked.prompt,
+      reasoningPromptVi: picked.reasoningPromptVi,
+      offlinePolicy: 'offline_approved_bank',
       estimatedSeconds: 60,
       fallback: true,
       isDebugFixture: false,
