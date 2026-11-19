@@ -14,6 +14,7 @@ import 'data/services/firebase_auth_gateway.dart';
 import 'data/services/local_key_value_store.dart';
 import 'data/services/method_channel_camera_gateway.dart';
 import 'data/services/method_channel_media_picker_gateway.dart';
+import 'data/services/method_channel_schedule_widget_bridge.dart';
 import 'data/services/method_channel_study_focus_bridge.dart';
 import 'data/services/offline_text_draft_store.dart';
 import 'data/services/pending_alarm_event_store.dart';
@@ -24,6 +25,7 @@ import 'domain/services/auth_session_gateway.dart';
 import 'domain/services/camera_capture_gateway.dart';
 import 'domain/services/media_picker_gateway.dart';
 import 'domain/services/personal_flow_repository.dart';
+import 'domain/services/schedule_widget_bridge.dart';
 import 'domain/services/study_ai_gateway.dart';
 import 'domain/services/study_focus_bridge.dart';
 import 'ui/core/theme/mindclock_theme.dart';
@@ -54,6 +56,7 @@ class MindClockApp extends StatefulWidget {
     this.mediaPickerGateway,
     this.draftStore,
     this.studyFocusBridge,
+    this.scheduleWidgetBridge,
     this.studyAiGateway,
     this.studyNowProvider,
     this.enableStudyTicker = true,
@@ -69,6 +72,7 @@ class MindClockApp extends StatefulWidget {
   final MediaPickerGateway? mediaPickerGateway;
   final OfflineTextDraftStore? draftStore;
   final StudyFocusBridge? studyFocusBridge;
+  final ScheduleWidgetBridge? scheduleWidgetBridge;
   final StudyAiGateway? studyAiGateway;
   final DateTime Function()? studyNowProvider;
   final bool enableStudyTicker;
@@ -106,6 +110,8 @@ class _MindClockAppState extends State<MindClockApp> {
           widget.alarmScheduler ?? createDefaultAlarmSchedulerService(),
       alarmSyncGateway: alarmSyncGateway,
       pendingAlarmEventStore: pendingEventStore,
+      scheduleWidgetBridge: widget.scheduleWidgetBridge ??
+          createDefaultScheduleWidgetBridge(),
     );
 
     final PersonalFlowRepository personalRepository =
@@ -193,6 +199,13 @@ StudyFocusBridge createDefaultStudyFocusBridge() {
     return const MethodChannelStudyFocusBridge();
   }
   return const UnboundStudyFocusBridge();
+}
+
+ScheduleWidgetBridge createDefaultScheduleWidgetBridge() {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    return const MethodChannelScheduleWidgetBridge();
+  }
+  return const UnboundScheduleWidgetBridge();
 }
 
 AuthSessionGateway createDefaultAuthGateway({

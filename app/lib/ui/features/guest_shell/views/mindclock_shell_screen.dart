@@ -381,6 +381,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return TimetableProfileScreen(
           viewModel: widget.viewModel,
           personalViewModel: widget.personalViewModel,
+          mediaPickerGateway:
+              widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
           onClose: () {
             setState(() => _stage = _GuestFlowStage.mainTabs);
           },

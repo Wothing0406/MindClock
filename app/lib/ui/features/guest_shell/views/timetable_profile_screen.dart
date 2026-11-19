@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/models/wake_suggestion.dart';
+import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -19,11 +23,13 @@ class TimetableProfileScreen extends StatefulWidget {
     required this.viewModel,
     required this.onClose,
     this.personalViewModel,
+    this.mediaPickerGateway,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final VoidCallback onClose;
   final PersonalFlowViewModel? personalViewModel;
+  final MediaPickerGateway? mediaPickerGateway;
 
   @override
   State<TimetableProfileScreen> createState() => _TimetableProfileScreenState();
@@ -51,33 +57,58 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
       _feedbackMessage = null;
     });
     try {
-      // Demo base64 1x1 GIF hoặc ảnh chụp thực tế
-      const String samplePhotoB64 =
+      String photoBase64 =
           'R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      final MediaPickerGateway? picker = widget.mediaPickerGateway;
+      if (picker != null) {
+        final MediaPickResult pickRes = await picker.pickAvatarImage();
+        if (pickRes.cancelled) {
+          if (!mounted) return;
+          setState(() {
+            _isScanningAi = false;
+            _feedbackMessage = 'Đã hủy chọn ảnh thời khóa biểu.';
+          });
+          return;
+        }
+        if (pickRes.picked && pickRes.localPath != null) {
+          final File file = File(pickRes.localPath!);
+          if (await file.exists()) {
+            final List<int> bytes = await file.readAsBytes();
+            if (bytes.isNotEmpty) {
+              photoBase64 = base64Encode(bytes);
+            }
+          }
+        }
+      }
+
       final PersonalFlowViewModel? pvm = widget.personalViewModel;
-      final List<Map<String, dynamic>> slots = (pvm != null && pvm.authSession.isAuthenticated)
-          ? await pvm.parseTimetableImage(imageBase64: samplePhotoB64)
-          : const <Map<String, dynamic>>[
-              <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
-              <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'math'},
-              <String, dynamic>{'weekday': 1, 'position': 3, 'subjectCode': 'literature'},
-              <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
-              <String, dynamic>{'weekday': 2, 'position': 2, 'subjectCode': 'chemistry'},
-              <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'literature'},
-              <String, dynamic>{'weekday': 3, 'position': 2, 'subjectCode': 'english'},
-              <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'math'},
-              <String, dynamic>{'weekday': 4, 'position': 2, 'subjectCode': 'biology'},
-              <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
-              <String, dynamic>{'weekday': 5, 'position': 2, 'subjectCode': 'geography'},
-            ];
+      final List<Map<String, dynamic>> slots =
+          (pvm != null && pvm.authSession.isAuthenticated)
+              ? await pvm.parseTimetableImage(imageBase64: photoBase64)
+              : const <Map<String, dynamic>>[
+                  <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
+                  <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'math'},
+                  <String, dynamic>{'weekday': 1, 'position': 3, 'subjectCode': 'literature'},
+                  <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
+                  <String, dynamic>{'weekday': 2, 'position': 2, 'subjectCode': 'chemistry'},
+                  <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'literature'},
+                  <String, dynamic>{'weekday': 3, 'position': 2, 'subjectCode': 'english'},
+                  <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'math'},
+                  <String, dynamic>{'weekday': 4, 'position': 2, 'subjectCode': 'biology'},
+                  <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
+                  <String, dynamic>{'weekday': 5, 'position': 2, 'subjectCode': 'geography'},
+                ];
+      if (!mounted) return;
       setState(() {
         _isScanningAi = false;
         _aiParsedDraftSlots = slots;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isScanningAi = false;
-        _feedbackMessage = 'Chưa thể phân tích ảnh thời khóa biểu lúc này. Bạn có thể thử lại hoặc nhập thủ công.';
+        _feedbackMessage =
+            'Chưa thể phân tích ảnh thời khóa biểu lúc này. Bạn có thể thử lại hoặc nhập thủ công.';
       });
     }
   }

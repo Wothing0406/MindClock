@@ -15,6 +15,7 @@ class MainActivity : FlutterActivity() {
     private lateinit var cameraBridge: CameraBridgeHandler
     private lateinit var studyFocusBridge: StudyFocusBridgeHandler
     private lateinit var mediaPickerBridge: MediaPickerBridgeHandler
+    private lateinit var scheduleWidgetBridge: ScheduleWidgetBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -22,7 +23,9 @@ class MainActivity : FlutterActivity() {
         cameraBridge = CameraBridgeHandler(this)
         studyFocusBridge = StudyFocusBridgeHandler(this)
         mediaPickerBridge = MediaPickerBridgeHandler(this)
+        scheduleWidgetBridge = ScheduleWidgetBridgeHandler(this)
         AlarmRingService.ensureNotificationChannel(this)
+        TaskReminderReceiver.ensureChannel(this)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -54,6 +57,13 @@ class MainActivity : FlutterActivity() {
             MediaPickerBridgeHandler.CHANNEL_NAME,
         ).setMethodCallHandler { call, result ->
             mediaPickerBridge.handleMethodCall(call, result)
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ScheduleWidgetBridgeHandler.CHANNEL_NAME,
+        ).setMethodCallHandler { call, result ->
+            scheduleWidgetBridge.handleMethodCall(call, result)
         }
     }
 

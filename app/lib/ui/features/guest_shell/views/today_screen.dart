@@ -16,6 +16,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../study_focus/view_models/study_focus_view_model.dart';
 import '../view_models/guest_workspace_view_model.dart';
+import 'day_schedule_timeline_card.dart';
 
 /// Màn hình `S04` Hôm nay (Dashboard cá nhân hóa đa môn & TKB tuần).
 class TodayScreen extends StatefulWidget {
@@ -582,6 +583,17 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ],
             ),
+          ),
+          SizedBox(height: mc.space12),
+          DayScheduleTimelineCard(
+            viewModel: widget.viewModel,
+            selectedDate: _currentTime.add(
+              Duration(days: _selectedWeekday - _currentTime.weekday),
+            ),
+            now: _currentTime,
+            onSelectWeekday: (int weekday) {
+              setState(() => _selectedWeekday = weekday);
+            },
           ),
           SizedBox(height: mc.space16),
 

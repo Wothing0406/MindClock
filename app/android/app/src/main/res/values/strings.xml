@@ -8,4 +8,5 @@
     <string name="alarm_emergency_stop">Dừng khẩn cấp</string>
     <string name="alarm_challenge_note">Chế độ thử thách không hỗ trợ Hoãn. Luôn có Dừng khẩn cấp.</string>
     <string name="alarm_normal_note">Chế độ thường: bạn có thể Hoãn 5 phút hoặc dừng báo thức.</string>
+    <string name="widget_schedule_description">Xem nhanh lịch học, học thêm, To-do và giờ báo thức hôm nay của MindClock.</string>
 </resources>

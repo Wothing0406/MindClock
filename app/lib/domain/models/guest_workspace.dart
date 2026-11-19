@@ -1,4 +1,5 @@
 import 'alarm_config.dart';
+import 'daily_todo_task.dart';
 import 'study_profile.dart';
 import 'timetable.dart';
 import 'wake_suggestion.dart';
@@ -16,6 +17,8 @@ class GuestWorkspace {
       prepMinutes: 30,
       bufferMinutes: 10,
     ),
+    this.dailyTasks = const <DailyTodoTask>[],
+    this.doneScheduleKeys = const <String>[],
     this.lastSavedIso,
   });
 
@@ -24,6 +27,8 @@ class GuestWorkspace {
         profile: const StudyProfile(),
         timetable: WeeklyTimetable(),
         alarms: const <AlarmConfig>[],
+        dailyTasks: const <DailyTodoTask>[],
+        doneScheduleKeys: const <String>[],
       );
 
   final bool onboardingCompleted;
@@ -31,6 +36,8 @@ class GuestWorkspace {
   final WeeklyTimetable timetable;
   final List<AlarmConfig> alarms;
   final WakeSuggestionInput wakePreferences;
+  final List<DailyTodoTask> dailyTasks;
+  final List<String> doneScheduleKeys;
   final String? lastSavedIso;
 
   AlarmConfig? get primaryAlarm => alarms.isEmpty ? null : alarms.first;
@@ -41,6 +48,8 @@ class GuestWorkspace {
     WeeklyTimetable? timetable,
     List<AlarmConfig>? alarms,
     WakeSuggestionInput? wakePreferences,
+    List<DailyTodoTask>? dailyTasks,
+    List<String>? doneScheduleKeys,
     String? lastSavedIso,
   }) {
     return GuestWorkspace(
@@ -49,23 +58,31 @@ class GuestWorkspace {
       timetable: timetable ?? this.timetable,
       alarms: alarms ?? this.alarms,
       wakePreferences: wakePreferences ?? this.wakePreferences,
+      dailyTasks: dailyTasks ?? this.dailyTasks,
+      doneScheduleKeys: doneScheduleKeys ?? this.doneScheduleKeys,
       lastSavedIso: lastSavedIso ?? this.lastSavedIso,
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'onboardingCompleted': onboardingCompleted,
         'profile': profile.toJson(),
         'timetable': timetable.toJson(),
         'alarms': alarms.map((AlarmConfig a) => a.toJson()).toList(),
         'wakePreferences': wakePreferences.toJson(),
+        'dailyTasks': dailyTasks.map((DailyTodoTask t) => t.toJson()).toList(),
+        'doneScheduleKeys': doneScheduleKeys,
         'lastSavedIso': lastSavedIso,
       };
 
   factory GuestWorkspace.fromJson(Map<String, dynamic> json) {
     final List<dynamic> rawAlarms =
         json['alarms'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> rawTasks =
+        json['dailyTasks'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> rawDoneKeys =
+        json['doneScheduleKeys'] as List<dynamic>? ?? <dynamic>[];
     final Map<String, dynamic>? rawProfile =
         json['profile'] as Map<String, dynamic>?;
     final Map<String, dynamic>? rawTimetable =
@@ -93,6 +110,13 @@ class GuestWorkspace {
               prepMinutes: 30,
               bufferMinutes: 10,
             ),
+      dailyTasks: rawTasks
+          .whereType<Map<String, dynamic>>()
+          .map(DailyTodoTask.fromJson)
+          .toList(growable: false),
+      doneScheduleKeys: rawDoneKeys
+          .whereType<String>()
+          .toList(growable: false),
       lastSavedIso: json['lastSavedIso'] as String?,
     );
   }

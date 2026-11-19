@@ -11,6 +11,7 @@ import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart'
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/data/services/personal_api_client.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
+import 'package:mindclock_app/domain/services/media_picker_gateway.dart';
 
 void main() {
   Future<void> scrollAndTap(WidgetTester tester, Finder finder) async {
@@ -29,6 +30,7 @@ void main() {
           repository: GuestWorkspaceRepository(store: store),
           personalRepository: DebugFixturePersonalFlowRepository(),
           alarmScheduler: const UnboundAlarmSchedulerService(),
+          mediaPickerGateway: const UnboundMediaPickerGateway(),
           enableStudyTicker: false,
         ),
       );
@@ -60,6 +62,7 @@ void main() {
           repository: GuestWorkspaceRepository(store: store),
           personalRepository: DebugFixturePersonalFlowRepository(),
           alarmScheduler: const UnboundAlarmSchedulerService(),
+          mediaPickerGateway: const UnboundMediaPickerGateway(),
           enableStudyTicker: false,
         ),
       );

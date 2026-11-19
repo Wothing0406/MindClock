@@ -6,6 +6,7 @@ import '../../../../data/repositories/guest_workspace_repository.dart';
 import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/pending_alarm_event_store.dart';
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/daily_todo_task.dart';
 import '../../../../domain/models/guest_workspace.dart';
 import '../../../../domain/models/personal_flow_models.dart';
 import '../../../../domain/models/study_profile.dart';
@@ -14,6 +15,7 @@ import '../../../../domain/models/timetable.dart';
 import '../../../../domain/models/wake_suggestion.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/alarm_sync_gateway.dart';
+import '../../../../domain/services/schedule_widget_bridge.dart';
 import '../../../core/strings/app_strings.dart';
 
 class GuestWorkspaceViewModel extends ChangeNotifier {
@@ -22,17 +24,21 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     required AlarmSchedulerService alarmScheduler,
     AlarmSyncGateway? alarmSyncGateway,
     PendingAlarmEventStore? pendingAlarmEventStore,
+    ScheduleWidgetBridge? scheduleWidgetBridge,
     DateTime Function()? nowProvider,
   })  : _repository = repository,
         _alarmScheduler = alarmScheduler,
         _alarmSyncGateway = alarmSyncGateway,
         _pendingAlarmEventStore = pendingAlarmEventStore,
+        _scheduleWidgetBridge =
+            scheduleWidgetBridge ?? const UnboundScheduleWidgetBridge(),
         _nowProvider = nowProvider ?? DateTime.now;
 
   final GuestWorkspaceRepository _repository;
   final AlarmSchedulerService _alarmScheduler;
   final AlarmSyncGateway? _alarmSyncGateway;
   final PendingAlarmEventStore? _pendingAlarmEventStore;
+  final ScheduleWidgetBridge _scheduleWidgetBridge;
   final DateTime Function() _nowProvider;
 
   GuestWorkspace _workspace = GuestWorkspace.initial();
@@ -80,6 +86,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     await refreshOsStatus();
     _isLoaded = true;
     notifyListeners();
+    unawaited(syncScheduleWidget());
   }
 
   Future<void> waitForPendingServerSync() async {
@@ -451,6 +458,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       timetable: _workspace.timetable,
     );
     notifyListeners();
+    unawaited(syncScheduleWidget());
   }
 
   Future<void> toggleRestDay(int weekday, bool isRestDay) async {
@@ -531,6 +539,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       timetable: _workspace.timetable,
     );
     notifyListeners();
+    unawaited(syncScheduleWidget());
   }
 
   WakeSuggestionResult previewWakeSuggestion(WakeSuggestionInput input) {
@@ -580,6 +589,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     _scheduleChangedSinceAlarmSave = false;
     _workspace = await _repository.save(_workspace);
     notifyListeners();
+    unawaited(syncScheduleWidget());
 
     if (shouldSyncServer) {
       _trackSync(_syncSingleAlarmToServer(persistedAlarm.id));
@@ -613,6 +623,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     _workspace = _workspace.copyWith(alarms: nextAlarms);
     _workspace = await _repository.save(_workspace);
     notifyListeners();
+    unawaited(syncScheduleWidget());
 
     if (shouldSyncServer) {
       _trackSync(_syncSingleAlarmToServer(alarmId));
@@ -773,5 +784,169 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     );
     _workspace = await _repository.save(_workspace);
     notifyListeners();
+    unawaited(syncScheduleWidget());
+  }
+
+  List<DailyTodoTask> get dailyTasks => _workspace.dailyTasks;
+
+  List<DayScheduleBlock> timelineForDate(DateTime date) {
+    return DayScheduleBlock.buildForDate(
+      date: date,
+      timetable: _workspace.timetable,
+      tasks: _workspace.dailyTasks,
+      doneScheduleKeys: _workspace.doneScheduleKeys.toSet(),
+    );
+  }
+
+  Future<void> addDailyTodoTask({
+    required String title,
+    required DateTime date,
+    required int startMinutes,
+    int durationMinutes = 45,
+    String? subjectCode,
+    DailyTodoCategory category = DailyTodoCategory.selfStudy,
+    bool remindOnTime = true,
+    String note = '',
+  }) async {
+    final String cleanTitle = title.trim();
+    if (cleanTitle.isEmpty) return;
+    final DailyTodoTask task = DailyTodoTask(
+      id: 'todo_${LocalIdGenerator.nextUuidV4()}',
+      title: cleanTitle,
+      dateIso: formatDateIso(date),
+      startMinutes: startMinutes.clamp(0, 1439),
+      durationMinutes: durationMinutes.clamp(15, 240),
+      subjectCode: subjectCode,
+      category: category,
+      isDone: false,
+      remindOnTime: remindOnTime,
+      note: note.trim(),
+    );
+    final List<DailyTodoTask> nextTasks = <DailyTodoTask>[
+      ..._workspace.dailyTasks,
+      task,
+    ];
+    _workspace = _workspace.copyWith(dailyTasks: nextTasks);
+    _workspace = await _repository.save(_workspace);
+    notifyListeners();
+    if (task.remindOnTime) {
+      await _scheduleWidgetBridge.scheduleTaskReminder(task);
+    }
+    await syncScheduleWidget();
+  }
+
+  Future<void> toggleBlockDone(DayScheduleBlock block, DateTime date) async {
+    if (block.isFromTimetable) {
+      final String? key = block.timetableDoneKey;
+      if (key == null) return;
+      final Set<String> nextDone = _workspace.doneScheduleKeys.toSet();
+      if (nextDone.contains(key)) {
+        nextDone.remove(key);
+      } else {
+        nextDone.add(key);
+      }
+      _workspace = _workspace.copyWith(
+        doneScheduleKeys: nextDone.toList(growable: false),
+      );
+      _workspace = await _repository.save(_workspace);
+      notifyListeners();
+      await syncScheduleWidget();
+      return;
+    }
+
+    final List<DailyTodoTask> nextTasks = <DailyTodoTask>[];
+    DailyTodoTask? toggledTask;
+    final String nowIso = _nowProvider().toIso8601String();
+    for (final DailyTodoTask item in _workspace.dailyTasks) {
+      if (item.id == block.id) {
+        final bool nextDone = !item.isDone;
+        toggledTask = item.copyWith(
+          isDone: nextDone,
+          doneAtIso: nextDone ? nowIso : null,
+          clearDoneAt: !nextDone,
+        );
+        nextTasks.add(toggledTask);
+      } else {
+        nextTasks.add(item);
+      }
+    }
+    _workspace = _workspace.copyWith(dailyTasks: nextTasks);
+    _workspace = await _repository.save(_workspace);
+    notifyListeners();
+
+    if (toggledTask != null) {
+      if (toggledTask.isDone) {
+        await _scheduleWidgetBridge.cancelTaskReminder(toggledTask.id);
+      } else if (toggledTask.remindOnTime) {
+        await _scheduleWidgetBridge.scheduleTaskReminder(toggledTask);
+      }
+    }
+    await syncScheduleWidget();
+  }
+
+  Future<void> deleteDailyTodoTask(String taskId) async {
+    final List<DailyTodoTask> nextTasks = _workspace.dailyTasks
+        .where((DailyTodoTask t) => t.id != taskId)
+        .toList(growable: false);
+    _workspace = _workspace.copyWith(dailyTasks: nextTasks);
+    _workspace = await _repository.save(_workspace);
+    notifyListeners();
+    await _scheduleWidgetBridge.cancelTaskReminder(taskId);
+    await syncScheduleWidget();
+  }
+
+  ScheduleWidgetSnapshot buildWidgetSnapshotForDate(DateTime date) {
+    final List<DayScheduleBlock> blocks = timelineForDate(date);
+    final int doneCount =
+        blocks.where((DayScheduleBlock b) => b.isDone).length;
+    final List<DayScheduleBlock> prioritized = <DayScheduleBlock>[
+      ...blocks.where((DayScheduleBlock b) => !b.isDone),
+      ...blocks.where((DayScheduleBlock b) => b.isDone),
+    ].take(4).toList(growable: false);
+
+    final AlarmConfig? nextAlarm = _workspace.alarms
+        .where((AlarmConfig a) => a.enabled)
+        .cast<AlarmConfig?>()
+        .firstWhere((AlarmConfig? _) => true, orElse: () => null);
+    final String alarmLabel = nextAlarm != null
+        ? 'Chuông ${nextAlarm.formattedTime}'
+        : 'Chưa bật chuông';
+
+    const List<String> shortWeekdays = <String>[
+      'TH 2',
+      'TH 3',
+      'TH 4',
+      'TH 5',
+      'TH 6',
+      'TH 7',
+      'CN',
+    ];
+    final String weekdayShort = shortWeekdays[(date.weekday - 1).clamp(0, 6)];
+
+    return ScheduleWidgetSnapshot(
+      dateIso: formatDateIso(date),
+      weekdayShortVi: weekdayShort,
+      dayNumberLabel: date.day.toString(),
+      monthLabelVi: '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}',
+      doneCount: doneCount,
+      totalCount: blocks.length,
+      nextAlarmLabelVi: alarmLabel,
+      items: prioritized
+          .map(
+            (DayScheduleBlock b) => ScheduleWidgetItem(
+              timeLabel: b.formattedStart,
+              title: b.title,
+              categoryLabelVi: b.category.labelVi,
+              isDone: b.isDone,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  Future<void> syncScheduleWidget() async {
+    final ScheduleWidgetSnapshot snapshot =
+        buildWidgetSnapshotForDate(_nowProvider());
+    await _scheduleWidgetBridge.syncWidgetSnapshot(snapshot);
   }
 }
