@@ -21,4 +21,4 @@
 ## Cổng kết thúc
 
 - [x] Acceptance đạt và test xanh (`flutter test` `91/91`, `flutter analyze` `No issues found!`, `RAW_HEX_COLOR_HITS: 0`, PG16 `pytest` `62/62`).
-- [ ] Push backup lên `origin/main` và ghi SHA vào `handoff.md`.
+- [x] Push backup lên `origin/main` và ghi SHA vào `handoff.md`.

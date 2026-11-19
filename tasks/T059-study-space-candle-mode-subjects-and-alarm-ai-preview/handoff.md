@@ -11,4 +11,4 @@
 - **Test chưa chạy/giới hạn:** Chưa build lại APK riêng cho T059 (sẽ build APK tổng sau T061 trên `emulator-5554` / máy thật); EXP trên server giữ nguyên trần công bằng mỗi phiên/ngày bất kể nến cháy vượt 120p.
 - **Rủi ro còn lại:** Cần đồng bộ `modelVersion` Gemini thật ở **T060** để phần xem trước câu AI trên `AlarmConfigScreen` và `StudySpaceScreen` dùng model thật khi chạy server kèm key.
 - **Điểm tiếp tục chính xác:** Chuyển sang **T060** (`tasks/T060-gemini-live-models-hard-bank-regen-and-math-keypad/`).
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T059`.
+- **Git:** Nhánh `main`, commit `e9c7cdc78da365ec64dfe76bdfc2006727288abb` đã push lên `origin/main`.
