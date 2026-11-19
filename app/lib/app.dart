@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 import 'data/debug/debug_fixture_alarm_sync_gateway.dart';
 import 'data/debug/debug_fixture_auth_gateway.dart';
+import 'data/debug/debug_fixture_community_repository.dart';
 import 'data/debug/debug_fixture_personal_flow_repository.dart';
 import 'data/debug/debug_fixture_study_ai_gateway.dart';
 import 'data/repositories/guest_workspace_repository.dart';
 import 'data/repositories/local_study_focus_repository.dart';
 import 'data/repositories/remote_alarm_sync_gateway.dart';
+import 'data/repositories/remote_community_repository.dart';
 import 'data/repositories/remote_personal_flow_repository.dart';
 import 'data/repositories/remote_study_ai_gateway.dart';
 import 'data/services/firebase_auth_gateway.dart';
@@ -23,6 +25,7 @@ import 'domain/services/alarm_scheduler_service.dart';
 import 'domain/services/alarm_sync_gateway.dart';
 import 'domain/services/auth_session_gateway.dart';
 import 'domain/services/camera_capture_gateway.dart';
+import 'domain/services/community_repository.dart';
 import 'domain/services/media_picker_gateway.dart';
 import 'domain/services/personal_flow_repository.dart';
 import 'domain/services/schedule_widget_bridge.dart';
@@ -52,6 +55,7 @@ class MindClockApp extends StatefulWidget {
     this.pendingAlarmEventStore,
     this.authGateway,
     this.personalRepository,
+    this.communityRepository,
     this.cameraGateway,
     this.mediaPickerGateway,
     this.draftStore,
@@ -68,6 +72,7 @@ class MindClockApp extends StatefulWidget {
   final PendingAlarmEventStore? pendingAlarmEventStore;
   final AuthSessionGateway? authGateway;
   final PersonalFlowRepository? personalRepository;
+  final CommunityRepository? communityRepository;
   final CameraCaptureGateway? cameraGateway;
   final MediaPickerGateway? mediaPickerGateway;
   final OfflineTextDraftStore? draftStore;
@@ -85,6 +90,7 @@ class _MindClockAppState extends State<MindClockApp> {
   late final GuestWorkspaceViewModel _viewModel;
   late final PersonalFlowViewModel _personalViewModel;
   late final StudyFocusViewModel _studyFocusViewModel;
+  late final CommunityRepository _communityRepository;
   late final MediaPickerGateway _mediaPickerGateway;
 
   @override
@@ -120,6 +126,8 @@ class _MindClockAppState extends State<MindClockApp> {
               authGateway: authGateway,
               apiClient: sharedApiClient,
             );
+    _communityRepository = widget.communityRepository ??
+        createDefaultCommunityRepository(apiClient: sharedApiClient);
     final CameraCaptureGateway cameraGateway =
         widget.cameraGateway ?? const MethodChannelCameraCaptureGateway();
     final OfflineTextDraftStore draftStore =
@@ -177,6 +185,7 @@ class _MindClockAppState extends State<MindClockApp> {
         viewModel: _viewModel,
         personalViewModel: _personalViewModel,
         studyViewModel: _studyFocusViewModel,
+        communityRepository: _communityRepository,
         mediaPickerGateway: _mediaPickerGateway,
       ),
     );
@@ -265,4 +274,13 @@ StudyAiGateway createDefaultStudyAiGateway({
     return const DebugFixtureStudyAiGateway();
   }
   return RemoteStudyAiGateway(apiClient: apiClient);
+}
+
+CommunityRepository createDefaultCommunityRepository({
+  required PersonalApiClient apiClient,
+}) {
+  if (kDebugMode && _envUseDebugFixture) {
+    return DebugFixtureCommunityRepository();
+  }
+  return RemoteCommunityRepository(apiClient: apiClient);
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/debug/debug_fixture_community_repository.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
@@ -12,6 +15,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/study_focus_view_model.dart';
+import 'study_community_sheet.dart';
 
 /// Màn hình Không gian học local & AI qua backend (`docs/45 §§1–6`).
 ///
@@ -25,12 +29,14 @@ class StudySpaceScreen extends StatefulWidget {
     required this.guestViewModel,
     required this.studyViewModel,
     required this.onClose,
+    this.communityRepository,
     this.mediaPickerGateway,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final StudyFocusViewModel studyViewModel;
   final VoidCallback onClose;
+  final CommunityRepository? communityRepository;
   final MediaPickerGateway? mediaPickerGateway;
 
   @override
@@ -50,6 +56,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   bool _ambientAudioPlaying = false;
   bool _pickingAmbientAudio = false;
   String? _ambientAudioStatusVi;
+  StudyRoomDetail? _activeMeetRoom;
+
+  CommunityRepository get _communityRepo =>
+      widget.communityRepository ?? DebugFixtureCommunityRepository();
 
   MediaPickerGateway get _mediaPicker =>
       widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
@@ -164,7 +174,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 ),
                 if (_ambientAudioPath != null)
                   MindClockButton(
-                    key: const ValueKey<String>('study-toggle-ambient-audio-btn'),
+                    key: const ValueKey<String>(
+                        'study-toggle-ambient-audio-btn'),
                     label: _ambientAudioPlaying
                         ? 'Dừng nhạc nền'
                         : 'Phát nhạc nền',
@@ -305,6 +316,101 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        if (_activeMeetRoom != null) ...<Widget>[
+          MeetStudyRoomGrid(
+            room: _activeMeetRoom!,
+            repository: _communityRepo,
+            animateAi: vm.enablePeriodicTicker,
+            onToggleMic: () async {
+              final StudyRoomMemberTile selfTile =
+                  _activeMeetRoom!.members.firstWhere(
+                (StudyRoomMemberTile m) => m.isSelf,
+                orElse: () => const StudyRoomMemberTile(
+                  userId: 'self',
+                  alias: 'Bạn',
+                  isSelf: true,
+                ),
+              );
+              final StudyRoomDetail updated =
+                  await _communityRepo.updateRoomMedia(
+                _activeMeetRoom!.summary.roomId,
+                micEnabled: !selfTile.micEnabled,
+              );
+              if (!mounted) return;
+              setState(() => _activeMeetRoom = updated);
+            },
+            onToggleCam: () async {
+              final StudyRoomMemberTile selfTile =
+                  _activeMeetRoom!.members.firstWhere(
+                (StudyRoomMemberTile m) => m.isSelf,
+                orElse: () => const StudyRoomMemberTile(
+                  userId: 'self',
+                  alias: 'Bạn',
+                  isSelf: true,
+                ),
+              );
+              final StudyRoomDetail updated =
+                  await _communityRepo.updateRoomMedia(
+                _activeMeetRoom!.summary.roomId,
+                camEnabled: !selfTile.camEnabled,
+              );
+              if (!mounted) return;
+              setState(() => _activeMeetRoom = updated);
+            },
+            onToggleAi: () async {
+              final StudyRoomDetail updated =
+                  await _communityRepo.updateRoomMedia(
+                _activeMeetRoom!.summary.roomId,
+                aiCompanionEnabled:
+                    !_activeMeetRoom!.summary.aiCompanionEnabled,
+              );
+              if (!mounted) return;
+              setState(() => _activeMeetRoom = updated);
+            },
+            onLeaveRoom: () async {
+              await _communityRepo.leaveRoom(_activeMeetRoom!.summary.roomId);
+              if (!mounted) return;
+              setState(() => _activeMeetRoom = null);
+            },
+          ),
+          SizedBox(height: mc.space16),
+        ] else ...<Widget>[
+          MindClockCard(
+            key: const ValueKey<String>('study-community-entry-card'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Phòng học Meet công khai & AI ghép nhóm',
+                  style: mc.sectionTitleStyle,
+                ),
+                SizedBox(height: mc.space4),
+                Text(
+                  'Quét phòng công khai đang mở, tìm bạn theo trình độ/môn hoặc mở phòng lưới Google Meet cùng avatar 2D MindClock AI.',
+                  style: mc.captionStyle,
+                ),
+                SizedBox(height: mc.space12),
+                MindClockButton(
+                  key: const ValueKey<String>('study-open-community-hub'),
+                  label: 'Mở Phòng Meet & Tìm bạn học',
+                  icon: MindClockIconKind.user,
+                  variant: MindClockButtonVariant.secondary,
+                  onPressed: () async {
+                    final StudyRoomDetail? joined = await showStudyCommunityHub(
+                      context: context,
+                      repository: _communityRepo,
+                      currentProfile: widget.guestViewModel.profile,
+                    );
+                    if (joined != null && mounted) {
+                      setState(() => _activeMeetRoom = joined);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: mc.space16),
+        ],
         MindClockCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +645,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     label: cadence.labelVi,
                     selected: vm.draftCadence == cadence,
                     onTap: () {
-                      if (cadence == StudyCadence.deepSilent && _ambientAudioPlaying) {
+                      if (cadence == StudyCadence.deepSilent &&
+                          _ambientAudioPlaying) {
                         _mediaPicker.stopAudioPreview();
                         setState(() {
                           _ambientAudioPlaying = false;
@@ -878,9 +985,32 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             ],
           ),
           SizedBox(height: mc.space8),
-          Text(
-            'Bạn học AI sẽ gợi ý phương pháp giải từng bước cho bài học hôm nay.',
-            style: mc.captionStyle,
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(mc.space12),
+            decoration: BoxDecoration(
+              color: mc.night,
+              borderRadius: BorderRadius.circular(mc.radiusControl),
+            ),
+            child: Column(
+              children: <Widget>[
+                MindClockAiAnimatedAvatar(
+                  size: 54,
+                  animate: vm.enablePeriodicTicker,
+                  isThinking: isLoading,
+                  isSpeaking: vm.aiTurns.isNotEmpty && !isLoading,
+                  statusLabelVi: isLoading
+                      ? 'Đang gợi mở...'
+                      : 'Chớp mắt & đồng hành cùng bạn',
+                ),
+                SizedBox(height: mc.space8),
+                Text(
+                  'Bạn học AI sẽ gợi ý phương pháp giải từng bước cho bài học hôm nay.',
+                  textAlign: TextAlign.center,
+                  style: mc.captionStyle.copyWith(color: mc.nightText),
+                ),
+              ],
+            ),
           ),
           if (vm.aiTurns.isNotEmpty) ...<Widget>[
             SizedBox(height: mc.space12),

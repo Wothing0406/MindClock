@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/app.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
@@ -20,6 +22,7 @@ void main() {
   Future<void> pumpApp(
     WidgetTester tester, {
     required InMemoryKeyValueStore store,
+    DebugFixtureAuthGateway? authGateway,
     Size surfaceSize = const Size(360, 780),
     double textScale = 1.0,
   }) async {
@@ -37,6 +40,8 @@ void main() {
         child: MindClockApp(
           repository: GuestWorkspaceRepository(store: store),
           alarmScheduler: const UnboundAlarmSchedulerService(),
+          authGateway: authGateway ?? DebugFixtureAuthGateway(),
+          personalRepository: DebugFixturePersonalFlowRepository(),
           enableStudyTicker: false,
         ),
       ),
@@ -44,23 +49,62 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> signUpViaAuthScreen(WidgetTester tester) async {
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('welcome-auth-start')),
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-email-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-email-input')),
+      'hocsinh@mindclock.vn',
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-password-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-password-input')),
+      'MindClock@2026',
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+      'MindClock@2026',
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-consent-terms')),
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-consent-age')),
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-submit-btn')),
+    );
+  }
+
   testWidgets(
-    'AC-01..AC-07: luồng khách, sửa lịch giữ nguyên giờ chuông, khôi phục khi mở lại app và hiển thị Đã lưu cấu hình',
+    'AC-01..AC-07: không có Guest mode, bắt buộc đăng ký mật khẩu mạnh, sửa lịch giữ nguyên giờ chuông và khôi phục khi mở lại app',
     (WidgetTester tester) async {
       final InMemoryKeyValueStore store = InMemoryKeyValueStore();
-      await pumpApp(tester, store: store);
+      final DebugFixtureAuthGateway authGateway = DebugFixtureAuthGateway();
+      await pumpApp(tester, store: store, authGateway: authGateway);
 
-      // Màn S01 Chào mừng: không ép đăng nhập, có Để sau và Chỉ báo thức
-      expect(find.text(AppStrings.tryGuestCta), findsOneWidget);
-      expect(find.text(AppStrings.setupLaterCta), findsOneWidget);
+      // Màn S01 Chào mừng: bỏ Guest mode (không còn tryGuest/Để sau), chỉ có Đăng ký/Đăng nhập và Chỉ báo thức khi mất mạng
+      expect(find.byKey(const ValueKey<String>('welcome-auth-start')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('guest-start-setup')), findsNothing);
+      expect(find.byKey(const ValueKey<String>('guest-skip-later')), findsNothing);
       expect(find.text(AppStrings.alarmOnlyCta), findsOneWidget);
       expect(find.text('Đấu trường'), findsNothing);
 
-      // Bắt đầu thiết lập học tập khách
-      await scrollAndTap(
-        tester,
-        find.byKey(const ValueKey<String>('guest-start-setup')),
-      );
+      // Đăng ký bằng mật khẩu mạnh -> Onboarding THPT
+      await signUpViaAuthScreen(tester);
 
       await scrollAndTap(tester, find.byKey(const ValueKey<String>('grade-Lớp 9')));
       await scrollAndTap(tester, find.byKey(const ValueKey<String>('subject-math')));
@@ -160,10 +204,10 @@ void main() {
         findsOneWidget,
       );
 
-      // Giả lập đóng và mở lại app với widget tree hoàn toàn mới trên cùng local store
+      // Giả lập đóng và mở lại app với widget tree hoàn toàn mới trên cùng local store & phiên đăng nhập
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
-      await pumpApp(tester, store: store);
+      await pumpApp(tester, store: store, authGateway: authGateway);
 
       expect(find.byKey(const ValueKey<String>('nav-today')), findsOneWidget);
       expect(find.text('05:55'), findsOneWidget);
@@ -186,7 +230,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await scrollAndTap(
         tester,
-        find.byKey(const ValueKey<String>('guest-skip-later')),
+        find.byKey(const ValueKey<String>('welcome-auth-start')),
       );
       expect(tester.takeException(), isNull);
     },

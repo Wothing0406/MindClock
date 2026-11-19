@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/app.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/repositories/local_study_focus_repository.dart';
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
@@ -545,6 +547,8 @@ void main() {
             child: MindClockApp(
               repository: GuestWorkspaceRepository(store: kv),
               alarmScheduler: alarmScheduler,
+              authGateway: DebugFixtureAuthGateway(),
+              personalRepository: DebugFixturePersonalFlowRepository(),
               studyFocusBridge: bridge,
               enableStudyTicker: false,
             ),
@@ -552,8 +556,40 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Bỏ qua onboarding nhanh -> vào Hôm nay -> mở Không gian học
-        await tester.tap(find.byKey(const ValueKey<String>('guest-skip-later')));
+        // Đăng ký tài khoản nhanh -> bỏ qua plan onboarding -> vào Hôm nay -> mở Không gian học
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('welcome-auth-start')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('welcome-auth-start')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+          'study@mindclock.vn',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+          'MindClock@2026',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+          'MindClock@2026',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-consent-terms')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-consent-terms')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-consent-age')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-consent-age')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-submit-btn')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-submit-btn')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey<String>('onboarding-later')));
         await tester.pumpAndSettle();
 
         await tester.ensureVisible(

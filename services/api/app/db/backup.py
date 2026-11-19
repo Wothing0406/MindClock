@@ -31,6 +31,12 @@ ORDERED_TABLE_NAMES: tuple[str, ...] = (
     'round_submissions',
     'round_actions',
     'match_events',
+    'user_community_profiles',
+    'friend_requests',
+    'friendships',
+    'user_blocks',
+    'study_rooms',
+    'study_room_members',
 )
 
 

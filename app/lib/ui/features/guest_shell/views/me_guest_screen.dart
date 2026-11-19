@@ -1,8 +1,11 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../data/debug/debug_fixture_community_repository.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
+import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
@@ -11,9 +14,10 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/account_auth_card.dart';
+import '../../study_focus/views/study_community_sheet.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
-/// Tab Tôi cho chế độ khách local & tùy chọn đăng nhập online (không có Đấu trường).
+/// Tab Tôi: Hồ sơ học sinh, cộng đồng bạn học, đồng bộ tài khoản & quyền báo thức OS.
 class MeGuestScreen extends StatefulWidget {
   const MeGuestScreen({
     super.key,
@@ -21,12 +25,14 @@ class MeGuestScreen extends StatefulWidget {
     required this.onEditProfileAndTimetable,
     required this.onResetGuestData,
     this.personalViewModel,
+    this.communityRepository,
     this.mediaPickerGateway,
     this.onDeleteAccount,
   });
 
   final GuestWorkspaceViewModel viewModel;
   final PersonalFlowViewModel? personalViewModel;
+  final CommunityRepository? communityRepository;
   final MediaPickerGateway? mediaPickerGateway;
   final VoidCallback onEditProfileAndTimetable;
   final VoidCallback onResetGuestData;
@@ -171,6 +177,78 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
             SizedBox(height: mc.space16),
             AccountAuthCard(viewModel: personalViewModel!),
           ],
+          SizedBox(height: mc.space16),
+          MindClockCard(
+            key: const ValueKey<String>('me-community-card'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Bạn học, Kết bạn & Hồ sơ công khai',
+                  style: mc.sectionTitleStyle,
+                ),
+                SizedBox(height: mc.space4),
+                Text(
+                  'Tìm bạn cùng khối/môn, xem hồ sơ công khai, gửi lời mời kết bạn hoặc quét phòng học Meet. Giờ dậy, TKB chi tiết và email luôn ẩn.',
+                  style: mc.captionStyle,
+                ),
+                SizedBox(height: mc.space12),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    MindClockButton(
+                      key: const ValueKey<String>('me-open-community-hub'),
+                      label: 'Tìm bạn & Phòng học Meet',
+                      icon: MindClockIconKind.user,
+                      expand: false,
+                      onPressed: () {
+                        final CommunityRepository repo =
+                            widget.communityRepository ??
+                                DebugFixtureCommunityRepository();
+                        showStudyCommunityHub(
+                          context: context,
+                          repository: repo,
+                          currentProfile: viewModel.profile,
+                        );
+                      },
+                    ),
+                    MindClockButton(
+                      key: const ValueKey<String>('me-preview-public-profile'),
+                      label: 'Xem thử hồ sơ công khai',
+                      icon: MindClockIconKind.info,
+                      variant: MindClockButtonVariant.secondary,
+                      expand: false,
+                      onPressed: () {
+                        final CommunityRepository repo =
+                            widget.communityRepository ??
+                                DebugFixtureCommunityRepository();
+                        showPublicStudentProfileDialog(
+                          context: context,
+                          profile: PublicStudentProfile(
+                            userId: 'self',
+                            alias: viewModel.profile.alias.isNotEmpty
+                                ? viewModel.profile.alias
+                                : 'Học sinh MindClock',
+                            avatarId: viewModel.profile.avatarId,
+                            gradeLevel:
+                                viewModel.profile.gradeLevel ?? 'Lớp 11',
+                            selectedSubjects:
+                                viewModel.profile.selectedSubjectCodes,
+                            goalLabel: viewModel.profile.goalLabel,
+                            studyLevel: 'exam_prep',
+                            studyLevelLabelVi: 'Đang ôn thi',
+                            friendStatus: 'self',
+                          ),
+                          repository: repo,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: mc.space16),
           MindClockCard(
             child: Column(

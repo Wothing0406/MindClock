@@ -6,6 +6,53 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 
+/// Quy chuẩn mật khẩu mạnh bắt buộc khi đăng ký tài khoản MindClock.
+class StrongPasswordEvaluation {
+  const StrongPasswordEvaluation({
+    required this.hasMinLength,
+    required this.hasUppercase,
+    required this.hasLowercase,
+    required this.hasDigit,
+    required this.hasSpecialChar,
+  });
+
+  static const int minLength = 8;
+
+  final bool hasMinLength;
+  final bool hasUppercase;
+  final bool hasLowercase;
+  final bool hasDigit;
+  final bool hasSpecialChar;
+
+  bool get isValid =>
+      hasMinLength &&
+      hasUppercase &&
+      hasLowercase &&
+      hasDigit &&
+      hasSpecialChar;
+
+  String? get firstErrorVi {
+    if (!hasMinLength) return 'Mật khẩu phải có ít nhất $minLength ký tự.';
+    if (!hasUppercase) return 'Mật khẩu phải có ít nhất 1 chữ cái in hoa (A–Z).';
+    if (!hasLowercase) return 'Mật khẩu phải có ít nhất 1 chữ cái thường (a–z).';
+    if (!hasDigit) return 'Mật khẩu phải có ít nhất 1 chữ số (0–9).';
+    if (!hasSpecialChar) {
+      return 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt (VD: ! @ # \$ % ^ & *).';
+    }
+    return null;
+  }
+
+  static StrongPasswordEvaluation evaluate(String password) {
+    return StrongPasswordEvaluation(
+      hasMinLength: password.length >= minLength,
+      hasUppercase: RegExp(r'[A-Z]').hasMatch(password),
+      hasLowercase: RegExp(r'[a-z]').hasMatch(password),
+      hasDigit: RegExp(r'[0-9]').hasMatch(password),
+      hasSpecialChar: RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]').hasMatch(password),
+    );
+  }
+}
+
 /// Màn hình Đăng ký / Đăng nhập tài khoản học sinh chuẩn MindClock theo `docs/07`.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
@@ -58,12 +105,14 @@ class _AuthScreenState extends State<AuthScreen> {
       setState(() => _localValidationError = 'Vui lòng nhập địa chỉ email hợp lệ.');
       return;
     }
-    if (password.length < 6) {
-      setState(() => _localValidationError = 'Mật khẩu phải có ít nhất 6 ký tự.');
-      return;
-    }
 
     if (_isSignUp) {
+      final StrongPasswordEvaluation pwdEval =
+          StrongPasswordEvaluation.evaluate(password);
+      if (!pwdEval.isValid) {
+        setState(() => _localValidationError = pwdEval.firstErrorVi);
+        return;
+      }
       final String confirm = _confirmPasswordController.text;
       if (password != confirm) {
         setState(() => _localValidationError = 'Mật khẩu xác nhận không khớp.');
@@ -72,7 +121,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!_acceptedTerms) {
         setState(
           () => _localValidationError =
-              'Vui lòng đồng ý điều khoản và chính sách dữ liệu trước khi tạo tài khoản.',
+              'Vui lòng đọc và đồng ý Điều khoản sử dụng & Chính sách bảo mật trước khi tạo tài khoản.',
         );
         return;
       }
@@ -91,6 +140,10 @@ class _AuthScreenState extends State<AuthScreen> {
         widget.onAuthenticated(alias.isNotEmpty ? alias : null);
       }
     } else {
+      if (password.length < 6) {
+        setState(() => _localValidationError = 'Mật khẩu đăng nhập không hợp lệ.');
+        return;
+      }
       final bool ok = await widget.personalViewModel.signIn(
         email: email,
         password: password,
@@ -140,7 +193,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             size: 16,
                           ),
                           SizedBox(width: mc.space4),
-                          Text('Trang chủ', style: mc.captionStyle),
+                          Flexible(
+                            child: Text('Trang chủ', style: mc.captionStyle),
+                          ),
                         ],
                       ),
                     ),
@@ -277,14 +332,26 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     SizedBox(height: mc.space12),
-                    Text('Mật khẩu (tối thiểu 6 ký tự)', style: mc.captionStyle),
+                    Text(
+                      _isSignUp
+                          ? 'Mật khẩu mạnh (tối thiểu 8 ký tự)'
+                          : 'Mật khẩu',
+                      style: mc.captionStyle,
+                    ),
                     SizedBox(height: mc.space4),
                     TextField(
                       key: const ValueKey<String>('auth-password-input'),
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      onChanged: (_) {
+                        if (_isSignUp) {
+                          setState(() => _localValidationError = null);
+                        }
+                      },
                       decoration: InputDecoration(
-                        hintText: 'Nhập mật khẩu',
+                        hintText: _isSignUp
+                            ? 'VD: MindClock@2026'
+                            : 'Nhập mật khẩu',
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(mc.radiusControl),
@@ -317,6 +384,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     if (_isSignUp) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      _PasswordStrengthChecklist(
+                        evaluation: StrongPasswordEvaluation.evaluate(
+                          _passwordController.text,
+                        ),
+                      ),
                       SizedBox(height: mc.space12),
                       Text('Xác nhận mật khẩu', style: mc.captionStyle),
                       SizedBox(height: mc.space4),
@@ -339,11 +412,27 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       SizedBox(height: mc.space12),
+                      MindClockButton(
+                        key: const ValueKey<String>('auth-view-policy-btn'),
+                        label: 'Đọc toàn văn Chính sách Bảo mật & Điều khoản (v2026-11)',
+                        icon: MindClockIconKind.book,
+                        variant: MindClockButtonVariant.secondary,
+                        onPressed: () async {
+                          final bool? agreed = await _showPolicyDialog(context);
+                          if (agreed == true && mounted) {
+                            setState(() {
+                              _acceptedTerms = true;
+                              _localValidationError = null;
+                            });
+                          }
+                        },
+                      ),
+                      SizedBox(height: mc.space8),
                       _ConsentRow(
                         key: const ValueKey<String>('auth-consent-terms'),
                         checked: _acceptedTerms,
                         label:
-                            'Tôi đồng ý điều khoản sử dụng và chính sách quyền riêng tư (v1; ảnh bài làm không lưu mặc định).',
+                            'Tôi đã đọc và đồng ý Điều khoản sử dụng & Chính sách quyền riêng tư MindClock (v2026-11).',
                         onToggle: () => setState(() {
                           _acceptedTerms = !_acceptedTerms;
                           _localValidationError = null;
@@ -460,6 +549,190 @@ class _ConsentRow extends StatelessWidget {
                 style: mc.captionStyle.copyWith(color: mc.ink),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PasswordStrengthChecklist extends StatelessWidget {
+  const _PasswordStrengthChecklist({required this.evaluation});
+
+  final StrongPasswordEvaluation evaluation;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    final List<({String label, bool ok})> rules = <({String label, bool ok})>[
+      (label: 'Từ ${StrongPasswordEvaluation.minLength} ký tự trở lên', ok: evaluation.hasMinLength),
+      (label: 'Chữ in hoa (A–Z)', ok: evaluation.hasUppercase),
+      (label: 'Chữ thường (a–z)', ok: evaluation.hasLowercase),
+      (label: 'Chữ số (0–9)', ok: evaluation.hasDigit),
+      (label: 'Ký tự đặc biệt (!@#...)', ok: evaluation.hasSpecialChar),
+    ];
+
+    return Container(
+      key: const ValueKey<String>('auth-password-rules'),
+      width: double.infinity,
+      padding: EdgeInsets.all(mc.space12),
+      decoration: BoxDecoration(
+        color: evaluation.isValid ? mc.primarySoft : mc.paper,
+        borderRadius: BorderRadius.circular(mc.radiusControl),
+        border: Border.all(
+          color: evaluation.isValid ? mc.primary : mc.outline,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: rules.map((({String label, bool ok}) rule) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: mc.space4),
+            child: Row(
+              children: <Widget>[
+                MindClockIcon(
+                  rule.ok ? MindClockIconKind.check : MindClockIconKind.lock,
+                  size: 13,
+                  color: rule.ok ? mc.primary : mc.inkMuted,
+                ),
+                SizedBox(width: mc.space8),
+                Expanded(
+                  child: Text(
+                    rule.label,
+                    style: mc.captionStyle.copyWith(
+                      color: rule.ok ? mc.primary : mc.inkMuted,
+                      fontWeight: rule.ok ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(growable: false),
+      ),
+    );
+  }
+}
+
+Future<bool?> _showPolicyDialog(BuildContext context) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: context.mc.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(context.mc.radiusPaper),
+      ),
+    ),
+    builder: (BuildContext sheetContext) {
+      final MindClockTheme mc = sheetContext.mc;
+      return SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(mc.space20),
+          child: SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.78,
+            child: Column(
+              key: const ValueKey<String>('auth-policy-dialog'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Chính sách Bảo mật & Điều khoản MindClock (v2026-11)',
+                  style: mc.sectionTitleStyle,
+                ),
+                SizedBox(height: mc.space4),
+                Text(
+                  'Vui lòng đọc kỹ trước khi xác nhận tạo tài khoản.',
+                  style: mc.captionStyle,
+                ),
+                SizedBox(height: mc.space12),
+                const Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        _PolicySection(
+                          title: '1. Dữ liệu tài khoản & Quyền riêng tư',
+                          body:
+                              'Email chỉ dùng để xác thực và khôi phục tài khoản; hệ thống không yêu cầu số điện thoại, họ tên pháp lý hay địa chỉ trường/nhà. Mật khẩu được quản lý qua Firebase Auth và không lưu dưới dạng văn bản thuần trên máy chủ.',
+                        ),
+                        _PolicySection(
+                          title: '2. Ảnh bài làm, Camera & Micro',
+                          body:
+                              'Camera và micro tắt mặc định. Ảnh bài làm bạn chụp được xử lý tạm thời trong bộ nhớ để chấm/gợi mở và không lưu vĩnh viễn mặc định trên hệ thống. Ứng dụng không quay video nền để chấm điểm biểu cảm.',
+                        ),
+                        _PolicySection(
+                          title: '3. Cộng đồng, Kết bạn & Phòng học',
+                          body:
+                              'Hồ sơ công khai chỉ hiển thị biệt danh, avatar, lớp, môn học và mục tiêu học. Giờ báo thức, lịch ngủ, thời khóa biểu chi tiết và email được giữ riêng tư tuyệt đối. Bạn luôn có quyền chặn, báo cáo hoặc rời phòng bất kỳ lúc nào.',
+                        ),
+                        _PolicySection(
+                          title: '4. Quyền rút đồng ý & Xóa tài khoản',
+                          body:
+                              'Trong mục Tôi → Tài khoản & dữ liệu, bạn có thể xuất hoặc xóa vĩnh viễn dữ liệu tài khoản khỏi máy chủ bất kỳ lúc nào; các báo thức đặt sẵn trên máy vẫn giữ an toàn để không gián đoạn lịch sinh hoạt.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: mc.space12),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: MindClockButton(
+                        key: const ValueKey<String>('auth-policy-close-btn'),
+                        label: 'Đóng',
+                        variant: MindClockButtonVariant.secondary,
+                        onPressed: () => Navigator.of(sheetContext).pop(false),
+                      ),
+                    ),
+                    SizedBox(width: mc.space8),
+                    Expanded(
+                      child: MindClockButton(
+                        key: const ValueKey<String>('auth-policy-accept-btn'),
+                        label: 'Tôi đã đọc & Đồng ý',
+                        icon: MindClockIconKind.check,
+                        onPressed: () => Navigator.of(sheetContext).pop(true),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _PolicySection extends StatelessWidget {
+  const _PolicySection({
+    required this.title,
+    required this.body,
+  });
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    return Padding(
+      padding: EdgeInsets.only(bottom: mc.space12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(mc.space12),
+        decoration: BoxDecoration(
+          color: mc.paper,
+          borderRadius: BorderRadius.circular(mc.radiusControl),
+          border: Border.all(color: mc.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(title, style: mc.bodyStrongStyle),
+            SizedBox(height: mc.space4),
+            Text(body, style: mc.bodyStyle),
           ],
         ),
       ),

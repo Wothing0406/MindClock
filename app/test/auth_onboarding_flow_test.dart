@@ -152,6 +152,14 @@ void main() {
           find.byKey(const ValueKey<String>('guest-alarm-only')),
           findsOneWidget,
         );
+        expect(
+          find.byKey(const ValueKey<String>('guest-start-setup')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey<String>('guest-skip-later')),
+          findsNothing,
+        );
         expect(tester.takeException(), isNull);
       },
     );
@@ -210,7 +218,7 @@ void main() {
         );
         expect(find.textContaining('email hợp lệ'), findsOneWidget);
 
-        // 2. Email ngoài Gmail hợp lệ nhưng xác nhận mật khẩu lệch
+        // 2a. Mật khẩu yếu thiếu ký tự đặc biệt bị chặn ngay với thông báo tiếng Việt
         await _scrollAndEnter(
           tester,
           find.byKey(const ValueKey<String>('auth-alias-input')),
@@ -229,7 +237,24 @@ void main() {
         await _scrollAndEnter(
           tester,
           find.byKey(const ValueKey<String>('auth-confirm-password-input')),
-          'KhacMatKhau',
+          'MatKhau123',
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-submit-btn')),
+        );
+        expect(find.textContaining('ký tự đặc biệt'), findsOneWidget);
+
+        // 2b. Mật khẩu mạnh nhưng xác nhận mật khẩu lệch
+        await _scrollAndEnter(
+          tester,
+          find.byKey(const ValueKey<String>('auth-password-input')),
+          'MindClock@2026',
+        );
+        await _scrollAndEnter(
+          tester,
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+          'KhacMatKhau@1',
         );
         await _scrollAndTap(
           tester,
@@ -237,11 +262,11 @@ void main() {
         );
         expect(find.textContaining('không khớp'), findsOneWidget);
 
-        // 3. Khớp mật khẩu nhưng chưa tích điều khoản
+        // 3. Khớp mật khẩu mạnh nhưng chưa đọc/tích điều khoản
         await _scrollAndEnter(
           tester,
           find.byKey(const ValueKey<String>('auth-confirm-password-input')),
-          'MatKhau123',
+          'MindClock@2026',
         );
         await _scrollAndTap(
           tester,
@@ -250,15 +275,23 @@ void main() {
         expect(
           find.descendant(
             of: find.byKey(const ValueKey<String>('auth-error-banner')),
-            matching: find.textContaining('điều khoản'),
+            matching: find.textContaining('Điều khoản'),
           ),
           findsOneWidget,
         );
 
-        // 4. Tích điều khoản nhưng chưa tích xác nhận độ tuổi
+        // 4. Mở đọc toàn văn Chính sách & bấm Đồng ý, rồi kiểm tra yêu cầu xác nhận độ tuổi
         await _scrollAndTap(
           tester,
-          find.byKey(const ValueKey<String>('auth-consent-terms')),
+          find.byKey(const ValueKey<String>('auth-view-policy-btn')),
+        );
+        expect(
+          find.byKey(const ValueKey<String>('auth-policy-dialog')),
+          findsOneWidget,
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-policy-accept-btn')),
         );
         await _scrollAndTap(
           tester,
@@ -354,12 +387,12 @@ void main() {
         await _scrollAndEnter(
           tester,
           find.byKey(const ValueKey<String>('auth-password-input')),
-          'Secret123',
+          'Secret@123',
         );
         await _scrollAndEnter(
           tester,
           find.byKey(const ValueKey<String>('auth-confirm-password-input')),
-          'Secret123',
+          'Secret@123',
         );
         await _scrollAndTap(
           tester,

@@ -17,22 +17,30 @@ from app.db.models import (
     AlarmSession,
     Attempt,
     ConsentEvent,
+    FriendRequest,
+    Friendship,
     IdempotencyRecord,
     MatchPlayer,
     MatchQueue,
     Question,
     RoundAction,
     RoundSubmission,
+    StudyRoom,
+    StudyRoomMember,
     StudySession,
     TimetableSlot,
     TopicProgress,
     User,
+    UserBlock,
+    UserCommunityProfile,
     XpLedger,
 )
 from app.repositories.idempotency import lookup_idempotency, save_idempotency
 from app.schemas import (
     AlarmUpsertRequest,
     ConsentUpdateRequest,
+    FriendRequestCreate,
+    FriendRespondRequest,
     LiveTokenRequest,
     PersonalizedQuestionRequest,
     ProfilePatchRequest,
@@ -40,14 +48,24 @@ from app.schemas import (
     SessionCreateRequest,
     SessionEventRequest,
     SessionFeedbackRequest,
+    StudyAiMatchRequest,
     StudyHelpRequest,
+    StudyRoomCreateRequest,
+    StudyRoomJoinRequest,
+    StudyRoomMediaPatchRequest,
     StudySessionCreateRequest,
     StudySessionFinishRequest,
     TimetablePutRequest,
     TimetableParseImageRequest,
+    UserBlockRequest,
     PvpMatchmakeRequest,
     PvpRoundSubmitRequest,
     PvpRoundActionRequest,
+)
+from app.services.community_service import (
+    CommunityService,
+    CommunityServiceError,
+    normalize_study_level,
 )
 from app.services.pvp_match_service import (
     PvpMatchService,
@@ -347,10 +365,13 @@ def create_v1_router(
         db: Session = Depends(get_db),
     ) -> dict[str, Any]:
         u = principal.user
+        meta = db.get(UserCommunityProfile, u.id)
         return {
             'id': u.id,
             'authSubject': u.auth_subject,
             'alias': u.alias,
+            'avatarId': (meta.avatar_id if meta else None) or 'avatar_sunrise',
+            'studyLevel': (meta.study_level if meta else None) or 'basic',
             'gradeLevel': u.grade_band,
             'selectedSubjects': u.selected_subjects_json or [],
             'goalLabel': u.goal_label,
@@ -367,8 +388,13 @@ def create_v1_router(
         u = db.get(type(principal.user), principal.user.id)
         if u is None:
             raise _api_error(404, 'USER_NOT_FOUND', 'Không tìm thấy hồ sơ người dùng.')
+        meta = CommunityService(db).get_or_create_profile_meta(u.id)
         if payload.alias is not None:
             u.alias = payload.alias.strip()[:80] or u.alias
+        if payload.avatar_id is not None:
+            meta.avatar_id = payload.avatar_id.strip()[:40] or meta.avatar_id
+        if payload.study_level is not None:
+            meta.study_level = normalize_study_level(payload.study_level)
         if payload.grade_band is not None:
             u.grade_band = payload.grade_band.strip()[:40] or u.grade_band
         if payload.selected_subjects is not None:
@@ -390,10 +416,13 @@ def create_v1_router(
             )
         db.commit()
         db.refresh(u)
+        db.refresh(meta)
         return {
             'id': u.id,
             'authSubject': u.auth_subject,
             'alias': u.alias,
+            'avatarId': meta.avatar_id,
+            'studyLevel': meta.study_level,
             'gradeLevel': u.grade_band,
             'selectedSubjects': u.selected_subjects_json or [],
             'goalLabel': u.goal_label,
@@ -427,6 +456,15 @@ def create_v1_router(
         db: Session = Depends(get_db),
     ) -> dict[str, Any]:
         uid = principal.user.id
+        owned_room_ids = list(db.scalars(select(StudyRoom.id).where(StudyRoom.owner_id == uid)))
+        if owned_room_ids:
+            db.execute(delete(StudyRoomMember).where(StudyRoomMember.room_id.in_(owned_room_ids)))
+        db.execute(delete(StudyRoomMember).where(StudyRoomMember.user_id == uid))
+        db.execute(delete(StudyRoom).where(StudyRoom.owner_id == uid))
+        db.execute(delete(UserBlock).where((UserBlock.blocker_id == uid) | (UserBlock.blocked_id == uid)))
+        db.execute(delete(Friendship).where((Friendship.user_a_id == uid) | (Friendship.user_b_id == uid)))
+        db.execute(delete(FriendRequest).where((FriendRequest.sender_id == uid) | (FriendRequest.receiver_id == uid)))
+        db.execute(delete(UserCommunityProfile).where(UserCommunityProfile.user_id == uid))
         db.execute(delete(MatchQueue).where(MatchQueue.user_id == uid))
         db.execute(delete(RoundAction).where(RoundAction.user_id == uid))
         db.execute(delete(RoundSubmission).where(RoundSubmission.user_id == uid))
@@ -1717,5 +1755,214 @@ def create_v1_router(
             )
         except PvpServiceError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    # --- GÓI B: HỒ SƠ CÔNG KHAI, KẾT BẠN & PHÒNG HỌC MEET (T058) ---
+
+    @router.get('/profiles/{user_id}')
+    def get_public_profile(
+        user_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.get_public_profile(principal.user.id, user_id)
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/users/search')
+    def search_community_users(
+        q: str = Query(default=''),
+        grade_level: str | None = Query(default=None, alias='gradeLevel'),
+        subject_code: str | None = Query(default=None, alias='subjectCode'),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return {
+            'users': svc.search_users(
+                principal.user.id,
+                query=q,
+                grade_level=grade_level,
+                subject_code=subject_code,
+            )
+        }
+
+    @router.post('/friends/request', status_code=status.HTTP_201_CREATED)
+    def send_friend_request(
+        payload: FriendRequestCreate,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.send_friend_request(
+                principal.user.id,
+                payload.receiver_user_id,
+                message_vi=payload.message_vi,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/friends/requests')
+    def list_friend_requests(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return svc.list_friend_requests(principal.user.id)
+
+    @router.post('/friends/requests/{request_id}/respond')
+    def respond_friend_request(
+        request_id: str,
+        payload: FriendRespondRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.respond_friend_request(
+                principal.user.id,
+                request_id,
+                payload.decision,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/friends')
+    def list_friends(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return {'friends': svc.list_friends(principal.user.id)}
+
+    @router.post('/users/block')
+    def block_community_user(
+        payload: UserBlockRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.block_user(
+                principal.user.id,
+                payload.blocked_user_id,
+                reason=payload.reason,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/study-rooms/public')
+    def list_public_study_rooms(
+        grade_level: str | None = Query(default=None, alias='gradeLevel'),
+        subject_code: str | None = Query(default=None, alias='subjectCode'),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return {
+            'rooms': svc.list_public_rooms(
+                principal.user.id,
+                grade_level=grade_level,
+                subject_code=subject_code,
+            )
+        }
+
+    @router.post('/study-rooms', status_code=status.HTTP_201_CREATED)
+    def create_study_room(
+        payload: StudyRoomCreateRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return svc.create_room(
+            principal.user,
+            title=payload.title,
+            subject_code=payload.subject_code,
+            grade_band=payload.grade_band,
+            target_level=payload.target_level,
+            visibility=payload.visibility,
+            max_members=payload.max_members,
+            ai_companion_enabled=payload.ai_companion_enabled,
+        )
+
+    @router.get('/study-rooms/{room_id}')
+    def get_study_room(
+        room_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.get_room_detail(principal.user.id, room_id)
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/{room_id}/join')
+    def join_study_room(
+        room_id: str,
+        payload: StudyRoomJoinRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.join_room(
+                principal.user.id,
+                room_id,
+                room_code=payload.room_code,
+                mic_enabled=payload.mic_enabled,
+                cam_enabled=payload.cam_enabled,
+                status_note=payload.status_note,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.patch('/study-rooms/{room_id}/media')
+    def patch_study_room_media(
+        room_id: str,
+        payload: StudyRoomMediaPatchRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.update_room_media(
+                principal.user.id,
+                room_id,
+                mic_enabled=payload.mic_enabled,
+                cam_enabled=payload.cam_enabled,
+                ai_companion_enabled=payload.ai_companion_enabled,
+                status_note=payload.status_note,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/{room_id}/leave')
+    def leave_study_room(
+        room_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.leave_room(principal.user.id, room_id)
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/ai-match')
+    def ai_match_study_groups(
+        payload: StudyAiMatchRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        return svc.ai_match_rooms_and_peers(
+            principal.user,
+            subject_code=payload.subject_code,
+            grade_band=payload.grade_band,
+            target_level=payload.target_level,
+        )
 
     return router

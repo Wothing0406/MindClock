@@ -9,6 +9,8 @@ class ApiModel(BaseModel):
 
 class ProfilePatchRequest(ApiModel):
     alias: str | None = None
+    avatar_id: str | None = Field(default=None, alias='avatarId', max_length=40)
+    study_level: str | None = Field(default=None, alias='studyLevel', max_length=24)
     grade_band: str | None = Field(default=None, alias='gradeLevel')
     selected_subjects: list[str] | None = Field(default=None, alias='selectedSubjects')
     goal_label: str | None = Field(default=None, alias='goalLabel')
@@ -160,4 +162,62 @@ class PvpRoundActionRequest(ApiModel):
     model_config = ConfigDict(populate_by_name=True, extra='forbid')
 
     action_type: str = Field(default='basic', alias='actionType')
+
+
+class FriendRequestCreate(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    receiver_user_id: str = Field(alias='receiverUserId', min_length=1, max_length=36)
+    message_vi: str = Field(default='', alias='messageVi', max_length=160)
+
+
+class FriendRespondRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    decision: str = Field(pattern='^(accept|decline|cancel)$')
+
+
+class UserBlockRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    blocked_user_id: str = Field(alias='blockedUserId', min_length=1, max_length=36)
+    reason: str = Field(default='', max_length=120)
+
+
+class StudyRoomCreateRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    title: str = Field(min_length=2, max_length=80)
+    subject_code: str = Field(default='TOAN', alias='subjectCode', min_length=1, max_length=32)
+    grade_band: str = Field(default='Lớp 11', alias='gradeLevel', min_length=1, max_length=40)
+    target_level: str = Field(default='basic', alias='targetLevel', max_length=24)
+    visibility: str = Field(default='public', pattern='^(public|invite_only)$')
+    max_members: int = Field(default=4, alias='maxMembers', ge=2, le=8)
+    ai_companion_enabled: bool = Field(default=True, alias='aiCompanionEnabled')
+
+
+class StudyRoomJoinRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    room_code: str | None = Field(default=None, alias='roomCode', max_length=12)
+    mic_enabled: bool = Field(default=False, alias='micEnabled')
+    cam_enabled: bool = Field(default=False, alias='camEnabled')
+    status_note: str = Field(default='Đang tập trung', alias='statusNote', max_length=80)
+
+
+class StudyRoomMediaPatchRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    mic_enabled: bool | None = Field(default=None, alias='micEnabled')
+    cam_enabled: bool | None = Field(default=None, alias='camEnabled')
+    ai_companion_enabled: bool | None = Field(default=None, alias='aiCompanionEnabled')
+    status_note: str | None = Field(default=None, alias='statusNote', max_length=80)
+
+
+class StudyAiMatchRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    subject_code: str | None = Field(default=None, alias='subjectCode', max_length=32)
+    grade_band: str | None = Field(default=None, alias='gradeLevel', max_length=40)
+    target_level: str | None = Field(default=None, alias='targetLevel', max_length=24)
 

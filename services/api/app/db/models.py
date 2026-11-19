@@ -402,3 +402,113 @@ class MatchEvent(Base):
     event_type: Mapped[str] = mapped_column(String(48))
     payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class UserCommunityProfile(Base):
+    __tablename__ = 'user_community_profiles'
+
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True
+    )
+    avatar_id: Mapped[str] = mapped_column(String(40), default='avatar_sunrise')
+    study_level: Mapped[str] = mapped_column(String(24), default='basic')
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class FriendRequest(Base):
+    __tablename__ = 'friend_requests'
+    __table_args__ = (
+        UniqueConstraint('sender_id', 'receiver_id', name='uq_friend_request_pair'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    sender_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    receiver_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), default='pending', index=True)
+    message_vi: Mapped[str] = mapped_column(String(160), default='')
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class Friendship(Base):
+    __tablename__ = 'friendships'
+    __table_args__ = (
+        UniqueConstraint('user_a_id', 'user_b_id', name='uq_friendship_pair'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    user_a_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    user_b_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class UserBlock(Base):
+    __tablename__ = 'user_blocks'
+    __table_args__ = (
+        UniqueConstraint('blocker_id', 'blocked_id', name='uq_user_block_pair'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    blocker_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    blocked_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    reason: Mapped[str] = mapped_column(String(120), default='')
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class StudyRoom(Base):
+    __tablename__ = 'study_rooms'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    owner_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    room_code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(80))
+    subject_code: Mapped[str] = mapped_column(String(32), index=True)
+    grade_band: Mapped[str] = mapped_column(String(40), index=True)
+    target_level: Mapped[str] = mapped_column(String(24), default='basic')
+    visibility: Mapped[str] = mapped_column(String(16), default='public', index=True)
+    max_members: Mapped[int] = mapped_column(Integer, default=4)
+    ai_companion_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[str] = mapped_column(String(16), default='active', index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class StudyRoomMember(Base):
+    __tablename__ = 'study_room_members'
+    __table_args__ = (
+        UniqueConstraint('room_id', 'user_id', name='uq_study_room_member'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    room_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('study_rooms.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    role: Mapped[str] = mapped_column(String(16), default='member')
+    mic_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    cam_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    status_note: Mapped[str] = mapped_column(String(80), default='Đang tập trung')
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

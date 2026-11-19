@@ -88,6 +88,7 @@ class StudyFocusViewModel extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String? get gradeLevel => _gradeLevel;
   bool get hasAiGateway => _aiGateway != null;
+  bool get enablePeriodicTicker => _enablePeriodicTicker;
   bool get isAiDebugFixture => _aiGateway?.isDebugFixture ?? false;
   bool get isLoaded => _isLoaded;
   String get draftTaskTitle => _draftTaskTitle;

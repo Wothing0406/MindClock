@@ -157,7 +157,40 @@ void main() {
 
         await _scrollAndTap(
           tester,
-          find.byKey(const ValueKey<String>('guest-start-setup')),
+          find.byKey(const ValueKey<String>('welcome-auth-start')),
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+          'plan1@mindclock.vn',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+          'MindClock@2026',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+          'MindClock@2026',
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-consent-terms')),
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-consent-age')),
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-submit-btn')),
         );
 
         await _scrollAndTap(
@@ -242,7 +275,40 @@ void main() {
 
         await _scrollAndTap(
           tester,
-          find.byKey(const ValueKey<String>('guest-start-setup')),
+          find.byKey(const ValueKey<String>('welcome-auth-start')),
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+          'plan1@mindclock.vn',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+          'MindClock@2026',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+          'MindClock@2026',
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-consent-terms')),
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-consent-age')),
+        );
+        await _scrollAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('auth-submit-btn')),
         );
         await _scrollAndTap(
           tester,

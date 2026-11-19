@@ -21,6 +21,50 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> signUpAndEnterToday(WidgetTester tester) async {
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('welcome-auth-start')),
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-email-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-email-input')),
+      'ocr@mindclock.vn',
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-password-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-password-input')),
+      'MindClock@2026',
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+      'MindClock@2026',
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-consent-terms')),
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-consent-age')),
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('auth-submit-btn')),
+    );
+    await scrollAndTap(
+      tester,
+      find.byKey(const ValueKey<String>('onboarding-later')),
+    );
+  }
+
   testWidgets(
     'TC-RTC-01: TodayScreen hiển thị đồng hồ thời gian thực và đếm ngược báo thức kế tiếp',
     (WidgetTester tester) async {
@@ -29,6 +73,7 @@ void main() {
         MindClockApp(
           repository: GuestWorkspaceRepository(store: store),
           personalRepository: DebugFixturePersonalFlowRepository(),
+          authGateway: DebugFixtureAuthGateway(),
           alarmScheduler: const UnboundAlarmSchedulerService(),
           mediaPickerGateway: const UnboundMediaPickerGateway(),
           enableStudyTicker: false,
@@ -36,11 +81,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Bỏ qua onboarding để vào thẳng màn Hôm nay
-      await scrollAndTap(
-        tester,
-        find.byKey(const ValueKey<String>('guest-skip-later')),
-      );
+      // Đăng ký để vào thẳng màn Hôm nay
+      await signUpAndEnterToday(tester);
 
       // Kiểm tra widget đồng hồ thời gian thực xuất hiện
       expect(find.byKey(const ValueKey<String>('today-realtime-clock-hm')), findsOneWidget);
@@ -61,6 +103,7 @@ void main() {
         MindClockApp(
           repository: GuestWorkspaceRepository(store: store),
           personalRepository: DebugFixturePersonalFlowRepository(),
+          authGateway: DebugFixtureAuthGateway(),
           alarmScheduler: const UnboundAlarmSchedulerService(),
           mediaPickerGateway: const UnboundMediaPickerGateway(),
           enableStudyTicker: false,
@@ -68,11 +111,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Bỏ qua onboarding để vào màn Hôm nay
-      await scrollAndTap(
-        tester,
-        find.byKey(const ValueKey<String>('guest-skip-later')),
-      );
+      // Đăng ký để vào màn Hôm nay
+      await signUpAndEnterToday(tester);
 
       // Mở màn Sửa thời khóa biểu & hồ sơ
       await scrollAndTap(

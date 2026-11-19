@@ -11,12 +11,12 @@ class AppStrings {
   // S01 Chào mừng
   static const String welcomeTitle = 'Dậy đúng giờ. Nghĩ bằng chính mình.';
   static const String welcomeSubtitle =
-      'Chọn lịch học và đặt báo thức trên máy, không cần tạo tài khoản.';
+      'Tạo tài khoản với mật khẩu mạnh để đồng bộ TKB, học cùng AI và phòng học cộng đồng.';
   static const String tryGuestCta = 'Dùng thử không cần tài khoản';
   static const String setupLaterCta = 'Để sau';
-  static const String alarmOnlyCta = 'Chỉ báo thức';
+  static const String alarmOnlyCta = 'Chỉ báo thức khi mất mạng';
   static const String guestPrivacyNote =
-      'Dữ liệu lớp, môn học, thời khóa biểu và báo thức chỉ lưu trên máy của bạn.';
+      'Ảnh bài làm xử lý tạm thời không lưu mặc định; giờ dậy và TKB chi tiết luôn được giữ riêng tư.';
 
   // 4 tab điều hướng (Hôm nay, Luyện tập, Đấu trường G1, Tôi)
   static const String navToday = 'Hôm nay';

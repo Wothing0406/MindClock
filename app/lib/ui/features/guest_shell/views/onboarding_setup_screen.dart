@@ -312,10 +312,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                                   selected: selected,
                                 ),
                                 SizedBox(width: mc.space8),
-                                Text(
-                                  label,
-                                  style: mc.chipLabelStyle.copyWith(
-                                    color: selected ? mc.primary : mc.ink,
+                                Flexible(
+                                  child: Text(
+                                    label,
+                                    style: mc.chipLabelStyle.copyWith(
+                                      color: selected ? mc.primary : mc.ink,
+                                    ),
                                   ),
                                 ),
                               ],

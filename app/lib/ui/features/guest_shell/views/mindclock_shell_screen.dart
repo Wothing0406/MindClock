@@ -4,6 +4,7 @@ import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
+import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
@@ -45,6 +46,7 @@ class MindClockShellScreen extends StatefulWidget {
     required this.personalViewModel,
     this.studyViewModel,
     this.arenaViewModel,
+    this.communityRepository,
     this.mediaPickerGateway,
   });
 
@@ -52,6 +54,7 @@ class MindClockShellScreen extends StatefulWidget {
   final PersonalFlowViewModel personalViewModel;
   final StudyFocusViewModel? studyViewModel;
   final SoloArenaViewModel? arenaViewModel;
+  final CommunityRepository? communityRepository;
   final MediaPickerGateway? mediaPickerGateway;
 
   @override
@@ -253,18 +256,6 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 _stage = _GuestFlowStage.alarmConfig;
               });
             },
-            onStartGuestSetup: () {
-              setState(() => _stage = _GuestFlowStage.onboardingSetup);
-            },
-            onSkipLater: () async {
-              await widget.viewModel
-                  .completeOnboardingAsLater(alarmOnly: false);
-              if (!mounted) return;
-              setState(() {
-                _stage = _GuestFlowStage.mainTabs;
-                _selectedTabIndex = 0;
-              });
-            },
           ),
         );
 
@@ -402,6 +393,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return StudySpaceScreen(
           guestViewModel: widget.viewModel,
           studyViewModel: studyVm,
+          communityRepository: widget.communityRepository,
           mediaPickerGateway:
               widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
           onClose: () {
@@ -435,6 +427,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             body = MeGuestScreen(
               viewModel: widget.viewModel,
               personalViewModel: widget.personalViewModel,
+              communityRepository: widget.communityRepository,
               mediaPickerGateway:
                   widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
               onEditProfileAndTimetable: () {

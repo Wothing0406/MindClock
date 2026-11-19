@@ -1,10 +1,13 @@
 # Bàn giao nhiệm vụ T058
 
-- **Trạng thái cuối:** `in_progress`
-- **Đã làm:** Hoàn thiện tài liệu đặc tả chuẩn & hồ sơ T058 trước khi viết code.
-- **File/code/docs thay đổi:** `docs/01-product/{04,07,08}*.md`, `docs/02-engineering/04-hop-dong-api.md`, `tasks/T058-*/*`.
-- **Test đã chạy:** xem `tests.md` (chưa code).
-- **Test chưa chạy/giới hạn:** Toàn bộ test triển khai của T058 sẽ chạy sau từng bước code.
-- **Rủi ro còn lại:** Cần rà soát các widget test cũ có dùng đường tắt `guest-skip-later` / `guest-start-setup` và cập nhật chúng sang luồng đăng nhập/đăng ký hoặc tài khoản test hợp lệ.
-- **Điểm tiếp tục chính xác:** Bước 1 trong `plan.md` — cập nhật `WelcomeScreen` & `AuthScreen`.
-- **Git:** Nhánh `main`, chuẩn bị commit Docs-First backup trước khi code.
+- **Trạng thái cuối:** `done`
+- **Đã làm:**
+  1. **Auth chặt & Chính sách:** Bỏ `Dùng thử không cần tài khoản` / `Để sau` khỏi `WelcomeScreen` (chỉ giữ `Bắt đầu ngay (Đăng ký / Đăng nhập)` + `Chỉ báo thức khi mất mạng` và chuyển Guest legacy ở `MeGuestScreen` sang mời đăng ký tài khoản thật); bắt buộc mật khẩu mạnh ($\ge 8$ ký tự, hoa/thường/số/ký tự đặc biệt + checklist trực quan) và thêm modal đọc toàn văn Chính sách Bảo mật & Điều khoản sử dụng `v2026-11` trên `AuthScreen`.
+  2. **Backend PostgreSQL 16 & API Gói B:** Tạo migration `0004_add_community_friends_and_study_rooms.py` (`user_community_profiles`, `friend_requests`, `friendships`, `user_blocks`, `study_rooms`, `study_room_members`), cập nhật `backup.py`, `community_service.py`, `routes/v1.py` (`/v1/community/profiles`, `/v1/friends/*`, `/v1/study-rooms/*`, `/v1/study-rooms/ai-match`), ẩn hoàn toàn email/giờ chuông khỏi hồ sơ công khai, kiểm quyền owner/block, dọn dữ liệu khi `DELETE /v1/me`.
+  3. **Flutter Gói B (Cộng đồng + Meet Grid + AI Avatar 2D):** Thêm `CommunityModels`, `CommunityRepository` (`RemoteCommunityRepository` + `DebugFixtureCommunityRepository`), `StudyCommunitySheet` (tab Hồ sơ công khai, Kết bạn, Quét phòng & AI ghép nhóm), `MeetStudyRoomGrid` và `MindClockAiAnimatedAvatar` cử động (tắt lặp khi `disableAnimations` / `!enablePeriodicTicker`) trong `StudySpaceScreen`.
+- **File/code/docs thay đổi:** `services/api/alembic/versions/0004_add_community_friends_and_study_rooms.py`, `services/api/app/db/{models.py,backup.py}`, `services/api/app/{schemas.py,routes/v1.py,services/community_service.py}`, `services/api/tests/test_community_rooms_and_friends.py`, `app/lib/app.dart`, `app/lib/domain/{models/community_models.dart,services/community_repository.dart}`, `app/lib/data/{repositories/remote_community_repository.dart,debug/debug_fixture_community_repository.dart}`, `app/lib/ui/core/strings/app_strings.dart`, `app/lib/ui/features/guest_shell/views/{welcome_screen.dart,auth_screen.dart,me_guest_screen.dart,mindclock_shell_screen.dart,onboarding_setup_screen.dart}`, `app/lib/ui/features/study_focus/{view_models/study_focus_view_model.dart,views/study_community_sheet.dart,views/study_space_screen.dart}`, `app/test/*`, `docs/00-start/01-hien-trang.md`, `tasks/T058-*/*`, `test_demo_android/screenshots/16_t058_strict_welcome.png`.
+- **Test đã chạy:** PG16 `pytest -q` (`62 passed, 0 skipped`), `flutter analyze --no-pub` (`No issues found!`), `RAW_COLOR_HITS: 0`, `flutter test --no-pub -j 1` (`+89: All tests passed!`), APK debug `151.90 MB` + screenshot `16_t058_strict_welcome.png` trên `emulator-5554`.
+- **Test chưa chạy/giới hạn:** Chưa có 2–4 máy Android vật lý cùng vào phòng WebRTC audio/video thật (hiện là Meet grid trạng thái phòng + mic/cam toggle an toàn mặc định tắt qua REST backend).
+- **Rủi ro còn lại:** Live audio/video media stream nhiều người thật vẫn khóa sau feature flag & kiểm thử 2–4 máy thật; AI ghép nhóm đang chấm điểm deterministic theo khối/lớp/môn/trình độ.
+- **Điểm tiếp tục chính xác:** Mở **T059** (`tasks/T059-study-space-candle-mode-subjects-and-alarm-ai-preview/`) — lọc môn theo `StudyProfile`, thêm chế độ **Đốt nến · Đếm giờ tự do** (bỏ giới hạn 120p) và xem trước câu hỏi sáng cá nhân hóa theo TKB/hồ sơ ngay trên màn Báo thức.
+- **Git:** Nhánh `main`, chuẩn bị commit & push `T058`.

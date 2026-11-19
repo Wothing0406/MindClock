@@ -367,11 +367,52 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Bỏ qua chào mừng để vào tab Luyện tập
+        // Đăng ký tài khoản + bỏ qua onboarding để vào tab Luyện tập
         await tester.ensureVisible(
-          find.byKey(const ValueKey<String>('guest-skip-later')),
+          find.byKey(const ValueKey<String>('welcome-auth-start')),
         );
-        await tester.tap(find.byKey(const ValueKey<String>('guest-skip-later')));
+        await tester.tap(find.byKey(const ValueKey<String>('welcome-auth-start')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-email-input')),
+          'realservice@mindclock.vn',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-password-input')),
+          'MindClock@2026',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey<String>('auth-confirm-password-input')),
+          'MindClock@2026',
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-consent-terms')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-consent-terms')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-consent-age')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-consent-age')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('auth-submit-btn')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('auth-submit-btn')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('onboarding-later')),
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('onboarding-later')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey<String>('nav-practice')));
         await tester.pumpAndSettle();

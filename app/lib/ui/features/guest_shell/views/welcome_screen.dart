@@ -5,20 +5,16 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 
-/// Màn hình `S01` Chào mừng chuẩn MindClock (hướng tới đăng ký/đăng nhập THPT và giữ đường cứu sinh local).
+/// Màn hình `S01` Chào mừng chuẩn MindClock (bắt buộc tài khoản, bỏ chế độ Guest; giữ đường cứu sinh báo thức cục bộ).
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     super.key,
     required this.onStartAuth,
     required this.onAlarmOnly,
-    this.onStartGuestSetup,
-    this.onSkipLater,
   });
 
   final VoidCallback onStartAuth;
   final VoidCallback onAlarmOnly;
-  final VoidCallback? onStartGuestSetup;
-  final VoidCallback? onSkipLater;
 
   @override
   Widget build(BuildContext context) {
@@ -75,34 +71,18 @@ class WelcomeScreen extends StatelessWidget {
               ),
               SizedBox(height: mc.space8),
               MindClockButton(
-                key: const ValueKey<String>('guest-start-setup'),
-                label: AppStrings.tryGuestCta,
-                icon: MindClockIconKind.book,
-                variant: MindClockButtonVariant.secondary,
-                onPressed: onStartGuestSetup ?? onStartAuth,
+                key: const ValueKey<String>('guest-alarm-only'),
+                label: AppStrings.alarmOnlyCta,
+                icon: MindClockIconKind.bell,
+                variant: MindClockButtonVariant.subtle,
+                onPressed: onAlarmOnly,
               ),
-              SizedBox(height: mc.space8),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: MindClockButton(
-                      key: const ValueKey<String>('guest-alarm-only'),
-                      label: AppStrings.alarmOnlyCta,
-                      icon: MindClockIconKind.bell,
-                      variant: MindClockButtonVariant.subtle,
-                      onPressed: onAlarmOnly,
-                    ),
-                  ),
-                  SizedBox(width: mc.space8),
-                  Expanded(
-                    child: MindClockButton(
-                      key: const ValueKey<String>('guest-skip-later'),
-                      label: AppStrings.setupLaterCta,
-                      variant: MindClockButtonVariant.subtle,
-                      onPressed: onSkipLater,
-                    ),
-                  ),
-                ],
+              SizedBox(height: mc.space12),
+              const MindClockNoticeBanner(
+                key: ValueKey<String>('welcome-no-guest-notice'),
+                message:
+                    'MindClock yêu cầu tài khoản chính thức (mật khẩu mạnh & đồng ý chính sách bảo mật) cho lộ trình học, AI và phòng học. Chỉ dùng chế độ báo thức cục bộ khi mất mạng.',
+                isWarm: false,
               ),
               SizedBox(height: mc.space12),
               Container(
