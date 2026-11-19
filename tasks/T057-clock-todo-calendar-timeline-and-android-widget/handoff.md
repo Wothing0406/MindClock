@@ -7,4 +7,4 @@
 - **Test chưa chạy/giới hạn:** Ghim Widget trực tiếp lên launcher màn hình chính phụ thuộc thao tác người dùng/launcher trên máy thật; nhắc việc đúng giờ `TaskReminderReceiver` trên máy Android vật lý qua Doze/reboot cần kiểm thực địa.
 - **Rủi ro còn lại:** Chưa test Doze/exact-alarm nhắc việc To-Do trên 2 máy thật; cần làm Gói B (`T058`: Profile công khai, kết bạn, AI ghép nhóm và phòng học công khai) + nâng cấp AI/Study Space/PvP/bàn phím công thức theo 2 To-Do list tài liệu trước.
 - **Điểm tiếp tục chính xác:** Viết docs đặc tả trước khi code cho T058 (Gói B) và các hạng mục nâng cấp theo 2 To-Do list người dùng yêu cầu.
-- **Git:** Nhánh `main`, chuẩn bị commit & push T057 lên `origin/main`.
+- **Git:** Nhánh `main`, đã commit & push T057 lên `origin/main` (`a4b3ba33a2207d6bdb247601588d930f3fc95a9f`).
