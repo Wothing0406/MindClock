@@ -21,9 +21,14 @@
 
 Chế độ thử thách chỉ trả gợi ý công khai từ lần **incorrect rõ thứ 3**; trước đó không lộ qua response field, analytics hoặc khác biệt lỗi. Từ lần `incorrect` rõ thứ 5 mở `Bỏ lượt`; backend đếm theo attempt ID duy nhất, `uncertain`/lỗi hệ thống không tăng. Socratic đưa một câu hỏi/công thức/bước kế tiếp, không lời giải cuối trước nỗ lực. Sau khi kết thúc, có thể xem lời giải và đoạn kết mở màn đã duyệt. `Bỏ lượt` không có EXP/ngày chuỗi mới; không trừ EXP/RP đã có. Dừng âm khẩn cấp không chờ AI.
 
-## 3. Model, quota, consent
+## 3. Model, quota, consent, tái tạo câu khó & Hiển thị công thức
 
-Model ID/prompt/schema/validator/grading policy đặt ở cấu hình server và log phiên bản. Không hardcode tên model giả định còn hiệu lực; trước task tích hợp cần kiểm docs nhà cung cấp, quota, region, giá và quyền dữ liệu tại thời điểm triển khai. Có timeout ngắn hơn client, circuit breaker/fallback, cache nội dung đã duyệt, hạn lượt theo user/route và budget ngày. Realtime audio/camera chỉ opt-in, giới hạn phiên/lượt, có nút dừng rõ và phương án text. Không quan sát camera liên tục để chấm “sao nhãng”. Phòng học dùng giọng `quiet|gentle|firm` nhưng cùng chính sách: không nhục mạ, đe dọa, thao túng cảm xúc; user có thể tắt nhắc. AI không được nói mình là người thật. Camera frame bài chỉ sau user chọn/xem lại, không lấy stream để suy lười học.
+Model ID/prompt/schema/validator/grading policy đặt ở cấu hình server (`GEMINI_PRIMARY_MODEL`, `GEMINI_FAST_MODEL`, `GEMINI_LIVE_MODEL` trong `.env` server) và log phiên bản. Phải dùng **tên model Gemini Developer API thực tế đang hỗ trợ** (ví dụ `gemini-2.5-flash`, `gemini-2.5-flash-lite`; không dùng tên model giả định không tồn tại trên endpoint). Có timeout ngắn hơn client, circuit breaker/fallback, cache nội dung đã duyệt, hạn lượt theo user/route và budget ngày.
+
+- **Tái tạo câu hỏi thực tế đa giai đoạn từ ngân hàng câu (T060):** Endpoint tạo câu cá nhân hóa nhận thêm `stage` (`foundational` / `applied` / `advanced`), tham chiếu câu gốc từ ngân hàng đã duyệt (`seedQuestionId`, `topicId`, `gradeLevel`) để tái tạo đề bài gắn ngữ cảnh thực tế với số liệu/tình huống mới, rubric bước giải rõ ràng và đáp án đối chiếu. Không lấy key Gemini xuống Flutter.
+- **Hiển thị ký hiệu Toán/Lý/Hóa & Bàn phím công thức (T060):** Câu hỏi, gợi ý và ô nhập đáp án hỗ trợ hiển thị chuẩn ký hiệu mũ ($x^2$, $10^{-3}$), phân số ($\frac{a}{b}$), phần trăm ($\%$), đạo hàm ($f'(x)$), tích phân ($\int$), căn bậc hai ($\sqrt{\phantom{x}}$), ký tự Hy Lạp ($\Delta, \pi, \Omega$) và thanh **bàn phím nhập nhanh công thức (`MathInputKeypad`)** trên mobile.
+
+Realtime audio/camera chỉ opt-in, giới hạn phiên/lượt, có nút dừng rõ và phương án text. Không quan sát camera liên tục để chấm “sao nhãng”. Phòng học dùng giọng `quiet|gentle|firm` nhưng cùng chính sách: không nhục mạ, đe dọa, thao túng cảm xúc; user có thể tắt nhắc. AI không được nói mình là người thật. Camera frame bài chỉ sau user chọn/xem lại, không lấy stream để suy lười học.
 
 ## 4. Bộ đánh giá trước pilot
 

@@ -20,7 +20,7 @@ Trận tối đa 6 round. Khi AI `uncertain`, câu lỗi, model/rubric đổi gi
 ## 2. Luật combat v0.1 (chỉ để playtest)
 
 - Mỗi bên `HP=100`, `armor=50`, `ward=0`, `qi=0`; ward tối đa 20 và hết theo round, HP/armor không vượt mức đầu. Không có chí mạng/né ngẫu nhiên, vật phẩm tăng sức mạnh hoặc loại sát thương “phép” riêng.
-- Đúng rõ mới kích hoạt action; sai/timeout không damage/buff và không phạt học tập. `correct` +1 qi sau settle, tối đa 3; secret round đúng +1 qi thêm **sau** round. Qi round này không dùng ngay round đó. Action chọn trong 6 giây sau khi cả hai grade rõ; không chọn → Đánh thường, skill thiếu qi/hết lượt phải báo lỗi để chọn lại.
+- Đúng rõ mới kích hoạt action; sai/timeout không damage/buff và không phạt học tập. Trả lời đúng 1 câu chuẩn xác cho phép thực hiện **Đánh thường (28 damage, 0 qi)** và tích lũy **+1 qi** sau settle (tối đa 3 qi); khi đủ qi (1 qi cho **Chiêu 1**, 2 qi cho **Chiêu 2**), người chơi mới được kích hoạt các chiêu thức đặc biệt (có hiệu ứng sprite + FX + SFX riêng từng tướng). Secret round đúng +1 qi thêm **sau** round. Qi round này không dùng ngay round đó. Action chọn trong 6 giây sau khi cả hai grade rõ; không chọn → Đánh thường, skill thiếu qi/hết lượt phải báo lỗi để chọn lại.
 - Đánh thường `28 damage`, 0 qi. Mỗi skill dùng tối đa 1 lần/trận. Damage đồng thời từ snapshot đầu round: `ward → armor → HP`, buff chắn trong round chặn damage cùng round; hồi sau damage, HP 0 không hồi cứu. Cả hai HP 0 hòa; sau round 6 so HP, rồi armor, còn bằng hòa. Tốc độ nộp không cộng damage/RP.
 - Secret round 3 hoặc 5 do server chọn trước bằng seed/pool khóa; cùng câu cho hai bên, bonus qi cosmetic, không damage thêm. Thiếu pool chuẩn thì bỏ secret và báo trước.
 
@@ -34,7 +34,7 @@ Trận tối đa 6 round. Khi AI `uncertain`, câu lỗi, model/rubric đổi gi
 
 ## 3. Giao diện trận
 
-Màn dọc: câu/bước làm lớn hơn sân game; thanh HP/giáp/qi và trạng thái chữ rõ; ba nút `Đánh thường`, `Chiêu 1`, `Chiêu 2` ghi cost, used/disabled reason; thẻ tướng có vai/nội tại/đánh đổi. Sau khi nộp, UI hiện `Đang kiểm tra bài làm`, action window chỉ mở theo event server. FX xuất phát từ attacker, projectile chạm defender, self-heal/buff ở chủ, passive đúng nhân vật; giảm chuyển động/bỏ qua hiệu ứng không đổi số. Không dùng animation để giả có kết quả sớm. [Asset](02-nhan-vat-asset.md).
+Màn dọc: sân đấu với map nền (`study-courtyard`), bộ sprite animation nhiều frame của 2 tướng đối mặt theo đúng `anchor/facing` (`idle`, `basic`, `skill1`, `skill2`, `hurt`, `stun`, `heal`, `victory`) + 6 avatar hồ sơ phân biệt (`ca-chep`, `cao-giay`, `cu-meo`, `may-nho`, `rua-xanh`, `tho-so`) — phần dùng file `assets/game/` chỉ đóng gói phát hành sau khi chủ dự án hoàn tất cổng rà soát/duyệt quyền; thanh HP/giáp/qi và trạng thái chữ rõ; ba nút `Đánh thường (0 qi)`, `Chiêu 1 (1 qi)`, `Chiêu 2 (2 qi)` ghi cost, used/disabled reason; thẻ tướng có vai/nội tại/đánh đổi. Sau khi nộp, UI hiện `Đang kiểm tra bài làm`, action window chỉ mở theo event server. FX xuất phát từ attacker, projectile chạm defender, self-heal/buff ở chủ, passive đúng nhân vật; giảm chuyển động/bỏ qua hiệu ứng không đổi số. Không dùng animation để giả có kết quả sớm. [Asset](02-nhan-vat-asset.md).
 
 ## 4. Server authoritative và data/API cần làm
 

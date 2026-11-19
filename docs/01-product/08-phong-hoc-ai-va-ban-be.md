@@ -4,7 +4,7 @@
 
 ## Trước khi vào phòng
 
-Luồng: **chọn chế độ → xem gợi ý phiên cá nhân hóa → xác nhận/sửa mục tiêu và thời lượng → chọn `Học sâu` hoặc `Học ngắt quãng` → tùy chọn âm → xem lại → `Bắt đầu`**. Gợi ý lấy từ kế hoạch đã xác nhận, TKB hôm nay và việc chưa xong, kèm lý do ngắn. Không bắt chọn môn lần nữa; người học có `Đổi mục tiêu` hoặc `Học tự do`, và chỉ đổi môn khi họ chủ động mở phần sửa. Nếu thiếu lịch/kế hoạch hoặc offline, cho nhập mục tiêu tự do mà không chặn phiên. Preset 15/25/45 phút hoặc tùy chỉnh.
+Luồng: **chọn chế độ (`Học một mình` / `Học cùng MindClock` / `Phòng học cộng đồng`) → xem gợi ý phiên cá nhân hóa từ các môn trong Profile & TKB → chọn chế độ thời gian (`Đếm ngược 15/25/45/90/180+ phút` hoặc `Đốt nến · Đếm giờ tự do không giới hạn`) → chọn `Học sâu` hoặc `Học ngắt quãng` → tùy chọn âm → xem lại → `Bắt đầu`**. Danh sách môn trong không gian học **phải lọc đúng theo các môn người học đã chọn trong `StudyProfile`** (chỉ fallback toàn bộ khi hồ sơ chưa có môn). Chế độ `Đốt nến · Đếm giờ tự do` cho phép đồng hồ đếm tiến (`00:00 → ∞`) kèm nến cháy trực quan theo thời gian thực để người dùng học dài hơn 120 phút nếu muốn; vẫn giữ cảnh báo nghỉ ngơi trung tính khi quá dài. Khi thiếu lịch/kế hoạch hoặc offline, cho nhập mục tiêu tự do mà không chặn phiên.
 
 `Học sâu` mặc định **im lặng hoàn toàn**: không nhạc nền, tiếng đếm giờ, chuông hết chặng, lời nhắc, tự phát giọng AI hay âm báo trong app. Cả hai chế độ đều theo quy tắc này; AI chỉ hiện chữ khi người học chủ động hỏi. Trong `Học ngắt quãng`, âm báo chuyển chặng và âm nền đều tắt mặc định, người học tự bật từng loại nếu muốn. Báo thức Android do người học đã đặt là luồng riêng và vẫn hoạt động. Mic/camera **tắt mặc định**, bật độc lập đúng lúc dùng; không yêu cầu quyền để dùng timer hoặc hỏi bằng chữ. Chỉ tính thời gian khi bấm `Bắt đầu`.
 
@@ -32,9 +32,15 @@ P1 text/voice theo lượt: bấm để nói, STT → câu hỏi gợi mở → 
 
 Trợ lý Socratic nhận môn/lớp/mục tiêu/câu hỏi và lịch sử đủ dùng, trả **một bước gợi mở**, hỏi người học thử tiếp; không giải trọn bài trước nỗ lực. Không thể bảo đảm người học chỉ nói về môn học; AI chuyển nhẹ về mục tiêu, vẫn trả lời yêu cầu nghỉ, trợ giúp an toàn hoặc dừng phiên. Có nút `Báo câu trả lời sai` và đường xem nguồn/rubric khi phù hợp.
 
-## Mời bạn vào học
+## Cộng đồng, Hồ sơ công khai, Kết bạn & Phòng học kiểu Google Meet (Gói B — T058)
 
-User tạo phòng `Chỉ mời`, mã/link ngắn hạn, tối đa 2 người ở giai đoạn đầu; bạn chấp nhận mới vào. Không tự bật cam/mic khi join. Mỗi người có timer local đồng bộ mốc phòng, việc riêng có thể ẩn; chủ phòng không xem bài/TKB/điểm riêng. Người tham gia có `Rời`, `Chặn`, `Báo cáo`; chủ phòng có `Kết thúc phòng` nhưng không tắt timer local của người kia. Kết bạn bằng lời mời hai chiều, có danh sách chặn; không mở tìm kiếm công khai/nhắn tin tự do ở giai đoạn đầu. Phòng AI và phòng bạn cùng dùng shell UI nhưng networking khác nhau; khi AI quota hết, phòng bạn/timer vẫn chạy.
+User đã xác thực (không dùng guest ẩn danh) có **Hồ sơ học sinh công khai (Public Profile)** hiển thị opt-in cho bạn học xem: `avatarId/avatarUrl`, `alias`, `gradeLevel`, `selectedSubjectCodes`, `goalLabel`, cấp bậc/chuỗi học tóm tắt, trạng thái kết bạn và nút `Kết bạn` / `Hủy lời mời` / `Chặn`. **Tuyệt đối không lộ** giờ dậy, TKB chi tiết, email, điểm yếu hoặc ảnh bài làm. Hệ thống hỗ trợ:
+1. **Tìm bạn & Kết bạn hai chiều:** tìm theo biệt danh/tổ hợp môn, gửi/nhận/chấp nhận/từ chối lời mời kết bạn, chặn và báo cáo người dùng vi phạm.
+2. **Quét phòng học công khai & Phòng riêng tư:** chủ phòng chọn chế độ `Công khai (Ai cũng có thể tìm & xin vào)` hoặc `Chỉ mời (Mã/link/QR)`. Màn `Quét phòng` hiển thị danh sách phòng công khai đang học (tên phòng, môn/tổ hợp, trình độ mục tiêu, số thành viên hiện tại/tối đa, chủ phòng) để tham gia nhanh.
+3. **AI ghép nhóm theo trình độ:** dựa trên `gradeLevel`, `selectedSubjectCodes`, mức tự đánh giá (`beginner/basic/exam_prep/challenge`) và mục tiêu, backend/AI gợi ý phòng công khai hoặc bạn học phù hợp trình độ nhất kèm lý do ngắn (`Cùng khối 11 · Ôn Toán nâng cao`).
+4. **Giao diện phòng học nhiều người kiểu Google Meet:** hiển thị **lưới thẻ thành viên trực quan** (mỗi ô là avatar/khung camera của thành viên, nhãn tên, môn đang học, chỉ báo mic bật/tắt, cam bật/tắt; người dùng tự bật/tắt mic & cam của mình, mặc định tắt). Khi **MindClock AI** được mời vào phòng, xuất hiện một ô riêng trong lưới với **avatar 2D cử động liên tục** (chớp mắt, gật đầu, trạng thái suy nghĩ/trả lời) và nhãn `MindClock AI`.
+
+User tạo phòng `Chỉ mời` hoặc `Công khai`, mã/link ngắn hạn; bạn chấp nhận mới vào. Không tự bật cam/mic khi join. Mỗi người có timer local đồng bộ mốc phòng, việc riêng có thể ẩn; chủ phòng không xem bài/TKB/điểm riêng. Người tham gia có `Rời`, `Chặn`, `Báo cáo`; chủ phòng có `Kết thúc phòng` nhưng không tắt timer local của người kia. Phòng AI và phòng bạn cùng dùng shell UI nhưng networking khác nhau; khi AI quota hết, phòng bạn/timer vẫn chạy.
 
 ### Vào phòng bằng QR hoặc link
 
