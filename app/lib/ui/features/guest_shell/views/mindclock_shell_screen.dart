@@ -352,6 +352,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           editingAlarm: _editingAlarm,
           mediaPickerGateway:
               widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
+          studyAiGateway: widget.studyViewModel?.aiGateway,
           onSaved: (String message) {
             setState(() {
               _editingAlarm = null;

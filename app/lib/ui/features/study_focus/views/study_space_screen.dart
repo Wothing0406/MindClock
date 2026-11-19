@@ -15,6 +15,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/study_focus_view_model.dart';
+import 'study_candle_timer.dart';
 import 'study_community_sheet.dart';
 
 /// Màn hình Không gian học local & AI qua backend (`docs/45 §§1–6`).
@@ -479,6 +480,29 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 style: mc.captionStyle,
               ),
               SizedBox(height: mc.space12),
+              Text('Môn theo hồ sơ của bạn', style: mc.bodyStrongStyle),
+              SizedBox(height: mc.space8),
+              Wrap(
+                spacing: mc.space8,
+                runSpacing: mc.space8,
+                children: _availablePersonalSubjects(vm).map((String code) {
+                  return _SelectableChip(
+                    key: ValueKey<String>('study-profile-subject-$code'),
+                    label: SubjectCatalog.nameFor(code),
+                    selected: vm.draftSubjectCode == code,
+                    onTap: () {
+                      vm.setDraftSubjectCode(code);
+                      if (_customTaskController.text.trim().isEmpty) {
+                        final String autoTitle =
+                            'Tự học ${SubjectCatalog.nameFor(code)}';
+                        _customTaskController.text = autoTitle;
+                        vm.setCustomTaskTitle(autoTitle);
+                      }
+                    },
+                  );
+                }).toList(growable: false),
+              ),
+              SizedBox(height: mc.space12),
               Wrap(
                 spacing: mc.space8,
                 runSpacing: mc.space8,
@@ -519,65 +543,97 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('2. Chọn thời lượng (5–120 phút)',
-                  style: mc.sectionTitleStyle),
-              SizedBox(height: mc.space12),
+              Text(
+                '2. Thời lượng & Chế độ đếm',
+                style: mc.sectionTitleStyle,
+              ),
+              SizedBox(height: mc.space8),
               Wrap(
                 spacing: mc.space8,
                 runSpacing: mc.space8,
-                children:
-                    StudyFocusSessionSnapshot.presetMinutes.map((int minutes) {
+                children: StudyTimingMode.values.map((StudyTimingMode mode) {
+                  final String keyName = mode == StudyTimingMode.candleCountup
+                      ? 'study-timing-candle'
+                      : 'study-timing-countdown';
                   return _SelectableChip(
-                    key: ValueKey<String>('study-duration-$minutes'),
-                    label: '$minutes phút',
-                    selected: vm.draftDurationMinutes == minutes,
-                    onTap: () => vm.setDurationMinutes(minutes),
+                    key: ValueKey<String>(keyName),
+                    label: mode.labelVi,
+                    selected: vm.draftTimingMode == mode,
+                    onTap: () => vm.setTimingMode(mode),
                   );
                 }).toList(growable: false),
               ),
-              SizedBox(height: mc.space12),
-              Wrap(
-                spacing: mc.space8,
-                runSpacing: mc.space8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: <Widget>[
-                  MindClockButton(
-                    key: const ValueKey<String>('study-duration-minus'),
-                    label: '-5 phút',
-                    icon: MindClockIconKind.minus,
-                    variant: MindClockButtonVariant.subtle,
-                    expand: false,
-                    onPressed: vm.draftDurationMinutes >
-                            StudyFocusSessionSnapshot.minDurationMinutes
-                        ? () => vm.setDurationMinutes(
-                              vm.draftDurationMinutes - 5,
-                            )
-                        : null,
-                  ),
-                  Semantics(
-                    label:
-                        'Thời lượng đang chọn ${vm.draftDurationMinutes} phút',
-                    child: Text(
-                      '${vm.draftDurationMinutes} phút',
-                      key: const ValueKey<String>('study-duration-display'),
-                      style: mc.sectionTitleStyle,
-                    ),
-                  ),
-                  MindClockButton(
-                    key: const ValueKey<String>('study-duration-plus'),
-                    label: '+5 phút',
-                    icon: MindClockIconKind.plus,
-                    variant: MindClockButtonVariant.subtle,
-                    expand: false,
-                    onPressed: vm.draftDurationMinutes <
-                            StudyFocusSessionSnapshot.maxDurationMinutes
-                        ? () => vm.setDurationMinutes(
-                              vm.draftDurationMinutes + 5,
-                            )
-                        : null,
-                  ),
-                ],
+              SizedBox(height: mc.space8),
+              Text(
+                vm.draftTimingMode.shortBehaviorVi,
+                style: mc.captionStyle,
               ),
+              if (!vm.isDraftCandleCountup) ...<Widget>[
+                SizedBox(height: mc.space12),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children:
+                      StudyFocusSessionSnapshot.presetMinutes.map((int minutes) {
+                    return _SelectableChip(
+                      key: ValueKey<String>('study-duration-$minutes'),
+                      label: '$minutes phút',
+                      selected: vm.draftDurationMinutes == minutes,
+                      onTap: () => vm.setDurationMinutes(minutes),
+                    );
+                  }).toList(growable: false),
+                ),
+                SizedBox(height: mc.space12),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    MindClockButton(
+                      key: const ValueKey<String>('study-duration-minus'),
+                      label: '-5 phút',
+                      icon: MindClockIconKind.minus,
+                      variant: MindClockButtonVariant.subtle,
+                      expand: false,
+                      onPressed: vm.draftDurationMinutes >
+                              StudyFocusSessionSnapshot.minDurationMinutes
+                          ? () => vm.setDurationMinutes(
+                                vm.draftDurationMinutes - 5,
+                              )
+                          : null,
+                    ),
+                    Semantics(
+                      label:
+                          'Thời lượng đang chọn ${vm.draftDurationMinutes} phút',
+                      child: Text(
+                        '${vm.draftDurationMinutes} phút',
+                        key: const ValueKey<String>('study-duration-display'),
+                        style: mc.sectionTitleStyle,
+                      ),
+                    ),
+                    MindClockButton(
+                      key: const ValueKey<String>('study-duration-plus'),
+                      label: '+5 phút',
+                      icon: MindClockIconKind.plus,
+                      variant: MindClockButtonVariant.subtle,
+                      expand: false,
+                      onPressed: vm.draftDurationMinutes <
+                              StudyFocusSessionSnapshot.maxDurationMinutes
+                          ? () => vm.setDurationMinutes(
+                                vm.draftDurationMinutes + 5,
+                              )
+                          : null,
+                    ),
+                  ],
+                ),
+              ] else ...<Widget>[
+                SizedBox(height: mc.space12),
+                const MindClockNoticeBanner(
+                  key: ValueKey<String>('study-candle-mode-info'),
+                  message:
+                      'Đồng hồ đốt nến đếm từ 00:00 không bị giới hạn 120 phút. Sau 120 phút liên tục app chỉ nhắc nhẹ nghỉ mắt; bấm Kết thúc/Hoàn tất bất kỳ lúc nào.',
+                ),
+              ],
             ],
           ),
         ),
@@ -744,9 +800,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     bool reduceMotion,
   ) {
     final DateTime now = vm.currentTime;
-    final int remainingSec = snapshot.remainingSecondsAt(now);
+    final bool isCandle = snapshot.isCandleCountup;
+    final int displaySec = snapshot.displayClockSecondsAt(now);
     final int wallSec = snapshot.elapsedWallSecondsAt(now);
     final int inAppSec = snapshot.inAppFocusSecondsAt(now);
+    final bool showRestHint = snapshot.isLongSessionRestHintAt(now);
 
     final String statusText;
     if (snapshot.status == StudyFocusStatus.interrupted) {
@@ -824,6 +882,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                   if (subjectName != null)
                     MindClockStatusPill(label: subjectName),
                   MindClockStatusPill(
+                    label: isCandle ? 'Đốt nến tự do' : 'Đếm ngược',
+                    accentWarm: isCandle,
+                  ),
+                  MindClockStatusPill(
                     key: const ValueKey<String>('study-remote-session-pill'),
                     label: snapshot.remoteSessionSynced
                         ? 'Đã lưu tiến độ'
@@ -842,7 +904,18 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
               Center(
                 child: Column(
                   children: <Widget>[
-                    if (!reduceMotion)
+                    if (isCandle)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: mc.space12),
+                        child: StudyCandleTimer(
+                          elapsedSeconds: displaySec,
+                          isRunning: snapshot.status == StudyFocusStatus.running &&
+                              !snapshot.commitmentAwaitingResume,
+                          reduceMotion: reduceMotion,
+                          animate: vm.enablePeriodicTicker,
+                        ),
+                      )
+                    else if (!reduceMotion)
                       Padding(
                         padding: EdgeInsets.only(bottom: mc.space12),
                         child: CustomPaint(
@@ -856,10 +929,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                         ),
                       ),
                     Semantics(
-                      label:
-                          'Thời gian còn lại ${formatDurationClock(remainingSec)}',
+                      label: isCandle
+                          ? 'Thời gian đã học ${formatDurationClock(displaySec)}'
+                          : 'Thời gian còn lại ${formatDurationClock(displaySec)}',
                       child: Text(
-                        formatDurationClock(remainingSec),
+                        formatDurationClock(displaySec),
                         key: const ValueKey<String>('study-timer-clock'),
                         style: mc.alarmHeroStyle,
                       ),
@@ -868,7 +942,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     Text(
                       reduceMotion
                           ? 'Chế độ số tĩnh đang bật (Reduce Motion).'
-                          : 'Đếm ngược theo mốc thời gian thiết bị.',
+                          : isCandle
+                              ? 'Đếm giờ tự do theo mốc thiết bị (không giới hạn 120p).'
+                              : 'Đếm ngược theo mốc thời gian thiết bị.',
                       style: mc.captionStyle.copyWith(color: mc.nightText),
                     ),
                   ],
@@ -894,6 +970,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
             ],
           ),
         ),
+        if (showRestHint) ...<Widget>[
+          SizedBox(height: mc.space12),
+          const MindClockNoticeBanner(
+            key: ValueKey<String>('study-long-session-rest-banner'),
+            message:
+                'Bạn đã học vượt 120 phút liên tục. Đừng quên đứng dậy uống nước và thư giãn mắt 5 phút nhé.',
+          ),
+        ],
         SizedBox(height: mc.space16),
         if (snapshot.status == StudyFocusStatus.interrupted ||
             snapshot.commitmentAwaitingResume ||
@@ -915,11 +999,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         SizedBox(height: mc.space12),
         MindClockButton(
           key: const ValueKey<String>('study-finish-button'),
-          label: AppStrings.studyFinishCta,
+          label: isCandle ? 'Hoàn tất đốt nến & kết thúc' : AppStrings.studyFinishCta,
           icon: MindClockIconKind.stop,
           variant: MindClockButtonVariant.subtle,
           onPressed: () {
-            final bool early = vm.remainingSeconds > 0;
+            final bool early = !isCandle && vm.remainingSeconds > 0;
             vm.finishSession(early: early);
           },
         ),

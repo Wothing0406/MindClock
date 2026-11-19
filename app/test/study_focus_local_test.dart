@@ -199,11 +199,13 @@ void main() {
         expect(vm.draftLevel, StudyFocusLevel.standard);
         expect(vm.draftDurationMinutes, 25);
 
-        // Chặn clamp 5..120 phút
+        // Bỏ trần 120p: cho phép vượt 120p và clamp 5..360 phút
         vm.setDurationMinutes(2);
         expect(vm.draftDurationMinutes, 5);
         vm.setDurationMinutes(180);
-        expect(vm.draftDurationMinutes, 120);
+        expect(vm.draftDurationMinutes, 180);
+        vm.setDurationMinutes(420);
+        expect(vm.draftDurationMinutes, 360);
         vm.setDurationMinutes(25);
 
         vm.setFocusLevel(StudyFocusLevel.flexible);

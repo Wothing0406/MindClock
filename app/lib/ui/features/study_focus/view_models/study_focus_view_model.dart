@@ -53,6 +53,7 @@ class StudyFocusViewModel extends ChangeNotifier {
   StudyFocusLevel _draftLevel = StudyFocusLevel.standard;
   StudyRoomMode _draftRoomMode = StudyRoomMode.withAi;
   StudyCadence _draftCadence = StudyCadence.interval;
+  StudyTimingMode _draftTimingMode = StudyTimingMode.countdown;
   bool _draftEndSoundEnabled = true;
   bool _draftNotifyOutsideApp = false;
   bool _reduceMotionStaticMode = false;
@@ -88,6 +89,7 @@ class StudyFocusViewModel extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String? get gradeLevel => _gradeLevel;
   bool get hasAiGateway => _aiGateway != null;
+  StudyAiGateway? get aiGateway => _aiGateway;
   bool get enablePeriodicTicker => _enablePeriodicTicker;
   bool get isAiDebugFixture => _aiGateway?.isDebugFixture ?? false;
   bool get isLoaded => _isLoaded;
@@ -97,6 +99,9 @@ class StudyFocusViewModel extends ChangeNotifier {
   StudyFocusLevel get draftLevel => _draftLevel;
   StudyRoomMode get draftRoomMode => _draftRoomMode;
   StudyCadence get draftCadence => _draftCadence;
+  StudyTimingMode get draftTimingMode => _draftTimingMode;
+  bool get isDraftCandleCountup =>
+      _draftTimingMode == StudyTimingMode.candleCountup;
   bool get isDeepSilentDraft => _draftCadence == StudyCadence.deepSilent;
   bool get draftEndSoundEnabled =>
       _draftCadence == StudyCadence.deepSilent ? false : _draftEndSoundEnabled;
@@ -139,6 +144,22 @@ class StudyFocusViewModel extends ChangeNotifier {
     return s.remainingSecondsAt(_nowProvider());
   }
 
+  bool get isActiveCandleCountup => _activeSnapshot?.isCandleCountup ?? false;
+
+  int get displayClockSeconds {
+    final StudyFocusSessionSnapshot? s = _activeSnapshot;
+    if (s == null) {
+      return isDraftCandleCountup ? 0 : _draftDurationMinutes * 60;
+    }
+    return s.displayClockSecondsAt(_nowProvider());
+  }
+
+  bool get shouldShowLongSessionRestHint {
+    final StudyFocusSessionSnapshot? s = _activeSnapshot;
+    if (s == null) return false;
+    return s.isLongSessionRestHintAt(_nowProvider());
+  }
+
   int get elapsedWallSeconds {
     final StudyFocusSessionSnapshot? s = _activeSnapshot;
     if (s == null) return 0;
@@ -155,6 +176,11 @@ class StudyFocusViewModel extends ChangeNotifier {
     final StudyFocusSessionSnapshot? s = _activeSnapshot;
     if (s == null || s.targetDurationSeconds <= 0) return 0;
     final int done = s.countdownElapsedSecondsAt(_nowProvider());
+    if (s.isCandleCountup) {
+      if (done <= 0) return 0;
+      final int cycleSec = done % 3600;
+      return cycleSec == 0 ? 1.0 : (cycleSec / 3600.0).clamp(0.0, 1.0);
+    }
     return (done / s.targetDurationSeconds).clamp(0.0, 1.0);
   }
 
@@ -260,6 +286,20 @@ class StudyFocusViewModel extends ChangeNotifier {
 
   void setCustomTaskTitle(String title) {
     _draftTaskTitle = title;
+    notifyListeners();
+  }
+
+  void setDraftSubjectCode(String? subjectCode) {
+    final String? clean =
+        subjectCode == null || subjectCode.trim().isEmpty ? null : subjectCode.trim();
+    if (_draftSubjectCode == clean) return;
+    _draftSubjectCode = clean;
+    notifyListeners();
+  }
+
+  void setTimingMode(StudyTimingMode mode) {
+    if (_draftTimingMode == mode) return;
+    _draftTimingMode = mode;
     notifyListeners();
   }
 
@@ -383,6 +423,7 @@ class StudyFocusViewModel extends ChangeNotifier {
       level: _draftLevel,
       roomMode: _draftRoomMode,
       cadence: _draftCadence,
+      timingMode: _draftTimingMode,
       status: StudyFocusStatus.running,
       endSoundEnabled: resolvedEndSound,
       notifyOutsideApp: resolvedNotifyOutside,

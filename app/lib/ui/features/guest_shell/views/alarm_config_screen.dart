@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/personal_flow_models.dart';
+import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/models/wake_suggestion.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
+import '../../../../domain/services/morning_question_selector.dart';
+import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -21,6 +27,7 @@ class AlarmConfigScreen extends StatefulWidget {
     required this.viewModel,
     this.editingAlarm,
     this.mediaPickerGateway,
+    this.studyAiGateway,
     required this.onSaved,
     required this.onCancel,
   });
@@ -28,6 +35,7 @@ class AlarmConfigScreen extends StatefulWidget {
   final GuestWorkspaceViewModel viewModel;
   final AlarmConfig? editingAlarm;
   final MediaPickerGateway? mediaPickerGateway;
+  final StudyAiGateway? studyAiGateway;
   final ValueChanged<String> onSaved;
   final VoidCallback onCancel;
 
@@ -55,6 +63,10 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   late TextEditingController _prepController;
   late TextEditingController _bufferController;
   String? _appliedSuggestionBanner;
+  PersonalizedPracticeQuestion? _aiPreviewQuestion;
+  bool _loadingAiPreview = false;
+  String? _aiPreviewStatusVi;
+  int _aiPreviewSeq = 0;
 
   @override
   void initState() {
@@ -88,6 +100,18 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
     _prepController = TextEditingController(text: prefs.prepMinutes.toString());
     _bufferController =
         TextEditingController(text: prefs.bufferMinutes.toString());
+    if (widget.studyAiGateway != null) {
+      unawaited(_refreshAiChallengePreview());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AlarmConfigScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.studyAiGateway != widget.studyAiGateway ||
+        oldWidget.editingAlarm?.id != widget.editingAlarm?.id) {
+      unawaited(_refreshAiChallengePreview());
+    }
   }
 
   @override
@@ -197,6 +221,93 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       return profile.selectedSubjectCodes.first;
     }
     return null;
+  }
+
+  int _resolvePreviewWeekday() {
+    if (_repeatWeekdays.isEmpty) {
+      return DateTime.now().weekday;
+    }
+    final int today = DateTime.now().weekday;
+    final List<int> sorted = _repeatWeekdays.toList()..sort();
+    for (final int day in sorted) {
+      if (day >= today) return day;
+    }
+    return sorted.first;
+  }
+
+  MorningQuestionProposal _resolveMorningProposal() {
+    final AlarmConfig draftPreview = AlarmConfig(
+      id: widget.editingAlarm?.id ?? 'preview',
+      hour: _hour,
+      minute: _minute,
+      repeatWeekdays: _repeatWeekdays.toList()..sort(),
+      enabled: _enabled,
+      soundEnabled: _soundEnabled,
+      vibrateEnabled: _vibrateEnabled,
+      mode: AlarmMode.challenge,
+      subjectRule: AlarmSubjectRule.todaySchedule,
+      subjectCode: _autoSubjectCode,
+    );
+    return MorningQuestionSelector.resolveForAlarm(
+      alarm: draftPreview,
+      profile: widget.viewModel.profile,
+      timetable: widget.viewModel.timetable,
+      weekday: _resolvePreviewWeekday(),
+    );
+  }
+
+  Future<void> _refreshAiChallengePreview() async {
+    final StudyAiGateway? gateway = widget.studyAiGateway;
+    final MorningQuestionProposal proposal = _resolveMorningProposal();
+    _autoSubjectCode = proposal.subjectCode;
+    if (gateway == null) {
+      setState(() {
+        _loadingAiPreview = false;
+        _aiPreviewQuestion = null;
+        _aiPreviewStatusVi = 'Đang dùng câu gợi ý cục bộ theo lịch học & ngân hàng chuẩn.';
+      });
+      return;
+    }
+    final int seq = ++_aiPreviewSeq;
+    setState(() {
+      _loadingAiPreview = true;
+      _aiPreviewStatusVi = null;
+    });
+    final String rawGrade = (widget.viewModel.profile.gradeLevel ?? '').trim();
+    final String gradeBand = rawGrade.isNotEmpty ? rawGrade : 'Lớp 11';
+    try {
+      final PersonalizedPracticeQuestion q =
+          await gateway.generatePersonalizedQuestion(
+        subjectCode: proposal.subjectCode,
+        gradeLevel: gradeBand,
+        topicHint: proposal.topicNameVi,
+        difficulty: proposal.difficultyBand,
+        idempotencyKey: 'alarm_preview_${proposal.subjectCode}_$seq',
+      );
+      if (!mounted || seq != _aiPreviewSeq) return;
+      setState(() {
+        _loadingAiPreview = false;
+        _aiPreviewQuestion = q;
+        _aiPreviewStatusVi = q.fallbackUsed
+            ? 'AI bận — đang dùng câu dự phòng chuẩn theo TKB & hồ sơ.'
+            : 'Đã tạo sẵn theo ${proposal.subjectNameVi} (${proposal.topicNameVi}).';
+      });
+    } on PersonalApiException catch (error) {
+      if (!mounted || seq != _aiPreviewSeq) return;
+      setState(() {
+        _loadingAiPreview = false;
+        _aiPreviewQuestion = null;
+        _aiPreviewStatusVi =
+            'Dùng câu cục bộ theo TKB (${error.messageVi}).';
+      });
+    } catch (_) {
+      if (!mounted || seq != _aiPreviewSeq) return;
+      setState(() {
+        _loadingAiPreview = false;
+        _aiPreviewQuestion = null;
+        _aiPreviewStatusVi = 'Đang dùng câu dự phòng cục bộ theo TKB & hồ sơ.';
+      });
+    }
   }
 
   WakeSuggestionInput _currentWakeInput() {
@@ -517,15 +628,18 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                           key: ValueKey<String>('repeat-day-$day'),
                           selected: selected,
                           semanticLabel: WeeklyTimetable.weekdayLabel(day),
-                          onPressed: () {
-                            setState(() {
-                              if (selected) {
-                                _repeatWeekdays.remove(day);
-                              } else {
-                                _repeatWeekdays.add(day);
+                            onPressed: () {
+                              setState(() {
+                                if (selected) {
+                                  _repeatWeekdays.remove(day);
+                                } else {
+                                  _repeatWeekdays.add(day);
+                                }
+                              });
+                              if (widget.studyAiGateway != null) {
+                                unawaited(_refreshAiChallengePreview());
                               }
-                            });
-                          },
+                            },
                           child: Container(
                             width: mc.minTouchTarget,
                             height: mc.minTouchTarget,
@@ -670,9 +784,84 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                       ],
                     ),
                     SizedBox(height: mc.space8),
-                    Text(
-                      'AI và hệ thống tự chọn 1 câu thử thách ngắn dựa theo hồ sơ ($gradeLabel · $selectedSubjectsLabel) và thời khóa biểu buổi sáng hôm đó.',
-                      style: mc.bodyStyle,
+                    Builder(
+                      builder: (BuildContext context) {
+                        final MorningQuestionProposal proposal =
+                            _resolveMorningProposal();
+                        final String previewPrompt =
+                            (_aiPreviewQuestion?.prompt.trim().isNotEmpty == true)
+                                ? _aiPreviewQuestion!.prompt
+                                : (proposal.sampleQuestionPrompt ??
+                                    'Câu ôn nhanh ${proposal.subjectNameVi} · ${proposal.topicNameVi}.');
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Hồ sơ ($gradeLabel · $selectedSubjectsLabel) — ${proposal.explanationVi}',
+                              style: mc.bodyStyle,
+                            ),
+                            SizedBox(height: mc.space12),
+                            Container(
+                              key: const ValueKey<String>(
+                                  'alarm-ai-challenge-preview'),
+                              width: double.infinity,
+                              padding: EdgeInsets.all(mc.space12),
+                              decoration: BoxDecoration(
+                                color: mc.primarySoft,
+                                borderRadius:
+                                    BorderRadius.circular(mc.radiusControl),
+                                border: Border.all(color: mc.primary),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Wrap(
+                                    spacing: mc.space8,
+                                    runSpacing: mc.space4,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: <Widget>[
+                                      Text(
+                                        'Câu gợi ý sáng · ${proposal.subjectNameVi}',
+                                        style: mc.bodyStrongStyle,
+                                      ),
+                                      MindClockStatusPill(
+                                        label: _aiPreviewQuestion != null
+                                            ? 'AI cá nhân hóa'
+                                            : 'Cục bộ theo TKB',
+                                        accentWarm: false,
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: mc.space8),
+                                  Text(previewPrompt, style: mc.bodyStyle),
+                                  if (_aiPreviewStatusVi != null) ...<Widget>[
+                                    SizedBox(height: mc.space8),
+                                    Text(
+                                      _aiPreviewStatusVi!,
+                                      style: mc.captionStyle,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: mc.space12),
+                            MindClockButton(
+                              key: const ValueKey<String>(
+                                  'alarm-regenerate-challenge'),
+                              label: _loadingAiPreview
+                                  ? 'Đang tạo câu mẫu...'
+                                  : 'Tạo lại câu AI theo TKB',
+                              icon: MindClockIconKind.sunrise,
+                              variant: MindClockButtonVariant.secondary,
+                              expand: false,
+                              onPressed: _loadingAiPreview
+                                  ? null
+                                  : _refreshAiChallengePreview,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     SizedBox(height: mc.space12),
                     const MindClockNoticeBanner(

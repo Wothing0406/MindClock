@@ -37,6 +37,39 @@ enum StudyRoomMode {
   }
 }
 
+/// Kiểu đếm thời gian trong Không gian học (`T059`, `docs/01-product/08`, `docs/02-engineering/07`).
+enum StudyTimingMode {
+  countdown,
+  candleCountup;
+
+  String get wireValue => this == candleCountup ? 'candle_countup' : 'countdown';
+
+  String get labelVi {
+    switch (this) {
+      case StudyTimingMode.countdown:
+        return 'Đếm ngược mục tiêu';
+      case StudyTimingMode.candleCountup:
+        return 'Đốt nến · Đếm giờ tự do';
+    }
+  }
+
+  String get shortBehaviorVi {
+    switch (this) {
+      case StudyTimingMode.countdown:
+        return 'Đặt mục tiêu linh hoạt từ 5 đến 360 phút (vượt mốc 120 phút nếu muốn).';
+      case StudyTimingMode.candleCountup:
+        return 'Đếm tiến từ 00:00 không giới hạn 120 phút; ngọn nến đồng hành và tự bấm Hoàn tất khi xong.';
+    }
+  }
+
+  static StudyTimingMode fromWire(String? value) {
+    for (final StudyTimingMode mode in values) {
+      if (mode.wireValue == value || mode.name == value) return mode;
+    }
+    return StudyTimingMode.countdown;
+  }
+}
+
 /// Nhịp học trong Không gian học (`docs/01-product/08`, `docs/02-engineering/07`).
 enum StudyCadence {
   interval,
@@ -174,9 +207,18 @@ class StudyTaskChoice {
       );
     }
 
+    final Set<String> allowedProfileCodes = profile.selectedSubjectCodes
+        .map((String e) => e.trim())
+        .where((String e) => e.isNotEmpty)
+        .toSet();
+
     final DaySchedule today = timetable.dayFor(now.weekday);
     if (!today.isRestDay) {
       for (final TimetableEntry entry in today.sortedEntries) {
+        if (allowedProfileCodes.isNotEmpty &&
+            !allowedProfileCodes.contains(entry.subjectCode)) {
+          continue;
+        }
         final String subjectName = SubjectCatalog.nameFor(entry.subjectCode);
         addChoice(
           'Ôn $subjectName (${entry.formattedStartTime})',
@@ -187,6 +229,10 @@ class StudyTaskChoice {
     }
 
     for (final String code in profile.prioritySubjectCodes) {
+      if (allowedProfileCodes.isNotEmpty &&
+          !allowedProfileCodes.contains(code)) {
+        continue;
+      }
       addChoice(
         'Làm bài tập ${SubjectCatalog.nameFor(code)}',
         code,
@@ -217,6 +263,7 @@ class StudyFocusSessionSnapshot {
     required this.level,
     this.roomMode = StudyRoomMode.withAi,
     this.cadence = StudyCadence.interval,
+    this.timingMode = StudyTimingMode.countdown,
     required this.status,
     required this.endSoundEnabled,
     required this.notifyOutsideApp,
@@ -242,8 +289,8 @@ class StudyFocusSessionSnapshot {
   });
 
   static const int minDurationMinutes = 5;
-  static const int maxDurationMinutes = 120;
-  static const List<int> presetMinutes = <int>[10, 25, 45];
+  static const int maxDurationMinutes = 360;
+  static const List<int> presetMinutes = <int>[10, 25, 45, 90, 150];
   static const int standardReminderThresholdSeconds = 30;
   static const int commitmentThresholdSeconds = 10;
 
@@ -255,6 +302,7 @@ class StudyFocusSessionSnapshot {
   final StudyFocusLevel level;
   final StudyRoomMode roomMode;
   final StudyCadence cadence;
+  final StudyTimingMode timingMode;
   final StudyFocusStatus status;
   final bool endSoundEnabled;
   final bool notifyOutsideApp;
@@ -321,7 +369,23 @@ class StudyFocusSessionSnapshot {
     return math.max(0, targetDurationSeconds - countdownElapsedSecondsAt(now));
   }
 
-  bool isTargetReachedAt(DateTime now) => remainingSecondsAt(now) == 0;
+  bool get isCandleCountup => timingMode == StudyTimingMode.candleCountup;
+
+  int displayClockSecondsAt(DateTime now) {
+    if (isCandleCountup) {
+      return countdownElapsedSecondsAt(now);
+    }
+    return remainingSecondsAt(now);
+  }
+
+  bool isLongSessionRestHintAt(DateTime now) {
+    return countdownElapsedSecondsAt(now) >= 120 * 60;
+  }
+
+  bool isTargetReachedAt(DateTime now) {
+    if (isCandleCountup) return false;
+    return remainingSecondsAt(now) == 0;
+  }
 
   /// Thời gian tập trung ở trong app (`in_app_focus_seconds`, tách khỏi `elapsed_wall_seconds`).
   int inAppFocusSecondsAt(DateTime now) {
@@ -346,6 +410,7 @@ class StudyFocusSessionSnapshot {
     StudyFocusLevel? level,
     StudyRoomMode? roomMode,
     StudyCadence? cadence,
+    StudyTimingMode? timingMode,
     StudyFocusStatus? status,
     bool? endSoundEnabled,
     bool? notifyOutsideApp,
@@ -383,6 +448,7 @@ class StudyFocusSessionSnapshot {
       level: level ?? this.level,
       roomMode: roomMode ?? this.roomMode,
       cadence: cadence ?? this.cadence,
+      timingMode: timingMode ?? this.timingMode,
       status: status ?? this.status,
       endSoundEnabled: endSoundEnabled ?? this.endSoundEnabled,
       notifyOutsideApp: notifyOutsideApp ?? this.notifyOutsideApp,
@@ -426,6 +492,7 @@ class StudyFocusSessionSnapshot {
       'level': level.wireValue,
       'roomMode': roomMode.wireValue,
       'cadence': cadence.wireValue,
+      'timingMode': timingMode.wireValue,
       'status': status.wireValue,
       'endSoundEnabled': endSoundEnabled,
       'notifyOutsideApp': notifyOutsideApp,
@@ -462,6 +529,7 @@ class StudyFocusSessionSnapshot {
       level: StudyFocusLevel.fromWire(json['level'] as String?),
       roomMode: StudyRoomMode.fromWire(json['roomMode'] as String?),
       cadence: StudyCadence.fromWire(json['cadence'] as String?),
+      timingMode: StudyTimingMode.fromWire(json['timingMode'] as String?),
       status: StudyFocusStatus.fromWire(json['status'] as String?),
       endSoundEnabled: json['endSoundEnabled'] as bool? ?? true,
       notifyOutsideApp: json['notifyOutsideApp'] as bool? ?? false,
