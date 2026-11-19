@@ -11,4 +11,4 @@
 - **Test chưa chạy/giới hạn:** Chưa đấu PvP 1v1 live đồng thời bằng 2 điện thoại Android vật lý (hiện đã kiểm chứng backend PG16 multi-user + client E2E với `DebugFixturePvpGateway` / API loopback); chưa đóng gói sprite nhiều frame từ `assets/game/` vì chưa có xác nhận bản quyền thương mại của chủ dự án (`AGENTS.md §3`).
 - **Rủi ro còn lại:** Nếu chủ dự án muốn thay hoạt cảnh `ArenaSpriteActor` gốc hiện tại bằng sprite `.webp` từng frame trong `assets/game/`, cần xác nhận quyền thương mại bằng văn bản trước khi copy vào `app/assets/`.
 - **Điểm tiếp tục chính xác:** Hỏi chủ dự án quyết định giữ bộ asset gốc đội tự tạo hiện có hay ký xác nhận quyền đóng gói `assets/game/`, và kiểm thử playtest PvP 1v1 trên 2 thiết bị Android vật lý nối staging HTTPS.
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T061`.
+- **Git:** Nhánh `main` — đã push `a5e9fe11d0798c358fd2344be6e9a0613c0df315` (`origin/main`).
