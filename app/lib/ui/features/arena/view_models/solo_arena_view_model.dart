@@ -9,6 +9,7 @@ import '../../../../domain/models/subject_catalog.dart';
 enum ArenaSection {
   hub,
   setup,
+  loading,
   battle,
   summary,
 }
@@ -223,7 +224,10 @@ class SoloArenaViewModel extends ChangeNotifier {
   }
 
   // --- Match lifecycle ---
-  bool startSoloMatch({String? playerName}) {
+  bool startSoloMatch({
+    String? playerName,
+    bool showLoadingScreen = false,
+  }) {
     if (!SoloTrainingQuestionBank.hasApprovedCacheFor(_selectedSubjectCode)) {
       _setupErrorVi =
           'Môn ${SubjectCatalog.nameFor(_selectedSubjectCode)} chưa có đủ bộ câu hỏi đã duyệt lưu trên máy. '
@@ -269,13 +273,31 @@ class SoloArenaViewModel extends ChangeNotifier {
     _finishReason = null;
 
     _phase = SoloBattlePhase.answering;
-    _section = ArenaSection.battle;
+    _section = showLoadingScreen ? ArenaSection.loading : ArenaSection.battle;
     notifyListeners();
     return true;
   }
 
-  bool replayWithSameSeed({String? playerName}) {
-    return startSoloMatch(playerName: playerName);
+  void completeArenaLoading() {
+    if (_section != ArenaSection.loading) return;
+    _section = ArenaSection.battle;
+    notifyListeners();
+  }
+
+  void cancelArenaLoading() {
+    if (_section != ArenaSection.loading) return;
+    _section = ArenaSection.setup;
+    notifyListeners();
+  }
+
+  bool replayWithSameSeed({
+    String? playerName,
+    bool showLoadingScreen = false,
+  }) {
+    return startSoloMatch(
+      playerName: playerName,
+      showLoadingScreen: showLoadingScreen,
+    );
   }
 
   SoloApprovedQuestion _drawNextQuestion() {

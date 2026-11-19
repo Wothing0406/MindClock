@@ -5,6 +5,7 @@ import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart'
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
 import 'package:mindclock_app/ui/core/strings/app_strings.dart';
+import 'package:mindclock_app/ui/core/widgets/mindclock_brand_mark.dart';
 
 void main() {
   Future<void> scrollAndTap(WidgetTester tester, Finder finder) async {
@@ -109,23 +110,22 @@ void main() {
       );
       expect(find.text('05:55'), findsWidgets);
 
-      // Chọn môn Tin học (chưa có câu duyệt) và bật Thử thách -> thấy rõ giải thích không Hoãn & môn chưa duyệt
-      await scrollAndTap(
-        tester,
-        find.byKey(const ValueKey<String>('alarm-subject-informatics')),
-      );
-      await scrollAndTap(
-        tester,
-        find.byKey(const ValueKey<String>('alarm-mode-challenge')),
-      );
-
-      expect(find.textContaining('Không có nút Hoãn'), findsWidgets);
+      // Màn đặt chuông tinh gọn: KHÔNG còn chọn môn thủ công hay chọn chế độ thường; auto Thử thách theo hồ sơ & TKB
       expect(
-        find.textContaining('chưa có câu ôn được duyệt'),
-        findsWidgets,
+        find.byKey(const ValueKey<String>('alarm-subject-informatics')),
+        findsNothing,
       );
+      expect(
+        find.byKey(const ValueKey<String>('alarm-mode-normal')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('alarm-auto-challenge-card')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Không có nút Hoãn'), findsWidgets);
 
-      // Lưu cấu hình báo thức
+      // Lưu cấu hình báo thức -> tự động lưu chế độ Thử thách theo hồ sơ & TKB sáng
       await scrollAndTap(
         tester,
         find.byKey(const ValueKey<String>('save-alarm-config')),
@@ -189,6 +189,41 @@ void main() {
         find.byKey(const ValueKey<String>('guest-skip-later')),
       );
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Boot loading screen hiển thị MindClockBrandMark và không tràn ở 320dp 200%',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final InMemoryKeyValueStore store = InMemoryKeyValueStore();
+      // Tạo app chưa pump xong future initialize -> pump 1 frame ngay lập tức để bắt màn boot loading
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 640),
+            textScaler: TextScaler.linear(2.0),
+            disableAnimations: true,
+          ),
+          child: MindClockApp(
+            repository: GuestWorkspaceRepository(store: store),
+            alarmScheduler: const UnboundAlarmSchedulerService(),
+            enableStudyTicker: false,
+          ),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey<String>('app-boot-loading')), findsOneWidget);
+      expect(find.byType(MindClockBrandMark), findsOneWidget);
+      expect(find.text('MindClock'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey<String>('app-boot-loading')), findsNothing);
     },
   );
 }

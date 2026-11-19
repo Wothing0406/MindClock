@@ -7,6 +7,7 @@ import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_brand_mark.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -151,9 +152,36 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
 
     if (!widget.viewModel.isLoaded) {
       return Scaffold(
-        backgroundColor: mc.paper,
-        body: Center(
-          child: Text('Đang tải dữ liệu trên máy...', style: mc.bodyStyle),
+        key: const ValueKey<String>('app-boot-loading'),
+        backgroundColor: mc.night,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(mc.space24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 340),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const MindClockBrandMark(size: 88),
+                    SizedBox(height: mc.space16),
+                    Text(
+                      'MindClock',
+                      style: mc.screenTitleStyle.copyWith(color: mc.nightText),
+                    ),
+                    SizedBox(height: mc.space8),
+                    Text(
+                      'Đang tải dữ liệu trên máy...',
+                      textAlign: TextAlign.center,
+                      style: mc.bodyStyle.copyWith(color: mc.nightText),
+                    ),
+                    SizedBox(height: mc.space16),
+                    const MindClockLoadingProgressBar(onNightSurface: true),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       );
     }

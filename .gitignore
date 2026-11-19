@@ -26,6 +26,8 @@ services/api/.venv/
 
 # Flutter SDK installed locally & generated build/machine artifacts
 /.local-sdk/
+/dist/
+*.apk
 app/.dart_tool/
 app/.flutter-plugins-dependencies
 app/build/

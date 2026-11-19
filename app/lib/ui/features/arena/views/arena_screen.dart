@@ -6,6 +6,7 @@ import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_brand_mark.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -28,20 +29,34 @@ class ArenaScreen extends StatefulWidget {
   State<ArenaScreen> createState() => _ArenaScreenState();
 }
 
-class _ArenaScreenState extends State<ArenaScreen> {
+class _ArenaScreenState extends State<ArenaScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _answerController = TextEditingController();
   final TextEditingController _reasoningController = TextEditingController();
   bool _showRulesCard = false;
   final Set<int> _expandedSummaryRounds = <int>{};
+  late final AnimationController _loadingController;
+  bool _loadingPrecacheStarted = false;
 
   @override
   void initState() {
     super.initState();
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    )..addStatusListener((AnimationStatus status) {
+        if (status == AnimationStatus.completed &&
+            mounted &&
+            widget.arenaViewModel.section == ArenaSection.loading) {
+          widget.arenaViewModel.completeArenaLoading();
+        }
+      });
     widget.arenaViewModel.addListener(_onArenaChanged);
   }
 
   @override
   void dispose() {
+    _loadingController.dispose();
     widget.arenaViewModel.removeListener(_onArenaChanged);
     _answerController.dispose();
     _reasoningController.dispose();
@@ -50,7 +65,51 @@ class _ArenaScreenState extends State<ArenaScreen> {
 
   void _onArenaChanged() {
     if (!mounted) return;
+    final SoloArenaViewModel vm = widget.arenaViewModel;
+    if (vm.section == ArenaSection.loading) {
+      _beginLoadingSequence();
+    } else {
+      _loadingController.stop();
+      _loadingPrecacheStarted = false;
+    }
     setState(() {});
+  }
+
+  void _beginLoadingSequence() {
+    if (_loadingPrecacheStarted) return;
+    _loadingPrecacheStarted = true;
+
+    final bool reduceMotion = widget.arenaViewModel.reduceMotionOverride ||
+        MediaQuery.maybeDisableAnimationsOf(context) == true;
+    _loadingController.duration =
+        Duration(milliseconds: reduceMotion ? 120 : 650);
+    _loadingController.forward(from: 0.0);
+
+    // Precache background map + hai chân dung + các icon chiêu trước khi vào round 1
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final SoloArenaViewModel vm = widget.arenaViewModel;
+      final ChampionSpec pSpec = CombatCatalog.getSpec(vm.playerChampion);
+      final ChampionSpec bSpec = CombatCatalog.getSpec(vm.botChampion);
+      final List<String> assets = <String>{
+        CombatCatalog.mapCourtyardAssetPath,
+        CombatCatalog.basicAttackAssetPath,
+        pSpec.portraitAssetPath,
+        bSpec.portraitAssetPath,
+        pSpec.skill1.iconAssetPath,
+        pSpec.skill2.iconAssetPath,
+        bSpec.skill1.iconAssetPath,
+        bSpec.skill2.iconAssetPath,
+      }.toList();
+      for (final String path in assets) {
+        if (!mounted) return;
+        try {
+          await precacheImage(AssetImage(path), context);
+        } catch (_) {
+          // Tiếp tục an toàn nếu thiết bị không nạp được 1 asset (đã có vector fallback).
+        }
+      }
+    });
   }
 
   void _clearInputs() {
@@ -66,6 +125,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
         return _buildHub(context, vm);
       case ArenaSection.setup:
         return _buildSetup(context, vm);
+      case ArenaSection.loading:
+        return _buildLoading(context, vm);
       case ArenaSection.battle:
         return _buildBattle(context, vm);
       case ArenaSection.summary:
@@ -98,7 +159,9 @@ class _ArenaScreenState extends State<ArenaScreen> {
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('arena-toggle-rules'),
-            label: _showRulesCard ? 'Ẩn luật chơi v0.1' : 'Xem Luật chơi (solo-three-v0.1)',
+            label: _showRulesCard
+                ? 'Ẩn luật chơi v0.1'
+                : 'Xem Luật chơi (solo-three-v0.1)',
             icon: MindClockIconKind.info,
             variant: MindClockButtonVariant.subtle,
             onPressed: () => setState(() => _showRulesCard = !_showRulesCard),
@@ -109,7 +172,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Luật chơi ($combatRuleVersion)', style: mc.sectionTitleStyle),
+                  Text('Luật chơi ($combatRuleVersion)',
+                      style: mc.sectionTitleStyle),
                   SizedBox(height: mc.space8),
                   Text(
                     '• Mỗi bên bắt đầu với $maxHp HP, $maxArmor Giáp, 0 Chắn, 0 Qi; tối đa $maxCombatRounds round.\n'
@@ -169,7 +233,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Text('Đấu đơn 1v1', style: mc.sectionTitleStyle),
-                    const MindClockStatusPill(label: 'Sắp mở · G2', accentWarm: true),
+                    const MindClockStatusPill(
+                        label: 'Sắp mở · G2', accentWarm: true),
                   ],
                 ),
                 SizedBox(height: mc.space8),
@@ -201,7 +266,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Text('Đấu đội 2v2', style: mc.sectionTitleStyle),
-                    const MindClockStatusPill(label: 'Chưa mở · G3', accentWarm: true),
+                    const MindClockStatusPill(
+                        label: 'Chưa mở · G3', accentWarm: true),
                   ],
                 ),
                 SizedBox(height: mc.space8),
@@ -324,7 +390,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('2. Chọn tướng của bạn (3 tướng gốc)', style: mc.sectionTitleStyle),
+                Text('2. Chọn tướng của bạn (3 tướng gốc)',
+                    style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space12),
                 ...ChampionId.values.map((ChampionId id) {
                   final ChampionSpec spec = CombatCatalog.getSpec(id);
@@ -337,14 +404,16 @@ class _ArenaScreenState extends State<ArenaScreen> {
                         MindClockPressable(
                           key: ValueKey<String>('arena-champion-${id.code}'),
                           selected: selected,
-                          semanticLabel: 'Chọn tướng ${spec.nameVi}, ${spec.roleVi}',
+                          semanticLabel:
+                              'Chọn tướng ${spec.nameVi}, ${spec.roleVi}',
                           onPressed: () => vm.selectPlayerChampion(id),
                           child: Container(
                             width: double.infinity,
                             padding: EdgeInsets.all(mc.space12),
                             decoration: BoxDecoration(
                               color: selected ? mc.primarySoft : mc.paper,
-                              borderRadius: BorderRadius.circular(mc.radiusControl),
+                              borderRadius:
+                                  BorderRadius.circular(mc.radiusControl),
                               border: Border.all(
                                 color: selected ? mc.primary : mc.outline,
                                 width: selected ? 1.5 : 1,
@@ -365,7 +434,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                                     SizedBox(width: mc.space12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Wrap(
                                             spacing: mc.space8,
@@ -412,11 +482,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
                         ),
                         SizedBox(height: mc.space4),
                         MindClockButton(
-                          key: ValueKey<String>('arena-champion-detail-${id.code}'),
-                          label: 'Xem chi tiết ${spec.nameVi} (nội tại & chiêu thức)',
+                          key: ValueKey<String>(
+                              'arena-champion-detail-${id.code}'),
+                          label:
+                              'Xem chi tiết ${spec.nameVi} (nội tại & chiêu thức)',
                           icon: MindClockIconKind.info,
                           variant: MindClockButtonVariant.subtle,
-                          onPressed: () => _showChampionDetailSheet(context, spec),
+                          onPressed: () =>
+                              _showChampionDetailSheet(context, spec),
                         ),
                       ],
                     ),
@@ -432,9 +505,11 @@ class _ArenaScreenState extends State<ArenaScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('3. Máy tập, luật & trợ năng', style: mc.sectionTitleStyle),
+                Text('3. Máy tập, luật & trợ năng',
+                    style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space8),
-                Text('Độ khó Máy tập (deterministic theo seed):', style: mc.bodyStrongStyle),
+                Text('Độ khó Máy tập (deterministic theo seed):',
+                    style: mc.bodyStrongStyle),
                 SizedBox(height: mc.space8),
                 Wrap(
                   spacing: mc.space8,
@@ -551,12 +626,15 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     ),
                     _ToggleChip(
                       key: const ValueKey<String>('arena-toggle-sound'),
-                      label: vm.soundEnabled ? 'Âm thanh game: Bật' : 'Âm thanh game: Tắt',
+                      label: vm.soundEnabled
+                          ? 'Âm thanh game: Bật'
+                          : 'Âm thanh game: Tắt',
                       active: vm.soundEnabled,
                       onTap: vm.toggleSound,
                     ),
                     _ToggleChip(
-                      key: const ValueKey<String>('arena-toggle-asset-fallback'),
+                      key:
+                          const ValueKey<String>('arena-toggle-asset-fallback'),
                       label: vm.simulateAssetFallback
                           ? 'Fallback lỗi asset: Đang bật'
                           : 'Fallback lỗi asset: Bình thường',
@@ -575,7 +653,135 @@ class _ArenaScreenState extends State<ArenaScreen> {
             icon: MindClockIconKind.play,
             onPressed: () {
               _clearInputs();
-              vm.startSoloMatch(playerName: profile.alias);
+              vm.startSoloMatch(
+                playerName: profile.alias,
+                showLoadingScreen: true,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoading(BuildContext context, SoloArenaViewModel vm) {
+    final MindClockTheme mc = context.mc;
+    final ChampionSpec playerSpec = CombatCatalog.getSpec(vm.playerChampion);
+    final ChampionSpec botSpec = CombatCatalog.getSpec(vm.botChampion);
+
+    return SingleChildScrollView(
+      key: const ValueKey<String>('arena-loading-screen'),
+      padding: EdgeInsets.all(mc.space20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.all(mc.space20),
+            decoration: BoxDecoration(
+              color: mc.night,
+              borderRadius: BorderRadius.circular(mc.radiusCard),
+              border: Border.all(color: mc.sunrise),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const MindClockBrandMark(size: 56),
+                SizedBox(height: mc.space12),
+                const MindClockStatusPill(
+                  label: 'G1 · Luyện đơn · 0 RP',
+                ),
+                SizedBox(height: mc.space12),
+                Text(
+                  'Đang chuẩn bị sân đấu...',
+                  textAlign: TextAlign.center,
+                  style: mc.screenTitleStyle.copyWith(color: mc.nightText),
+                ),
+                SizedBox(height: mc.space4),
+                Text(
+                  'Sân đấu: Võ đường Bình minh · ${SubjectCatalog.nameFor(vm.selectedSubjectCode)} · $maxCombatRounds lượt',
+                  textAlign: TextAlign.center,
+                  style: mc.captionStyle.copyWith(color: mc.nightText),
+                ),
+                SizedBox(height: mc.space20),
+                Wrap(
+                  spacing: mc.space12,
+                  runSpacing: mc.space12,
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    _LoadingFighterBadge(
+                      name: vm.playerState.displayName,
+                      championName: playerSpec.nameVi,
+                      role: playerSpec.roleVi,
+                      assetPath: playerSpec.portraitAssetPath,
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: mc.space12,
+                        vertical: mc.space8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: mc.nightSurface,
+                        borderRadius: BorderRadius.circular(mc.radiusChip),
+                        border: Border.all(color: mc.sunrise),
+                      ),
+                      child: Text(
+                        'VS',
+                        style: mc.bodyStrongStyle.copyWith(color: mc.sunrise),
+                      ),
+                    ),
+                    _LoadingFighterBadge(
+                      name: vm.botState.displayName,
+                      championName: botSpec.nameVi,
+                      role: botSpec.roleVi,
+                      assetPath: botSpec.portraitAssetPath,
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space20),
+                AnimatedBuilder(
+                  animation: _loadingController,
+                  builder: (BuildContext context, _) {
+                    final double pct = 0.15 + 0.85 * _loadingController.value;
+                    return Column(
+                      children: <Widget>[
+                        MindClockLoadingProgressBar(
+                          value: pct,
+                          onNightSurface: true,
+                        ),
+                        SizedBox(height: mc.space8),
+                        Text(
+                          pct >= 0.98
+                              ? 'Sân đấu đã sẵn sàng.'
+                              : 'Đang nạp bộ câu hỏi & hình ảnh kỹ năng...',
+                          textAlign: TextAlign.center,
+                          style: mc.captionStyle.copyWith(color: mc.nightText),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: mc.space16),
+          MindClockButton(
+            key: const ValueKey<String>('arena-enter-battle-now'),
+            label: 'Vào trận ngay',
+            icon: MindClockIconKind.play,
+            onPressed: () {
+              _loadingController.stop();
+              vm.completeArenaLoading();
+            },
+          ),
+          SizedBox(height: mc.space8),
+          MindClockButton(
+            key: const ValueKey<String>('arena-cancel-loading'),
+            label: 'Quay lại chọn tướng',
+            variant: MindClockButtonVariant.subtle,
+            onPressed: () {
+              _loadingController.stop();
+              vm.cancelArenaLoading();
             },
           ),
         ],
@@ -636,7 +842,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
             children: <Widget>[
               _ToggleChip(
                 key: const ValueKey<String>('arena-battle-skip-fx'),
-                label: vm.skipEffects ? 'Bỏ qua hiệu ứng: Bật' : 'Bỏ qua hiệu ứng',
+                label:
+                    vm.skipEffects ? 'Bỏ qua hiệu ứng: Bật' : 'Bỏ qua hiệu ứng',
                 active: vm.skipEffects,
                 onTap: vm.toggleSkipEffects,
               ),
@@ -708,7 +915,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                       key: const ValueKey<String>('arena-answer-input'),
                       controller: _answerController,
                       decoration: InputDecoration(
-                        hintText: 'Nhập đáp án (ví dụ: 8, 0,5, 2 A, has lived...)',
+                        hintText:
+                            'Nhập đáp án (ví dụ: 8, 0,5, 2 A, has lived...)',
                         filled: true,
                         fillColor: mc.surface,
                         border: OutlineInputBorder(
@@ -729,7 +937,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                       minLines: 3,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        hintText: 'Viết ngắn gọn 1–2 bước biến đổi hoặc công thức bạn áp dụng...',
+                        hintText:
+                            'Viết ngắn gọn 1–2 bước biến đổi hoặc công thức bạn áp dụng...',
                         filled: true,
                         fillColor: mc.surface,
                         border: OutlineInputBorder(
@@ -810,7 +1019,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   if (vm.lastGrading!.oneStepHintVi != null) ...<Widget>[
                     SizedBox(height: mc.space8),
                     MindClockNoticeBanner(
-                      message: 'Gợi ý 1 bước: ${vm.lastGrading!.oneStepHintVi!}',
+                      message:
+                          'Gợi ý 1 bước: ${vm.lastGrading!.oneStepHintVi!}',
                     ),
                   ],
                   SizedBox(height: mc.space12),
@@ -832,7 +1042,9 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     SizedBox(height: mc.space8),
                     MindClockButton(
                       key: const ValueKey<String>('arena-toggle-rubric'),
-                      label: vm.showRubricReveal ? 'Ẩn cách chấm' : 'Xem cách chấm',
+                      label: vm.showRubricReveal
+                          ? 'Ẩn cách chấm'
+                          : 'Xem cách chấm',
                       icon: MindClockIconKind.info,
                       variant: MindClockButtonVariant.subtle,
                       onPressed: vm.toggleRubricReveal,
@@ -879,7 +1091,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     return Padding(
                       padding: EdgeInsets.only(bottom: mc.space8),
                       child: MindClockPressable(
-                        key: ValueKey<String>('arena-action-${opt.actionType.code}'),
+                        key: ValueKey<String>(
+                            'arena-action-${opt.actionType.code}'),
                         semanticLabel: opt.enabled
                             ? '${opt.titleVi}, ${opt.effectSummaryVi}'
                             : '${opt.titleVi} không khả dụng: ${opt.disabledReasonVi ?? ""}',
@@ -891,7 +1104,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                           padding: EdgeInsets.all(mc.space12),
                           decoration: BoxDecoration(
                             color: opt.enabled ? mc.surface : mc.paper,
-                            borderRadius: BorderRadius.circular(mc.radiusControl),
+                            borderRadius:
+                                BorderRadius.circular(mc.radiusControl),
                             border: Border.all(
                               color: opt.enabled ? mc.primary : mc.outline,
                               width: opt.enabled ? 1.5 : 1,
@@ -936,7 +1150,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                                     Text(opt.effectSummaryVi,
                                         style: mc.captionStyle),
                                     if (!opt.enabled &&
-                                        opt.disabledReasonVi != null) ...<Widget>[
+                                        opt.disabledReasonVi !=
+                                            null) ...<Widget>[
                                       SizedBox(height: mc.space4),
                                       Text(
                                         'Lý do khóa: ${opt.disabledReasonVi!}',
@@ -958,7 +1173,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                   }),
                   MindClockButton(
                     key: const ValueKey<String>('arena-toggle-rubric'),
-                    label: vm.showRubricReveal ? 'Ẩn cách chấm' : 'Xem cách chấm',
+                    label:
+                        vm.showRubricReveal ? 'Ẩn cách chấm' : 'Xem cách chấm',
                     icon: MindClockIconKind.info,
                     variant: MindClockButtonVariant.subtle,
                     onPressed: vm.toggleRubricReveal,
@@ -1016,14 +1232,16 @@ class _ArenaScreenState extends State<ArenaScreen> {
             '(Chắn ${pDelta.wardAbsorbed}, Giáp ${pDelta.armorDamageTaken}, HP ${pDelta.hpDamageTaken}).',
             style: mc.captionStyle.copyWith(color: mc.ink),
           ),
-          if (pDelta.passiveTriggered && pDelta.passiveEffectVi != null) ...<Widget>[
+          if (pDelta.passiveTriggered &&
+              pDelta.passiveEffectVi != null) ...<Widget>[
             SizedBox(height: mc.space8),
             MindClockNoticeBanner(
               message: 'Nội tại của bạn kích hoạt: ${pDelta.passiveEffectVi!}',
               isWarm: false,
             ),
           ],
-          if (bDelta.passiveTriggered && bDelta.passiveEffectVi != null) ...<Widget>[
+          if (bDelta.passiveTriggered &&
+              bDelta.passiveEffectVi != null) ...<Widget>[
             SizedBox(height: mc.space8),
             MindClockNoticeBanner(
               message: 'Nội tại Máy tập kích hoạt: ${bDelta.passiveEffectVi!}',
@@ -1080,7 +1298,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
             ...q.gradingRubricStepsVi.map(
               (String step) => Padding(
                 padding: EdgeInsets.only(bottom: mc.space4),
-                child: Text('• $step', style: mc.captionStyle.copyWith(color: mc.ink)),
+                child: Text('• $step',
+                    style: mc.captionStyle.copyWith(color: mc.ink)),
               ),
             ),
             Text(
@@ -1117,13 +1336,13 @@ class _ArenaScreenState extends State<ArenaScreen> {
           SizedBox(height: mc.space4),
           Text(vm.summaryFinishReasonVi(), style: mc.bodyStyle),
           SizedBox(height: mc.space12),
-
           MindClockCard(
             highlighted: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Thông số kết thúc ($combatRuleVersion)', style: mc.sectionTitleStyle),
+                Text('Thông số kết thúc ($combatRuleVersion)',
+                    style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space8),
                 Text(
                   '• Bạn (${playerSpec.nameVi}): HP ${vm.playerState.hp}/$maxHp · Giáp ${vm.playerState.armor}/$maxArmor · Qi ${vm.playerState.qi}/$maxQi',
@@ -1144,8 +1363,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
             ),
           ),
           SizedBox(height: mc.space16),
-
-          Text('Nhật ký từng round & phát lại (Replay)', style: mc.sectionTitleStyle),
+          Text('Nhật ký từng round & phát lại (Replay)',
+              style: mc.sectionTitleStyle),
           SizedBox(height: mc.space8),
           ...vm.history.map((SoloRoundHistoryItem item) {
             final bool expanded = _expandedSummaryRounds.contains(item.roundNo);
@@ -1160,15 +1379,18 @@ class _ArenaScreenState extends State<ArenaScreen> {
                       runSpacing: mc.space4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: <Widget>[
-                        Text('Round ${item.roundNo}', style: mc.bodyStrongStyle),
+                        Text('Round ${item.roundNo}',
+                            style: mc.bodyStrongStyle),
                         MindClockStatusPill(
                           label: item.playerGrade.labelVi,
-                          accentWarm: item.playerGrade != SoloGradeStatus.correct,
+                          accentWarm:
+                              item.playerGrade != SoloGradeStatus.correct,
                         ),
                       ],
                     ),
                     SizedBox(height: mc.space4),
-                    Text(item.question.prompt, style: mc.captionStyle.copyWith(color: mc.ink)),
+                    Text(item.question.prompt,
+                        style: mc.captionStyle.copyWith(color: mc.ink)),
                     SizedBox(height: mc.space4),
                     Text(
                       'Bạn: gây ${item.resolution.settle.playerADelta.rawDamageDealt} ST, còn ${item.resolution.settle.playerADelta.newHp} HP · '
@@ -1177,7 +1399,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                     ),
                     SizedBox(height: mc.space8),
                     MindClockButton(
-                      key: ValueKey<String>('arena-summary-rubric-${item.roundNo}'),
+                      key: ValueKey<String>(
+                          'arena-summary-rubric-${item.roundNo}'),
                       label: expanded ? 'Ẩn cách chấm' : 'Xem cách chấm',
                       variant: MindClockButtonVariant.subtle,
                       expand: false,
@@ -1197,7 +1420,6 @@ class _ArenaScreenState extends State<ArenaScreen> {
               ),
             );
           }),
-
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('arena-replay-same-seed'),
@@ -1206,7 +1428,10 @@ class _ArenaScreenState extends State<ArenaScreen> {
             onPressed: () {
               _clearInputs();
               _expandedSummaryRounds.clear();
-              vm.replayWithSameSeed(playerName: widget.guestViewModel.profile.alias);
+              vm.replayWithSameSeed(
+                playerName: widget.guestViewModel.profile.alias,
+                showLoadingScreen: true,
+              );
             },
           ),
           SizedBox(height: mc.space8),
@@ -1247,12 +1472,14 @@ class _ArenaScreenState extends State<ArenaScreen> {
       isScrollControlled: true,
       backgroundColor: mc.paper,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(mc.radiusCard)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(mc.radiusCard)),
       ),
       builder: (BuildContext sheetContext) {
         return SafeArea(
           child: SingleChildScrollView(
-            key: ValueKey<String>('arena-champion-detail-sheet-${spec.id.code}'),
+            key:
+                ValueKey<String>('arena-champion-detail-sheet-${spec.id.code}'),
             padding: EdgeInsets.all(mc.space20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1307,7 +1534,8 @@ class _ArenaScreenState extends State<ArenaScreen> {
                 ),
                 SizedBox(height: mc.space12),
                 _ChampionSkillDetailRow(
-                  title: 'Đánh thường ($basicAttackQiCost Qi · $basicAttackDamage ST)',
+                  title:
+                      'Đánh thường ($basicAttackQiCost Qi · $basicAttackDamage ST)',
                   assetPath: CombatCatalog.basicAttackAssetPath,
                   descriptionVi: spec.basicAttackDescriptionVi,
                 ),
@@ -1504,6 +1732,61 @@ class _ToggleChip extends StatelessWidget {
           label,
           style: mc.chipLabelStyle.copyWith(color: mc.ink),
         ),
+      ),
+    );
+  }
+}
+
+class _LoadingFighterBadge extends StatelessWidget {
+  const _LoadingFighterBadge({
+    required this.name,
+    required this.championName,
+    required this.role,
+    required this.assetPath,
+  });
+
+  final String name;
+  final String championName;
+  final String role;
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    return Container(
+      width: 128,
+      padding: EdgeInsets.all(mc.space12),
+      decoration: BoxDecoration(
+        color: mc.nightSurface,
+        borderRadius: BorderRadius.circular(mc.radiusCard),
+        border: Border.all(color: mc.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _ChampionPortraitThumb(
+            assetPath: assetPath,
+            fallbackInitials: championName,
+            size: 64,
+            highlighted: true,
+          ),
+          SizedBox(height: mc.space8),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: mc.captionStyle.copyWith(color: mc.sunrise),
+          ),
+          Text(
+            championName,
+            textAlign: TextAlign.center,
+            style: mc.bodyStrongStyle.copyWith(color: mc.nightText),
+          ),
+          Text(
+            role,
+            textAlign: TextAlign.center,
+            style: mc.captionStyle.copyWith(color: mc.nightText),
+          ),
+        ],
       ),
     );
   }

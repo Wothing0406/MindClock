@@ -484,5 +484,90 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets(
+      'Hiển thị màn Loading Game (ArenaSection.loading) trước khi vào trận ở 320dp 200%',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(320, 760);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final InMemoryKeyValueStore store = InMemoryKeyValueStore();
+        final GuestWorkspaceViewModel guestVm = GuestWorkspaceViewModel(
+          repository: GuestWorkspaceRepository(store: store),
+          alarmScheduler: const UnboundAlarmSchedulerService(),
+        );
+        await guestVm.initialize();
+        await guestVm.completeOnboardingAsLater(alarmOnly: false);
+
+        final PersonalFlowViewModel personalVm = PersonalFlowViewModel(
+          authGateway: DebugFixtureAuthGateway(),
+          repository: DebugFixturePersonalFlowRepository(),
+          draftStore: OfflineTextDraftStore(store: store),
+          cameraGateway: _NoopCameraGateway(),
+        );
+        await personalVm.initialize();
+
+        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 20261119);
+
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 760),
+              textScaler: TextScaler.linear(2.0),
+              disableAnimations: true,
+            ),
+            child: MaterialApp(
+              theme: MindClockTheme.buildThemeData(),
+              home: MindClockShellScreen(
+                viewModel: guestVm,
+                personalViewModel: personalVm,
+                arenaViewModel: arenaVm,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('nav-arena')),
+        );
+        await _scrollCenterAndTap(
+          tester,
+          find.byKey(const ValueKey<String>('arena-enter-solo')),
+        );
+
+        final Finder startBtn = find.byKey(const ValueKey<String>('arena-start-solo-match'));
+        await Scrollable.ensureVisible(
+          tester.element(startBtn),
+          alignment: 0.5,
+          duration: Duration.zero,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(startBtn);
+        // Pump 1 frame (không settle) để kiểm chứng màn Loading Game trước timer hoàn tất
+        await tester.pump();
+
+        expect(arenaVm.section, ArenaSection.loading);
+        expect(find.byKey(const ValueKey<String>('arena-loading-screen')), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-enter-battle-now')), findsOneWidget);
+        expect(find.textContaining('Đang chuẩn bị sân đấu'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('arena-enter-battle-now')),
+        );
+        await tester.pump();
+        await tester.tap(
+          find.byKey(const ValueKey<String>('arena-enter-battle-now')),
+        );
+        await tester.pumpAndSettle();
+        expect(arenaVm.section, ArenaSection.battle);
+        expect(find.byKey(const ValueKey<String>('arena-stage-compact')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

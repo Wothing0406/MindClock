@@ -52,15 +52,11 @@ class AppStrings {
   static const String alarmSoundTitle = 'Âm thanh chuông';
   static const String alarmVibrateLabel = 'Rung khi chuông reo';
   static const String alarmEnabledLabel = 'Bật cấu hình báo thức này';
-  static const String alarmSubjectTitle = 'Môn kèm theo buổi sáng (tùy chọn)';
-  static const String alarmModeTitle = 'Chế độ khi báo thức reo';
   static const String normalModeTitle = 'Báo thức thường';
   static const String normalModeDesc = 'Có nút Hoãn 5 phút và Dừng khẩn cấp.';
-  static const String challengeModeTitle = 'Báo thức thử thách (tự chọn)';
+  static const String challengeModeTitle = 'Báo thức thử thách';
   static const String challengeModeNotice =
       'Không có nút Hoãn. Bạn sẽ làm một câu ngắn để hoàn thành. Dừng khẩn cấp luôn có 1 chạm.';
-  static const String unapprovedSubjectExplain =
-      'Môn này chưa có câu ôn được duyệt. Bạn vẫn đặt được báo thức; khi reo hệ thống dùng chế độ thường / Chỉ báo thức để không khóa chuông.';
   static const String saveAlarmButton = 'Lưu cấu hình báo thức';
 
   // Trạng thái dịch vụ báo thức & OS Android
