@@ -19,4 +19,4 @@
 - **Test chưa chạy/giới hạn:** Chưa test trên 2 máy Android vật lý thật, chưa ký release keystore để phát hành Store, chưa host backend HTTPS public.
 - **Rủi ro còn lại:** Để điện thoại thật dùng được AI & đồng bộ tài khoản, khi build APK phải truyền `-ApiBaseUrl https://<domain-backend-public>`.
 - **Điểm tiếp tục chính xác:** Triển khai sprint mới (T057+) cho **R6/Social & Clock-First Calendar**: giao diện Kết bạn / Tìm bạn học theo trình độ / Phòng học công khai nhiều người, màn Lịch trình ngày theo giờ + To-Do done công việc + Android Home Screen Widget (`AppWidgetProvider`).
-- **Git:** Nhánh `main` — sẵn sàng commit & push lên `origin/main` (sẽ cập nhật SHA xác minh nếu cần hoặc commit trọn gói).
+- **Git:** Nhánh `main` · commit triển khai `c3ae885` (`c3ae885a3eec60166c454827871cfefd8b303781`) đã push & xác minh trên `origin/main`; commit tiếp theo bổ sung trọn bộ ảnh/video dẫn chứng `test_demo_android/` và cập nhật SHA vào `handoff.md`.
