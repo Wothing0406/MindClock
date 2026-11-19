@@ -10,4 +10,4 @@
 - **Test chưa chạy/giới hạn:** Chưa có 2–4 máy Android vật lý cùng vào phòng WebRTC audio/video thật (hiện là Meet grid trạng thái phòng + mic/cam toggle an toàn mặc định tắt qua REST backend).
 - **Rủi ro còn lại:** Live audio/video media stream nhiều người thật vẫn khóa sau feature flag & kiểm thử 2–4 máy thật; AI ghép nhóm đang chấm điểm deterministic theo khối/lớp/môn/trình độ.
 - **Điểm tiếp tục chính xác:** Mở **T059** (`tasks/T059-study-space-candle-mode-subjects-and-alarm-ai-preview/`) — lọc môn theo `StudyProfile`, thêm chế độ **Đốt nến · Đếm giờ tự do** (bỏ giới hạn 120p) và xem trước câu hỏi sáng cá nhân hóa theo TKB/hồ sơ ngay trên màn Báo thức.
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T058`.
+- **Git:** Nhánh `main`, commit code/test `0ba7b296565f18958e4f77c578bf5f4ef904197d` đã push lên `origin/main`.
