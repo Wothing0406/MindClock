@@ -6,6 +6,7 @@ import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
+import '../../../../domain/services/pvp_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_brand_mark.dart';
@@ -47,6 +48,7 @@ class MindClockShellScreen extends StatefulWidget {
     this.studyViewModel,
     this.arenaViewModel,
     this.communityRepository,
+    this.pvpGateway,
     this.mediaPickerGateway,
   });
 
@@ -55,6 +57,7 @@ class MindClockShellScreen extends StatefulWidget {
   final StudyFocusViewModel? studyViewModel;
   final SoloArenaViewModel? arenaViewModel;
   final CommunityRepository? communityRepository;
+  final PvpGateway? pvpGateway;
   final MediaPickerGateway? mediaPickerGateway;
 
   @override
@@ -423,6 +426,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             body = ArenaScreen(
               guestViewModel: widget.viewModel,
               arenaViewModel: _arenaVm,
+              pvpGateway: widget.pvpGateway,
+              currentUserId: widget.personalViewModel.authSession.uid,
             );
           case 3:
             body = MeGuestScreen(

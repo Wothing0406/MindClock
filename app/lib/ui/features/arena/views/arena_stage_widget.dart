@@ -4,6 +4,7 @@ import '../../../../domain/game/combat_catalog.dart';
 import '../../../../domain/game/solo_combat_engine.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_icon.dart';
+import 'arena_sprite_stage.dart';
 
 /// Khung sân đấu màn dọc cho G1 Luyện đơn (dùng đồ họa vector chuẩn MindClockTheme).
 ///
@@ -289,50 +290,15 @@ class _CombatantSlotCard extends StatelessWidget {
             if (!compact) ...<Widget>[
               SizedBox(height: mc.space8),
               Center(
-                child: assetFallbackMode
-                    ? Container(
-                        width: 64,
-                        height: 64,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: mc.night,
-                          borderRadius: BorderRadius.circular(mc.radiusControl),
-                          border: Border.all(color: mc.outline),
-                        ),
-                        child: Text(
-                          spec.nameVi.substring(0, 2).toUpperCase(),
-                          style: mc.sectionTitleStyle.copyWith(
-                            color: mc.nightText,
-                          ),
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(mc.radiusControl),
-                        child: Transform(
-                          alignment: Alignment.center,
-                          transform: facingRight
-                              ? Matrix4.identity()
-                              : Matrix4.diagonal3Values(-1.0, 1.0, 1.0),
-                          child: Image.asset(
-                            spec.portraitAssetPath,
-                            width: 76,
-                            height: 76,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => CustomPaint(
-                              size: const Size(76, 68),
-                              painter: _ChampionCrestPainter(
-                                championId: state.championId,
-                                facingRight: facingRight,
-                                primaryColor: accentColor,
-                                strokeColor: mc.nightText,
-                                highlightColor: mc.sunrise,
-                                activePulse:
-                                    !disableMotion && deltaActionUsed != null,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                child: ArenaSpriteActor(
+                  spec: spec,
+                  facingRight: facingRight,
+                  isBot: state.isBot,
+                  disableMotion: disableMotion,
+                  assetFallbackMode: assetFallbackMode,
+                  actionUsed: deltaActionUsed,
+                  damageTaken: deltaDamageTaken,
+                ),
               ),
             ],
             SizedBox(height: mc.space8),
@@ -412,91 +378,4 @@ class _NumericStatBar extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Hình tượng vector placeholder riêng cho từng tướng (không đóng gói art nghiên cứu chưa duyệt quyền).
-class _ChampionCrestPainter extends CustomPainter {
-  const _ChampionCrestPainter({
-    required this.championId,
-    required this.facingRight,
-    required this.primaryColor,
-    required this.strokeColor,
-    required this.highlightColor,
-    required this.activePulse,
-  });
-
-  final ChampionId championId;
-  final bool facingRight;
-  final Color primaryColor;
-  final Color strokeColor;
-  final Color highlightColor;
-  final bool activePulse;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double h = size.height;
-    final Paint stroke = Paint()
-      ..color = strokeColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final Paint accent = Paint()
-      ..color = activePulse ? highlightColor : primaryColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = activePulse ? 2.6 : 2.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // Đường nền chân (anchor baseline chung cho cả hai đấu thủ)
-    canvas.drawLine(Offset(6, h - 6), Offset(w - 6, h - 6), accent);
-
-    canvas.save();
-    if (!facingRight) {
-      canvas.translate(w, 0);
-      canvas.scale(-1, 1);
-    }
-
-    switch (championId) {
-      case ChampionId.haNhan:
-        // Biểu tượng sách mở & thế đứng vững
-        canvas.drawCircle(Offset(w * 0.44, h * 0.28), 9, stroke);
-        canvas.drawLine(Offset(w * 0.44, h * 0.42), Offset(w * 0.44, h * 0.72), stroke);
-        canvas.drawLine(Offset(w * 0.44, h * 0.72), Offset(w * 0.30, h - 7), stroke);
-        canvas.drawLine(Offset(w * 0.44, h * 0.72), Offset(w * 0.58, h - 7), stroke);
-        canvas.drawLine(Offset(w * 0.30, h * 0.54), Offset(w * 0.72, h * 0.48), accent);
-        canvas.drawRect(Rect.fromLTWH(w * 0.64, h * 0.36, 12, 16), accent);
-      case ChampionId.tuyetDinh:
-        // Biểu tượng bút kiếm tốc độ cao
-        canvas.drawCircle(Offset(w * 0.40, h * 0.28), 9, stroke);
-        canvas.drawLine(Offset(w * 0.40, h * 0.42), Offset(w * 0.46, h * 0.70), stroke);
-        canvas.drawLine(Offset(w * 0.46, h * 0.70), Offset(w * 0.28, h - 7), stroke);
-        canvas.drawLine(Offset(w * 0.46, h * 0.70), Offset(w * 0.60, h - 7), stroke);
-        canvas.drawLine(Offset(w * 0.34, h * 0.54), Offset(w * 0.84, h * 0.24), accent);
-        canvas.drawLine(Offset(w * 0.74, h * 0.22), Offset(w * 0.84, h * 0.24), accent);
-      case ChampionId.hanBoiPhap:
-        // Biểu tượng tháp chắn phòng thủ
-        canvas.drawCircle(Offset(w * 0.42, h * 0.28), 9, stroke);
-        canvas.drawLine(Offset(w * 0.42, h * 0.42), Offset(w * 0.42, h * 0.72), stroke);
-        canvas.drawLine(Offset(w * 0.42, h * 0.72), Offset(w * 0.30, h - 7), stroke);
-        canvas.drawLine(Offset(w * 0.42, h * 0.72), Offset(w * 0.54, h - 7), stroke);
-        final Path tower = Path()
-          ..moveTo(w * 0.60, h - 7)
-          ..lineTo(w * 0.65, h * 0.30)
-          ..lineTo(w * 0.77, h * 0.30)
-          ..lineTo(w * 0.82, h - 7)
-          ..close();
-        canvas.drawPath(tower, accent);
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_ChampionCrestPainter oldDelegate) =>
-      oldDelegate.championId != championId ||
-      oldDelegate.facingRight != facingRight ||
-      oldDelegate.activePulse != activePulse ||
-      oldDelegate.primaryColor != primaryColor;
 }

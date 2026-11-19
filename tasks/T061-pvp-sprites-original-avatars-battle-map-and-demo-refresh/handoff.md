@@ -1,10 +1,14 @@
 # Bàn giao nhiệm vụ T061
 
-- **Trạng thái cuối:** `planned`
-- **Đã làm:** Hoàn thiện đặc tả `spec.md`, `plan.md`, `tests.md` (Docs-First).
-- **File/code/docs thay đổi:** `tasks/T061-*/*`.
-- **Test đã chạy:** Chưa chạy (đợi sau T060).
-- **Test chưa chạy/giới hạn:** Toàn bộ test của T061.
-- **Rủi ro còn lại:** Phải xác nhận rõ quyền sử dụng thương mại đối với `assets/game/` trước khi phát hành APK công khai.
-- **Điểm tiếp tục chính xác:** Bước 1 trong `plan.md` sau khi hoàn tất T060.
-- **Git:** Nhánh `main`, nằm trong commit Docs-First.
+- **Trạng thái cuối:** `verifying`
+- **Đã làm:**
+  1. Tạo mới & chuẩn hóa 256×256 PNG cho đủ **6 avatar linh vật gốc đội tự tạo** (`sunrise`, `cu_meo`, `cao_giay`, `ca_chep`, `rua_xanh`, `may_nho`) cùng 3 chân dung tướng (`app/assets/avatars/manifest.json` bản v2, `project_owned_release_ready`) vào `MindClockAvatarCatalog` — **không đóng gói art thô từ `assets/game/` chưa duyệt quyền** theo `AGENTS.md §3`.
+  2. Xây dựng `ArenaSpriteActor` + `_ArenaVfxOverlayPainter` (hỗ trợ xung kích hữu hạn theo round, vệt chiêu riêng tướng, huy hiệu sát thương nổi, tôn trọng `Reduce Motion` & `Bỏ qua hiệu ứng`) và `ArenaQiGuideStrip` giải thích luật trả lời đúng -> `Đánh thường` (+1 Qi) -> mở `Chiêu 1` (`1 Qi`) / `Chiêu 2` (`2 Qi`).
+  3. Nối đầy đủ giao diện & client **Đấu đơn 1v1 PvP giao hữu** (`PvpGateway`, `RemotePvpGateway`, `DebugFixturePvpGateway`, `PvpArenaViewModel`, `ArenaPvpLobby`) vào `ArenaScreen` (mở cửa 2 PvP 1v1 giao hữu `0 RP`, giữ khóa Đấu hạng và 2v2).
+  4. Build lại `dist/mindclock-debug.apk` (`152.35 MB`), chạy pass `integration_test/arena_game_e2e_test.dart` trên emulator `Medium_Phone_API_37.0` (`emulator-5554`), chụp/quay cập nhật `test_demo_android/` (`17_t061_welcome.png`, `18_t061_auth_strong_pw.png`, `videos/05_t057_to_t061_new_features_demo.mp4`).
+- **File/code/docs thay đổi:** `app/assets/avatars/*`, `app/lib/app.dart`, `app/lib/domain/{game/pvp_models.dart,services/pvp_gateway.dart}`, `app/lib/data/{repositories/remote_pvp_gateway.dart,debug/debug_fixture_pvp_gateway.dart}`, `app/lib/ui/core/widgets/mindclock_avatar_view.dart`, `app/lib/ui/features/guest_shell/views/mindclock_shell_screen.dart`, `app/lib/ui/features/arena/{view_models/pvp_arena_view_model.dart,views/arena_sprite_stage.dart,views/arena_stage_widget.dart,views/arena_pvp_lobby.dart,views/arena_screen.dart}`, `app/test/{arena_pvp_and_sprites_test.dart,solo_arena_widget_test.dart}`, `test_demo_android/*`, `docs/00-start/01-hien-trang.md`, `tasks/T061-*/*`.
+- **Test đã chạy:** `flutter analyze --no-pub` (`No issues found!`), `RAW_HEX_COLOR_HITS=0`, `flutter test --no-pub -j 1` (**94/94 passed**), `integration_test/arena_game_e2e_test.dart` trên `emulator-5554` (**PASS**, 01:45 +1), PG16 backend `pytest -q` trước đó (**64/64 passed**, gồm bộ test PvP server).
+- **Test chưa chạy/giới hạn:** Chưa đấu PvP 1v1 live đồng thời bằng 2 điện thoại Android vật lý (hiện đã kiểm chứng backend PG16 multi-user + client E2E với `DebugFixturePvpGateway` / API loopback); chưa đóng gói sprite nhiều frame từ `assets/game/` vì chưa có xác nhận bản quyền thương mại của chủ dự án (`AGENTS.md §3`).
+- **Rủi ro còn lại:** Nếu chủ dự án muốn thay hoạt cảnh `ArenaSpriteActor` gốc hiện tại bằng sprite `.webp` từng frame trong `assets/game/`, cần xác nhận quyền thương mại bằng văn bản trước khi copy vào `app/assets/`.
+- **Điểm tiếp tục chính xác:** Hỏi chủ dự án quyết định giữ bộ asset gốc đội tự tạo hiện có hay ký xác nhận quyền đóng gói `assets/game/`, và kiểm thử playtest PvP 1v1 trên 2 thiết bị Android vật lý nối staging HTTPS.
+- **Git:** Nhánh `main`, chuẩn bị commit & push `T061`.

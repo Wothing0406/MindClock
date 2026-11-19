@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "task": "T055",
+  "version": 2,
+  "task": "T061",
   "origin": "original_team_generated_and_cropped",
   "license": "project_owned_release_ready",
   "assets": [
@@ -9,6 +9,36 @@
       "file": "avatar_sunrise.png",
       "size": "256x256",
       "description": "MindClock original warm dawn student portrait"
+    },
+    {
+      "id": "cu_meo",
+      "file": "avatar_cu_meo.png",
+      "size": "256x256",
+      "description": "MindClock original wise scholar owl mascot"
+    },
+    {
+      "id": "cao_giay",
+      "file": "avatar_cao_giay.png",
+      "size": "256x256",
+      "description": "MindClock original origami fox mascot"
+    },
+    {
+      "id": "ca_chep",
+      "file": "avatar_ca_chep.png",
+      "size": "256x256",
+      "description": "MindClock original carp spirit scholar mascot"
+    },
+    {
+      "id": "rua_xanh",
+      "file": "avatar_rua_xanh.png",
+      "size": "256x256",
+      "description": "MindClock original emerald turtle hourglass mascot"
+    },
+    {
+      "id": "may_nho",
+      "file": "avatar_may_nho.png",
+      "size": "256x256",
+      "description": "MindClock original dawn cloud bell mascot"
     }
   ]
 }

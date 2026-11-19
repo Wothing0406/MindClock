@@ -5,12 +5,14 @@ import 'data/debug/debug_fixture_alarm_sync_gateway.dart';
 import 'data/debug/debug_fixture_auth_gateway.dart';
 import 'data/debug/debug_fixture_community_repository.dart';
 import 'data/debug/debug_fixture_personal_flow_repository.dart';
+import 'data/debug/debug_fixture_pvp_gateway.dart';
 import 'data/debug/debug_fixture_study_ai_gateway.dart';
 import 'data/repositories/guest_workspace_repository.dart';
 import 'data/repositories/local_study_focus_repository.dart';
 import 'data/repositories/remote_alarm_sync_gateway.dart';
 import 'data/repositories/remote_community_repository.dart';
 import 'data/repositories/remote_personal_flow_repository.dart';
+import 'data/repositories/remote_pvp_gateway.dart';
 import 'data/repositories/remote_study_ai_gateway.dart';
 import 'data/services/firebase_auth_gateway.dart';
 import 'data/services/local_key_value_store.dart';
@@ -28,6 +30,7 @@ import 'domain/services/camera_capture_gateway.dart';
 import 'domain/services/community_repository.dart';
 import 'domain/services/media_picker_gateway.dart';
 import 'domain/services/personal_flow_repository.dart';
+import 'domain/services/pvp_gateway.dart';
 import 'domain/services/schedule_widget_bridge.dart';
 import 'domain/services/study_ai_gateway.dart';
 import 'domain/services/study_focus_bridge.dart';
@@ -56,6 +59,7 @@ class MindClockApp extends StatefulWidget {
     this.authGateway,
     this.personalRepository,
     this.communityRepository,
+    this.pvpGateway,
     this.cameraGateway,
     this.mediaPickerGateway,
     this.draftStore,
@@ -73,6 +77,7 @@ class MindClockApp extends StatefulWidget {
   final AuthSessionGateway? authGateway;
   final PersonalFlowRepository? personalRepository;
   final CommunityRepository? communityRepository;
+  final PvpGateway? pvpGateway;
   final CameraCaptureGateway? cameraGateway;
   final MediaPickerGateway? mediaPickerGateway;
   final OfflineTextDraftStore? draftStore;
@@ -91,6 +96,7 @@ class _MindClockAppState extends State<MindClockApp> {
   late final PersonalFlowViewModel _personalViewModel;
   late final StudyFocusViewModel _studyFocusViewModel;
   late final CommunityRepository _communityRepository;
+  late final PvpGateway _pvpGateway;
   late final MediaPickerGateway _mediaPickerGateway;
 
   @override
@@ -128,6 +134,8 @@ class _MindClockAppState extends State<MindClockApp> {
             );
     _communityRepository = widget.communityRepository ??
         createDefaultCommunityRepository(apiClient: sharedApiClient);
+    _pvpGateway =
+        widget.pvpGateway ?? createDefaultPvpGateway(apiClient: sharedApiClient);
     final CameraCaptureGateway cameraGateway =
         widget.cameraGateway ?? const MethodChannelCameraCaptureGateway();
     final OfflineTextDraftStore draftStore =
@@ -186,6 +194,7 @@ class _MindClockAppState extends State<MindClockApp> {
         personalViewModel: _personalViewModel,
         studyViewModel: _studyFocusViewModel,
         communityRepository: _communityRepository,
+        pvpGateway: _pvpGateway,
         mediaPickerGateway: _mediaPickerGateway,
       ),
     );
@@ -283,4 +292,13 @@ CommunityRepository createDefaultCommunityRepository({
     return DebugFixtureCommunityRepository();
   }
   return RemoteCommunityRepository(apiClient: apiClient);
+}
+
+PvpGateway createDefaultPvpGateway({
+  required PersonalApiClient apiClient,
+}) {
+  if (kDebugMode && _envUseDebugFixture) {
+    return DebugFixturePvpGateway();
+  }
+  return RemotePvpGateway(apiClient: apiClient);
 }

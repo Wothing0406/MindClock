@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../../data/debug/debug_fixture_pvp_gateway.dart';
 import '../../../../domain/game/combat_catalog.dart';
 import '../../../../domain/game/solo_combat_engine.dart';
 import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/pvp_gateway.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/math_formula_text.dart';
 import '../../../core/widgets/math_input_keypad.dart';
@@ -13,19 +15,26 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
+import '../view_models/pvp_arena_view_model.dart';
 import '../view_models/solo_arena_view_model.dart';
+import 'arena_pvp_lobby.dart';
+import 'arena_sprite_stage.dart';
 import 'arena_stage_widget.dart';
 
-/// Màn hình Đấu trường G1 (Hub 3 mode + Luyện đơn cục bộ với Máy tập).
+/// Màn hình Đấu trường G1/G2 (Hub 3 mode + Luyện đơn cục bộ + PvP 1v1 giao hữu).
 class ArenaScreen extends StatefulWidget {
   const ArenaScreen({
     super.key,
     required this.guestViewModel,
     required this.arenaViewModel,
+    this.pvpGateway,
+    this.currentUserId,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final SoloArenaViewModel arenaViewModel;
+  final PvpGateway? pvpGateway;
+  final String? currentUserId;
 
   @override
   State<ArenaScreen> createState() => _ArenaScreenState();
@@ -36,9 +45,16 @@ class _ArenaScreenState extends State<ArenaScreen>
   final TextEditingController _answerController = TextEditingController();
   final TextEditingController _reasoningController = TextEditingController();
   bool _showRulesCard = false;
+  bool _showPvp1v1 = false;
   final Set<int> _expandedSummaryRounds = <int>{};
   late final AnimationController _loadingController;
+  PvpArenaViewModel? _pvpViewModel;
   bool _loadingPrecacheStarted = false;
+
+  PvpArenaViewModel get _pvpVm => _pvpViewModel ??= PvpArenaViewModel(
+        gateway: widget.pvpGateway ?? DebugFixturePvpGateway(),
+        enableAutoPolling: false,
+      );
 
   @override
   void initState() {
@@ -59,6 +75,7 @@ class _ArenaScreenState extends State<ArenaScreen>
   @override
   void dispose() {
     _loadingController.dispose();
+    _pvpViewModel?.dispose();
     widget.arenaViewModel.removeListener(_onArenaChanged);
     _answerController.dispose();
     _reasoningController.dispose();
@@ -121,6 +138,17 @@ class _ArenaScreenState extends State<ArenaScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_showPvp1v1) {
+      return ArenaPvpLobby(
+        viewModel: _pvpVm,
+        profile: widget.guestViewModel.profile,
+        userId: (widget.currentUserId != null &&
+                widget.currentUserId!.isNotEmpty)
+            ? widget.currentUserId!
+            : 'debug_user_a',
+        onBackToHub: () => setState(() => _showPvp1v1 = false),
+      );
+    }
     final SoloArenaViewModel vm = widget.arenaViewModel;
     switch (vm.section) {
       case ArenaSection.hub:
@@ -224,7 +252,7 @@ class _ArenaScreenState extends State<ArenaScreen>
           ),
           SizedBox(height: mc.space12),
 
-          // Cửa 2: Đấu đơn 1v1 (G2 — chưa mở UI hai máy)
+          // Cửa 2: Đấu đơn 1v1 (G2 — Giao hữu cùng server /v1/pvp/*, 0 RP)
           MindClockCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,21 +264,23 @@ class _ArenaScreenState extends State<ArenaScreen>
                   children: <Widget>[
                     Text('Đấu đơn 1v1', style: mc.sectionTitleStyle),
                     const MindClockStatusPill(
-                        label: 'Sắp mở · G2', accentWarm: true),
+                      label: 'Giao hữu thật · G2',
+                      accentWarm: false,
+                    ),
                   ],
                 ),
                 SizedBox(height: mc.space8),
                 Text(
-                  'Giao hữu 1v1 cùng người thật có mạng, cùng câu/rubric/deadline do máy chủ xác nhận. Không dựng đối thủ online giả ở bản G1.',
+                  'Giao hữu 1v1 cùng người thật, cùng câu hỏi GDPT 2018 & rubric, máy chủ chốt HP/Qi (0 điểm xếp hạng).',
                   style: mc.captionStyle.copyWith(color: mc.ink),
                 ),
                 SizedBox(height: mc.space8),
-                const MindClockButton(
-                  key: ValueKey<String>('arena-enter-1v1-locked'),
-                  label: 'Chờ hoàn tất cổng G2 (hai máy thật)',
-                  icon: MindClockIconKind.lock,
-                  variant: MindClockButtonVariant.subtle,
-                  onPressed: null,
+                MindClockButton(
+                  key: const ValueKey<String>('arena-enter-1v1'),
+                  label: 'Vào Đấu đơn 1v1 (Giao hữu)',
+                  icon: MindClockIconKind.arena,
+                  variant: MindClockButtonVariant.secondary,
+                  onPressed: () => setState(() => _showPvp1v1 = true),
                 ),
               ],
             ),
@@ -872,6 +902,11 @@ class _ArenaScreenState extends State<ArenaScreen>
             lastResolution: vm.phase == SoloBattlePhase.roundFeedback
                 ? vm.lastResolution
                 : null,
+          ),
+          SizedBox(height: mc.space8),
+          ArenaQiGuideStrip(
+            currentQi: vm.playerState.qi,
+            maxQi: maxQi,
           ),
           SizedBox(height: mc.space12),
 

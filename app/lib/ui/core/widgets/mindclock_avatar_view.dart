@@ -12,6 +12,16 @@ class MindClockAvatarCatalog {
 
   static const Map<String, String> assetPaths = <String, String>{
     'sunrise': 'assets/avatars/avatar_sunrise.png',
+    'cu_meo': 'assets/avatars/avatar_cu_meo.png',
+    'cu-meo': 'assets/avatars/avatar_cu_meo.png',
+    'cao_giay': 'assets/avatars/avatar_cao_giay.png',
+    'cao-giay': 'assets/avatars/avatar_cao_giay.png',
+    'ca_chep': 'assets/avatars/avatar_ca_chep.png',
+    'ca-chep': 'assets/avatars/avatar_ca_chep.png',
+    'rua_xanh': 'assets/avatars/avatar_rua_xanh.png',
+    'rua-xanh': 'assets/avatars/avatar_rua_xanh.png',
+    'may_nho': 'assets/avatars/avatar_may_nho.png',
+    'may-nho': 'assets/avatars/avatar_may_nho.png',
     'ha_nhan': 'assets/arena/champ_ha_nhan.png',
     'tuyet_dinh': 'assets/arena/champ_tuyet_dinh.png',
     'han_boi_phap': 'assets/arena/champ_han_boi_phap.png',
@@ -23,6 +33,36 @@ class MindClockAvatarCatalog {
       'label': 'Bình minh',
       'icon': MindClockIconKind.sunrise,
       'assetPath': 'assets/avatars/avatar_sunrise.png',
+    },
+    <String, dynamic>{
+      'id': 'cu_meo',
+      'label': 'Cú mèo',
+      'icon': MindClockIconKind.book,
+      'assetPath': 'assets/avatars/avatar_cu_meo.png',
+    },
+    <String, dynamic>{
+      'id': 'cao_giay',
+      'label': 'Cáo giấy',
+      'icon': MindClockIconKind.sunrise,
+      'assetPath': 'assets/avatars/avatar_cao_giay.png',
+    },
+    <String, dynamic>{
+      'id': 'ca_chep',
+      'label': 'Cá chép',
+      'icon': MindClockIconKind.book,
+      'assetPath': 'assets/avatars/avatar_ca_chep.png',
+    },
+    <String, dynamic>{
+      'id': 'rua_xanh',
+      'label': 'Rùa xanh',
+      'icon': MindClockIconKind.clock,
+      'assetPath': 'assets/avatars/avatar_rua_xanh.png',
+    },
+    <String, dynamic>{
+      'id': 'may_nho',
+      'label': 'Mây nhỏ',
+      'icon': MindClockIconKind.bell,
+      'assetPath': 'assets/avatars/avatar_may_nho.png',
     },
     <String, dynamic>{
       'id': 'ha_nhan',
@@ -41,24 +81,6 @@ class MindClockAvatarCatalog {
       'label': 'Hàn Bội Pháp',
       'icon': MindClockIconKind.shield,
       'assetPath': 'assets/arena/champ_han_boi_phap.png',
-    },
-    <String, dynamic>{
-      'id': 'book',
-      'label': 'Trang sách',
-      'icon': MindClockIconKind.book,
-      'assetPath': null,
-    },
-    <String, dynamic>{
-      'id': 'clock',
-      'label': 'Kỷ luật',
-      'icon': MindClockIconKind.clock,
-      'assetPath': null,
-    },
-    <String, dynamic>{
-      'id': 'user',
-      'label': 'Học sinh',
-      'icon': MindClockIconKind.user,
-      'assetPath': null,
     },
   ];
 

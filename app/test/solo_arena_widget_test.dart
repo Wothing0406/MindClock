@@ -79,7 +79,8 @@ void main() {
         );
         await personalVm.initialize();
 
-        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 2026);
+        final SoloArenaViewModel arenaVm =
+            SoloArenaViewModel(initialSeed: 2026);
 
         await tester.pumpWidget(
           MediaQuery(
@@ -103,9 +104,12 @@ void main() {
         // 1. Vào tab Đấu trường -> thấy 3 mode, không có Đấu hạng
         await tester.tap(find.byKey(const ValueKey<String>('nav-arena')));
         await tester.pumpAndSettle();
-        expect(find.byKey(const ValueKey<String>('arena-enter-solo')), findsOneWidget);
-        expect(find.byKey(const ValueKey<String>('arena-enter-1v1-locked')), findsOneWidget);
-        expect(find.byKey(const ValueKey<String>('arena-enter-2v2-locked')), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-enter-solo')),
+            findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-enter-1v1')),
+            findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-enter-2v2-locked')),
+            findsOneWidget);
         expect(find.text('Đấu hạng'), findsNothing);
 
         // 2. Vào Thiết lập Luyện đơn -> chọn Toán, tướng Hàn Bối Pháp, bật fallback asset
@@ -131,8 +135,10 @@ void main() {
         );
 
         // 3. Đang giải câu: sân ở chế độ compact, fallback asset hiển thị an toàn, không lộ rubric
-        expect(find.byKey(const ValueKey<String>('arena-stage-compact')), findsOneWidget);
-        expect(find.byKey(const ValueKey<String>('arena-rubric-reveal-box')), findsNothing);
+        expect(find.byKey(const ValueKey<String>('arena-stage-compact')),
+            findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-rubric-reveal-box')),
+            findsNothing);
         expect(find.textContaining('Khung tĩnh dự phòng'), findsOneWidget);
 
         // 4. Nộp câu mơ hồ -> uncertain -> đổi câu không mất HP
@@ -206,7 +212,8 @@ void main() {
           find.byKey(const ValueKey<String>('arena-grade-pill-correct')),
           findsOneWidget,
         );
-        expect(find.byKey(const ValueKey<String>('arena-stage-expanded')), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-stage-expanded')),
+            findsOneWidget);
         expect(
           find.byKey(const ValueKey<String>('arena-action-reason-skill_1')),
           findsOneWidget,
@@ -257,7 +264,8 @@ void main() {
         );
         await personalVm.initialize();
 
-        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 2026);
+        final SoloArenaViewModel arenaVm =
+            SoloArenaViewModel(initialSeed: 2026);
 
         await tester.pumpWidget(
           MediaQuery(
@@ -369,7 +377,8 @@ void main() {
         final List<String> expectedAssets = <String>[
           CombatCatalog.mapCourtyardAssetPath,
           CombatCatalog.basicAttackAssetPath,
-          for (final ChampionSpec spec in CombatCatalog.champions.values) ...<String>[
+          for (final ChampionSpec spec
+              in CombatCatalog.champions.values) ...<String>[
             spec.portraitAssetPath,
             spec.skill1.iconAssetPath,
             spec.skill2.iconAssetPath,
@@ -377,7 +386,8 @@ void main() {
         ];
         for (final String path in expectedAssets) {
           final ByteData bytes = await rootBundle.load(path);
-          expect(bytes.lengthInBytes, greaterThan(1000), reason: 'Thiếu asset $path');
+          expect(bytes.lengthInBytes, greaterThan(1000),
+              reason: 'Thiếu asset $path');
         }
 
         final InMemoryKeyValueStore store = InMemoryKeyValueStore();
@@ -396,7 +406,8 @@ void main() {
         );
         await personalVm.initialize();
 
-        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 2026);
+        final SoloArenaViewModel arenaVm =
+            SoloArenaViewModel(initialSeed: 2026);
 
         await tester.pumpWidget(
           MediaQuery(
@@ -427,7 +438,8 @@ void main() {
         // Bấm xem chi tiết Tuyệt Đỉnh trước khi vào trận
         await _scrollCenterAndTap(
           tester,
-          find.byKey(const ValueKey<String>('arena-champion-detail-tuyet_dinh')),
+          find.byKey(
+              const ValueKey<String>('arena-champion-detail-tuyet_dinh')),
         );
         final Finder detailSheet = find.byKey(
           const ValueKey<String>('arena-champion-detail-sheet-tuyet_dinh'),
@@ -509,7 +521,8 @@ void main() {
         );
         await personalVm.initialize();
 
-        final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 20261119);
+        final SoloArenaViewModel arenaVm =
+            SoloArenaViewModel(initialSeed: 20261119);
 
         await tester.pumpWidget(
           MediaQuery(
@@ -539,7 +552,8 @@ void main() {
           find.byKey(const ValueKey<String>('arena-enter-solo')),
         );
 
-        final Finder startBtn = find.byKey(const ValueKey<String>('arena-start-solo-match'));
+        final Finder startBtn =
+            find.byKey(const ValueKey<String>('arena-start-solo-match'));
         await Scrollable.ensureVisible(
           tester.element(startBtn),
           alignment: 0.5,
@@ -551,8 +565,10 @@ void main() {
         await tester.pump();
 
         expect(arenaVm.section, ArenaSection.loading);
-        expect(find.byKey(const ValueKey<String>('arena-loading-screen')), findsOneWidget);
-        expect(find.byKey(const ValueKey<String>('arena-enter-battle-now')), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-loading-screen')),
+            findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-enter-battle-now')),
+            findsOneWidget);
         expect(find.textContaining('Đang chuẩn bị sân đấu'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
@@ -565,7 +581,8 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(arenaVm.section, ArenaSection.battle);
-        expect(find.byKey(const ValueKey<String>('arena-stage-compact')), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('arena-stage-compact')),
+            findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
