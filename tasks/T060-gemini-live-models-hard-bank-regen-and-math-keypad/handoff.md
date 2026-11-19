@@ -10,4 +10,4 @@
 - **Test chưa chạy/giới hạn:** Bidi Live WebSocket audio thực tế (`gemini-3.1-flash-live-preview`) chưa được test âm thanh hai chiều trên 2 thiết bị thật (để ở gated feature flag).
 - **Rủi ro còn lại:** Nếu Google thay đổi model preview/GA theo thời gian, fallback chain sẽ tự trượt qua model kế tiếp nhưng vẫn cần theo dõi `/v1/health` và chi phí token định kỳ.
 - **Điểm tiếp tục chính xác:** Chuyển sang **T061** (`tasks/T061-pvp-sprites-original-avatars-battle-map-and-demo-refresh/`).
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T060`.
+- **Git:** Nhánh `main`, commit `37bedcc6085bef64cbc6ef724eefd9278675769d` đã push lên `origin/main`.
