@@ -3,7 +3,7 @@
 TC01 ↔ AC01: owner/non-owner, input/empty/null, capacity/member invariant.
 TC02 ↔ AC02: fetch/refresh, request cũ, lifecycle, offline/closed, leave.
 TC03 ↔ AC03: host/editor vs member, lỗi/retry và accessibility.
-TC04 ↔ AC04: PostgreSQL race/settings, Flutter regression. Chưa chạy.
+TC04 ↔ AC04: PostgreSQL race/settings, Flutter regression. Đã chạy PASS, kết quả bên dưới.
 
 ## Kết quả 20/11/2026, Windows
 
