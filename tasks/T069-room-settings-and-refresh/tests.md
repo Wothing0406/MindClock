@@ -13,3 +13,5 @@ TC04 ↔ AC04: PostgreSQL race/settings, Flutter regression. Chưa chạy.
 - `flutter analyze --no-pub`: PASS, No issues found (3.0s) sau sửa 2 lint if braces. Các lint đã sửa, không đổi yêu cầu để test pass.
 
 Chưa Android APK mới, ảnh/UI máy thật, 2–8 điện thoại, Live media, host transfer/kick, QR TTL/rotate, outbox leave khi offline hoặc pet. Harness không là Firebase thật. Backend Docker phục vụ app chưa rebuild trong task này; API được kiểm bằng TestClient/migration DB test.
+
+Kiểm cuối docs links PASS 629 Markdown; task records PASS; staged whitespace/secret/asset/config review PASS. Code đã commit/push và xác minh SHA trong handoff.md.
