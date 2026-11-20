@@ -22,8 +22,9 @@ def main():
     except Exception:
         print('Invalid local Docker DB configuration; no DB changes made.')
         return 1
+    test_paths = sys.argv[1:] or ['tests/test_progression_postgres.py']
     return subprocess.call([sys.executable, '-m', 'pytest',
-        'tests/test_progression_postgres.py', '-q', '--tb=short'], env=env)
+        *test_paths, '-q', '--tb=short'], env=env)
 
 
 if __name__ == '__main__':

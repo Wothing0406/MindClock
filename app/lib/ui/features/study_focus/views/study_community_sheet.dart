@@ -594,7 +594,9 @@ class MeetStudyRoomGrid extends StatelessWidget {
                             alias: member.alias,
                             avatarId: member.avatarId,
                             gradeLevel: member.gradeLevel,
-                            selectedSubjects: <String>[room.summary.subjectCode],
+                            selectedSubjects: <String>[
+                              room.summary.subjectCode
+                            ],
                           ),
                           repository: repository,
                           onUpdated: onRefreshNeeded,
@@ -604,8 +606,7 @@ class MeetStudyRoomGrid extends StatelessWidget {
                         padding: EdgeInsets.all(mc.space12),
                         decoration: BoxDecoration(
                           color: mc.nightSurface,
-                          borderRadius:
-                              BorderRadius.circular(mc.radiusControl),
+                          borderRadius: BorderRadius.circular(mc.radiusControl),
                           border: Border.all(
                             color: member.camEnabled ? mc.sunrise : mc.primary,
                             width: 1.5,
@@ -621,14 +622,18 @@ class MeetStudyRoomGrid extends StatelessWidget {
                             ),
                             SizedBox(height: mc.space8),
                             Text(
-                              member.isSelf ? '${member.alias} (Bạn)' : member.alias,
+                              member.isSelf
+                                  ? '${member.alias} (Bạn)'
+                                  : member.alias,
                               textAlign: TextAlign.center,
                               style: mc.bodyStrongStyle
                                   .copyWith(color: mc.nightText),
                             ),
                             SizedBox(height: mc.space4),
                             Text(
-                              member.camEnabled ? 'Camera: Đang bật' : member.statusNote,
+                              member.camEnabled
+                                  ? 'Camera: Đang bật'
+                                  : member.statusNote,
                               textAlign: TextAlign.center,
                               style: mc.captionStyle.copyWith(
                                 color: member.camEnabled
@@ -643,11 +648,13 @@ class MeetStudyRoomGrid extends StatelessWidget {
                               alignment: WrapAlignment.center,
                               children: <Widget>[
                                 _MeetBadge(
-                                  label: member.micEnabled ? 'Mic Bật' : 'Mic Tắt',
+                                  label:
+                                      member.micEnabled ? 'Mic Bật' : 'Mic Tắt',
                                   active: member.micEnabled,
                                 ),
                                 _MeetBadge(
-                                  label: member.camEnabled ? 'Cam Bật' : 'Cam Tắt',
+                                  label:
+                                      member.camEnabled ? 'Cam Bật' : 'Cam Tắt',
                                   active: member.camEnabled,
                                 ),
                               ],
@@ -802,6 +809,12 @@ class _StudyCommunityHubBody extends StatefulWidget {
 class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _roomTitleController = TextEditingController();
+  final TextEditingController _roomCodeController = TextEditingController();
+  int _newRoomMaxMembers = 4;
+  String? _roomSubjectFilter;
+  String? _roomGradeFilter;
+  bool _onlyAvailableRooms = false;
+  int _loadEpoch = 0;
 
   int _tabIndex = 0; // 0: Quét phòng & AI ghép nhóm, 1: Tìm bạn & Kết bạn
   bool _loading = true;
@@ -813,6 +826,7 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
   List<PublicStudentProfile> _searchResults = <PublicStudentProfile>[];
   List<PublicStudentProfile> _friends = <PublicStudentProfile>[];
   List<FriendRequestItem> _incomingRequests = <FriendRequestItem>[];
+  List<FriendRequestItem> _outgoingRequests = <FriendRequestItem>[];
   StudyAiMatchResult? _aiMatch;
   String? _statusMessage;
 
@@ -826,30 +840,36 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
   void dispose() {
     _searchController.dispose();
     _roomTitleController.dispose();
+    _roomCodeController.dispose();
     super.dispose();
   }
 
   Future<void> _loadAll() async {
+    final epoch = ++_loadEpoch;
     setState(() => _loading = true);
     try {
-      final List<PublicStudyRoomSummary> rooms =
-          await widget.repository.listPublicRooms();
+      final List<PublicStudyRoomSummary> rooms = await widget.repository
+          .listPublicRooms(
+              subjectCode: _roomSubjectFilter, gradeLevel: _roomGradeFilter);
       final List<PublicStudentProfile> users =
           await widget.repository.searchUsers(query: _searchController.text);
       final List<PublicStudentProfile> friends =
           await widget.repository.fetchFriends();
-      final ({List<FriendRequestItem> incoming, List<FriendRequestItem> outgoing})
-          reqs = await widget.repository.fetchFriendRequests();
-      if (!mounted) return;
+      final ({
+        List<FriendRequestItem> incoming,
+        List<FriendRequestItem> outgoing
+      }) reqs = await widget.repository.fetchFriendRequests();
+      if (!mounted || epoch != _loadEpoch) return;
       setState(() {
         _loading = false;
         _publicRooms = rooms;
         _searchResults = users;
         _friends = friends;
         _incomingRequests = reqs.incoming;
+        _outgoingRequests = reqs.outgoing;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || epoch != _loadEpoch) return;
       setState(() {
         _loading = false;
         _statusMessage = 'Chưa tải được dữ liệu cộng đồng. Vui lòng thử lại.';
@@ -860,10 +880,9 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
   Future<void> _runAiMatch() async {
     setState(() => _loading = true);
     try {
-      final String subj =
-          widget.currentProfile.selectedSubjectCodes.isNotEmpty
-              ? widget.currentProfile.selectedSubjectCodes.first
-              : 'math';
+      final String subj = widget.currentProfile.selectedSubjectCodes.isNotEmpty
+          ? widget.currentProfile.selectedSubjectCodes.first
+          : 'math';
       final StudyAiMatchResult res = await widget.repository.aiMatchGroups(
         gradeLevel: widget.currentProfile.gradeLevel,
         subjectCode: subj,
@@ -883,6 +902,21 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
     }
   }
 
+  Future<void> _respondRequest(String requestId, String decision) async {
+    setState(() => _loading = true);
+    try {
+      await widget.repository.respondFriendRequest(requestId, decision);
+      if (mounted) await _loadAll();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _statusMessage =
+            'Chưa xử lý được lời mời. Bạn có thể tải lại và thử lần nữa.';
+      });
+    }
+  }
+
   Future<void> _createAndEnterRoom() async {
     final String title = _roomTitleController.text.trim();
     if (title.isEmpty) {
@@ -891,17 +925,16 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
     }
     setState(() => _loading = true);
     try {
-      final String subj =
-          widget.currentProfile.selectedSubjectCodes.isNotEmpty
-              ? widget.currentProfile.selectedSubjectCodes.first
-              : 'math';
+      final String subj = widget.currentProfile.selectedSubjectCodes.isNotEmpty
+          ? widget.currentProfile.selectedSubjectCodes.first
+          : 'math';
       final StudyRoomDetail detail = await widget.repository.createRoom(
         title: title,
         subjectCode: subj,
         gradeLevel: widget.currentProfile.gradeLevel ?? 'Lớp 11',
         targetLevel: 'exam_prep',
         visibility: _newRoomPublic ? 'public' : 'invite_only',
-        maxMembers: 6,
+        maxMembers: _newRoomMaxMembers,
         aiCompanionEnabled: _newRoomAiEnabled,
       );
       if (!mounted) return;
@@ -915,10 +948,11 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
     }
   }
 
-  Future<void> _joinAndEnterRoom(String roomId) async {
+  Future<void> _joinAndEnterRoom(String roomId, {String? roomCode}) async {
     setState(() => _loading = true);
     try {
-      final StudyRoomDetail detail = await widget.repository.joinRoom(roomId);
+      final StudyRoomDetail detail =
+          await widget.repository.joinRoom(roomId, roomCode: roomCode);
       if (!mounted) return;
       Navigator.of(context).pop(detail);
     } catch (_) {
@@ -1027,6 +1061,70 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        Text('Lọc phòng học', style: mc.bodyStrongStyle),
+        SizedBox(height: mc.space8),
+        Wrap(spacing: mc.space8, runSpacing: mc.space8, children: [
+          for (final code in <String?>[
+            null,
+            ...widget.currentProfile.selectedSubjectCodes
+          ])
+            MindClockPressable(
+                key: ValueKey('community-filter-subject-${code ?? 'all'}'),
+                selected: _roomSubjectFilter == code,
+                onPressed: () {
+                  setState(() => _roomSubjectFilter = code);
+                  _loadAll();
+                },
+                child: MindClockStatusPill(
+                    label: code == null
+                        ? 'Tất cả môn'
+                        : SubjectCatalog.nameFor(code),
+                    accentWarm: _roomSubjectFilter == code)),
+        ]),
+        SizedBox(height: mc.space8),
+        Wrap(spacing: mc.space8, runSpacing: mc.space8, children: [
+          for (final grade in <String?>[null, 'Lớp 10', 'Lớp 11', 'Lớp 12'])
+            MindClockPressable(
+                key: ValueKey('community-filter-grade-${grade ?? 'all'}'),
+                selected: _roomGradeFilter == grade,
+                onPressed: () {
+                  setState(() => _roomGradeFilter = grade);
+                  _loadAll();
+                },
+                child: MindClockStatusPill(
+                    label: grade ?? 'Tất cả lớp',
+                    accentWarm: _roomGradeFilter == grade)),
+          MindClockPressable(
+              key: const ValueKey('community-filter-available'),
+              selected: _onlyAvailableRooms,
+              onPressed: () =>
+                  setState(() => _onlyAvailableRooms = !_onlyAvailableRooms),
+              child: MindClockStatusPill(
+                  label: 'Chỉ phòng còn chỗ', accentWarm: _onlyAvailableRooms)),
+        ]),
+        SizedBox(height: mc.space16),
+        Text('Vào bằng mã phòng', style: mc.bodyStrongStyle),
+        SizedBox(height: mc.space8),
+        TextField(
+          key: const ValueKey('community-room-code'),
+          controller: _roomCodeController,
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(labelText: 'Mã do bạn học chia sẻ'),
+        ),
+        SizedBox(height: mc.space8),
+        MindClockButton(
+            key: const ValueKey('community-join-code'),
+            label: 'Vào phòng bằng mã',
+            onPressed: () {
+              final code = _roomCodeController.text.trim().toUpperCase();
+              if (code.isEmpty) {
+                setState(
+                    () => _statusMessage = 'Nhập mã phòng trước khi tham gia.');
+                return;
+              }
+              _joinAndEnterRoom(code, roomCode: code);
+            }),
+        SizedBox(height: mc.space16),
         Wrap(
           spacing: mc.space8,
           runSpacing: mc.space8,
@@ -1040,7 +1138,8 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
             ),
             MindClockButton(
               key: const ValueKey<String>('community-create-room-toggle'),
-              label: _showCreateRoomForm ? 'Ẩn form tạo phòng' : 'Tạo phòng học',
+              label:
+                  _showCreateRoomForm ? 'Ẩn form tạo phòng' : 'Tạo phòng học',
               icon: MindClockIconKind.plus,
               variant: MindClockButtonVariant.secondary,
               expand: false,
@@ -1112,6 +1211,22 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
                   ],
                 ),
                 SizedBox(height: mc.space12),
+                Text('Số người tối đa (tính cả bạn)',
+                    style: mc.bodyStrongStyle),
+                Wrap(spacing: mc.space8, runSpacing: mc.space8, children: [
+                  for (final count in [2, 3, 4, 5, 6, 7, 8])
+                    MindClockPressable(
+                      key: ValueKey('community-capacity-$count'),
+                      selected: count == _newRoomMaxMembers,
+                      semanticLabel: '$count người',
+                      onPressed: () =>
+                          setState(() => _newRoomMaxMembers = count),
+                      child: MindClockStatusPill(
+                          label: '$count',
+                          accentWarm: count == _newRoomMaxMembers),
+                    ),
+                ]),
+                SizedBox(height: mc.space12),
                 MindClockButton(
                   key: const ValueKey<String>('community-create-room-submit'),
                   label: 'Mở phòng Meet ngay',
@@ -1142,19 +1257,25 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
         SizedBox(height: mc.space16),
         Text('Phòng học công khai đang mở', style: mc.bodyStrongStyle),
         SizedBox(height: mc.space8),
-        if (_publicRooms.isEmpty)
+        if (_publicRooms
+            .where((r) => !_onlyAvailableRooms || r.memberCount < r.maxMembers)
+            .isEmpty)
           const MindClockNoticeBanner(
-            message: 'Chưa có phòng công khai nào. Bạn có thể tạo phòng mới!',
+            message:
+                'Chưa có phòng phù hợp bộ lọc. Bạn có thể đổi bộ lọc hoặc tạo phòng mới.',
             isWarm: false,
           )
         else
-          ..._publicRooms.map(
-            (PublicStudyRoomSummary r) => _RoomTile(
-              room: r,
-              isHighlighted: false,
-              onJoin: () => _joinAndEnterRoom(r.roomId),
-            ),
-          ),
+          ..._publicRooms
+              .where(
+                  (r) => !_onlyAvailableRooms || r.memberCount < r.maxMembers)
+              .map(
+                (PublicStudyRoomSummary r) => _RoomTile(
+                  room: r,
+                  isHighlighted: false,
+                  onJoin: () => _joinAndEnterRoom(r.roomId),
+                ),
+              ),
       ],
     );
   }
@@ -1217,21 +1338,15 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
                           label: 'Chấp nhận',
                           icon: MindClockIconKind.check,
                           expand: false,
-                          onPressed: () async {
-                            await widget.repository
-                                .respondFriendRequest(req.requestId, 'accept');
-                            await _loadAll();
-                          },
+                          onPressed: () =>
+                              _respondRequest(req.requestId, 'accept'),
                         ),
                         MindClockButton(
                           label: 'Từ chối',
                           variant: MindClockButtonVariant.secondary,
                           expand: false,
-                          onPressed: () async {
-                            await widget.repository
-                                .respondFriendRequest(req.requestId, 'decline');
-                            await _loadAll();
-                          },
+                          onPressed: () =>
+                              _respondRequest(req.requestId, 'decline'),
                         ),
                       ],
                     ),
@@ -1241,9 +1356,23 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
             );
           }),
         ],
+        if (_outgoingRequests.isNotEmpty) ...<Widget>[
+          SizedBox(height: mc.space16),
+          Text('Lời mời bạn đã gửi', style: mc.bodyStrongStyle),
+          for (final req in _outgoingRequests) ...[
+            SizedBox(height: mc.space8),
+            _PeerHeaderRow(peer: req.peer),
+            MindClockButton(
+                key: ValueKey('community-cancel-${req.requestId}'),
+                label: 'Hủy lời mời',
+                variant: MindClockButtonVariant.subtle,
+                onPressed: () => _respondRequest(req.requestId, 'cancel')),
+          ],
+        ],
         if (_friends.isNotEmpty) ...<Widget>[
           SizedBox(height: mc.space16),
-          Text('Bạn học của bạn (${_friends.length})', style: mc.bodyStrongStyle),
+          Text('Bạn học của bạn (${_friends.length})',
+              style: mc.bodyStrongStyle),
           SizedBox(height: mc.space8),
           ..._friends.map(
             (PublicStudentProfile p) => _PeerCard(
@@ -1329,10 +1458,12 @@ class _RoomTile extends StatelessWidget {
             SizedBox(height: mc.space8),
             MindClockButton(
               key: ValueKey<String>('$keyPrefix${room.roomId}'),
-              label: 'Vào phòng học Meet',
+              label: room.memberCount >= room.maxMembers
+                  ? 'Phòng đã đầy'
+                  : 'Vào phòng học Meet',
               icon: MindClockIconKind.play,
               expand: false,
-              onPressed: onJoin,
+              onPressed: room.memberCount >= room.maxMembers ? null : onJoin,
             ),
           ],
         ),

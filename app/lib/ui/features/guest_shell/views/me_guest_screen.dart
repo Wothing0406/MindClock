@@ -29,6 +29,7 @@ class MeGuestScreen extends StatefulWidget {
     this.communityRepository,
     this.mediaPickerGateway,
     this.onDeleteAccount,
+    this.onRoomJoined,
   });
 
   final GuestWorkspaceViewModel viewModel;
@@ -38,6 +39,7 @@ class MeGuestScreen extends StatefulWidget {
   final VoidCallback onEditProfileAndTimetable;
   final VoidCallback onResetGuestData;
   final Future<void> Function()? onDeleteAccount;
+  final ValueChanged<StudyRoomDetail>? onRoomJoined;
 
   @override
   State<MeGuestScreen> createState() => _MeGuestScreenState();
@@ -92,7 +94,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
 
   GuestWorkspaceViewModel get viewModel => widget.viewModel;
   PersonalFlowViewModel? get personalViewModel => widget.personalViewModel;
-  VoidCallback get onEditProfileAndTimetable => widget.onEditProfileAndTimetable;
+  VoidCallback get onEditProfileAndTimetable =>
+      widget.onEditProfileAndTimetable;
   VoidCallback get onResetGuestData => widget.onResetGuestData;
 
   String _permissionLabel(OsPermissionState state) {
@@ -205,15 +208,23 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                       label: 'Tìm bạn & Phòng học Meet',
                       icon: MindClockIconKind.user,
                       expand: false,
-                      onPressed: () {
+                      onPressed: () async {
+                        final owner =
+                            personalViewModel?.authSession.ownerScopeKey;
                         final CommunityRepository repo =
                             widget.communityRepository ??
                                 DebugFixtureCommunityRepository();
-                        showStudyCommunityHub(
+                        final room = await showStudyCommunityHub(
                           context: context,
                           repository: repo,
                           currentProfile: viewModel.profile,
                         );
+                        if (room != null &&
+                            mounted &&
+                            owner ==
+                                personalViewModel?.authSession.ownerScopeKey) {
+                          widget.onRoomJoined?.call(room);
+                        }
                       },
                     ),
                     MindClockButton(
@@ -257,7 +268,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Trạng thái dịch vụ báo thức', style: mc.sectionTitleStyle),
+                Text('Trạng thái dịch vụ báo thức',
+                    style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space8),
                 Text(
                   viewModel.isOsBridgeConnected
@@ -297,7 +309,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                         label: viewModel.labelForPermissionAction(action),
                         icon: MindClockIconKind.warning,
                         variant: MindClockButtonVariant.secondary,
-                        onPressed: () => viewModel.openPermissionSettings(action),
+                        onPressed: () =>
+                            viewModel.openPermissionSettings(action),
                       ),
                     ),
                   ),
@@ -414,7 +427,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                       variant: MindClockButtonVariant.subtle,
                       onPressed: _deletingAccount
                           ? null
-                          : () => setState(() => _confirmingDeleteAccount = false),
+                          : () =>
+                              setState(() => _confirmingDeleteAccount = false),
                     ),
                   ],
                 ),

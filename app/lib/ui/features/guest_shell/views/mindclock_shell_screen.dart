@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/community_repository.dart';
@@ -69,6 +70,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     with WidgetsBindingObserver {
   _GuestFlowStage _stage = _GuestFlowStage.welcome;
   int _selectedTabIndex = 0;
+  StudyRoomDetail? _joinedCommunityRoom;
+  String? _roomOwnerScope;
   AlarmConfig? _editingAlarm;
   String? _todayBanner;
   bool _syncedInitialRoute = false;
@@ -128,6 +131,10 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     }
     final String scope = widget.personalViewModel.authSession.ownerScopeKey;
     final bool isAuth = widget.personalViewModel.authSession.isAuthenticated;
+    if (_roomOwnerScope != scope || !isAuth) {
+      _joinedCommunityRoom = null;
+      _roomOwnerScope = scope;
+    }
 
     if (widget.viewModel.isLoaded &&
         (widget.viewModel.ownerScopeKey != scope ||
@@ -424,9 +431,13 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           );
         }
         return StudySpaceScreen(
+          key: ValueKey(
+              'study-space-${widget.personalViewModel.authSession.ownerScopeKey}'),
           guestViewModel: widget.viewModel,
           studyViewModel: studyVm,
           communityRepository: widget.communityRepository,
+          initialRoom: _joinedCommunityRoom,
+          onRoomChanged: (room) => _joinedCommunityRoom = room,
           mediaPickerGateway:
               widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
           onClose: () {
@@ -463,8 +474,14 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               viewModel: widget.viewModel,
               personalViewModel: widget.personalViewModel,
               communityRepository: widget.communityRepository,
-              mediaPickerGateway:
-                  widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
+              onRoomJoined: (room) {
+                setState(() {
+                  _joinedCommunityRoom = room;
+                  _stage = _GuestFlowStage.studySpace;
+                });
+              },
+              mediaPickerGateway: widget.mediaPickerGateway ??
+                  MethodChannelMediaPickerGateway(),
               onEditProfileAndTimetable: () {
                 setState(() => _stage = _GuestFlowStage.timetableProfile);
               },

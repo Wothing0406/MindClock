@@ -1,5 +1,15 @@
 # MultiCal, ghép phòng học và điểm pet nhóm
 
+## Phần phòng REST đã sửa ở T068
+
+`POST /v1/study-rooms` nhận maxMembers 2–8, mặc định 4, tính cả host; không tính avatar AI là thành viên người. UI cho chọn số chỗ khi tạo. Đây là giới hạn membership REST, chưa chứng minh gọi video 8 người chạy được. Chưa có API sửa capacity của phòng đã mở.
+
+`join_room` khóa row study_rooms bằng SELECT FOR UPDATE trước khi đếm member active và thêm/reactivate; leave/host đóng phòng dùng cùng row lock. Retry thành viên đã active không nhân row. PostgreSQL test hai session tranh chỗ cuối phải có một thành công và một ROOM_FULL/409. SQLite test không thay được kiểm concurrency này.
+
+UI có bộ lọc môn/lớp/còn chỗ và nhập mã vào phòng. Mã hiện hành không TTL/rotate nên chưa được coi là token mời production; QR/link có hạn ở phần sau vẫn chưa triển khai. Luồng join từ tab Tôi trả detail sang không gian học; account scope đổi thì bỏ room state cũ. Danh sách và trạng thái REST chưa là WebRTC/media live hoặc heartbeat/presence production.
+
+Lời mời kết bạn có pending/accepted/declined/cancelled; respond khóa row, sai actor 403, đóng rồi không đổi quyết định trả REQUEST_CLOSED/409; retry cùng kết quả thành công không tạo friendship thứ hai. UI có incoming và outgoing/cancel, lỗi cho thử lại. Rate limit/TTL/unfriend và block concurrency audit đầy đủ cần cổng riêng.
+
 **Trạng thái:** contract thiết kế P2, chưa có API/SQL migration hay media production. [Hành vi](../01-product/12-lich-chung-ghep-phong-va-pet-nhom.md), [phòng realtime](09-phong-hoc-realtime.md), [SQL](03-du-lieu-sql.md), [API](04-hop-dong-api.md). Flutter Android + FastAPI/PostgreSQL là stack hiện hành. Media có thể dùng SFU/WebRTC sau phép đo hai máy; LiveKit có Flutter SDK và token quyền theo phòng, song **chưa chọn nhà cung cấp**. [Tài liệu LiveKit transport](https://docs.livekit.io/transport/), [token grants](https://docs.livekit.io/frontends/reference/tokens-grants/).
 
 ## 1. Miền dữ liệu và quyền sở hữu

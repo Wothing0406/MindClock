@@ -350,19 +350,31 @@ class CommunityService:
         request_id: str,
         decision: str,
     ) -> dict[str, Any]:
-        req = self._db.get(FriendRequest, request_id)
+        req = self._db.scalar(select(FriendRequest).where(
+            FriendRequest.id == request_id).with_for_update())
         if req is None:
             raise CommunityServiceError(404, 'REQUEST_NOT_FOUND', 'Không tìm thấy lời mời kết bạn.')
 
         if decision == 'cancel':
             if req.sender_id != actor_id:
                 raise CommunityServiceError(403, 'FORBIDDEN', 'Bạn không phải người gửi lời mời này.')
+            if req.status == 'cancelled':
+                return {'requestId': req.id, 'status': req.status}
+            if req.status != 'pending':
+                raise CommunityServiceError(409, 'REQUEST_CLOSED', 'Lời mời đã được xử lý.')
             req.status = 'cancelled'
             self._db.commit()
             return {'requestId': req.id, 'status': 'cancelled'}
 
         if req.receiver_id != actor_id:
             raise CommunityServiceError(403, 'FORBIDDEN', 'Bạn không phải người nhận lời mời này.')
+
+        if self._is_blocked_pair(req.sender_id, req.receiver_id):
+            raise CommunityServiceError(403, 'USER_BLOCKED', 'Không thể xử lý lời mời do có thiết lập chặn.')
+        if (req.status == 'accepted' and decision == 'accept') or (req.status == 'declined' and decision == 'decline'):
+            return {'requestId': req.id, 'status': req.status}
+        if req.status != 'pending':
+            raise CommunityServiceError(409, 'REQUEST_CLOSED', 'Lời mời đã được xử lý.')
 
         if decision == 'decline':
             req.status = 'declined'
@@ -617,10 +629,12 @@ class CommunityService:
         cam_enabled: bool = False,
         status_note: str = 'Đang tập trung',
     ) -> dict[str, Any]:
-        room = self._db.get(StudyRoom, room_id)
+        room = self._db.scalar(select(StudyRoom).where(
+            StudyRoom.id == room_id).with_for_update())
         if room is None:
             clean_code = (room_code or room_id).strip().upper()
-            room = self._db.scalar(select(StudyRoom).where(StudyRoom.room_code == clean_code))
+            room = self._db.scalar(select(StudyRoom).where(
+                StudyRoom.room_code == clean_code).with_for_update())
         if room is None or room.status != 'active':
             raise CommunityServiceError(404, 'ROOM_NOT_FOUND', 'Phòng học không tồn tại hoặc đã kết thúc.')
         if self._is_blocked_pair(user_id, room.owner_id):
@@ -712,7 +726,8 @@ class CommunityService:
         return self._serialize_room_detail(user_id, room)
 
     def leave_room(self, user_id: str, room_id: str) -> dict[str, Any]:
-        room = self._db.get(StudyRoom, room_id)
+        room = self._db.scalar(select(StudyRoom).where(
+            StudyRoom.id == room_id).with_for_update())
         if room is None:
             raise CommunityServiceError(404, 'ROOM_NOT_FOUND', 'Phòng học không tồn tại.')
         member = self._db.scalar(

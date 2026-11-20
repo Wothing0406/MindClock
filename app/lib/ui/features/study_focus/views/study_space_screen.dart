@@ -33,6 +33,8 @@ class StudySpaceScreen extends StatefulWidget {
     required this.onClose,
     this.communityRepository,
     this.mediaPickerGateway,
+    this.initialRoom,
+    this.onRoomChanged,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
@@ -40,6 +42,8 @@ class StudySpaceScreen extends StatefulWidget {
   final VoidCallback onClose;
   final CommunityRepository? communityRepository;
   final MediaPickerGateway? mediaPickerGateway;
+  final StudyRoomDetail? initialRoom;
+  final ValueChanged<StudyRoomDetail?>? onRoomChanged;
 
   @override
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
@@ -69,10 +73,16 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   @override
   void initState() {
     super.initState();
+    _activeMeetRoom = widget.initialRoom;
     _customTaskController.text = widget.studyViewModel.draftTaskTitle;
     if (widget.studyViewModel.pendingHelpQuestion != null) {
       _aiInputController.text = widget.studyViewModel.pendingHelpQuestion!;
     }
+  }
+
+  void _changeRoom(StudyRoomDetail? room) {
+    setState(() => _activeMeetRoom = room);
+    widget.onRoomChanged?.call(room);
   }
 
   @override
@@ -339,7 +349,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 micEnabled: !selfTile.micEnabled,
               );
               if (!mounted) return;
-              setState(() => _activeMeetRoom = updated);
+              _changeRoom(updated);
             },
             onToggleCam: () async {
               final StudyRoomMemberTile selfTile =
@@ -357,7 +367,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 camEnabled: !selfTile.camEnabled,
               );
               if (!mounted) return;
-              setState(() => _activeMeetRoom = updated);
+              _changeRoom(updated);
             },
             onToggleAi: () async {
               final StudyRoomDetail updated =
@@ -367,12 +377,12 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     !_activeMeetRoom!.summary.aiCompanionEnabled,
               );
               if (!mounted) return;
-              setState(() => _activeMeetRoom = updated);
+              _changeRoom(updated);
             },
             onLeaveRoom: () async {
               await _communityRepo.leaveRoom(_activeMeetRoom!.summary.roomId);
               if (!mounted) return;
-              setState(() => _activeMeetRoom = null);
+              _changeRoom(null);
             },
           ),
           SizedBox(height: mc.space16),
@@ -404,7 +414,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                       currentProfile: widget.guestViewModel.profile,
                     );
                     if (joined != null && mounted) {
-                      setState(() => _activeMeetRoom = joined);
+                      _changeRoom(joined);
                     }
                   },
                 ),
@@ -574,8 +584,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                 Wrap(
                   spacing: mc.space8,
                   runSpacing: mc.space8,
-                  children:
-                      StudyFocusSessionSnapshot.presetMinutes.map((int minutes) {
+                  children: StudyFocusSessionSnapshot.presetMinutes
+                      .map((int minutes) {
                     return _SelectableChip(
                       key: ValueKey<String>('study-duration-$minutes'),
                       label: '$minutes phút',
@@ -910,8 +920,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                         padding: EdgeInsets.only(bottom: mc.space12),
                         child: StudyCandleTimer(
                           elapsedSeconds: displaySec,
-                          isRunning: snapshot.status == StudyFocusStatus.running &&
-                              !snapshot.commitmentAwaitingResume,
+                          isRunning:
+                              snapshot.status == StudyFocusStatus.running &&
+                                  !snapshot.commitmentAwaitingResume,
                           reduceMotion: reduceMotion,
                           animate: vm.enablePeriodicTicker,
                         ),
@@ -1000,7 +1011,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
         SizedBox(height: mc.space12),
         MindClockButton(
           key: const ValueKey<String>('study-finish-button'),
-          label: isCandle ? 'Hoàn tất đốt nến & kết thúc' : AppStrings.studyFinishCta,
+          label: isCandle
+              ? 'Hoàn tất đốt nến & kết thúc'
+              : AppStrings.studyFinishCta,
           icon: MindClockIconKind.stop,
           variant: MindClockButtonVariant.subtle,
           onPressed: () {

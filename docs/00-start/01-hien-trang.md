@@ -1,5 +1,12 @@
 # Hiện trạng có bằng chứng
 
+## Các lát cập nhật gần nhất 20/11/2026
+
+- T066/T067: streak ôn từ ledger, level và XP history backend + thẻ tiến độ trong tab Tôi; đã kiểm unit/API/Flutter và PostgreSQL DB test riêng. Chưa xác minh profile đa thiết bị Android thật.
+- T068: giới hạn 2–8 người (mặc định 4) khi tạo phòng, lọc môn/lớp/còn chỗ, nhập mã, nối room detail từ tab Tôi, lời mời đã gửi/hủy và khóa transaction join/leave. Test tranh chỗ cuối trên PostgreSQL đạt; chưa là cuộc gọi media nhiều người.
+- Pet nhóm/tiến hóa/share: mới có [thiết kế](../01-product/14-pet-nhom-va-the-chia-se.md), chưa có bộ asset pet runtime, ledger nhóm/pet hoặc chức năng xuất/chia sẻ thẻ.
+- Game T064/T065 còn WIP/verifying; chưa hoàn tất event playback/âm PvP, bố cục sân ghim, ranked hoặc kiểm hai máy thật. Không dùng kết quả test/build T063 cũ làm bằng chứng bản game WIP mới đã chạy.
+
 **Cập nhật 20/11/2026.** Tài liệu này phân biệt **có mã**, **đã kiểm trên môi trường phát triển** và **đủ điều kiện cho người dùng thật**. Chỉ cột cuối quyết định có thể gọi là sản phẩm đang chạy. Nguồn hiện hành: [code Flutter](../../app/lib/app.dart), [Android native](../../app/android/app/src/main/AndroidManifest.xml), [FastAPI](../../services/api/app/main.py), [task history](../../tasks/README.md).
 
 | Phần                                | Hiện có trong repo & đã kiểm trên dev                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Bằng chứng còn thiếu trước pilot                                                                                                                                                                              |
