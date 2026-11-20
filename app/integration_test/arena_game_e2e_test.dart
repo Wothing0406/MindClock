@@ -76,7 +76,10 @@ void main() {
       );
       await personalVm.initialize();
 
-      final SoloArenaViewModel arenaVm = SoloArenaViewModel(initialSeed: 20261119);
+      final SoloArenaViewModel arenaVm = SoloArenaViewModel(
+        initialSeed: 20261119,
+        enableRoundTimer: false,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -91,9 +94,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // 1. Vào tab Đấu trường -> Hub -> Setup
-      await _tapVisible(tester, find.byKey(const ValueKey<String>('nav-arena')));
-      expect(find.byKey(const ValueKey<String>('arena-hub-scroll')), findsOneWidget);
-      await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-enter-solo')));
+      await _tapVisible(
+          tester, find.byKey(const ValueKey<String>('nav-arena')));
+      expect(find.byKey(const ValueKey<String>('arena-hub-scroll')),
+          findsOneWidget);
+      await _tapVisible(
+          tester, find.byKey(const ValueKey<String>('arena-enter-solo')));
 
       // 2. Mở modal xem nội tại/skill của Tuyệt Đỉnh rồi đóng lại
       await _tapVisible(
@@ -101,7 +107,8 @@ void main() {
         find.byKey(const ValueKey<String>('arena-champion-detail-tuyet_dinh')),
       );
       expect(
-        find.byKey(const ValueKey<String>('arena-champion-detail-sheet-tuyet_dinh')),
+        find.byKey(
+            const ValueKey<String>('arena-champion-detail-sheet-tuyet_dinh')),
         findsOneWidget,
       );
       await _tapVisible(
@@ -109,8 +116,17 @@ void main() {
         find.byKey(const ValueKey<String>('arena-champion-detail-close')),
       );
 
+      // 2b. Chọn giới hạn 30s/lượt ở T062 trên Setup
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey<String>('arena-timer-30')),
+      );
+      expect(arenaVm.noTimeLimit, isFalse);
+      expect(arenaVm.roundTimeLimitSeconds, 30);
+
       // 3. Bấm Bắt đầu Luyện đơn -> đi qua Loading Game (ArenaSection.loading) -> Battle
-      final Finder startBtn = find.byKey(const ValueKey<String>('arena-start-solo-match'));
+      final Finder startBtn =
+          find.byKey(const ValueKey<String>('arena-start-solo-match'));
       await Scrollable.ensureVisible(
         tester.element(startBtn),
         alignment: 0.45,
@@ -120,7 +136,8 @@ void main() {
       await tester.tap(startBtn);
       await tester.pump();
       expect(arenaVm.section, ArenaSection.loading);
-      expect(find.byKey(const ValueKey<String>('arena-loading-screen')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('arena-loading-screen')),
+          findsOneWidget);
 
       final Finder enterNowBtn =
           find.byKey(const ValueKey<String>('arena-enter-battle-now'));
@@ -129,7 +146,10 @@ void main() {
       await tester.tap(enterNowBtn);
       await tester.pumpAndSettle();
       expect(arenaVm.section, ArenaSection.battle);
-      expect(find.byKey(const ValueKey<String>('arena-stage-map-image')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('arena-stage-map-image')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('arena-round-countdown')), findsOneWidget);
+      expect(find.text('Thời gian còn: 30s'), findsOneWidget);
 
       // 4. Kiểm tra uncertain không phạt HP
       await _enterVisibleText(
@@ -142,9 +162,12 @@ void main() {
         find.byKey(const ValueKey<String>('arena-reasoning-input')),
         'chua chac chan',
       );
-      await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-submit-answer')));
-      expect(find.byKey(const ValueKey<String>('arena-grade-pill-uncertain')), findsOneWidget);
-      await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-uncertain-swap')));
+      await _tapVisible(
+          tester, find.byKey(const ValueKey<String>('arena-submit-answer')));
+      expect(find.byKey(const ValueKey<String>('arena-grade-pill-uncertain')),
+          findsOneWidget);
+      await _tapVisible(
+          tester, find.byKey(const ValueKey<String>('arena-uncertain-swap')));
       expect(arenaVm.playerState.hp, baseHp);
 
       // 5. Đánh các round tới Summary (0 RP)
@@ -162,21 +185,28 @@ void main() {
           find.byKey(const ValueKey<String>('arena-reasoning-input')),
           '${q.reasoningKeywords.first} dung theo de bai',
         );
-        await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-submit-answer')));
-        expect(find.byKey(const ValueKey<String>('arena-grade-pill-correct')), findsOneWidget);
+        await _tapVisible(
+            tester, find.byKey(const ValueKey<String>('arena-submit-answer')));
+        expect(find.byKey(const ValueKey<String>('arena-grade-pill-correct')),
+            findsOneWidget);
 
-        await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-action-basic')));
-        expect(find.byKey(const ValueKey<String>('arena-next-round')), findsOneWidget);
+        await _tapVisible(
+            tester, find.byKey(const ValueKey<String>('arena-action-basic')));
+        expect(find.byKey(const ValueKey<String>('arena-next-round')),
+            findsOneWidget);
 
-        await _tapVisible(tester, find.byKey(const ValueKey<String>('arena-next-round')));
+        await _tapVisible(
+            tester, find.byKey(const ValueKey<String>('arena-next-round')));
       }
 
       expect(arenaVm.section, ArenaSection.summary);
-      expect(find.byKey(const ValueKey<String>('arena-summary-scroll')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('arena-summary-scroll')),
+          findsOneWidget);
       expect(find.textContaining('0 RP'), findsWidgets);
 
       // 6. Bấm Luyện lại -> kiểm tra lại Loading Game
-      final Finder replayBtn = find.byKey(const ValueKey<String>('arena-replay-same-seed'));
+      final Finder replayBtn =
+          find.byKey(const ValueKey<String>('arena-replay-same-seed'));
       await Scrollable.ensureVisible(
         tester.element(replayBtn),
         alignment: 0.45,
