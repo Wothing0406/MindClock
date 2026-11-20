@@ -13,7 +13,7 @@ TC03 ↔ AC04: state/Reduce Motion/fallback Flutter nếu nối runtime.
 - `python scripts/check_companion_assets.py`: PASS 19 tile, hash/source/app copies, alpha, biên, số frame preview. Tổng runtime19 tile+nền777138 bytes, ZIP10649115 bytes tại thời điểm kiểm (metadata có thể đổi kích thước archive sau cập nhật docs).
 - `flutter test --no-pub test/t070_companion_assets_test.dart test/community_friends_and_meet_room_test.dart test/t068_community_room_controls_test.dart test/t069_room_settings_and_refresh_test.dart`: PASS21 trước bổ sung2 ca cadence/fallback.
 - `flutter test --no-pub test/t070_companion_assets_test.dart`: PASS7 sau bổ sung cadence/fallback. Các ca blink frame riêng, audioLevel gate, dừng khi hết audio, Reduce Motion/animatefalse, thinking/listening/encouraging, nhãn AI và petprops.
-- Analyze trước bổ sung2 test PASS, sửa lint if braces. Kiểm cuối sẽ chạy trước commit.
+- Analyze cuối sau bổ sung 2 test: PASS, No issues found. Kiểm docs links PASS 635 Markdown; task records PASS; git diff --check PASS. Rà staged secret/asset PASS, không có key/config Firebase, game WIP hoặc cache processed trong commit.
 
 Lỗi môi trường: Flutter không xóa được app/build/unit_test_assets do directory ReadOnly; đã kiểm path trong build, không reparse, gỡ ReadOnly và dọn riêng cache sinh ra rồi chạy lại PASS. Lặp lại khi đóng gói lại art; chưa xác định nguyên nhân Windows đặt ReadOnly. Không sửa SDK/source/assets để lách test.
 
