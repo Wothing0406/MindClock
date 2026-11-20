@@ -12,4 +12,4 @@
   - `check_docs_links.py` & `check_task_records.py` (chạy trước commit).
 - **Test chưa chạy/giới hạn:** Emulator không thay thế **2 máy Android vật lý thật** (báo thức màn khóa/Doze/boot/DND và PvP 1v1 live đồng thời hai máy) và vẫn còn **1 cổng xác nhận ở T061** (`assets/game/` nghiên cứu vs bộ asset gốc `app/assets/`).
 - **Điểm tiếp tục chính xác:** Nếu muốn cài APK lên điện thoại Android thật để tự tay test AI + đồng bộ từ ngoài mạng localhost, build bằng `.\scripts\build_android_apk.ps1 -Mode release -ApiBaseUrl https://<domain-backend-staging>` (trước đó cấu hình Firebase dự án thật & keystore phát hành), đồng thời phản hồi quyết định asset cho T061.
-- **Git:** Nhánh `main`, chuẩn bị commit & push `T063`.
+- **Git:** Nhánh `main` — đã push `cb2f3a00d269c83f8d8c41ab10ba078a77abf8e1` (`origin/main`).
