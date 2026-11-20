@@ -12,6 +12,8 @@
 
 ## Bản đồ nguồn chuẩn
 
+Tiến độ EXP/level và thứ tự triển khai bạn bè/nhóm/phòng/pet: [kế hoạch hiện hành](01-product/13-tien-do-va-cong-dong-trien-khai.md).
+
 | Khi làm | Nguồn hành vi/thiết kế | Contract/kỹ thuật | Test/cổng |
 | --- | --- | --- | --- |
 | Onboarding → dashboard | [PRD](01-product/01-prd.md), [journey/UX](01-product/02-hanh-trinh-ux.md), [đăng ký/lộ trình](01-product/07-dang-ky-va-khoi-tao-lo-trinh.md), [design](01-product/03-he-thiet-ke.md) | [Catalog/planner](02-engineering/10-catalog-chuong-trinh-va-ke-hoach.md), [API](02-engineering/04-hop-dong-api.md) | ON/UX/AUTH ở [ca nghiệm thu](03-quality/05-ca-nghiem-thu.md) |

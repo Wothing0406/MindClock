@@ -1,4 +1,5 @@
 import '../../domain/models/personal_flow_models.dart';
+import '../../domain/models/xp_history.dart';
 import '../../domain/models/study_profile.dart';
 import '../../domain/models/timetable.dart';
 import '../../domain/services/personal_flow_repository.dart';
@@ -229,6 +230,17 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
       isServerAuthoritative: true,
       isDebugFixture: false,
     );
+  }
+
+  @override
+  Future<XpHistoryPage> fetchXpHistory({int limit = 20, int offset = 0}) async {
+    return XpHistoryPage.fromJson(await _apiClient.getJson(
+      '/progress/xp-history',
+      queryParameters: {
+        'limit': limit.clamp(1, 100).toString(),
+        'offset': offset.clamp(0, 2147483647).toString(),
+      },
+    ));
   }
 
   @override

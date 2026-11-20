@@ -1,5 +1,11 @@
 # Hợp đồng HTTP `/v1` và tích hợp Flutter
 
+## Bổ sung tiến độ T066
+
+`GET /v1/progress/summary` giữ các trường cũ, thêm `level`, `levelStartXp`, `nextLevelXp`, `xpIntoLevel`, `xpToNextLevel`, `progressVersion=progress-v1`, `streakKind=review_days`. EXP là tổng ledger owner. Streak đếm ngày ledger challenge_correct dương theo timezone tài khoản; hôm nay chưa làm giữ chuỗi hôm qua đến hết ngày. Không thể hiện thức dậy đúng giờ. Xem [policy](../01-product/13-tien-do-va-cong-dong-trien-khai.md).
+
+`GET /v1/progress/xp-history?limit=20&offset=0`: auth bắt buộc, owner từ token; limit 1–100, offset >=0, sai query trả 422. Trả `{items:[{id,sourceType,sourceId,reason,delta,createdAt}],nextOffset}`; nextOffset null khi hết. Sắp created_at DESC rồi id DESC. Phân trang offset cho lịch sử cá nhân có thể dịch khi nhận EXP mới, client refresh từ trang đầu; chưa cam kết snapshot pagination. API chỉ đọc không cấp thưởng.
+
 **Mục tiêu:** một contract duy nhất cho Android và FastAPI. **Trạng thái:** các route nêu ở bảng A có mã trong [`routes/v1.py`](../../services/api/app/routes/v1.py); payload/permission vẫn phải khóa bằng OpenAPI + contract test trước khi mở người dùng thật. Bảng B là **đề xuất chưa triển khai**. Không coi danh sách docs là bằng chứng API đang chạy. [Dữ liệu](03-du-lieu-sql.md), [AI](06-ai-va-cham-bai.md), [auth](../01-product/04-tai-khoan-quyen-rieng-tu.md).
 
 ## 1. Quy ước chung

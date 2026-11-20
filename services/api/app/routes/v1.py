@@ -36,6 +36,7 @@ from app.db.models import (
     XpLedger,
 )
 from app.repositories.idempotency import lookup_idempotency, save_idempotency
+from app.services.progression import progress_level, review_streak
 from app.schemas import (
     AlarmUpsertRequest,
     ConsentUpdateRequest,
@@ -1493,9 +1494,40 @@ def create_v1_router(
         )
         return {
             'xp': int(total_xp or 0),
-            'streak': 1 if (completed_count or 0) > 0 else 0,
+            'streak': review_streak(
+                list(db.scalars(select(XpLedger.created_at).where(
+                    XpLedger.user_id == principal.user.id,
+                    XpLedger.reason == 'challenge_correct',
+                    XpLedger.delta > 0,
+                ))),
+                principal.user.time_zone,
+                datetime.now(timezone.utc),
+            ),
+            'streakKind': 'review_days',
+            **progress_level(int(total_xp or 0)),
             'completedSessions': int(completed_count or 0),
             'topicsToReview': weak_topics,
+        }
+
+    @router.get('/progress/xp-history')
+    def xp_history(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        limit: int = Query(default=20, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
+    ) -> dict[str, Any]:
+        rows = list(db.scalars(
+            select(XpLedger).where(XpLedger.user_id == principal.user.id)
+            .order_by(XpLedger.created_at.desc(), XpLedger.id.desc())
+            .offset(offset).limit(limit + 1)
+        ))
+        return {
+            'items': [{
+                'id': row.id, 'sourceType': row.source_type,
+                'sourceId': row.source_id, 'reason': row.reason,
+                'delta': row.delta, 'createdAt': row.created_at.isoformat(),
+            } for row in rows[:limit]],
+            'nextOffset': offset + limit if len(rows) > limit else None,
         }
 
     @router.post('/study/sessions')

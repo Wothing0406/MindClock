@@ -1,4 +1,5 @@
 import '../../domain/models/personal_flow_models.dart';
+import '../../domain/models/xp_history.dart';
 import '../../domain/models/study_profile.dart';
 import '../../domain/models/timetable.dart';
 import '../../domain/services/answer_normalizer.dart';
@@ -12,7 +13,8 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   DebugFixturePersonalFlowRepository();
 
   int _wrongStreakInChallenge = 0;
-  final Map<String, GradingResult> _idempotentResults = <String, GradingResult>{};
+  final Map<String, GradingResult> _idempotentResults =
+      <String, GradingResult>{};
 
   @override
   bool get isDebugFixture => true;
@@ -141,7 +143,8 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
         isServerAuthoritative: false,
         isDebugFixture: true,
       );
-    } else if (isAnswerAccepted(cleanAnswer, const <String>['8', 'x=8', 'x = 8'])) {
+    } else if (isAnswerAccepted(
+        cleanAnswer, const <String>['8', 'x=8', 'x = 8'])) {
       _wrongStreakInChallenge = 0;
       outcome = GradingResult(
         attemptId: 'debug_att_$clientAttemptId',
@@ -174,7 +177,12 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
             ? 'Nhân số 2 vào cả hai số hạng trong ngoặc trước khi chuyển vế.'
             : null,
         nextActions: allowAbandon
-            ? const <String>['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            ? const <String>[
+                'retry',
+                'abandon',
+                'finish_ungraded',
+                'emergency_stop'
+              ]
             : const <String>['retry', 'finish_ungraded', 'emergency_stop'],
         xpAwarded: 0,
         modelVersion: 'debug-fixture-v1',
@@ -235,6 +243,11 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   }
 
   @override
+  Future<XpHistoryPage> fetchXpHistory(
+          {int limit = 20, int offset = 0}) async =>
+      const XpHistoryPage(items: []);
+
+  @override
   Future<List<SessionHistoryItem>> fetchSessionHistory({
     int limit = 20,
     String? cursor,
@@ -249,9 +262,17 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   }) async {
     return const <Map<String, dynamic>>[
       <String, dynamic>{'weekday': 1, 'position': 1, 'subjectCode': 'math'},
-      <String, dynamic>{'weekday': 1, 'position': 2, 'subjectCode': 'literature'},
+      <String, dynamic>{
+        'weekday': 1,
+        'position': 2,
+        'subjectCode': 'literature'
+      },
       <String, dynamic>{'weekday': 2, 'position': 1, 'subjectCode': 'physics'},
-      <String, dynamic>{'weekday': 3, 'position': 1, 'subjectCode': 'chemistry'},
+      <String, dynamic>{
+        'weekday': 3,
+        'position': 1,
+        'subjectCode': 'chemistry'
+      },
       <String, dynamic>{'weekday': 4, 'position': 1, 'subjectCode': 'english'},
       <String, dynamic>{'weekday': 5, 'position': 1, 'subjectCode': 'history'},
     ];

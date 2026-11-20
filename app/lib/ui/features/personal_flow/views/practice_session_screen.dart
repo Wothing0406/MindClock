@@ -131,6 +131,10 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                     style: mc.bodyStyle,
                   )
                 else ...<Widget>[
+                  if (progress.level != null)
+                    Text('Cấp ${progress.level} · Còn ${progress.xpToNextLevel ?? 0} EXP để lên cấp',
+                      key: const ValueKey<String>('progress-server-level'),
+                      style: mc.bodyStrongStyle),
                   Text(
                     'XP tích lũy: ${progress.xp} XP · Chuỗi: ${progress.streak} ngày · Số buổi: ${progress.completedSessions}',
                     key: const ValueKey<String>('progress-server-xp'),

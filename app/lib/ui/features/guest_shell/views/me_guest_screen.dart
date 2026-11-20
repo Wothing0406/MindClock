@@ -14,6 +14,7 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/account_auth_card.dart';
+import '../../personal_flow/views/profile_progress_card.dart';
 import '../../study_focus/views/study_community_sheet.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
@@ -176,6 +177,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
           if (personalViewModel != null) ...<Widget>[
             SizedBox(height: mc.space16),
             AccountAuthCard(viewModel: personalViewModel!),
+            SizedBox(height: mc.space16),
+            ProfileProgressCard(viewModel: personalViewModel!),
           ],
           SizedBox(height: mc.space16),
           MindClockCard(

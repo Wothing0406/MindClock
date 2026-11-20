@@ -1,5 +1,7 @@
 # Hồ sơ, tiến độ học và cộng đồng
 
+Kế hoạch triển khai: [level, EXP và cộng đồng](13-tien-do-va-cong-dong-trien-khai.md). Cấp tài khoản tách khỏi năng lực theo môn và rank thi đấu.
+
 **Mục tiêu:** cho người học thấy việc mình đã làm và kiểm soát thông tin người khác nhìn thấy. Hành vi này mở từng phần sau [PRD](01-prd.md); bảng rank/PvP chỉ mở qua [GDD](../04-game/01-pvp-gdd.md). Không dùng giờ dậy làm thước đo giá trị con người.
 
 ## Hồ sơ của chính mình

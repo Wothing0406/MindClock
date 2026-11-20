@@ -6,6 +6,7 @@ import '../../../../domain/game/solo_combat_engine.dart';
 import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/auth_session.dart';
 import '../../../../domain/models/personal_flow_models.dart';
+import '../../../../domain/models/xp_history.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/auth_session_gateway.dart';
@@ -41,6 +42,23 @@ class PersonalFlowViewModel extends ChangeNotifier {
   GradingResult? _lastResult;
   ProgressSummary _progressSummary = const ProgressSummary.unauthenticated();
   List<SessionHistoryItem> _sessionHistory = const <SessionHistoryItem>[];
+  List<XpHistoryEntry> _xpHistory = const [];
+  int? _xpNextOffset;
+  bool _xpHistoryLoaded = false;
+  bool _xpHistoryBusy = false;
+  String? _xpHistoryError;
+  DateTime? _progressSyncedAt;
+  String? _progressError;
+  int _progressEpoch = 0;
+  int _historyEpoch = 0;
+
+  List<XpHistoryEntry> get xpHistory => List.unmodifiable(_xpHistory);
+  bool get xpHistoryHasMore => _xpNextOffset != null;
+  bool get xpHistoryLoaded => _xpHistoryLoaded;
+  bool get xpHistoryBusy => _xpHistoryBusy;
+  String? get xpHistoryError => _xpHistoryError;
+  DateTime? get progressSyncedAt => _progressSyncedAt;
+  String? get progressError => _progressError;
   OfflineTextDraft? _savedDraft;
   PhotoAttemptUpload? _pendingPhotoPreview;
   FeedbackReportResult? _lastFeedbackReport;
@@ -181,6 +199,15 @@ class PersonalFlowViewModel extends ChangeNotifier {
   }
 
   void _resetAccountScopedMemory() {
+    _progressEpoch++;
+    _historyEpoch++;
+    _xpHistory = const [];
+    _xpNextOffset = null;
+    _xpHistoryLoaded = false;
+    _xpHistoryBusy = false;
+    _xpHistoryError = null;
+    _progressSyncedAt = null;
+    _progressError = null;
     _currentQuestion = null;
     _activeSession = null;
     _lastResult = null;
@@ -200,10 +227,23 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _sessionHistory = const <SessionHistoryItem>[];
       return;
     }
+    final epoch = ++_progressEpoch;
+    final owner = _authSession.ownerScopeKey;
+    bool current() =>
+        epoch == _progressEpoch &&
+        _authSession.isAuthenticated &&
+        owner == _authSession.ownerScopeKey;
     try {
-      _progressSummary = await _repository.fetchProgressSummary();
-      _sessionHistory = await _repository.fetchSessionHistory(limit: 10);
+      final summary = await _repository.fetchProgressSummary();
+      if (!current()) return;
+      _progressSummary = summary;
+      _progressSyncedAt = _nowProvider();
+      _progressError = null;
+      final history = await _repository.fetchSessionHistory(limit: 10);
+      if (current()) _sessionHistory = history;
     } on PersonalApiException catch (e) {
+      if (!current()) return;
+      _progressError = e.messageVi;
       await _handleApiError(e, preservePendingSubmission: true);
     }
   }
@@ -221,13 +261,49 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _errorMessageVi = null;
     notifyListeners();
     try {
-      _progressSummary = await _repository.fetchProgressSummary();
-      _sessionHistory = await _repository.fetchSessionHistory(limit: 10);
+      await _loadOnlineProgressQuietly();
     } on PersonalApiException catch (e) {
       await _handleApiError(e, preservePendingSubmission: true);
     } finally {
       _isBusy = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> loadXpHistory({bool refresh = false}) async {
+    if (!_authSession.isAuthenticated || isDebugFixture) return;
+    if (_xpHistoryBusy && !refresh) return;
+    if (!refresh && _xpHistoryLoaded && _xpNextOffset == null) return;
+    final owner = _authSession.ownerScopeKey;
+    final epoch = ++_historyEpoch;
+    bool current() =>
+        epoch == _historyEpoch &&
+        _authSession.isAuthenticated &&
+        owner == _authSession.ownerScopeKey;
+    final offset = refresh ? 0 : _xpNextOffset ?? 0;
+    _xpHistoryBusy = true;
+    _xpHistoryError = null;
+    notifyListeners();
+    try {
+      final page = await _repository.fetchXpHistory(offset: offset);
+      if (!current()) return;
+      final byId = <String, XpHistoryEntry>{
+        if (!refresh)
+          for (final entry in _xpHistory) entry.id: entry,
+        for (final entry in page.items) entry.id: entry,
+      };
+      _xpHistory = List.unmodifiable(byId.values);
+      _xpNextOffset = page.nextOffset;
+      _xpHistoryLoaded = true;
+    } on PersonalApiException catch (e) {
+      if (!current()) return;
+      _xpHistoryError = e.messageVi;
+      await _handleApiError(e, preservePendingSubmission: true);
+    } finally {
+      if (epoch == _historyEpoch) {
+        _xpHistoryBusy = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -389,7 +465,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
       rubricRevision: offlineQ.rubricRevision,
       isServerAuthoritative: false,
       confirmedIncorrectCount: nextWrongCount,
-      canAbandon: mappedVerdict != GradingVerdict.correct && nextWrongCount >= 5,
+      canAbandon:
+          mappedVerdict != GradingVerdict.correct && nextWrongCount >= 5,
       revealVi: mappedVerdict == GradingVerdict.correct
           ? '${offlineQ.gradingRubricStepsVi.join(" ")} Đáp án: ${offlineQ.explanationAfterRevealVi}'
           : null,
@@ -548,7 +625,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
     final String cleanAnswer = answerValue.trim();
     if (cleanAnswer.isEmpty) {
-      _errorMessageVi = 'Vui lòng nhập đáp án cuối cùng trước khi xác nhận gửi ảnh.';
+      _errorMessageVi =
+          'Vui lòng nhập đáp án cuối cùng trước khi xác nhận gửi ảnh.';
       notifyListeners();
       return null;
     }
@@ -590,7 +668,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
       await _loadOnlineProgressQuietly();
       return result;
     } on PersonalApiException catch (e) {
-      _hasRetryablePhotoFailure = e.retryable || e.isTimeout || e.isNetworkError;
+      _hasRetryablePhotoFailure =
+          e.retryable || e.isTimeout || e.isNetworkError;
       if (e.isConflict) {
         _clearSubmissionKeys();
       }
@@ -673,7 +752,9 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   Future<void> completeSessionUngraded() async {
     final StudySessionRecord? session = _activeSession;
-    if (session != null && _authSession.isAuthenticated && !session.isOfflineLocal) {
+    if (session != null &&
+        _authSession.isAuthenticated &&
+        !session.isOfflineLocal) {
       try {
         _activeSession = await _repository.postSessionEvent(
           sessionId: session.sessionId,
@@ -754,8 +835,9 @@ class PersonalFlowViewModel extends ChangeNotifier {
         localDate: _formatYmd(now),
         questionId: draft.questionId,
         questionRevision: draft.questionRevision,
-        startedAtUtc:
-            DateTime.fromMillisecondsSinceEpoch(draft.savedAtEpochMillis, isUtc: true),
+        startedAtUtc: DateTime.fromMillisecondsSinceEpoch(
+            draft.savedAtEpochMillis,
+            isUtc: true),
         idempotencyKey: LocalIdGenerator.nextUuidV4(),
       );
 
@@ -809,7 +891,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _errorMessageVi = null;
     notifyListeners();
     try {
-      final FeedbackReportResult report = await _repository.reportGradingFeedback(
+      final FeedbackReportResult report =
+          await _repository.reportGradingFeedback(
         sessionId: session.sessionId,
         attemptId: result.attemptId,
         category: category,
@@ -834,6 +917,12 @@ class PersonalFlowViewModel extends ChangeNotifier {
   }) async {
     _errorMessageVi = e.messageVi;
     if (e.isAuthExpired) {
+      _progressSummary = const ProgressSummary.unauthenticated();
+      _sessionHistory = const [];
+      _xpHistory = const [];
+      _xpHistoryLoaded = false;
+      _xpNextOffset = null;
+      _progressSyncedAt = null;
       _authSession = await _authGateway.loadSavedSession();
       if (_authSession.status != AuthStatus.reauthRequired) {
         _authSession = await _authGateway.markSessionExpired(

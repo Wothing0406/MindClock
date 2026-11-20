@@ -208,15 +208,14 @@ class GradingResult {
     final int wrongCount =
         (json['confirmedIncorrectCount'] as num?)?.toInt() ?? 0;
     final bool canAbandon = (json['canAbandon'] as bool?) ??
-        parsedActions.contains('abandon') ||
-        wrongCount >= 5;
+        parsedActions.contains('abandon') || wrongCount >= 5;
     return GradingResult(
       attemptId: json['attemptId'] as String? ?? '',
       verdict: GradingVerdict.fromWire(json['result'] as String?),
       observedSteps: rawSteps.whereType<String>().toList(growable: false),
       firstIssue: json['firstIssue'] as String?,
-      feedbackVi: json['feedback'] as String? ??
-          'Đã nhận phản hồi từ hệ thống chấm.',
+      feedbackVi:
+          json['feedback'] as String? ?? 'Đã nhận phản hồi từ hệ thống chấm.',
       hintVi: json['hint'] as String?,
       nextActions: parsedActions,
       xpAwarded: (json['xpAwarded'] as num?)?.toInt() ?? 0,
@@ -296,7 +295,8 @@ class OfflineTextDraft {
   final int savedAtEpochMillis;
   final int expiresAtEpochMillis;
 
-  bool isExpiredAt(int nowEpochMillis) => nowEpochMillis >= expiresAtEpochMillis;
+  bool isExpiredAt(int nowEpochMillis) =>
+      nowEpochMillis >= expiresAtEpochMillis;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'ownerKey': ownerKey,
@@ -321,8 +321,7 @@ class OfflineTextDraft {
       reasoningText: json['reasoningText'] as String? ?? '',
       clientAttemptId: json['clientAttemptId'] as String? ?? '',
       idempotencyKey: json['idempotencyKey'] as String? ?? '',
-      savedAtEpochMillis:
-          (json['savedAtEpochMillis'] as num?)?.toInt() ?? 0,
+      savedAtEpochMillis: (json['savedAtEpochMillis'] as num?)?.toInt() ?? 0,
       expiresAtEpochMillis:
           (json['expiresAtEpochMillis'] as num?)?.toInt() ?? 0,
     );
@@ -337,6 +336,10 @@ class ProgressSummary {
     required this.topicsToReview,
     required this.isServerAuthoritative,
     this.isDebugFixture = false,
+    this.level,
+    this.xpToNextLevel,
+    this.levelStartXp,
+    this.nextLevelXp,
   });
 
   const ProgressSummary.unauthenticated()
@@ -345,9 +348,25 @@ class ProgressSummary {
         completedSessions = 0,
         topicsToReview = const <String>[],
         isServerAuthoritative = false,
+        level = null,
+        xpToNextLevel = null,
+        levelStartXp = null,
+        nextLevelXp = null,
         isDebugFixture = false;
 
   final int xp;
+  final int? level;
+  final int? xpToNextLevel;
+  final int? levelStartXp;
+  final int? nextLevelXp;
+
+  double? get levelFraction {
+    final start = levelStartXp;
+    final end = nextLevelXp;
+    if (start == null || end == null || end <= start) return null;
+    return ((xp - start) / (end - start)).clamp(0.0, 1.0);
+  }
+
   final int streak;
   final int completedSessions;
   final List<String> topicsToReview;
@@ -363,6 +382,10 @@ class ProgressSummary {
         json['topicsToReview'] as List<dynamic>? ?? const <dynamic>[];
     return ProgressSummary(
       xp: (json['xp'] as num?)?.toInt() ?? 0,
+      level: (json['level'] as num?)?.toInt(),
+      xpToNextLevel: (json['xpToNextLevel'] as num?)?.toInt(),
+      levelStartXp: (json['levelStartXp'] as num?)?.toInt(),
+      nextLevelXp: (json['nextLevelXp'] as num?)?.toInt(),
       streak: (json['streak'] as num?)?.toInt() ?? 0,
       completedSessions: (json['completedSessions'] as num?)?.toInt() ?? 0,
       topicsToReview: rawTopics.whereType<String>().toList(growable: false),

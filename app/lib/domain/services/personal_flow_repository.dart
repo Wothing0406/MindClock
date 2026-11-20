@@ -1,4 +1,5 @@
 import '../models/personal_flow_models.dart';
+import '../models/xp_history.dart';
 import '../models/study_profile.dart';
 import '../models/timetable.dart';
 
@@ -80,6 +81,8 @@ abstract interface class PersonalFlowRepository {
   });
 
   Future<ProgressSummary> fetchProgressSummary();
+
+  Future<XpHistoryPage> fetchXpHistory({int limit = 20, int offset = 0});
 
   Future<List<SessionHistoryItem>> fetchSessionHistory({
     int limit = 20,
