@@ -1,0 +1,31 @@
+# Prompt set và provenance — T070
+
+Route mọi lần: `image_gen` built-in, alpha thật cho character/icon, nền opaque cho study corner. Reference là ảnh gốc được tạo trong chính task này; không có ảnh người thật/nhân vật bên thứ ba. Dưới đây là prompt brief lưu cùng invariant, generation ID đối chiếu ảnh nguồn; không có key/API secret.
+
+## 1. Pet master — exec-6139b82b-48c5-4f1c-b5fa-77a1a56fe986
+
+Create ONE original finished 2D mobile-game companion pet master sprite for the Vietnamese study app MindClock. Character name Mầm (do not write text). A small bean-shaped cream and pale sage woodland creature, clearly an animal not a human or robot, with two big soft leaf-shaped ears, tiny round dark eyes with brows and a little relaxed smile, short stubby arms and feet, a small recycled kraft paper crossbody pencil pouch with one teal pencil. Warm, understated humor and tactile hand-drawn editorial game art: clean dark navy outlines, flat gouache/cel colors, restrained shading, professional polished silhouette, not pixel art, not 3D, not glossy AI mascot. Palette warm cream #E9DDBF, muted sage #91AD8D, teal #126F73, ink #1B2741, tiny gold #F4B95F accents. Full body front three-quarter facing slightly right, in a relaxed grounded standing pose, centered and filling 75% of a square canvas. Both leaf ears and all feet entirely inside image with generous margin. Transparent background with actual alpha, NO floor/ground shadow, NO backdrop, NO checkerboard illustration, NO text, NO labels, NO extra characters, NO panels. Designed to read at 64px and to use as the identity reference for future evolution and emotion assets. Completely original character, no recognizable commercial IP.
+
+## 2. AI master — exec-0c66be16-f26f-4fa1-830d-0e6f156bd510
+
+Create ONE original 2D illustrated AI study companion avatar master for the Vietnamese Android study app MindClock. Head-and-shoulders portrait of a fictional friendly young-adult Vietnamese mentor, subtly androgynous, short soft dark-navy hair swept to one side, round thin navy glasses, calm dark eyes with clear brows, gentle closed-mouth smile. Teal #126F73 simple cardigan over warm cream shirt, tiny muted gold #F4B95F clock-hand-shaped pin on cardigan, no text or letters. One hand rests near a closed cream notebook at the bottom, not a gesture over the face. Face occupies the upper central half so eyes and mouth remain clear at a 96px avatar size. Original flat editorial mobile-game illustration, clean navy #1B2741 outlines, warm restrained cel colors, very limited soft shading, beautifully consistent facial proportions, professional and quiet; match the visual family of a cream and sage leaf-eared pet, but this is a separate mentor character. Not photoreal, not 3D, not anime franchise imitation, not a generic robot face, no neon, no headset/microphone, no surveillance eyes or webcam frame. Front facing, centered square composition, entire hair and shoulders inside with 12% padding, genuinely transparent alpha background, no floor shadow, no painted checkerboard, no logos or labels. This is an openly labeled AI avatar in the app, not a representation of a real person. Produce just one portrait, not a sheet.
+
+## 3. AI expression library — exec-e513c0b7-2eea-429d-ad0d-05a326dc0dba
+
+Reference: mindclock-ai/source/master.png. Exact same mentor, 3×3 equal cells, transparent, no labels/borders, same scale/face center/bust bottom. Row 1 neutral closed smile, eyes closed blink, attentive listening; row 2 eyes-up thinking, encouraging closed smile, calm focused; row 3 speech-small, speech-medium, speech-wide ah. Only eyes/brows/mouth change; same glasses/hair/cardigan/pin/notebook. Full portrait fits every cell with clear gutters, no body tilts or props crossing cells. No exaggerated teeth, distorted lips, speech bubbles, emoji, checkerboard. UI expression icons, not full-body animation. Tool returned 1254×1254, so packaging uses measured grid instead of assuming requested pixels.
+
+## 4. Pet stages — exec-8248db09-26b4-4158-8c15-fc32ace9ecba
+
+Reference: pet-mam/source/master.png. Four static evolution appearances in 2×2 equal cells. Same cream bean body/sage leaf ears/gold cheeks/navy lines. Young stage: rounder/smaller ears holding tiny notebook, no pouch. Familiar stage: reference pouch with teal pencil. Third: teal scarf, gold star on pouch, longer leaves. Fourth: sage vest, scarf, pouch, rolled paper, small gold veins. Grounded facing slightly right, no sick/sad states, weapons/crowns/glow. Transparent margins at least 10%, no text or borders. Shared scale preserves stage size differences.
+
+## 5. Pet reactions v1 REJECTED — exec-7dc587d1-1a33-4a14-b934-8afac3c859e2
+
+Reference: pet master. Six static UI reaction stickers in 3×2 equal cells: neutral, happy arms raised, curled asleep with pouch, nibbling leaf biscuit, reading open notebook, waving pencil. Same identity/palette/outline, full body and props fit each cell with transparent gutters. No shame/anger/injury/food-particle spill/text/labels. Result crossed cells at top middle/right; not used by runtime.
+
+## 6. Study background — exec-88c68081-9825-4df6-b4e3-b4cd1f63cb51
+
+Original 2D illustrated MindClock study corner, landscape 3:2. Pale cream wall; light wood desk bottom22%; sage plant and closed books far left; warm desk lamp far right; narrow window upper right with greenery. Central55% wall and desk clear for mentor compositing. Same muted navy/cream/sage/teal/gold editorial cel style, subtle paper texture. Ordinary quiet student space, not luxury/fantasy. No people/animals/faces/screens/UI/text/logos, no photoreal/3D/shiny glow. Opaque background, portrait-safe clear center.
+
+## 7. Pet reactions spacing edit — exec-9f91a091-6d2d-4043-b5f2-1b5e7f6f7522
+
+Edit first image (reactions v1) only; pet master is identity reference. Preserve exact six reaction designs and reading order. Make each whole sticker smaller in its fixed 3×2 cell with at least18% clear alpha on each side including leaf ears, pencil, sleeping pouch and yellow reaction marks. Fix top-middle/top-right touching. Same square canvas, no redesign, clipping, new expressions, text/borders/background. Result reactions-v2 selected after visual review and structural pipeline QA. Residual raw speck/safe-frame warnings retained in qa-report.md.

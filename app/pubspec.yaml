@@ -21,5 +21,8 @@ dev_dependencies:
 flutter:
   uses-material-design: false
   assets:
+    - assets/companions/
+    - assets/companions/mindclock-ai/
+    - assets/companions/pet-mam/
     - assets/arena/
     - assets/avatars/

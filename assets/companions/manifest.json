@@ -1,0 +1,645 @@
+{
+  "schema": "mindclock.companions.v1",
+  "artSource": "host_image",
+  "route": "image_gen builtin",
+  "model": "not exposed by tool",
+  "costUsd": null,
+  "sourceReview": "assistant visual selection; user feedback pending",
+  "rights": "original generated designs; no third-party character references",
+  "sources": [
+    {
+      "file": "environment/source/study-corner.png",
+      "sha256": "695a726feed1b0dc9f1e549c511ac99fb69a6befd06b58a57ecfcecaee78050d",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "mindclock-ai/source/expressions.png",
+      "sha256": "2801942ed9f9c20201b8946ef847325f0c40b9a6d4cd200fb232446c422cdf58",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "mindclock-ai/source/master.png",
+      "sha256": "1cea39fbe3fc5d68423c0206a75517a910a0d84071cb10d1b932698d02265d86",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "pet-mam/source/master.png",
+      "sha256": "b3200b7d9d62ba51ce4de96119fe91acb1ee43ddaa91dde04acf3da9538fcca9",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "pet-mam/source/reactions-rejected-v1.png",
+      "sha256": "0ab9de59e70ad2236350fe65f0c938734db1e090a3d0b2fa24c6bd9daa297f3a",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "pet-mam/source/reactions-v2.png",
+      "sha256": "1ec8e82752818d374f73cceaf419852367aa3f9ef89b75d148745f82ded1f372",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "pet-mam/source/stages.png",
+      "sha256": "5d91627fe85d5c8779af951fd8020491899ab09b2951c2b5a6bcb46fdf083c1b",
+      "size": [
+        1254,
+        1254
+      ]
+    }
+  ],
+  "ai": [
+    {
+      "id": "neutral",
+      "file": "mindclock-ai/runtime/neutral.webp",
+      "appFile": "assets/companions/mindclock-ai/neutral.webp",
+      "sha256": "419e46214e44f7b6da25afad9fc449ae9537dc8354e491b8ef123567479c84c1",
+      "bytes": 38142,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        77,
+        47,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "blink",
+      "file": "mindclock-ai/runtime/blink.webp",
+      "appFile": "assets/companions/mindclock-ai/blink.webp",
+      "sha256": "9e8761d7a3f0e4c5010ec9b2f71df3d39bb0a1755254ce3b381cc6ede60e9316",
+      "bytes": 37920,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        46,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "listening",
+      "file": "mindclock-ai/runtime/listening.webp",
+      "appFile": "assets/companions/mindclock-ai/listening.webp",
+      "sha256": "aa70cf0306c4df554c9b7824c93f18b6685a9383ed2ff200e225552610a8b1f4",
+      "bytes": 38092,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        46,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "thinking",
+      "file": "mindclock-ai/runtime/thinking.webp",
+      "appFile": "assets/companions/mindclock-ai/thinking.webp",
+      "sha256": "aa1a39c97eae034366e5d652473536cdf4744f2d0c1cd50ce1a585801664b9b2",
+      "bytes": 38422,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        75,
+        47,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "encouraging",
+      "file": "mindclock-ai/runtime/encouraging.webp",
+      "appFile": "assets/companions/mindclock-ai/encouraging.webp",
+      "sha256": "b67c0738081f68cb36c0d79889ca550208e262facf14dfe5966ae4d8c55a9286",
+      "bytes": 38334,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        77,
+        46,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "focused",
+      "file": "mindclock-ai/runtime/focused.webp",
+      "appFile": "assets/companions/mindclock-ai/focused.webp",
+      "sha256": "136bd9886737dcd8e249b392f964a904a7ee885ddcaa2080e8f6ae42f61bd036",
+      "bytes": 38144,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        46,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "speaking-small",
+      "file": "mindclock-ai/runtime/speaking-small.webp",
+      "appFile": "assets/companions/mindclock-ai/speaking-small.webp",
+      "sha256": "29951fa083611d0fbf0e7519ae65a5fa093f007be2bc6afc9308ae80e5bd617e",
+      "bytes": 38422,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        47,
+        435,
+        467
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "speaking-medium",
+      "file": "mindclock-ai/runtime/speaking-medium.webp",
+      "appFile": "assets/companions/mindclock-ai/speaking-medium.webp",
+      "sha256": "e8f953ca101aa88eb4ef36781480f3c62963a96f5adf5a56a8bcc1a58129c1a7",
+      "bytes": 38418,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        47,
+        436,
+        466
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "speaking-wide",
+      "file": "mindclock-ai/runtime/speaking-wide.webp",
+      "appFile": "assets/companions/mindclock-ai/speaking-wide.webp",
+      "sha256": "42632bde97fcf7290d6cef6aa2e65a634e9ae2be501baf7361e0a751cbb13338",
+      "bytes": 38302,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        76,
+        47,
+        436,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    }
+  ],
+  "petStages": [
+    {
+      "id": "stage-1",
+      "file": "pet-mam/runtime/stage-1.webp",
+      "appFile": "assets/companions/pet-mam/stage-1.webp",
+      "sha256": "d6eb983988b644696539891a9345b8cb6ff081878c6cbc8165d840da9333bcfb",
+      "bytes": 24192,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        137,
+        142,
+        375,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "stage-2",
+      "file": "pet-mam/runtime/stage-2.webp",
+      "appFile": "assets/companions/pet-mam/stage-2.webp",
+      "sha256": "61cf371570f85b5e37bb69ab90d20b01dda30aba0b9000df826c2f61a7b31fce",
+      "bytes": 29958,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        111,
+        96,
+        400,
+        467
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "stage-3",
+      "file": "pet-mam/runtime/stage-3.webp",
+      "appFile": "assets/companions/pet-mam/stage-3.webp",
+      "sha256": "182bb4f35f3b74803a52b7cb04591024ce0c878bbac7eb323fa64e424612ea53",
+      "bytes": 33012,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        107,
+        63,
+        404,
+        467
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "stage-4",
+      "file": "pet-mam/runtime/stage-4.webp",
+      "appFile": "assets/companions/pet-mam/stage-4.webp",
+      "sha256": "36446753838c5ffd05f7af8b5360f18b426778ba61e74fd8a6c206e7be80bd2f",
+      "bytes": 38962,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        82,
+        47,
+        430,
+        467
+      ],
+      "kind": "static_ui_illustration"
+    }
+  ],
+  "petReactions": [
+    {
+      "id": "idle",
+      "file": "pet-mam/runtime/idle.webp",
+      "appFile": "assets/companions/pet-mam/idle.webp",
+      "sha256": "6f2fc9c22d60a4065c9c7fa312103a362d59a739c77fa026a42362e36ddc3040",
+      "bytes": 40116,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        85,
+        47,
+        427,
+        466
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "happy",
+      "file": "pet-mam/runtime/happy.webp",
+      "appFile": "assets/companions/pet-mam/happy.webp",
+      "sha256": "1f4ec7a7d65b210df4e27e66645cac26cfdd7f7b6e9c3462bdb25ac57784de97",
+      "bytes": 44936,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        83,
+        46,
+        425,
+        466
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "sleep",
+      "file": "pet-mam/runtime/sleep.webp",
+      "appFile": "assets/companions/pet-mam/sleep.webp",
+      "sha256": "646b465378704b10fc9b55a587038ed3f866c8b5dfcec70bdf32b46064c86acb",
+      "bytes": 41446,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        43,
+        164,
+        468,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "snack",
+      "file": "pet-mam/runtime/snack.webp",
+      "appFile": "assets/companions/pet-mam/snack.webp",
+      "sha256": "e7ab4f534987883c92eab4b4fe9292f2f0fc0774183be8792909c519fa167148",
+      "bytes": 40734,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        95,
+        46,
+        419,
+        469
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "reading",
+      "file": "pet-mam/runtime/reading.webp",
+      "appFile": "assets/companions/pet-mam/reading.webp",
+      "sha256": "be15b60af55538879b534fd14d366722f4c1bb2d88b75d56614923eff273c294",
+      "bytes": 43748,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        92,
+        44,
+        418,
+        467
+      ],
+      "kind": "static_ui_illustration"
+    },
+    {
+      "id": "celebrate",
+      "file": "pet-mam/runtime/celebrate.webp",
+      "appFile": "assets/companions/pet-mam/celebrate.webp",
+      "sha256": "be793d9cd54a2d695635343a4e06b2fd97ba7d8d08e5e70b454a2a0d28a68206",
+      "bytes": 44566,
+      "canvas": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "normalizedSourceBbox": [
+        79,
+        46,
+        432,
+        468
+      ],
+      "kind": "static_ui_illustration"
+    }
+  ],
+  "canvasConvention": "256x256; display whole canvas, bottom-center registration from sprite pipeline; no per-frame BoxFit.cover",
+  "pipelineQa": {
+    "mindclock-ai/expressions": "pass",
+    "pet-mam/stages": "pass",
+    "pet-mam/reactions-v2": "pass"
+  },
+  "background": {
+    "file": "environment/runtime/study-corner.webp",
+    "sha256": "9cc9f2b0190c9dc57f501464bdc2e8bab5db37566cb5367b64de28be51739b53"
+  },
+  "aiStateMap": {
+    "idle": [
+      "neutral",
+      "blink"
+    ],
+    "listening": [
+      "listening"
+    ],
+    "thinking": [
+      "thinking"
+    ],
+    "encouraging": [
+      "encouraging"
+    ],
+    "focused": [
+      "focused"
+    ],
+    "speaking": [
+      "speaking-small",
+      "speaking-medium",
+      "speaking-wide"
+    ]
+  },
+  "motionLimits": [
+    "UI expression switching only; no full-body animation video",
+    "Speaking is gated by actual caller audio playback state, not chat history",
+    "Generic mouth cadence is not phoneme-accurate lip sync",
+    "Pet reaction tiles are static poses, not feed/walk animation cycles"
+  ],
+  "rawSourceWarnings": [
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/ai-source/sheet-qc.json",
+      "id": "boundary_band",
+      "status": "warn",
+      "value": 9,
+      "threshold": 0,
+      "note": "solid pixels within 8 px of a cell line; a different crop or rounding can cut them"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/ai-source/sheet-qc.json",
+      "id": "safe_frame",
+      "status": "warn",
+      "value": 6,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "note": "owned art closer than 2% of the cell to its edge; ask for more margin next time"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/ai-source/sheet-qc.json",
+      "id": "faint_specks",
+      "status": "warn",
+      "value": {
+        "floor_px": 46295,
+        "detached_components": 2
+      },
+      "threshold": 0,
+      "note": "alpha haze and detached specks; process removes them with --alpha-hygiene both"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-source/sheet-qc.json",
+      "id": "cross_cell_components",
+      "status": "fail",
+      "value": 1,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          2
+        ]
+      ],
+      "note": "solid parts crossing a cell line are cut or misassigned when the sheet is sliced"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-source/sheet-qc.json",
+      "id": "cross_cell_visible",
+      "status": "fail",
+      "value": 1,
+      "threshold": 0,
+      "note": "the same test on the visible edge (alpha > 16)"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-source/sheet-qc.json",
+      "id": "boundary_band",
+      "status": "warn",
+      "value": 1243,
+      "threshold": 0,
+      "note": "solid pixels within 8 px of a cell line; a different crop or rounding can cut them"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-source/sheet-qc.json",
+      "id": "safe_frame",
+      "status": "warn",
+      "value": 2,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "note": "owned art closer than 2% of the cell to its edge; ask for more margin next time"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-source/sheet-qc.json",
+      "id": "faint_specks",
+      "status": "warn",
+      "value": {
+        "floor_px": 32558,
+        "detached_components": 6
+      },
+      "threshold": 0,
+      "note": "alpha haze and detached specks; process removes them with --alpha-hygiene both"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-v2-source/sheet-qc.json",
+      "id": "safe_frame",
+      "status": "warn",
+      "value": 1,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          2
+        ]
+      ],
+      "note": "owned art closer than 10% of the cell to its edge; ask for more margin next time"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/reactions-v2-source/sheet-qc.json",
+      "id": "faint_specks",
+      "status": "warn",
+      "value": {
+        "floor_px": 72483,
+        "detached_components": 3
+      },
+      "threshold": 0,
+      "note": "alpha haze and detached specks; process removes them with --alpha-hygiene both"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/stages-source/sheet-qc.json",
+      "id": "boundary_band",
+      "status": "warn",
+      "value": 78,
+      "threshold": 0,
+      "note": "solid pixels within 13 px of a cell line; a different crop or rounding can cut them"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/stages-source/sheet-qc.json",
+      "id": "safe_frame",
+      "status": "warn",
+      "value": 1,
+      "threshold": 0,
+      "cells": [
+        [
+          1,
+          1
+        ]
+      ],
+      "note": "owned art closer than 2% of the cell to its edge; ask for more margin next time"
+    },
+    {
+      "file": "tasks/T070-pet-and-ai-avatar-assets/qa/stages-source/sheet-qc.json",
+      "id": "faint_specks",
+      "status": "warn",
+      "value": {
+        "floor_px": 51431,
+        "detached_components": 7
+      },
+      "threshold": 0,
+      "note": "alpha haze and detached specks; process removes them with --alpha-hygiene both"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Nhóm bạn học, MultiCal và pet chung
 
-Thiết kế pet tiến hóa và thẻ chia sẻ mạng xã hội: [pet nhóm và thẻ chia sẻ](14-pet-nhom-va-the-chia-se.md). Bộ asset và chức năng share này chưa được sản xuất/triển khai.
+Thiết kế pet tiến hóa và thẻ chia sẻ mạng xã hội: [pet nhóm và thẻ chia sẻ](14-pet-nhom-va-the-chia-se.md). T070 đã tạo art pet tĩnh và các stage; ledger nhóm, animation toàn thân và chức năng share vẫn chưa triển khai.
 
 **Trạng thái:** thiết kế P2 sau phòng một mình/AI và phòng mời 2 người; chưa có tính năng online production. `MultiCal` ở đây là lớp **tìm giờ rảnh chung** trong MindClock, không phải đọc toàn bộ lịch Google của bạn bè. Android Flutter là client đầu tiên; không thêm web client chỉ để làm phòng học. [PRD](01-prd.md), [phòng hiện hành](08-phong-hoc-ai-va-ban-be.md), [lịch cá nhân](05-lich-hoc-nhac-viec.md), [quyền riêng tư](04-tai-khoan-quyen-rieng-tu.md).
 

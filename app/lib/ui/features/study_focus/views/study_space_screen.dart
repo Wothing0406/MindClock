@@ -1064,25 +1064,35 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             width: double.infinity,
             padding: EdgeInsets.all(mc.space12),
             decoration: BoxDecoration(
-              color: mc.night,
+              color: mc.paper,
+              image: const DecorationImage(
+                  image: AssetImage('assets/companions/study-corner.webp'),
+                  fit: BoxFit.cover),
               borderRadius: BorderRadius.circular(mc.radiusControl),
             ),
             child: Column(
               children: <Widget>[
                 MindClockAiAnimatedAvatar(
-                  size: 54,
-                  animate: vm.enablePeriodicTicker,
+                  size: 160,
+                  animate: vm.enablePeriodicTicker &&
+                      !vm.isDeepSilentDraft &&
+                      vm.activeSnapshot?.cadence != StudyCadence.deepSilent,
                   isThinking: isLoading,
-                  isSpeaking: vm.aiTurns.isNotEmpty && !isLoading,
+                  // Text replies are not audio playback. Live voice must supply actual playback state.
+                  isSpeaking: false,
+                  onLightBackground: true,
+                  mood: vm.aiTurns.isEmpty
+                      ? AiCompanionMood.neutral
+                      : AiCompanionMood.encouraging,
                   statusLabelVi: isLoading
                       ? 'Đang gợi mở...'
-                      : 'Chớp mắt & đồng hành cùng bạn',
+                      : 'Sẵn sàng nhận câu hỏi của bạn',
                 ),
                 SizedBox(height: mc.space8),
                 Text(
                   'Bạn học AI sẽ gợi ý phương pháp giải từng bước cho bài học hôm nay.',
                   textAlign: TextAlign.center,
-                  style: mc.captionStyle.copyWith(color: mc.nightText),
+                  style: mc.captionStyle.copyWith(color: mc.ink),
                 ),
               ],
             ),

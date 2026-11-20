@@ -20,6 +20,8 @@ Mic/cam chỉ sau thao tác user và quyền OS, indicator trong app, stop ngay 
 
 ## Avatar AI
 
+T070 tạo art mentor gốc 2D và nền góc học; 9 biểu cảm UI nằm tại [asset companions](../../assets/companions/README.md). Flutter chọn frame theo neutral/listening/thinking/encouraging/focused; blink dùng ảnh nhắm mắt riêng. Mouth frame chỉ chạy khi caller cung cấp isSpeaking từ audio đang phát; có audioLevel thì đổi độ mở miệng theo mức âm, chưa là lip sync theo âm vị. Text chat hiện không có audio playback state nên isSpeaking=false, không suy từ việc đã có tin nhắn. Reduce Motion/animate=false/TickerMode tắt đều giữ ảnh tĩnh. Chưa có Live media từ việc thêm avatar.
+
 Avatar là nhân vật 2D gốc, nhãn `MindClock AI`, animation `idle/listening/speaking/thinking` theo **trạng thái kết nối và audio thật**; không giả đang nhìn user. Miệng theo âm lượng nếu chưa có viseme; không tạo ảnh mặt người thật từ video học sinh. Giới hạn frame/memory, fallback ảnh tĩnh khi Reduce Motion/pin yếu. SFX/nhạc phòng tách âm báo thức. Không cho avatar nói khi mic/cam tắt mà UI không giải thích nguồn phản hồi.
 
 Asset rig 2D tối thiểu có lớp đầu/thân, mắt/chớp, chân mày và các hình miệng; timeline của miệng lấy từ clock phát audio (viseme nếu pipeline trả được, nếu không dùng biên độ đã làm mượt), dừng khi audio pause/stop/buffer. Các trạng thái `idle|thinking|speaking|error` do event thật điều khiển; không chạy vòng miệng giả trong lúc model chờ. Khi mất frame budget, giảm chuyển động rồi chuyển ảnh tĩnh, không làm timer/chat giật. Ở `deep`, phản hồi AI chữ và avatar không phát cử động nói cho đến khi người dùng tự bấm `Nghe`.

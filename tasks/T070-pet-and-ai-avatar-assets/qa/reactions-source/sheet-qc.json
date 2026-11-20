@@ -1,0 +1,512 @@
+{
+  "schema": "generate2dsprite.sheet_qc.v1",
+  "check": "spill",
+  "status": "fail",
+  "method": "8-connected components at alpha > 127 (solid) and > 16 (visible edge) on the raw sheet; a component belongs to the cell holding most of its pixels; cells are forge_core.rounded_grid_boxes; specks are forge_core.alpha_hygiene('both') counts",
+  "notProven": [
+    "Whether an overhang is intended art such as a tail or weapon trail.",
+    "Whether a cell's pose, anatomy or identity is correct; run sheet_qc.py frames and look at the frames.",
+    "That a different crop or slicing method would be safe: only the nominal grid was measured."
+  ],
+  "checks": [
+    {
+      "id": "cross_cell_components",
+      "status": "fail",
+      "value": 1,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          2
+        ]
+      ],
+      "note": "solid parts crossing a cell line are cut or misassigned when the sheet is sliced"
+    },
+    {
+      "id": "cross_cell_visible",
+      "status": "fail",
+      "value": 1,
+      "threshold": 0,
+      "note": "the same test on the visible edge (alpha > 16)"
+    },
+    {
+      "id": "sheet_edge",
+      "status": "pass",
+      "value": 0,
+      "threshold": 0,
+      "note": "art touching the sheet border was cut by the image edge"
+    },
+    {
+      "id": "empty_cells",
+      "status": "pass",
+      "value": [],
+      "threshold": [],
+      "note": "the first 6 cells must each hold a subject"
+    },
+    {
+      "id": "boundary_band",
+      "status": "warn",
+      "value": 1243,
+      "threshold": 0,
+      "note": "solid pixels within 8 px of a cell line; a different crop or rounding can cut them"
+    },
+    {
+      "id": "safe_frame",
+      "status": "warn",
+      "value": 2,
+      "threshold": 0,
+      "cells": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "note": "owned art closer than 2% of the cell to its edge; ask for more margin next time"
+    },
+    {
+      "id": "faint_specks",
+      "status": "warn",
+      "value": {
+        "floor_px": 32558,
+        "detached_components": 6
+      },
+      "threshold": 0,
+      "note": "alpha haze and detached specks; process removes them with --alpha-hygiene both"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "../../../../assets/companions/pet-mam/source/reactions.png",
+      "sha256": "0ab9de59e70ad2236350fe65f0c938734db1e090a3d0b2fa24c6bd9daa297f3a",
+      "bytes": 1435203
+    }
+  ],
+  "outputs": [
+    {
+      "path": "spill-overlay.png",
+      "sha256": "90774fe38dd67c4612e50034aa34cb2891e07d9838de550cefbfde5bac4da570",
+      "bytes": 1113405
+    }
+  ],
+  "tool": {
+    "name": "sheet_qc.py",
+    "version": "0.5.0"
+  },
+  "image": {
+    "sha256": "0ab9de59e70ad2236350fe65f0c938734db1e090a3d0b2fa24c6bd9daa297f3a",
+    "size": [
+      1254,
+      1254
+    ],
+    "source_mode": "RGBA",
+    "bit_depth": 8,
+    "conversion": "none",
+    "keyed": null
+  },
+  "grid": {
+    "rows": 2,
+    "cols": 3,
+    "cell_boxes": [
+      [
+        0,
+        0,
+        418,
+        627
+      ],
+      [
+        418,
+        0,
+        836,
+        627
+      ],
+      [
+        836,
+        0,
+        1254,
+        627
+      ],
+      [
+        0,
+        627,
+        418,
+        1254
+      ],
+      [
+        418,
+        627,
+        836,
+        1254
+      ],
+      [
+        836,
+        627,
+        1254,
+        1254
+      ]
+    ],
+    "rounding": "half-up (forge_core.rounded_grid_boxes)"
+  },
+  "params": {
+    "alpha_threshold": 127,
+    "edge_threshold": 16,
+    "min_area": 64,
+    "band_px": 8,
+    "safe_margin": 0.02,
+    "expect": 6,
+    "connectivity": 8
+  },
+  "cells": [
+    {
+      "cell": [
+        0,
+        0
+      ],
+      "index": 0,
+      "box": [
+        0,
+        0,
+        418,
+        627
+      ],
+      "owned_components": 1,
+      "owned_area": 105373,
+      "components_over_line": 0,
+      "pixels_over_line": 0,
+      "overhang_px": 0,
+      "visible_pixels_over_line": 0,
+      "visible_overhang_px": 0,
+      "intruders": [],
+      "expected": true,
+      "owned_bbox": [
+        25,
+        63,
+        394,
+        525
+      ],
+      "margins_px": {
+        "left": 25,
+        "top": 63,
+        "right": 24,
+        "bottom": 102
+      },
+      "margins_frac": {
+        "left": 0.0598,
+        "top": 0.1005,
+        "right": 0.0574,
+        "bottom": 0.1627
+      },
+      "cut_by_cell_edge": false,
+      "inside_safe_frame": true
+    },
+    {
+      "cell": [
+        0,
+        1
+      ],
+      "index": 1,
+      "box": [
+        418,
+        0,
+        836,
+        627
+      ],
+      "owned_components": 7,
+      "owned_area": 110259,
+      "components_over_line": 0,
+      "pixels_over_line": 0,
+      "overhang_px": 0,
+      "visible_pixels_over_line": 0,
+      "visible_overhang_px": 0,
+      "intruders": [
+        {
+          "label": 4,
+          "owner_cell": [
+            0,
+            2
+          ],
+          "pixels_in_this_cell": 323
+        }
+      ],
+      "expected": true,
+      "owned_bbox": [
+        430,
+        63,
+        797,
+        524
+      ],
+      "margins_px": {
+        "left": 12,
+        "top": 63,
+        "right": 39,
+        "bottom": 103
+      },
+      "margins_frac": {
+        "left": 0.0287,
+        "top": 0.1005,
+        "right": 0.0933,
+        "bottom": 0.1643
+      },
+      "cut_by_cell_edge": false,
+      "inside_safe_frame": true
+    },
+    {
+      "cell": [
+        0,
+        2
+      ],
+      "index": 2,
+      "box": [
+        836,
+        0,
+        1254,
+        627
+      ],
+      "owned_components": 1,
+      "owned_area": 88997,
+      "components_over_line": 1,
+      "pixels_over_line": 323,
+      "overhang_px": 10,
+      "visible_pixels_over_line": 374,
+      "visible_overhang_px": 11,
+      "intruders": [],
+      "expected": true,
+      "owned_bbox": [
+        826,
+        221,
+        1224,
+        513
+      ],
+      "margins_px": {
+        "left": -10,
+        "top": 221,
+        "right": 30,
+        "bottom": 114
+      },
+      "margins_frac": {
+        "left": -0.0239,
+        "top": 0.3525,
+        "right": 0.0718,
+        "bottom": 0.1818
+      },
+      "cut_by_cell_edge": true,
+      "inside_safe_frame": false
+    },
+    {
+      "cell": [
+        1,
+        0
+      ],
+      "index": 3,
+      "box": [
+        0,
+        627,
+        418,
+        1254
+      ],
+      "owned_components": 1,
+      "owned_area": 114210,
+      "components_over_line": 0,
+      "pixels_over_line": 0,
+      "overhang_px": 0,
+      "visible_pixels_over_line": 0,
+      "visible_overhang_px": 0,
+      "intruders": [],
+      "expected": true,
+      "owned_bbox": [
+        32,
+        664,
+        398,
+        1158
+      ],
+      "margins_px": {
+        "left": 32,
+        "top": 37,
+        "right": 20,
+        "bottom": 96
+      },
+      "margins_frac": {
+        "left": 0.0766,
+        "top": 0.059,
+        "right": 0.0478,
+        "bottom": 0.1531
+      },
+      "cut_by_cell_edge": false,
+      "inside_safe_frame": true
+    },
+    {
+      "cell": [
+        1,
+        1
+      ],
+      "index": 4,
+      "box": [
+        418,
+        627,
+        836,
+        1254
+      ],
+      "owned_components": 1,
+      "owned_area": 120392,
+      "components_over_line": 0,
+      "pixels_over_line": 0,
+      "overhang_px": 0,
+      "visible_pixels_over_line": 0,
+      "visible_overhang_px": 0,
+      "intruders": [],
+      "expected": true,
+      "owned_bbox": [
+        430,
+        664,
+        809,
+        1159
+      ],
+      "margins_px": {
+        "left": 12,
+        "top": 37,
+        "right": 27,
+        "bottom": 95
+      },
+      "margins_frac": {
+        "left": 0.0287,
+        "top": 0.059,
+        "right": 0.0646,
+        "bottom": 0.1515
+      },
+      "cut_by_cell_edge": false,
+      "inside_safe_frame": true
+    },
+    {
+      "cell": [
+        1,
+        2
+      ],
+      "index": 5,
+      "box": [
+        836,
+        627,
+        1254,
+        1254
+      ],
+      "owned_components": 4,
+      "owned_area": 125672,
+      "components_over_line": 0,
+      "pixels_over_line": 0,
+      "overhang_px": 0,
+      "visible_pixels_over_line": 0,
+      "visible_overhang_px": 0,
+      "intruders": [],
+      "expected": true,
+      "owned_bbox": [
+        839,
+        663,
+        1233,
+        1158
+      ],
+      "margins_px": {
+        "left": 3,
+        "top": 36,
+        "right": 21,
+        "bottom": 96
+      },
+      "margins_frac": {
+        "left": 0.0072,
+        "top": 0.0574,
+        "right": 0.0502,
+        "bottom": 0.1531
+      },
+      "cut_by_cell_edge": false,
+      "inside_safe_frame": false
+    }
+  ],
+  "crossing_components": [
+    {
+      "label": 4,
+      "area": 88997,
+      "bbox": [
+        826,
+        221,
+        1224,
+        513
+      ],
+      "owner_cell": [
+        0,
+        2
+      ],
+      "pixels_per_cell": {
+        "1": 323,
+        "2": 88674
+      },
+      "pixels_over_line": 323,
+      "overhang_px": 10,
+      "overhang_sides": {
+        "left": 10,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "touches_sheet_edge": false
+    }
+  ],
+  "visible_crossing_components": [
+    {
+      "label": 4,
+      "area": 89988,
+      "bbox": [
+        825,
+        220,
+        1224,
+        514
+      ],
+      "owner_cell": [
+        0,
+        2
+      ],
+      "pixels_per_cell": {
+        "1": 374,
+        "2": 89614
+      },
+      "pixels_over_line": 374,
+      "overhang_px": 11,
+      "overhang_sides": {
+        "left": 11,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "touches_sheet_edge": false
+    }
+  ],
+  "boundary_band": [
+    {
+      "axis": "x",
+      "at": 418,
+      "solid_px": 0
+    },
+    {
+      "axis": "x",
+      "at": 836,
+      "solid_px": 1243
+    },
+    {
+      "axis": "y",
+      "at": 627,
+      "solid_px": 0
+    }
+  ],
+  "specks": {
+    "floor_px": 32558,
+    "detached_px": 6,
+    "detached_components": 6,
+    "max_removed_alpha": 5,
+    "soft_alpha_histogram": {
+      "1-4": 32558,
+      "5-15": 7013,
+      "16-63": 5493,
+      "64-127": 5195
+    }
+  }
+}

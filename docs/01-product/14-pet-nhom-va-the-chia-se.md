@@ -2,7 +2,7 @@
 
 ## Trạng thái thật
 
-Chưa có bộ pet runtime hoàn chỉnh trong assets/app; avatar linh vật hiện có không thay pet có diễn hoạt và tiến hóa. Chưa có group/pet ledger hoặc xuất thẻ share trên app. Tài liệu này là thiết kế để triển khai sau khi ngày chăm/nhóm được xác minh, không là tính năng đã hoàn thành.
+T070 đã tạo bộ art pet Mầm gốc: master, 4 giai đoạn ngoại hình và 6 reaction **tĩnh**, đóng gói WebP/alpha trong assets/companions và app/assets/companions. [Asset và QA](../../assets/companions/README.md). Chưa có chu kỳ animation toàn thân, group/pet ledger hoặc xuất thẻ share trên app. Các mốc cấp dưới đây vẫn là thiết kế sau khi ngày chăm/nhóm được xác minh, không tự mở tiến hóa chỉ vì có ảnh.
 
 ## Một pet chung có gì để quay lại?
 
