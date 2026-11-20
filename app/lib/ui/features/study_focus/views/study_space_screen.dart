@@ -16,6 +16,8 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/study_focus_view_model.dart';
+import '../view_models/study_room_session_view_model.dart';
+import 'study_room_session_panel.dart';
 import 'study_candle_timer.dart';
 import 'study_community_sheet.dart';
 
@@ -49,7 +51,8 @@ class StudySpaceScreen extends StatefulWidget {
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
 }
 
-class _StudySpaceScreenState extends State<StudySpaceScreen> {
+class _StudySpaceScreenState extends State<StudySpaceScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _customTaskController = TextEditingController();
   final TextEditingController _doneController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
@@ -62,10 +65,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   bool _ambientAudioPlaying = false;
   bool _pickingAmbientAudio = false;
   String? _ambientAudioStatusVi;
-  StudyRoomDetail? _activeMeetRoom;
+  late final StudyRoomSessionViewModel _roomVm;
+  late final CommunityRepository _roomRepository;
+  StudyRoomDetail? get _activeMeetRoom => _roomVm.room;
 
-  CommunityRepository get _communityRepo =>
-      widget.communityRepository ?? DebugFixtureCommunityRepository();
+  CommunityRepository get _communityRepo => _roomRepository;
 
   MediaPickerGateway get _mediaPicker =>
       widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
@@ -73,7 +77,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   @override
   void initState() {
     super.initState();
-    _activeMeetRoom = widget.initialRoom;
+    _roomRepository =
+        widget.communityRepository ?? DebugFixtureCommunityRepository();
+    _roomVm = StudyRoomSessionViewModel(
+        repository: _roomRepository,
+        initialRoom: widget.initialRoom,
+        enablePolling: widget.studyViewModel.enablePeriodicTicker);
+    _roomVm.addListener(_onRoomState);
+    WidgetsBinding.instance.addObserver(this);
     _customTaskController.text = widget.studyViewModel.draftTaskTitle;
     if (widget.studyViewModel.pendingHelpQuestion != null) {
       _aiInputController.text = widget.studyViewModel.pendingHelpQuestion!;
@@ -81,12 +92,25 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
   }
 
   void _changeRoom(StudyRoomDetail? room) {
-    setState(() => _activeMeetRoom = room);
-    widget.onRoomChanged?.call(room);
+    _roomVm.attach(room);
+  }
+
+  void _onRoomState() {
+    if (!mounted) return;
+    setState(() {});
+    widget.onRoomChanged?.call(_roomVm.room);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _roomVm.setForeground(state == AppLifecycleState.resumed);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _roomVm.removeListener(_onRoomState);
+    _roomVm.dispose();
     if (_ambientAudioPlaying) {
       _mediaPicker.stopAudioPreview();
     }
@@ -297,6 +321,17 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
                     ),
                   ],
                   SizedBox(height: mc.space16),
+                  if (_roomVm.message != null) ...[
+                    MindClockNoticeBanner(message: _roomVm.message!),
+                    SizedBox(height: mc.space8),
+                  ],
+                  if (_activeMeetRoom != null) ...[
+                    StudyRoomSessionPanel(
+                        viewModel: _roomVm,
+                        repository: _communityRepo,
+                        animateAi: vm.enablePeriodicTicker),
+                    SizedBox(height: mc.space16),
+                  ],
                   if (snapshot == null)
                     _buildSetupAndHistory(context, mc, vm, reduceMotion)
                   else if (snapshot.status.isTerminal)
@@ -328,65 +363,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (_activeMeetRoom != null) ...<Widget>[
-          MeetStudyRoomGrid(
-            room: _activeMeetRoom!,
-            repository: _communityRepo,
-            animateAi: vm.enablePeriodicTicker,
-            onToggleMic: () async {
-              final StudyRoomMemberTile selfTile =
-                  _activeMeetRoom!.members.firstWhere(
-                (StudyRoomMemberTile m) => m.isSelf,
-                orElse: () => const StudyRoomMemberTile(
-                  userId: 'self',
-                  alias: 'Bạn',
-                  isSelf: true,
-                ),
-              );
-              final StudyRoomDetail updated =
-                  await _communityRepo.updateRoomMedia(
-                _activeMeetRoom!.summary.roomId,
-                micEnabled: !selfTile.micEnabled,
-              );
-              if (!mounted) return;
-              _changeRoom(updated);
-            },
-            onToggleCam: () async {
-              final StudyRoomMemberTile selfTile =
-                  _activeMeetRoom!.members.firstWhere(
-                (StudyRoomMemberTile m) => m.isSelf,
-                orElse: () => const StudyRoomMemberTile(
-                  userId: 'self',
-                  alias: 'Bạn',
-                  isSelf: true,
-                ),
-              );
-              final StudyRoomDetail updated =
-                  await _communityRepo.updateRoomMedia(
-                _activeMeetRoom!.summary.roomId,
-                camEnabled: !selfTile.camEnabled,
-              );
-              if (!mounted) return;
-              _changeRoom(updated);
-            },
-            onToggleAi: () async {
-              final StudyRoomDetail updated =
-                  await _communityRepo.updateRoomMedia(
-                _activeMeetRoom!.summary.roomId,
-                aiCompanionEnabled:
-                    !_activeMeetRoom!.summary.aiCompanionEnabled,
-              );
-              if (!mounted) return;
-              _changeRoom(updated);
-            },
-            onLeaveRoom: () async {
-              await _communityRepo.leaveRoom(_activeMeetRoom!.summary.roomId);
-              if (!mounted) return;
-              _changeRoom(null);
-            },
-          ),
-          SizedBox(height: mc.space16),
-        ] else ...<Widget>[
+        if (_activeMeetRoom == null) ...<Widget>[
           MindClockCard(
             key: const ValueKey<String>('study-community-entry-card'),
             child: Column(

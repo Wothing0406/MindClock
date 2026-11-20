@@ -8,6 +8,7 @@ import 'package:mindclock_app/domain/models/study_profile.dart';
 import 'package:mindclock_app/domain/services/alarm_scheduler_service.dart';
 import 'package:mindclock_app/domain/services/study_focus_bridge.dart';
 import 'package:mindclock_app/ui/core/theme/mindclock_theme.dart';
+import 'package:mindclock_app/ui/core/widgets/mindclock_cards.dart';
 import 'package:mindclock_app/ui/features/guest_shell/view_models/guest_workspace_view_model.dart';
 import 'package:mindclock_app/ui/features/study_focus/view_models/study_focus_view_model.dart';
 import 'package:mindclock_app/ui/features/study_focus/views/study_community_sheet.dart';
@@ -110,7 +111,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.byKey(const ValueKey<String>('public-profile-sheet-peer_quang_huy')),
+        find.byKey(
+            const ValueKey<String>('public-profile-sheet-peer_quang_huy')),
         findsOneWidget,
       );
 
@@ -123,7 +125,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Đã gửi lời mời kết bạn'), findsOneWidget);
       Navigator.of(
-        tester.element(find.byKey(const ValueKey<String>('public-profile-sheet-peer_quang_huy'))),
+        tester.element(find.byKey(
+            const ValueKey<String>('public-profile-sheet-peer_quang_huy'))),
       ).pop();
       await tester.pumpAndSettle();
 
@@ -157,15 +160,21 @@ void main() {
         findsOneWidget,
       );
 
-      // 5. Mic & Cam mặc định tắt -> bật Mic & Cam -> rời phòng
-      expect(find.text('Bật Mic'), findsOneWidget);
-      expect(find.text('Bật Cam'), findsOneWidget);
-      await tester.ensureVisible(
-        find.byKey(const ValueKey<String>('meet-toggle-mic')),
-      );
-      await tester.tap(find.byKey(const ValueKey<String>('meet-toggle-mic')));
-      await tester.pumpAndSettle();
-      expect(find.text('Tắt Mic'), findsOneWidget);
+      // REST metadata does not prove live media. Unsupported controls stay disabled.
+      expect(find.text('Mic chưa khả dụng'), findsOneWidget);
+      expect(find.text('Camera chưa khả dụng'), findsOneWidget);
+      expect(
+          tester
+              .widget<MindClockButton>(
+                  find.byKey(const ValueKey('meet-toggle-mic')))
+              .onPressed,
+          isNull);
+      expect(
+          tester
+              .widget<MindClockButton>(
+                  find.byKey(const ValueKey('meet-toggle-cam')))
+              .onPressed,
+          isNull);
 
       await tester.ensureVisible(
         find.byKey(const ValueKey<String>('meet-leave-room')),

@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ApiModel(BaseModel):
@@ -205,6 +205,24 @@ class StudyRoomJoinRequest(ApiModel):
     mic_enabled: bool = Field(default=False, alias='micEnabled')
     cam_enabled: bool = Field(default=False, alias='camEnabled')
     status_note: str = Field(default='Đang tập trung', alias='statusNote', max_length=80)
+
+
+class StudyRoomSettingsPatchRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    title: str | None = Field(default=None, min_length=2, max_length=80)
+    max_members: int | None = Field(default=None, alias='maxMembers', ge=2, le=8)
+    visibility: str | None = Field(default=None, pattern='^(public|invite_only)$')
+    ai_companion_enabled: bool | None = Field(default=None, alias='aiCompanionEnabled')
+
+    @model_validator(mode='after')
+    def nonempty_patch(self):
+        if not self.model_fields_set or any(getattr(self, key) is None for key in self.model_fields_set):
+            raise ValueError('Provide at least one non-null setting')
+        if self.title is not None:
+            self.title = self.title.strip()
+            if len(self.title) < 2:
+                raise ValueError('Room title must contain at least two characters')
+        return self
 
 
 class StudyRoomMediaPatchRequest(ApiModel):

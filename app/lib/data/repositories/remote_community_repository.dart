@@ -214,6 +214,30 @@ class RemoteCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<StudyRoomDetail> fetchRoom(String roomId) async =>
+      StudyRoomDetail.fromJson(
+          await _apiClient.getJson('/study-rooms/$roomId'));
+
+  @override
+  Future<StudyRoomDetail> updateRoomSettings(
+    String roomId, {
+    String? title,
+    int? maxMembers,
+    String? visibility,
+    bool? aiCompanionEnabled,
+  }) async =>
+      StudyRoomDetail.fromJson(await _apiClient.patchJson(
+        '/study-rooms/$roomId/settings',
+        body: {
+          if (title != null) 'title': title.trim(),
+          if (maxMembers != null) 'maxMembers': maxMembers,
+          if (visibility != null) 'visibility': visibility,
+          if (aiCompanionEnabled != null)
+            'aiCompanionEnabled': aiCompanionEnabled,
+        },
+      ));
+
+  @override
   Future<StudyAiMatchResult> aiMatchGroups({
     String? subjectCode,
     String? gradeLevel,

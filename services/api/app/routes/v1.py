@@ -54,6 +54,7 @@ from app.schemas import (
     StudyRoomCreateRequest,
     StudyRoomJoinRequest,
     StudyRoomMediaPatchRequest,
+    StudyRoomSettingsPatchRequest,
     StudySessionCreateRequest,
     StudySessionFinishRequest,
     TimetablePutRequest,
@@ -2033,6 +2034,19 @@ def create_v1_router(
                 cam_enabled=payload.cam_enabled,
                 status_note=payload.status_note,
             )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.patch('/study-rooms/{room_id}/settings')
+    def patch_study_room_settings(
+        room_id: str,
+        payload: StudyRoomSettingsPatchRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommunityService(db).update_room_settings(
+                principal.user.id, room_id, **payload.model_dump(exclude_unset=True))
         except CommunityServiceError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
 

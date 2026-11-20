@@ -2,6 +2,8 @@
 
 ## Các lát cập nhật gần nhất 20/11/2026
 
+- T069: host sửa tên/giới hạn/privacy/AI sau tạo; GET room refresh 5 giây foreground, xử lý offline/đóng phòng/response cũ và giữ panel lúc timer đang chạy. Mic/cam metadata không còn hiển thị như cuộc gọi thật: nút chưa khả dụng cho đến khi nối media. Test SQLite/PostgreSQL/Flutter đạt; chưa build/rà Android hoặc media nhiều máy trong task này.
+
 - T066/T067: streak ôn từ ledger, level và XP history backend + thẻ tiến độ trong tab Tôi; đã kiểm unit/API/Flutter và PostgreSQL DB test riêng. Chưa xác minh profile đa thiết bị Android thật.
 - T068: giới hạn 2–8 người (mặc định 4) khi tạo phòng, lọc môn/lớp/còn chỗ, nhập mã, nối room detail từ tab Tôi, lời mời đã gửi/hủy và khóa transaction join/leave. Test tranh chỗ cuối trên PostgreSQL đạt; chưa là cuộc gọi media nhiều người.
 - Pet nhóm/tiến hóa/share: mới có [thiết kế](../01-product/14-pet-nhom-va-the-chia-se.md), chưa có bộ asset pet runtime, ledger nhóm/pet hoặc chức năng xuất/chia sẻ thẻ.

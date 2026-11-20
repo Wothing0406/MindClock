@@ -58,3 +58,43 @@ def test_competing_last_seat_is_atomic(isolated_pg):
                     assert error.code == 'ROOM_NOT_FOUND'
         finally:
             engine.dispose()
+
+
+def test_shrink_capacity_and_join_share_one_lock(isolated_pg):
+    from alembic import command
+    from alembic.config import Config
+    cfg = Config('alembic.ini')
+    cfg.attributes['sqlalchemy.url'] = isolated_pg
+    command.upgrade(cfg, 'head')
+    app = create_app(Settings(_env_file=None, app_env='test', database_url=isolated_pg,
+        gemini_mock_mode=True, local_dev_bearer_uid_fallback=True))
+    headers = lambda user: {'Authorization': f'Bearer dev:{user}'}
+    with TestClient(app) as client:
+        ids = [client.get('/v1/me', headers=headers(user)).json()['id'] for user in ['host', 'one', 'two']]
+        room = client.post('/v1/study-rooms', headers=headers('host'), json={'title': 'Nhóm ôn', 'maxMembers': 4}).json()
+        rid = room['roomId']
+        client.post(f'/v1/study-rooms/{rid}/join', headers=headers('one'), json={})
+        barrier = Barrier(2)
+        engine = create_engine(isolated_pg)
+        def act(operation):
+            with Session(engine) as db:
+                barrier.wait(timeout=10)
+                try:
+                    service = CommunityService(db)
+                    if operation == 'shrink':
+                        service.update_room_settings(ids[0], rid, max_members=2)
+                    else:
+                        service.join_room(ids[2], rid)
+                    return 200
+                except CommunityServiceError as error:
+                    db.rollback()
+                    return error.status_code
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(act, ['shrink', 'join']))
+            assert sorted(results) == [200, 409]
+            with Session(engine) as db:
+                result = CommunityService(db).get_room_detail(ids[0], rid)
+                assert len(result['members']) <= result['maxMembers']
+        finally:
+            engine.dispose()

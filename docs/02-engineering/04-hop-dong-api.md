@@ -1,5 +1,11 @@
 # Hợp đồng HTTP `/v1` và tích hợp Flutter
 
+## Bổ sung phòng T069
+
+`PATCH /v1/study-rooms/{id}/settings` host-only; các trường tùy chọn được gửi khi thay đổi: title trim 2–80, maxMembers 2–8, visibility public|invite_only, aiCompanionEnabled boolean. Không nhận patch rỗng/null/extra (422); owner sai403, phòng đóng404, capacity nhỏ hơn active member409. Response cùng schema GET detail gồm danh sách members. Host sửa settings cùng row lock với join/leave; không giảm số chỗ bằng cách đuổi member. [Chi tiết](12-lich-chung-va-ghep-phong.md).
+
+GET detail hiện được client refresh/poll 5 giây trong foreground. Đây là cập nhật membership REST, không là media call/heartbeat presence. UI mic/cam disabled khi chưa có media transport; timer/text tiếp tục khi mất mạng.
+
 ## Bổ sung tiến độ T066
 
 `GET /v1/progress/summary` giữ các trường cũ, thêm `level`, `levelStartXp`, `nextLevelXp`, `xpIntoLevel`, `xpToNextLevel`, `progressVersion=progress-v1`, `streakKind=review_days`. EXP là tổng ledger owner. Streak đếm ngày ledger challenge_correct dương theo timezone tài khoản; hôm nay chưa làm giữ chuỗi hôm qua đến hết ngày. Không thể hiện thức dậy đúng giờ. Xem [policy](../01-product/13-tien-do-va-cong-dong-trien-khai.md).

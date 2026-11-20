@@ -513,13 +513,17 @@ class MeetStudyRoomGrid extends StatelessWidget {
     required this.onLeaveRoom,
     this.animateAi = true,
     this.onRefreshNeeded,
+    this.controlsEnabled = true,
+    this.mediaAvailable = false,
   });
 
   final StudyRoomDetail room;
   final CommunityRepository repository;
   final VoidCallback onToggleMic;
   final VoidCallback onToggleCam;
-  final VoidCallback onToggleAi;
+  final VoidCallback? onToggleAi;
+  final bool controlsEnabled;
+  final bool mediaAvailable;
   final VoidCallback onLeaveRoom;
   final bool animateAi;
   final VoidCallback? onRefreshNeeded;
@@ -618,7 +622,7 @@ class MeetStudyRoomGrid extends StatelessWidget {
                             MindClockAvatarView(
                               avatarId: member.avatarId,
                               size: 54,
-                              selected: member.camEnabled,
+                              selected: mediaAvailable && member.camEnabled,
                             ),
                             SizedBox(height: mc.space8),
                             Text(
@@ -631,12 +635,12 @@ class MeetStudyRoomGrid extends StatelessWidget {
                             ),
                             SizedBox(height: mc.space4),
                             Text(
-                              member.camEnabled
+                              mediaAvailable && member.camEnabled
                                   ? 'Camera: Đang bật'
                                   : member.statusNote,
                               textAlign: TextAlign.center,
                               style: mc.captionStyle.copyWith(
-                                color: member.camEnabled
+                                color: mediaAvailable && member.camEnabled
                                     ? mc.sunrise
                                     : mc.nightText,
                               ),
@@ -648,14 +652,16 @@ class MeetStudyRoomGrid extends StatelessWidget {
                               alignment: WrapAlignment.center,
                               children: <Widget>[
                                 _MeetBadge(
-                                  label:
-                                      member.micEnabled ? 'Mic Bật' : 'Mic Tắt',
-                                  active: member.micEnabled,
+                                  label: mediaAvailable && member.micEnabled
+                                      ? 'Mic Bật'
+                                      : 'Mic Tắt',
+                                  active: mediaAvailable && member.micEnabled,
                                 ),
                                 _MeetBadge(
-                                  label:
-                                      member.camEnabled ? 'Cam Bật' : 'Cam Tắt',
-                                  active: member.camEnabled,
+                                  label: mediaAvailable && member.camEnabled
+                                      ? 'Cam Bật'
+                                      : 'Cam Tắt',
+                                  active: mediaAvailable && member.camEnabled,
                                 ),
                               ],
                             ),
@@ -701,21 +707,31 @@ class MeetStudyRoomGrid extends StatelessWidget {
             children: <Widget>[
               MindClockButton(
                 key: const ValueKey<String>('meet-toggle-mic'),
-                label: selfTile.micEnabled ? 'Tắt Mic' : 'Bật Mic',
+                label: !mediaAvailable
+                    ? 'Mic chưa khả dụng'
+                    : selfTile.micEnabled
+                        ? 'Tắt Mic'
+                        : 'Bật Mic',
                 icon: selfTile.micEnabled
                     ? MindClockIconKind.volumeOn
                     : MindClockIconKind.volumeOff,
                 variant: MindClockButtonVariant.secondary,
                 expand: false,
-                onPressed: onToggleMic,
+                onPressed:
+                    controlsEnabled && mediaAvailable ? onToggleMic : null,
               ),
               MindClockButton(
                 key: const ValueKey<String>('meet-toggle-cam'),
-                label: selfTile.camEnabled ? 'Tắt Cam' : 'Bật Cam',
+                label: !mediaAvailable
+                    ? 'Camera chưa khả dụng'
+                    : selfTile.camEnabled
+                        ? 'Tắt Cam'
+                        : 'Bật Cam',
                 icon: MindClockIconKind.user,
                 variant: MindClockButtonVariant.secondary,
                 expand: false,
-                onPressed: onToggleCam,
+                onPressed:
+                    controlsEnabled && mediaAvailable ? onToggleCam : null,
               ),
               MindClockButton(
                 key: const ValueKey<String>('meet-toggle-ai'),
@@ -725,14 +741,14 @@ class MeetStudyRoomGrid extends StatelessWidget {
                 icon: MindClockIconKind.info,
                 variant: MindClockButtonVariant.subtle,
                 expand: false,
-                onPressed: onToggleAi,
+                onPressed: controlsEnabled ? onToggleAi : null,
               ),
               MindClockButton(
                 key: const ValueKey<String>('meet-leave-room'),
                 label: 'Rời phòng',
                 icon: MindClockIconKind.stop,
                 expand: false,
-                onPressed: onLeaveRoom,
+                onPressed: controlsEnabled ? onLeaveRoom : null,
               ),
             ],
           ),

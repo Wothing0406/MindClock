@@ -242,20 +242,19 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
     return _rooms
         .map((StudyRoomDetail r) => r.summary)
         .where((PublicStudyRoomSummary s) {
-          if (s.visibility != 'public') return false;
-          if (gradeLevel != null &&
-              gradeLevel.trim().isNotEmpty &&
-              s.gradeLevel != gradeLevel.trim()) {
-            return false;
-          }
-          if (subjectCode != null &&
-              subjectCode.trim().isNotEmpty &&
-              s.subjectCode != subjectCode.trim()) {
-            return false;
-          }
-          return true;
-        })
-        .toList(growable: false);
+      if (s.visibility != 'public') return false;
+      if (gradeLevel != null &&
+          gradeLevel.trim().isNotEmpty &&
+          s.gradeLevel != gradeLevel.trim()) {
+        return false;
+      }
+      if (subjectCode != null &&
+          subjectCode.trim().isNotEmpty &&
+          s.subjectCode != subjectCode.trim()) {
+        return false;
+      }
+      return true;
+    }).toList(growable: false);
   }
 
   @override
@@ -314,7 +313,8 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
     final int idx = _rooms.indexWhere(
       (StudyRoomDetail r) =>
           r.summary.roomId == roomId ||
-          (roomCode != null && r.summary.roomCode == roomCode.trim().toUpperCase()),
+          (roomCode != null &&
+              r.summary.roomCode == roomCode.trim().toUpperCase()),
     );
     final StudyRoomDetail target = idx >= 0 ? _rooms[idx] : _rooms.first;
     final bool hasSelf =
@@ -416,6 +416,30 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
         .toList(growable: false);
     _rooms = List<StudyRoomDetail>.from(_rooms)
       ..[idx] = target.copyWith(members: nextMembers);
+  }
+
+  @override
+  Future<StudyRoomDetail> fetchRoom(String roomId) async =>
+      _rooms.firstWhere((room) => room.summary.roomId == roomId);
+
+  @override
+  Future<StudyRoomDetail> updateRoomSettings(
+    String roomId, {
+    String? title,
+    int? maxMembers,
+    String? visibility,
+    bool? aiCompanionEnabled,
+  }) async {
+    final index = _rooms.indexWhere((room) => room.summary.roomId == roomId);
+    final room = _rooms[index];
+    final next = room.copyWith(
+        summary: room.summary.copyWith(
+            title: title,
+            maxMembers: maxMembers,
+            visibility: visibility,
+            aiCompanionEnabled: aiCompanionEnabled));
+    _rooms = List.of(_rooms)..[index] = next;
+    return next;
   }
 
   @override

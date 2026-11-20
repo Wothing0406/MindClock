@@ -59,6 +59,16 @@ abstract interface class CommunityRepository {
 
   Future<void> leaveRoom(String roomId);
 
+  Future<StudyRoomDetail> fetchRoom(String roomId);
+
+  Future<StudyRoomDetail> updateRoomSettings(
+    String roomId, {
+    String? title,
+    int? maxMembers,
+    String? visibility,
+    bool? aiCompanionEnabled,
+  });
+
   Future<StudyAiMatchResult> aiMatchGroups({
     String? subjectCode,
     String? gradeLevel,

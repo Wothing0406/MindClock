@@ -2,7 +2,17 @@
 
 ## Phần phòng REST đã sửa ở T068
 
-`POST /v1/study-rooms` nhận maxMembers 2–8, mặc định 4, tính cả host; không tính avatar AI là thành viên người. UI cho chọn số chỗ khi tạo. Đây là giới hạn membership REST, chưa chứng minh gọi video 8 người chạy được. Chưa có API sửa capacity của phòng đã mở.
+`POST /v1/study-rooms` nhận maxMembers 2–8, mặc định 4, tính cả host; không tính avatar AI là thành viên người. UI cho chọn số chỗ khi tạo. Đây là giới hạn membership REST, chưa chứng minh gọi video 8 người chạy được. T069 bổ sung sửa capacity của phòng đã mở như phần dưới.
+
+## Cài đặt và cập nhật phòng REST T069
+
+`PATCH /v1/study-rooms/{id}/settings`: host-only từ token, nhận các field đổi `title`, `maxMembers`, `visibility`, `aiCompanionEnabled`; không nhận owner/member/điểm. Patch tuyệt đối, gửi lại cùng giá trị không nhân thưởng. Body rỗng/null/extra hoặc sai giới hạn trả422; sai host403; phòng đóng404; maxMembers dưới active count trả409 CAPACITY_BELOW_MEMBERS. Cùng SELECT FOR UPDATE room row với join/leave, không cho số active vượt capacity dù join và shrink đồng thời. Không đổi môn/lớp giữa phiên. Cùng field được sửa nhiều lần dùng giá trị commit sau cùng; chưa có optimistic room revision.
+
+Flutter `StudyRoomSessionViewModel` dùng GET detail mỗi 5 giây khi màn foreground, đã vào phòng và repository thật; không polling chồng request, fixture/ticker test có thể tắt. Background dừng ticker và bỏ response cũ, resume yêu cầu refresh (nếu request cũ còn chạy thì kỳ sau cập nhật). Settings/leave invalidates poll cũ. Dispose/đổi owner không nhận response cũ. Không gọi polling là socket/media realtime hoặc heartbeat xác minh đang có mặt.
+
+Lỗi mạng giữ snapshot kèm thông báo, không dừng timer học. 401/403/404, room status ended hoặc không còn self member làm bỏ room UI; không tự join lại. Rời phòng lỗi mạng báo chưa rời trên máy chủ, cho thử lại và luôn có đường về màn trước; chưa có outbox leave. Panel phòng hiện cả lúc timer đã bắt đầu. Host có editor tên/capacity/privacy/AI, member không có. Đổi sang invite_only giữ quyền thành viên đang active.
+
+Mic/cam trong panel REST mặc định chưa khả dụng và disabled: boolean metadata không chứng minh media đang phát. Không vẽ trạng thái Cam Bật từ metadata khi không có media transport. Chỉ bật trong task nối media thật/consent/quyền. Các cổng Live, QR TTL/rotate, moderation/rate-limit và nhóm/pet ở phần P2 vẫn chưa hoàn tất.
 
 `join_room` khóa row study_rooms bằng SELECT FOR UPDATE trước khi đếm member active và thêm/reactivate; leave/host đóng phòng dùng cùng row lock. Retry thành viên đã active không nhân row. PostgreSQL test hai session tranh chỗ cuối phải có một thành công và một ROOM_FULL/409. SQLite test không thay được kiểm concurrency này.
 

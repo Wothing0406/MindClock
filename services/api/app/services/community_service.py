@@ -692,6 +692,32 @@ class CommunityService:
                 raise CommunityServiceError(403, 'ROOM_INVITE_REQUIRED', 'Chỉ thành viên phòng mới xem được.')
         return self._serialize_room_detail(user_id, room)
 
+    def update_room_settings(
+        self, user_id: str, room_id: str, *, title: str | None = None,
+        max_members: int | None = None, visibility: str | None = None,
+        ai_companion_enabled: bool | None = None,
+    ) -> dict[str, Any]:
+        room = self._db.scalar(select(StudyRoom).where(
+            StudyRoom.id == room_id).with_for_update())
+        if room is None or room.status != 'active':
+            raise CommunityServiceError(404, 'ROOM_NOT_FOUND', 'Phòng học đã đóng hoặc không tồn tại.')
+        if room.owner_id != user_id:
+            raise CommunityServiceError(403, 'HOST_REQUIRED', 'Chỉ chủ phòng được sửa cài đặt.')
+        if max_members is not None:
+            count = self._active_member_counts([room.id]).get(room.id, 0)
+            if max_members < count:
+                raise CommunityServiceError(409, 'CAPACITY_BELOW_MEMBERS',
+                    'Giới hạn mới thấp hơn số người đang trong phòng.')
+            room.max_members = max_members
+        if title is not None:
+            room.title = title
+        if visibility is not None:
+            room.visibility = visibility
+        if ai_companion_enabled is not None:
+            room.ai_companion_enabled = ai_companion_enabled
+        self._db.commit()
+        return self._serialize_room_detail(user_id, room)
+
     def update_room_media(
         self,
         user_id: str,

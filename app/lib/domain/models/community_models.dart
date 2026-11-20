@@ -25,7 +25,8 @@ class PublicStudentProfile {
   final String goalLabel;
   final String studyLevel;
   final String studyLevelLabelVi;
-  final String friendStatus; // self | friends | outgoing_pending | incoming_pending | none
+  final String
+      friendStatus; // self | friends | outgoing_pending | incoming_pending | none
   final String? pendingRequestId;
   final int? matchScore;
   final String? matchReasonVi;
@@ -143,6 +144,30 @@ class PublicStudyRoomSummary {
   final String? matchReasonVi;
 
   String get subjectNameVi => SubjectCatalog.nameFor(subjectCode);
+
+  PublicStudyRoomSummary copyWith(
+          {String? title,
+          int? maxMembers,
+          String? visibility,
+          bool? aiCompanionEnabled}) =>
+      PublicStudyRoomSummary(
+        roomId: roomId,
+        roomCode: roomCode,
+        title: title ?? this.title,
+        subjectCode: subjectCode,
+        gradeLevel: gradeLevel,
+        targetLevel: targetLevel,
+        targetLevelLabelVi: targetLevelLabelVi,
+        visibility: visibility ?? this.visibility,
+        maxMembers: maxMembers ?? this.maxMembers,
+        memberCount: memberCount,
+        aiCompanionEnabled: aiCompanionEnabled ?? this.aiCompanionEnabled,
+        ownerAlias: ownerAlias,
+        ownerAvatarId: ownerAvatarId,
+        status: status,
+        matchScore: matchScore,
+        matchReasonVi: matchReasonVi,
+      );
 
   factory PublicStudyRoomSummary.fromJson(Map<String, dynamic> json) {
     return PublicStudyRoomSummary(
