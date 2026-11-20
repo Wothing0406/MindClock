@@ -75,3 +75,7 @@ Lịch rảnh chung, nhóm 2–4 người, tìm phòng theo môn hoặc chỉ c�
 | ROOM-11 | Bật AI voice/avatar, chuyển Học sâu/Reduce Motion/mạng yếu | Avatar chuyển động theo audio thật, dừng khi audio dừng; Học sâu không tự phát tiếng, luôn có chữ và nút tắt. |
 
 Học cùng bạn và Live voice/video là feature flags độc lập; không xuất hiện như phòng hoạt động thật trước khi có backend, moderation, thiết bị thật và ngân sách. [Kỹ thuật realtime](../02-engineering/09-phong-hoc-realtime.md).
+
+## Đọc câu trả lời AI trên Android — T071
+
+Sau khi hỏi bằng chữ trong phiên AI nhịp ngắt quãng, người dùng có thể bấm **Nghe câu trả lời** hoặc **Dừng giọng đọc**. Mặc định im lặng, không tự đọc câu mới. Dùng giọng tiếng Việt ngoại tuyến đã cài trên thiết bị; thiếu giọng thì báo chưa khả dụng, vẫn đọc chữ và tiếp tục timer. Học sâu, một mình, phiên chưa bắt đầu/đã kết thúc hoặc đã đăng xuất không phát giọng. Rời màn/app, đổi phiên/tài khoản hoặc âm thanh khác được ưu tiên thì dừng, quay lại không tự phát tiếp. Avatar chỉ chuyển khẩu hình trong khoảng callback phát của engine; Reduce Motion giữ ảnh tĩnh. Đây là đọc text theo lượt, chưa phải nói chuyện hai chiều/Gemini Live.

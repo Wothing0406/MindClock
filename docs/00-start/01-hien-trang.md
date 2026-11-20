@@ -2,6 +2,8 @@
 
 ## Các lát cập nhật gần nhất 20/11/2026
 
+- T071 verifying: nối nút nghe câu trả lời AI với TTS Android ngoại tuyến và callback avatar, stop khi background/scope đổi; Học sâu/solo không phát. 18 Flutter tests, Kotlin compile/APK build và 2 integration tests trên API37 đạt. Native chỉ trả fallback/error (playbackStarted=false), chưa chứng minh phát tiếng Việt thành công hoặc voice trên máy thật; chưa là Live full-duplex. Pet nhóm chưa có ledger/tiến hóa server.
+
 - T069: host sửa tên/giới hạn/privacy/AI sau tạo; GET room refresh 5 giây foreground, xử lý offline/đóng phòng/response cũ và giữ panel lúc timer đang chạy. Mic/cam metadata không còn hiển thị như cuộc gọi thật: nút chưa khả dụng cho đến khi nối media. Test SQLite/PostgreSQL/Flutter đạt; chưa build/rà Android hoặc media nhiều máy trong task này.
 
 - T066/T067: streak ôn từ ledger, level và XP history backend + thẻ tiến độ trong tab Tôi; đã kiểm unit/API/Flutter và PostgreSQL DB test riêng. Chưa xác minh profile đa thiết bị Android thật.

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/debug/debug_fixture_community_repository.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../data/services/method_channel_study_speech_gateway.dart';
 import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
+import '../../../../domain/services/study_speech_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/math_formula_text.dart';
@@ -16,6 +18,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/study_focus_view_model.dart';
+import '../view_models/study_speech_view_model.dart';
 import '../view_models/study_room_session_view_model.dart';
 import 'study_room_session_panel.dart';
 import 'study_candle_timer.dart';
@@ -37,6 +40,7 @@ class StudySpaceScreen extends StatefulWidget {
     this.mediaPickerGateway,
     this.initialRoom,
     this.onRoomChanged,
+    this.speechGateway,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
@@ -46,6 +50,7 @@ class StudySpaceScreen extends StatefulWidget {
   final MediaPickerGateway? mediaPickerGateway;
   final StudyRoomDetail? initialRoom;
   final ValueChanged<StudyRoomDetail?>? onRoomChanged;
+  final StudySpeechGateway? speechGateway;
 
   @override
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
@@ -67,6 +72,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   String? _ambientAudioStatusVi;
   late final StudyRoomSessionViewModel _roomVm;
   late final CommunityRepository _roomRepository;
+  late final StudySpeechViewModel _speech;
+  bool _foreground = true;
   StudyRoomDetail? get _activeMeetRoom => _roomVm.room;
 
   CommunityRepository get _communityRepo => _roomRepository;
@@ -77,6 +84,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   @override
   void initState() {
     super.initState();
+    _speech = StudySpeechViewModel(
+        gateway: widget.speechGateway ?? MethodChannelStudySpeechGateway());
+    _configureSpeech();
+    _speech.addListener(_onSpeechState);
+    widget.studyViewModel.addListener(_configureSpeech);
     _roomRepository =
         widget.communityRepository ?? DebugFixtureCommunityRepository();
     _roomVm = StudyRoomSessionViewModel(
@@ -92,7 +104,25 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   }
 
   void _changeRoom(StudyRoomDetail? room) {
+    _speech.stop();
     _roomVm.attach(room);
+  }
+
+  void _onSpeechState() {
+    if (mounted) setState(() {});
+  }
+
+  void _configureSpeech() {
+    final vm = widget.studyViewModel;
+    final snapshot = vm.activeSnapshot;
+    _speech.configure(
+      scope: '${vm.ownerScopeKey}/${snapshot?.sessionId}',
+      allowed: _foreground &&
+          vm.isAuthenticated &&
+          snapshot?.roomMode == StudyRoomMode.withAi &&
+          snapshot?.cadence != StudyCadence.deepSilent &&
+          snapshot?.status == StudyFocusStatus.running,
+    );
   }
 
   void _onRoomState() {
@@ -103,12 +133,17 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    _configureSpeech();
     _roomVm.setForeground(state == AppLifecycleState.resumed);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.studyViewModel.removeListener(_configureSpeech);
+    _speech.removeListener(_onSpeechState);
+    _speech.dispose();
     _roomVm.removeListener(_onRoomState);
     _roomVm.dispose();
     if (_ambientAudioPlaying) {
@@ -1078,15 +1113,16 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                       !vm.isDeepSilentDraft &&
                       vm.activeSnapshot?.cadence != StudyCadence.deepSilent,
                   isThinking: isLoading,
-                  // Text replies are not audio playback. Live voice must supply actual playback state.
-                  isSpeaking: false,
+                  isSpeaking: _speech.isSpeaking,
                   onLightBackground: true,
                   mood: vm.aiTurns.isEmpty
                       ? AiCompanionMood.neutral
                       : AiCompanionMood.encouraging,
-                  statusLabelVi: isLoading
-                      ? 'Đang gợi mở...'
-                      : 'Sẵn sàng nhận câu hỏi của bạn',
+                  statusLabelVi: _speech.isSpeaking
+                      ? 'Đang đọc câu trả lời'
+                      : isLoading
+                          ? 'Đang gợi mở...'
+                          : 'Sẵn sàng nhận câu hỏi của bạn',
                 ),
                 SizedBox(height: mc.space8),
                 Text(
@@ -1130,11 +1166,47 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                           style: mc.captionStyle,
                         ),
                       ],
+                      if (isAssistant &&
+                          !turn.isOfflineFallback &&
+                          turn.safetyStatus == 'safe' &&
+                          snapshot.cadence != StudyCadence.deepSilent &&
+                          snapshot.status == StudyFocusStatus.running &&
+                          vm.isAuthenticated) ...<Widget>[
+                        SizedBox(height: mc.space8),
+                        MindClockButton(
+                          key: ValueKey<String>('study-ai-read-${e.key}'),
+                          label: _speech.isBusy
+                              ? 'Dừng giọng đọc'
+                              : 'Nghe câu trả lời',
+                          icon: _speech.isBusy
+                              ? MindClockIconKind.stop
+                              : MindClockIconKind.volumeOn,
+                          variant: MindClockButtonVariant.secondary,
+                          onPressed: () {
+                            if (_speech.isBusy) {
+                              _speech.stop();
+                            } else {
+                              _speech.readReply([
+                                turn.contentVi,
+                                if (turn.nextQuestionVi != null)
+                                  turn.nextQuestionVi!,
+                              ].join(' '));
+                            }
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
               );
             }),
+          ],
+          if (_speech.errorVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockNoticeBanner(
+                key: const ValueKey<String>('study-ai-speech-error'),
+                message: _speech.errorVi!,
+                isWarm: true),
           ],
           if (isLoading) ...<Widget>[
             SizedBox(height: mc.space8),

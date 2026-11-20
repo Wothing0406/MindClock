@@ -16,6 +16,7 @@ class MainActivity : FlutterActivity() {
     private lateinit var studyFocusBridge: StudyFocusBridgeHandler
     private lateinit var mediaPickerBridge: MediaPickerBridgeHandler
     private lateinit var scheduleWidgetBridge: ScheduleWidgetBridgeHandler
+    private lateinit var speechBridge: StudySpeechBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -24,6 +25,9 @@ class MainActivity : FlutterActivity() {
         studyFocusBridge = StudyFocusBridgeHandler(this)
         mediaPickerBridge = MediaPickerBridgeHandler(this)
         scheduleWidgetBridge = ScheduleWidgetBridgeHandler(this)
+        val speechChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mindclock/study_speech")
+        speechBridge = StudySpeechBridgeHandler(this, speechChannel)
+        speechChannel.setMethodCallHandler { call, result -> speechBridge.handle(call, result) }
         AlarmRingService.ensureNotificationChannel(this)
         TaskReminderReceiver.ensureChannel(this)
 
@@ -100,7 +104,18 @@ class MainActivity : FlutterActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::speechBridge.isInitialized) speechBridge.setForeground(true)
+    }
+
+    override fun onPause() {
+        if (::speechBridge.isInitialized) speechBridge.setForeground(false)
+        super.onPause()
+    }
+
     override fun onDestroy() {
+        if (::speechBridge.isInitialized) speechBridge.dispose()
         if (::mediaPickerBridge.isInitialized) {
             mediaPickerBridge.stopPreviewAudio()
         }

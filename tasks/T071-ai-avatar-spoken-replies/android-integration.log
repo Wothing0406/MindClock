@@ -1,0 +1,9 @@
+00:00 +0: loading C:/Users/QuangDev/Downloads/Projects/web/MindClock/app/integration_test/study_speech_android_test.dart
+Running Gradle task 'assembleDebug'...                            114.8s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...          11.0s
+00:00 +0: Android TTS native contract, actual callback or explicit unavailable fallback
+T071_NATIVE_OUTCOME: {nativePlaybackStarted: false, explicitFallback: true, eventStates: [error], noMicrophoneUsed: true}
+00:18 +1: native bridge rejects unsupported version
+00:18 +2: (tearDownAll)
+00:20 +2: All tests passed!
