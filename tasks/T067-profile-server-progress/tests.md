@@ -13,3 +13,5 @@ TC03 ↔ AC04: ledger PostgreSQL/test schema; chưa chạy.
 - Vòng sửa test: semanticsValue thanh progress phải là số phần trăm theo Flutter, sửa từ chữ sang `20%`; test 401 cần httpStatus=401 theo model; sửa một dấu ngoặc thừa trong test empty. Tất cả đã chạy lại đạt.
 
 Chưa chụp/rà UI Android và chưa đồng bộ hai điện thoại thật. Đây là giới hạn kiểm release, không dùng fixture làm chứng cứ người dùng thật. Pet/ranked/shop online không thuộc nghiệm thu T067.
+
+Kiểm cuối: analyze PASS (No issues found, 2.3s); backend `pytest tests/test_progression.py tests/test_api_v1.py -q` PASS 23; docs links PASS 616 Markdown; task records PASS; staged diff whitespace/secret/asset/config review PASS. Git fetch không dọn worktree dùng --no-auto-maintenance vì `.git/worktrees/wt_t048` cũ bị lỗi quyền, không thay/xóa worktree đó. Push code main đã xác minh remote SHA trong handoff.md.
