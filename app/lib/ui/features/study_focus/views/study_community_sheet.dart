@@ -251,6 +251,8 @@ class MeetStudyRoomGrid extends StatelessWidget {
     this.onRefreshNeeded,
     this.controlsEnabled = true,
     this.mediaAvailable = false,
+    this.onRemoveMember,
+    this.onDeleteRoom,
   });
 
   final StudyRoomDetail room;
@@ -261,6 +263,8 @@ class MeetStudyRoomGrid extends StatelessWidget {
   final bool controlsEnabled;
   final bool mediaAvailable;
   final VoidCallback onLeaveRoom;
+  final ValueChanged<StudyRoomMemberTile>? onRemoveMember;
+  final VoidCallback? onDeleteRoom;
   final bool animateAi;
   final VoidCallback? onRefreshNeeded;
 
@@ -401,6 +405,21 @@ class MeetStudyRoomGrid extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            if (onRemoveMember != null &&
+                                !member.isSelf &&
+                                member.role != 'host') ...<Widget>[
+                              SizedBox(height: mc.space8),
+                              MindClockButton(
+                                key: ValueKey<String>(
+                                    'room-remove-${member.userId}'),
+                                label: 'Mời ra khỏi phòng',
+                                variant: MindClockButtonVariant.subtle,
+                                expand: false,
+                                onPressed: controlsEnabled
+                                    ? () => onRemoveMember!(member)
+                                    : null,
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -486,6 +505,15 @@ class MeetStudyRoomGrid extends StatelessWidget {
                 expand: false,
                 onPressed: controlsEnabled ? onLeaveRoom : null,
               ),
+              if (onDeleteRoom != null)
+                MindClockButton(
+                  key: const ValueKey<String>('meet-delete-room'),
+                  label: 'Xóa phòng',
+                  icon: MindClockIconKind.stop,
+                  variant: MindClockButtonVariant.subtle,
+                  expand: false,
+                  onPressed: controlsEnabled ? onDeleteRoom : null,
+                ),
             ],
           ),
         ],

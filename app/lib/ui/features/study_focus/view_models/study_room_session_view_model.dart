@@ -160,6 +160,23 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
         return null;
       });
 
+  Future<bool> removeMember(String memberUserId) async {
+    if (!isHost || memberUserId.trim().isEmpty) return false;
+    final self = _room?.members.where((member) => member.isSelf).firstOrNull;
+    if (self == null || self.userId == memberUserId) return false;
+    return _change(
+      (id) => _repository.removeRoomMember(id, memberUserId),
+    );
+  }
+
+  Future<bool> deleteRoom() async {
+    if (!isHost) return false;
+    return _change((id) async {
+      await _repository.deleteRoom(id);
+      return null;
+    });
+  }
+
   @override
   void dispose() {
     _disposed = true;

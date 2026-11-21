@@ -650,6 +650,12 @@ class CommunityService:
                 StudyRoomMember.user_id == user_id,
             )
         )
+        if existing is not None and existing.role == 'removed':
+            raise CommunityServiceError(
+                403,
+                'ROOM_REMOVED_BY_HOST',
+                'Bạn đã được chủ phòng mời ra khỏi phòng này.',
+            )
         active_count = self._active_member_counts([room.id]).get(room.id, 0)
         if (existing is None or existing.left_at is not None) and active_count >= room.max_members:
             raise CommunityServiceError(409, 'ROOM_FULL', 'Phòng học đã đủ số lượng thành viên.')
@@ -770,6 +776,58 @@ class CommunityService:
             room.status = 'ended'
         self._db.commit()
         return {'roomId': room.id, 'left': True, 'roomStatus': room.status}
+
+    def remove_room_member(
+        self, owner_id: str, room_id: str, member_user_id: str
+    ) -> dict[str, Any]:
+        room = self._db.scalar(
+            select(StudyRoom).where(StudyRoom.id == room_id).with_for_update()
+        )
+        if room is None or room.status != 'active':
+            raise CommunityServiceError(
+                404, 'ROOM_NOT_FOUND', 'Phòng học không tồn tại hoặc đã đóng.'
+            )
+        if room.owner_id != owner_id:
+            raise CommunityServiceError(
+                403, 'HOST_REQUIRED', 'Chỉ chủ phòng được mời thành viên ra.'
+            )
+        if member_user_id == owner_id:
+            raise CommunityServiceError(
+                409, 'HOST_CANNOT_BE_REMOVED', 'Chủ phòng không thể tự mời mình ra.'
+            )
+        member = self._db.scalar(
+            select(StudyRoomMember).where(
+                StudyRoomMember.room_id == room.id,
+                StudyRoomMember.user_id == member_user_id,
+            )
+        )
+        if member is None or member.left_at is not None:
+            raise CommunityServiceError(
+                404, 'ROOM_MEMBER_NOT_FOUND', 'Thành viên không còn ở trong phòng.'
+            )
+        member.left_at = _utc_now()
+        member.mic_enabled = False
+        member.cam_enabled = False
+        # Giữ row làm dấu chặn tái tham gia; task moderation sau có thể thêm
+        # thao tác cho phép quay lại thay vì xóa dấu này ngầm.
+        member.role = 'removed'
+        self._db.commit()
+        return self._serialize_room_detail(owner_id, room)
+
+    def delete_room(self, owner_id: str, room_id: str) -> None:
+        room = self._db.scalar(
+            select(StudyRoom).where(StudyRoom.id == room_id).with_for_update()
+        )
+        if room is None:
+            raise CommunityServiceError(
+                404, 'ROOM_NOT_FOUND', 'Phòng học không tồn tại hoặc đã được xóa.'
+            )
+        if room.owner_id != owner_id:
+            raise CommunityServiceError(
+                403, 'HOST_REQUIRED', 'Chỉ chủ phòng được xóa phòng.'
+            )
+        self._db.delete(room)
+        self._db.commit()
 
     def ai_match_rooms_and_peers(
         self,

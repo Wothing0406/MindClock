@@ -17,6 +17,63 @@ class StudyRoomSessionPanel extends StatelessWidget {
   final CommunityRepository repository;
   final bool animateAi;
 
+  Future<void> _removeMember(
+    BuildContext context,
+    StudyRoomMemberTile member,
+  ) async {
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Mời thành viên ra?'),
+            content: Text(
+              '${member.alias} sẽ rời phòng và không thể tự vào lại phòng này.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                key: const ValueKey<String>('room-remove-cancel'),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Giữ lại'),
+              ),
+              FilledButton(
+                key: const ValueKey<String>('room-remove-confirm'),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Mời ra'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) return;
+    await viewModel.removeMember(member.userId);
+  }
+
+  Future<void> _deleteRoom(BuildContext context) async {
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Xóa phòng học?'),
+            content: const Text(
+              'Phòng và danh sách thành viên sẽ bị xóa. Đồng hồ học cá nhân vẫn tiếp tục.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                key: const ValueKey<String>('room-delete-cancel'),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Quay lại'),
+              ),
+              FilledButton(
+                key: const ValueKey<String>('room-delete-confirm'),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Xóa phòng'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed) return;
+    await viewModel.deleteRoom();
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
       listenable: viewModel,
@@ -72,7 +129,14 @@ class StudyRoomSessionPanel extends StatelessWidget {
                   ? () => vm.updateMedia(
                       aiCompanionEnabled: !room.summary.aiCompanionEnabled)
                   : null,
+              onRemoveMember:
+                  vm.isHost ? (member) => _removeMember(context, member) : null,
+              onDeleteRoom: vm.isHost ? () => _deleteRoom(context) : null,
               onLeaveRoom: vm.leave),
+          if (vm.message != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            Text(vm.message!, style: mc.bodyStyle.copyWith(color: mc.error)),
+          ],
         ]);
       });
 }

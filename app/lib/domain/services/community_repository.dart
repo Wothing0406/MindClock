@@ -59,6 +59,13 @@ abstract interface class CommunityRepository {
 
   Future<void> leaveRoom(String roomId);
 
+  Future<StudyRoomDetail> removeRoomMember(
+    String roomId,
+    String memberUserId,
+  );
+
+  Future<void> deleteRoom(String roomId);
+
   Future<StudyRoomDetail> fetchRoom(String roomId);
 
   Future<StudyRoomDetail> updateRoomSettings(

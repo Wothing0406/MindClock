@@ -419,6 +419,30 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<StudyRoomDetail> removeRoomMember(
+    String roomId,
+    String memberUserId,
+  ) async {
+    final int idx =
+        _rooms.indexWhere((StudyRoomDetail r) => r.summary.roomId == roomId);
+    final StudyRoomDetail target = _rooms[idx];
+    final StudyRoomDetail updated = target.copyWith(
+      members: target.members
+          .where((StudyRoomMemberTile member) => member.userId != memberUserId)
+          .toList(growable: false),
+    );
+    _rooms = List<StudyRoomDetail>.from(_rooms)..[idx] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> deleteRoom(String roomId) async {
+    _rooms = _rooms
+        .where((StudyRoomDetail room) => room.summary.roomId != roomId)
+        .toList(growable: false);
+  }
+
+  @override
   Future<StudyRoomDetail> fetchRoom(String roomId) async =>
       _rooms.firstWhere((room) => room.summary.roomId == roomId);
 

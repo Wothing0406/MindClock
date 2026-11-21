@@ -6,6 +6,7 @@
 
 1. [Hiện trạng](00-start/01-hien-trang.md): phần nào có mã, phần nào chưa qua máy thật/DB/AI eval.
 2. [Lộ trình](00-start/02-lo-trinh.md), [gói task đầu tiên](00-start/05-goi-task-dau-tien.md) và [quyết định còn mở](00-start/06-quyet-dinh-va-gia-dinh.md).
+   Ma trận “đã có/chưa là product” và thứ tự T073–T084 nằm ở [kế hoạch hoàn thiện product](00-start/08-ke-hoach-hoan-thien-product.md).
 3. [Quy trình vibe coding](00-start/03-quy-trinh-vibe-code.md), [quy tắc skill](00-start/07-quy-tac-skills-va-ai-agent.md) và [AGENTS.md](../AGENTS.md): tạo task, AC ↔ test, vòng sửa, bàn giao.
 4. [PRD](01-product/01-prd.md) và [ma trận truy vết](03-quality/03-truy-vet-yeu-cau.md): hành vi cần đạt và test.
 5. Chỉ đọc tài liệu chuyên môn đúng task ở bảng dưới; **không cần đọc 58 file archive**.

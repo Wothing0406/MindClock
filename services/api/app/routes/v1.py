@@ -2109,6 +2109,32 @@ def create_v1_router(
         except CommunityServiceError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
+    @router.delete('/study-rooms/{room_id}/members/{member_user_id}')
+    def remove_study_room_member(
+        room_id: str,
+        member_user_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommunityService(db).remove_room_member(
+                principal.user.id, room_id, member_user_id
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.delete('/study-rooms/{room_id}', status_code=status.HTTP_204_NO_CONTENT)
+    def delete_study_room(
+        room_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> Response:
+        try:
+            CommunityService(db).delete_room(principal.user.id, room_id)
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
     @router.post('/study-rooms/ai-match')
     def ai_match_study_groups(
         payload: StudyAiMatchRequest,

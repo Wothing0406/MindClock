@@ -151,6 +151,22 @@ class PersonalApiClient {
     );
   }
 
+  Future<Map<String, dynamic>> deleteJson(
+    String path, {
+    String? idempotencyKey,
+  }) {
+    return _executeWithSingleAuthRefresh<Map<String, dynamic>>(
+      method: 'DELETE',
+      path: path,
+      sender: (String token) => _sendJson(
+        method: 'DELETE',
+        uri: _resolvePath(path),
+        token: token,
+        idempotencyKey: idempotencyKey,
+      ),
+    );
+  }
+
   Future<Map<String, dynamic>> postMultipartAttempt({
     required String path,
     required Map<String, String> fields,

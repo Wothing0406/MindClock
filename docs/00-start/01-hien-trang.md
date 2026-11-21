@@ -1,5 +1,9 @@
 # Hiện trạng có bằng chứng
 
+## Cập nhật 21/11/2026 — T073 vòng đời phòng
+
+Đã bổ sung contract host-only để mời thành viên ra, chặn thành viên đó tự vào lại, và xóa hẳn room/member rows theo cascade; Flutter có xác nhận kick/xóa và clear room state trong khi study timer local không bị xóa. Test API SQLite, PostgreSQL thật và Flutter đã chạy trong task T073. Phần này vẫn là REST room lifecycle: mic/cam/loa realtime, QR TTL, waitlist, lịch hẹn, chat, pet ledger và game nhiều máy chưa nằm trong T073. [Ma trận product](08-ke-hoach-hoan-thien-product.md).
+
 ## Cập nhật 21/11/2026 — T072 voice
 
 Đã có Gemini TTS server thật và nút nghe có consent, phát WAV qua Android/callback avatar, hủy response muộn; provider đã tạo sample gốc và API Docker local đã xử lý hỏi→giọng thành công bằng tài khoản development test rồi xóa. Native integration phát sample Gemini `started→done`, cache sau phát rỗng. 22 Flutter tests và analyze sạch ở lượt trước chốt icon mic; 27 API tests + test quota PostgreSQL riêng đạt. `Nói câu hỏi` đã nối activity nhận giọng Android và bản nháp xác nhận gửi, widget test; chưa kiểm nhận tiếng Việt thật từ mic/máy vật lý, Firebase E2E hoặc Live full-duplex. Task T072 giữ bằng chứng/giới hạn, không gọi toàn bộ sản phẩm hoàn thành.

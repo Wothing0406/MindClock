@@ -22,6 +22,73 @@ def _h(uid: str) -> dict[str, str]:
     return {'Authorization': f'Bearer dev:{uid}'}
 
 
+def test_room_host_can_remove_member_and_delete_room(tmp_path: Path) -> None:
+    with TestClient(create_app(_settings(tmp_path))) as client:
+        host = client.get('/v1/me', headers=_h('room_host')).json()
+        member = client.get('/v1/me', headers=_h('room_member')).json()
+        outsider = client.get('/v1/me', headers=_h('room_outsider')).json()
+        room = client.post(
+            '/v1/study-rooms',
+            headers=_h('room_host'),
+            json={'title': 'Phòng quản trị thật', 'maxMembers': 4},
+        ).json()
+        room_id = room['roomId']
+        joined = client.post(
+            f'/v1/study-rooms/{room_id}/join',
+            headers=_h('room_member'),
+            json={},
+        )
+        assert joined.status_code == 200
+        assert {item['userId'] for item in joined.json()['members']} == {
+            host['id'], member['id']
+        }
+
+        not_host = client.delete(
+            f'/v1/study-rooms/{room_id}/members/{member["id"]}',
+            headers=_h('room_outsider'),
+        )
+        assert not_host.status_code == 403
+        remove_self = client.delete(
+            f'/v1/study-rooms/{room_id}/members/{host["id"]}',
+            headers=_h('room_host'),
+        )
+        assert remove_self.status_code == 409
+
+        removed = client.delete(
+            f'/v1/study-rooms/{room_id}/members/{member["id"]}',
+            headers=_h('room_host'),
+        )
+        assert removed.status_code == 200
+        assert [item['userId'] for item in removed.json()['members']] == [host['id']]
+        rejoin = client.post(
+            f'/v1/study-rooms/{room_id}/join',
+            headers=_h('room_member'),
+            json={},
+        )
+        assert rejoin.status_code == 403
+        assert rejoin.json()['error']['code'] == 'ROOM_REMOVED_BY_HOST'
+
+        non_host_delete = client.delete(
+            f'/v1/study-rooms/{room_id}', headers=_h('room_outsider')
+        )
+        assert non_host_delete.status_code == 403
+        assert client.get(
+            f'/v1/study-rooms/{room_id}', headers=_h('room_host')
+        ).status_code == 200
+
+        deleted = client.delete(
+            f'/v1/study-rooms/{room_id}', headers=_h('room_host')
+        )
+        assert deleted.status_code == 204
+        assert client.get(
+            f'/v1/study-rooms/{room_id}', headers=_h('room_host')
+        ).status_code == 404
+        assert client.get(
+            '/v1/study-rooms/public', headers=_h('room_outsider')
+        ).json()['rooms'] == []
+        assert outsider['id']
+
+
 def test_public_profile_search_friends_and_block_isolation(tmp_path: Path) -> None:
     with TestClient(create_app(_settings(tmp_path))) as client:
         assert client.get('/v1/study-rooms/public').status_code == 401

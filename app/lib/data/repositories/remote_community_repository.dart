@@ -214,6 +214,22 @@ class RemoteCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<StudyRoomDetail> removeRoomMember(
+    String roomId,
+    String memberUserId,
+  ) async {
+    final Map<String, dynamic> data = await _apiClient.deleteJson(
+      '/study-rooms/$roomId/members/$memberUserId',
+      idempotencyKey: 'room_remove_${LocalIdGenerator.nextUuidV4()}',
+    );
+    return StudyRoomDetail.fromJson(data);
+  }
+
+  @override
+  Future<void> deleteRoom(String roomId) =>
+      _apiClient.deleteNoContent('/study-rooms/$roomId');
+
+  @override
   Future<StudyRoomDetail> fetchRoom(String roomId) async =>
       StudyRoomDetail.fromJson(
           await _apiClient.getJson('/study-rooms/$roomId'));

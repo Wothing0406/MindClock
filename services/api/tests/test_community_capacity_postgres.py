@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db.models import StudyRoomMember
+from app.db.models import StudyRoom, StudyRoomMember
 from app.main import create_app
 from app.services.community_service import CommunityService, CommunityServiceError
 from tests.test_progression_postgres import isolated_pg  # noqa: F401
@@ -98,3 +98,34 @@ def test_shrink_capacity_and_join_share_one_lock(isolated_pg):
                 assert len(result['members']) <= result['maxMembers']
         finally:
             engine.dispose()
+
+
+def test_delete_room_cascades_members_on_postgres(isolated_pg):
+    from alembic import command
+    from alembic.config import Config
+    cfg = Config('alembic.ini')
+    cfg.attributes['sqlalchemy.url'] = isolated_pg
+    command.upgrade(cfg, 'head')
+    app = create_app(Settings(_env_file=None, app_env='test', database_url=isolated_pg,
+        gemini_mock_mode=True, local_dev_bearer_uid_fallback=True))
+    headers = lambda user: {'Authorization': f'Bearer dev:{user}'}
+    engine = create_engine(isolated_pg)
+    try:
+        with TestClient(app) as client:
+            host_id = client.get('/v1/me', headers=headers('cascade_host')).json()['id']
+            client.get('/v1/me', headers=headers('cascade_member'))
+            room = client.post('/v1/study-rooms', headers=headers('cascade_host'),
+                json={'title': 'Xóa cascade', 'maxMembers': 2}).json()
+            room_id = room['roomId']
+            assert client.post(f'/v1/study-rooms/{room_id}/join',
+                headers=headers('cascade_member'), json={}).status_code == 200
+            assert client.delete(f'/v1/study-rooms/{room_id}',
+                headers=headers('cascade_host')).status_code == 204
+        with Session(engine) as db:
+            assert db.scalar(select(func.count()).select_from(StudyRoom).where(
+                StudyRoom.id == room_id)) == 0
+            assert db.scalar(select(func.count()).select_from(StudyRoomMember).where(
+                StudyRoomMember.room_id == room_id)) == 0
+            assert host_id
+    finally:
+        engine.dispose()

@@ -68,3 +68,9 @@ Alarm/timer local không chờ API. Metadata dismiss có thể queue tối đa 7
 404 không có phiên của owner; 409 ended hoặc SPEECH_REQUEST_USED; 403 chưa consent; 422 input/nonce; 429 quota; 502 WAV hỏng; 503/504 provider/config/timeout. Khóa row user trên PostgreSQL, ghi reservation `idempotency_records.route=speech:v1` trước gọi provider, cap5/phút và30/ngày UTC. Reservation chỉ nonce/policy/status, không text/audio/hash nội dung. Retry cùng nonce không sinh lại âm; lỗi provider vẫn tiêu thụ slot để chống retry tốn tài nguyên. Bấm thử lại dùng nonce mới trong quota. Không là replay cache idempotency trả lại audio vì audio không lưu. Xóa account xóa reservation theo luồng hiện có.
 
 WAV PCM16 mono/stereo8–48kHz, tối đa4MiB/90giây; provider interactions store=false; không log/save text/audio. Client kiểm định dạng và bỏ response quá hạn/scope cũ. Quota không là XP/streak. Cadence chưa lưu server nên Học sâu/solo chặn ở client, không tuyên bố server xác minh nhịp. API chỉ chuyển text user chủ động chọn thành giọng, không tạo/chấm câu hỏi hoặc tự kết luận đúng/sai.
+
+# Bổ sung contract T073 — quản trị vòng đời phòng
+
+- `DELETE /v1/study-rooms/{roomId}/members/{userId}`: chỉ host; không cho xóa host; đánh dấu member rời, tắt cờ mic/cam và giữ dấu `role=removed` để chặn tự join lại. Trả room detail mới. `403 HOST_REQUIRED`, `409 HOST_CANNOT_BE_REMOVED`, `404 ROOM_MEMBER_NOT_FOUND`.
+- `DELETE /v1/study-rooms/{roomId}`: chỉ host; hard-delete room và member rows theo FK cascade, trả `204`. `403 HOST_REQUIRED`, `404 ROOM_NOT_FOUND`.
+- Client nhận `403/404` khi refresh room phải bỏ room state nhưng không xóa/dừng study timer local. Hai endpoint này không chứng minh có WebRTC/media.
