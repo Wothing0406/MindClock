@@ -6,4 +6,4 @@
 - [x] Theo lựa chọn user: nói→nháp chữ→xác nhận gửi, qua RecognizerIntent, không tự gửi/mở mic liên tục.
 - [x] Test API/Flutter/native, provider sample thật và toàn luồng mạng Android; APK app cuối build PASS, hash trong handoff.
 - [ ] Test nghe/nhận tiếng Việt bằng mic trên điện thoại vật lý, Firebase E2E và audio focus thực.
-- [ ] Docs/handoff, rà secret/WIP, commit/push/xác minh.
+- [x] Docs/handoff, rà secret/WIP, commit/push/xác minh main33bb685; giữ verifying cho các cổng máy thật ở trên.

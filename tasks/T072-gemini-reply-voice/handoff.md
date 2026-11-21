@@ -10,6 +10,8 @@ Còn cần kiểm: nói tiếng Việt thật với mic/dịch vụ nhận giọ
 
 Điểm tiếp chính xác: cài dist/mindclock-voice-debug.apk cho emulator API10.0.2.2:8000, đăng nhập→học cùng AI→ngắt quãng→bắt đầu→Nói câu hỏi→cho phép dịch vụ hệ thống/xem lại bản chữ→Gửi→Nghe giọng AI→consent; kiểm hủy/rời màn/Học sâu. APK cho máy thật cần build với URL backend truy cập được, không dùng10.0.2.2. Không gọi app phát hành hoàn thành.
 
-Git sẽ ghi SHA sau push. Chỉ stage file voice; giữ WIP game/web/Firebase ngoài commit. Task T071 metadata đã push riêng ở135212c.
+Git: mã/bằng chứng T072 commit `33bb6856cd1783b9934d25bf6b2ca6d57c9bce59`, nhánh main đã push và xác minh đúng SHA qua ls-remote ngày21/11/2026. Chỉ stage file voice; giữ WIP game/web/Firebase ngoài commit. Task T071 metadata đã push riêng ở135212c. Bản ghi này đi sau bằng commit metadata; task vẫn verifying cho mic/máy thật, không đổi trạng thái chỉ vì đã push.
 
 APK cuối app bình thường (không entrypoint test): dist/mindclock-voice-debug.apk, 208575556bytes, SHA256 `d40d82e7bccd9cb26b84552f93bbca124b80087ac792cbf5f55d7a6edcabe4c5`. Analyze cuối No issues found; build cuối PASS sau gỡ ReadOnly cache. API Docker đã recreate bản cuối, giữ nguyên PostgreSQL. APK chứa game WIP hiện có, không là bản release từ checkout sạch. Không commit APK hoặc file .env/google-services.
+
+Cài APK cuối trên emulator-5554 thành công; am start MainActivity trả Status:ok/LaunchState:COLD/TotalTime8846ms. Đây là kiểm khởi động Activity, không chứng minh đã đăng nhập Firebase hoặc đã trải nghiệm toàn app với tài khoản thật.

@@ -18,6 +18,7 @@ TC05 ↔ AC05: PostgreSQL quota concurrency, Flutter analyze/test, Kotlin compil
 - Kiểm toàn luồng trên màn học Android: `integration_test/gemini_voice_network_test.dart` **1 PASS**, RemoteStudyAiGateway/PersonalApiClient thật→API Docker→Gemini help→user thao tác consent→Gemini TTS→MediaPlayer, UI avatar observed speaking rồi nghỉ, native events started→done. Test dùng dev principal riêng (không Firebase login), user test được xóa trong finally. Không fake audio/text response trong ca này. `android-network.log` lưu kết quả.
 - Native nhận giọng: query-activities có GoogleTTSActivity xử lý RecognizerIntent. Chưa cho người nói tiếng Việt vào mic máy thật, không coi service tồn tại hoặc fake transcript là đã kiểm nhận giọng thành công.
 - Build APK debug app bình thường đã đạt; API define10.0.2.2:8000 cho emulator. Build chứa WIP game đang có trong working tree, không phải release/commit sạch. Hash bản cuối ở handoff.
+- Cài APK cuối adb install -r: Success; mở MainActivity: Status ok/LaunchState COLD. Không dùng startup này làm bằng chứng login/nhận mic thành công.
 - Docs links PASS647 Markdown, task records PASS; asset structural check PASS19tiles, T070 raw findings vẫn giữ13, không bị đổi trong voice task.
 
 Lỗi đã sửa: tên pytest parameter bốnMiB sinh node-id quá dài trên Windows; đặt ids ngắn, không giảm ca oversize. Lint builder dùng trùng `_` với SDK hiện tại và if braces đã sửa. Không đổi SDK/framework để bỏ kiểm tra.
