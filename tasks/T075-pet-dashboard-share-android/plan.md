@@ -7,7 +7,7 @@
 | 3 | Share card + gateway + Kotlin/FileProvider | PNG/intent typed, cancel an toàn | [x] |
 | 4 | Widget/unit/native test + analyzer/docs | AC-01–05 đạt | [x] |
 | 5 | Build/cài emulator, chụp PNG + quay MP4 | font thật, recap đường dẫn | [x] |
-| 6 | Rà staged/secret, commit/push/handoff | remote SHA trùng | [ ] |
+| 6 | Rà staged/secret, commit/push/handoff | remote SHA trùng | [x] |
 
 ## Rủi ro/đường lui
 
