@@ -17,6 +17,11 @@ from app.db.models import (
     AlarmSession,
     Attempt,
     ConsentEvent,
+    CommitmentGroup,
+    CommitmentGroupInvite,
+    CommitmentGroupJoinRequest,
+    CommitmentGroupMember,
+    CommitmentPetCare,
     FriendRequest,
     Friendship,
     IdempotencyRecord,
@@ -51,6 +56,10 @@ from app.schemas import (
     SessionEventRequest,
     SessionFeedbackRequest,
     StudyAiMatchRequest,
+    CommitmentGroupCreateRequest,
+    CommitmentGroupInviteRequest,
+    CommitmentGroupDecisionRequest,
+    CommitmentGroupJoinRequestCreate,
     StudyHelpRequest,
     StudySpeechRequest,
     StudyRoomCreateRequest,
@@ -70,6 +79,10 @@ from app.services.community_service import (
     CommunityService,
     CommunityServiceError,
     normalize_study_level,
+)
+from app.services.commitment_group_service import (
+    CommitmentGroupError,
+    CommitmentGroupService,
 )
 from app.services.pvp_match_service import (
     PvpMatchService,
@@ -468,6 +481,15 @@ def create_v1_router(
         db: Session = Depends(get_db),
     ) -> dict[str, Any]:
         uid = principal.user.id
+        owned_group_ids = list(db.scalars(select(CommitmentGroup.id).where(CommitmentGroup.owner_id == uid)))
+        if owned_group_ids:
+            db.execute(delete(CommitmentGroup).where(CommitmentGroup.id.in_(owned_group_ids)))
+        db.execute(delete(CommitmentPetCare).where(CommitmentPetCare.user_id == uid))
+        db.execute(delete(CommitmentGroupInvite).where(
+            (CommitmentGroupInvite.inviter_id == uid) | (CommitmentGroupInvite.recipient_id == uid)
+        ))
+        db.execute(delete(CommitmentGroupJoinRequest).where(CommitmentGroupJoinRequest.user_id == uid))
+        db.execute(delete(CommitmentGroupMember).where(CommitmentGroupMember.user_id == uid))
         owned_room_ids = list(db.scalars(select(StudyRoom.id).where(StudyRoom.owner_id == uid)))
         if owned_room_ids:
             db.execute(delete(StudyRoomMember).where(StudyRoomMember.room_id.in_(owned_room_ids)))
@@ -1162,6 +1184,14 @@ def create_v1_router(
             if result == 'correct':
                 tp.correct += 1
 
+        group_care = (
+            CommitmentGroupService(db).record_morning_challenge(
+                principal.user.id, session.id
+            )
+            if result == 'correct'
+            else []
+        )
+
         resp = {
             'attemptId': attempt_id,
             'result': result,
@@ -1174,6 +1204,7 @@ def create_v1_router(
             'canAbandon': can_abandon,
             'revealVi': reveal_vi,
             'xpAwarded': xp_delta,
+            'groupCare': group_care,
             'modelVersion': 'deterministic-validator',
             'rubricRevision': question.rubric_revision if question else 1,
         }
@@ -1357,6 +1388,14 @@ def create_v1_router(
             if grade.result == 'correct':
                 tp.correct += 1
 
+        group_care = (
+            CommitmentGroupService(db).record_morning_challenge(
+                principal.user.id, session.id
+            )
+            if grade.result == 'correct'
+            else []
+        )
+
         resp = {
             'attemptId': attempt_id,
             'result': grade.result,
@@ -1369,6 +1408,7 @@ def create_v1_router(
             'canAbandon': can_abandon,
             'revealVi': reveal_vi,
             'xpAwarded': xp_delta,
+            'groupCare': group_care,
             'modelVersion': grade.model_version,
             'rubricRevision': question.rubric_revision if question else 1,
         }
@@ -1662,6 +1702,13 @@ def create_v1_router(
             ended_at_iso=payload.ended_at,
             now_utc=now_utc,
         )
+        group_care = None
+        if xp_status in ('confirmed', 'already_recorded', 'daily_cap_reached'):
+            group_care = CommitmentGroupService(db).record_study_care(
+                principal.user.id,
+                study_session.id,
+                at=now_utc,
+            )
 
         resp = {
             'sessionId': study_session.id,
@@ -1670,6 +1717,7 @@ def create_v1_router(
             'xpAwarded': xp_awarded,
             'xpStatus': xp_status,
             'dailyStudyXpRemaining': daily_remaining,
+            'groupCare': group_care,
         }
         save_idempotency(
             db,
@@ -2148,5 +2196,134 @@ def create_v1_router(
             grade_band=payload.grade_band,
             target_level=payload.target_level,
         )
+
+    @router.get('/commitment-groups/me')
+    def get_commitment_group_hub(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        return CommitmentGroupService(db).hub(principal.user.id)
+
+    @router.post('/commitment-groups', status_code=status.HTTP_201_CREATED)
+    def create_commitment_group(
+        payload: CommitmentGroupCreateRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
+    ) -> dict[str, Any]:
+        raw_body = payload.model_dump(by_alias=True)
+        route_key = 'POST:/v1/commitment-groups'
+        cached = lookup_idempotency(
+            db, user_id=principal.user.id, route=route_key,
+            key=idempotency_key, payload=raw_body,
+        )
+        if cached is not None:
+            return cached
+        try:
+            response_json = CommitmentGroupService(db).create_group(
+                principal.user, name=payload.name, pet_name=payload.pet_name
+            )
+            save_idempotency(
+                db, user_id=principal.user.id, route=route_key,
+                key=idempotency_key, payload=raw_body,
+                response_json=response_json, status_code=201,
+            )
+            db.commit()
+            return response_json
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-groups/{group_id}/invites', status_code=status.HTTP_201_CREATED)
+    def invite_commitment_group_friend(
+        group_id: str,
+        payload: CommitmentGroupInviteRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).invite(
+                principal.user.id, group_id, payload.recipient_user_id
+            )
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-group-invites/{invite_id}/respond')
+    def respond_commitment_group_invite(
+        invite_id: str,
+        payload: CommitmentGroupDecisionRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).respond_invite(
+                principal.user.id, invite_id, payload.decision
+            )
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-group-join-requests', status_code=status.HTTP_201_CREATED)
+    def request_commitment_group_join(
+        payload: CommitmentGroupJoinRequestCreate,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).request_join(
+                principal.user.id, payload.group_code
+            )
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-groups/{group_id}/join-requests/{request_id}/respond')
+    def respond_commitment_group_join_request(
+        group_id: str,
+        request_id: str,
+        payload: CommitmentGroupDecisionRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).respond_join_request(
+                principal.user.id, group_id, request_id, payload.decision
+            )
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.delete('/commitment-groups/{group_id}/members/{member_user_id}')
+    def remove_commitment_group_member(
+        group_id: str,
+        member_user_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).remove_member(
+                principal.user.id, group_id, member_user_id
+            )
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-groups/{group_id}/leave')
+    def leave_commitment_group(
+        group_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).leave(principal.user.id, group_id)
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.delete('/commitment-groups/{group_id}', status_code=status.HTTP_204_NO_CONTENT)
+    def delete_commitment_group(
+        group_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> Response:
+        try:
+            CommitmentGroupService(db).delete_group(principal.user.id, group_id)
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
     return router

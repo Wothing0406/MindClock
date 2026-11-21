@@ -512,3 +512,109 @@ class StudyRoomMember(Base):
     status_note: Mapped[str] = mapped_column(String(80), default='Đang tập trung')
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CommitmentGroup(Base):
+    __tablename__ = 'commitment_groups'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    owner_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    group_code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(60))
+    time_zone: Mapped[str] = mapped_column(String(64), default='Asia/Ho_Chi_Minh')
+    pet_key: Mapped[str] = mapped_column(String(24), default='mam')
+    pet_name: Mapped[str] = mapped_column(String(40), default='Mầm')
+    progression_version: Mapped[str] = mapped_column(
+        String(32), default='pet-progression-v0.1'
+    )
+    max_members: Mapped[int] = mapped_column(Integer, default=4)
+    status: Mapped[str] = mapped_column(String(16), default='active', index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class CommitmentGroupMember(Base):
+    __tablename__ = 'commitment_group_members'
+    __table_args__ = (
+        UniqueConstraint('group_id', 'user_id', name='uq_commitment_group_member'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    group_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('commitment_groups.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    role: Mapped[str] = mapped_column(String(16), default='member')
+    status: Mapped[str] = mapped_column(String(16), default='active', index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CommitmentGroupInvite(Base):
+    __tablename__ = 'commitment_group_invites'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    group_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('commitment_groups.id', ondelete='CASCADE'), index=True
+    )
+    inviter_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    recipient_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), default='pending', index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class CommitmentGroupJoinRequest(Base):
+    __tablename__ = 'commitment_group_join_requests'
+    __table_args__ = (
+        UniqueConstraint('group_id', 'user_id', name='uq_commitment_join_request'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    group_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('commitment_groups.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), default='pending', index=True)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class CommitmentPetCare(Base):
+    __tablename__ = 'commitment_pet_care'
+    __table_args__ = (
+        UniqueConstraint(
+            'group_id', 'user_id', 'local_date', 'care_kind',
+            name='uq_commitment_pet_daily_care',
+        ),
+        UniqueConstraint(
+            'group_id', 'source_type', 'source_id', name='uq_commitment_pet_source'
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    group_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('commitment_groups.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    local_date: Mapped[str] = mapped_column(String(10), index=True)
+    care_kind: Mapped[str] = mapped_column(String(24), default='study_care')
+    source_type: Mapped[str] = mapped_column(String(32), default='study_session')
+    source_id: Mapped[str] = mapped_column(String(64))
+    xp_delta: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

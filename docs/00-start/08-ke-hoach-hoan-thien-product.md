@@ -12,7 +12,7 @@
 | Học một mình | Timer đếm ngược/đếm tiến, deep/interval, pause/finish/recap, EXP server | Chưa E2E resume/notification/EXP đa thiết bị trên staging | T074, T080, T084 |
 | Học cùng AI | Text Socratic, Gemini TTS theo lượt, nhận giọng Android thành bản nháp, avatar trạng thái | Chưa kiểm mic tiếng Việt máy thật; không full-duplex/camera live; deep mode vẫn phải im lặng | T076/T077/T084 |
 | Bạn bè/phòng REST | Tìm/kết bạn, public/invite-code, capacity 2–8, settings, polling; T073 thêm kick/xóa/cascade | Không có signaling/media/chat/QR TTL/waitlist/lịch hẹn/presence socket; mic/cam hiện không truyền dữ liệu | T075–T078 |
-| Pet nhóm | Art pet Mầm 4 stage + reaction tĩnh | Chưa có group membership, ledger/streak, evolution runtime, share card hoặc moderation | T079 |
+| Pet nhóm | Art pet Mầm 4 stage + reaction tĩnh | T074 đang làm membership/ledger/EXP; chưa có dashboard/share/moderation đã kiểm | T074–T075 |
 | PvP/game | G1 luyện đơn và asset game đang WIP/verifying | Chưa chứng minh G2 hai máy, networking event/FX/audio/reconnect; chưa ranked/cân bằng/quyền release | T081–T083 |
 | Vận hành | Docker local, PostgreSQL migration/test, APK debug nội bộ | Chưa staging production-like, monitoring, backup drill, privacy/release signing/pilot | T084 |
 
@@ -22,41 +22,49 @@
 
 Host kick, chặn tự vào lại, xóa phòng/cascade member, client clear state, UI xác nhận. Không bật media giả. Đây là điều kiện trước invite/media.
 
-### T074 — Lịch cá nhân, todo và nhắc đúng giờ
+### T074 — Nền nhóm cam kết và pet
 
-Thêm event/task server có owner, timezone, recurrence/exception, version và idempotency. Android lập lịch local từ bản đã xác nhận; sửa/xóa phải hủy notification cũ. Test quyền từ chối, quiet hours, timezone, reboot/Doze và hai thiết bị; notification khóa màn hình ẩn môn mặc định.
+Nhóm kín tối đa 4 người; một user tối đa 3 nhóm; owner mời/duyệt/kick/delete. Ledger server nhận phiên học đủ 5 phút và thử thách sáng đúng, phát care/EXP cho từng group active, chống trùng theo source/group. Pet là phép chiếu từ ledger. Không chứa share, chat hay media.
 
-### T075 — Lời mời và quản trị nhóm
+### T075 — Pet trên dashboard và chia sẻ
+
+Thẻ pet/chuỗi/EXP trên màn Hôm nay; chọn pet chính. Share card 1080 opt-in không lộ tên/lịch/giờ dậy thành viên; Android share sheet, provenance, Reduce Motion và dọn file tạm.
+
+### T076 — Lời mời phòng, QR, phòng chờ và lịch hẹn
 
 Invite token ngẫu nhiên có TTL/số lượt/thu hồi; QR chỉ chứa HTTPS link; phòng `invite_only` có request/waitlist/approve/reject. Rate-limit, block/report, host kick/unban và log moderation tối thiểu có retention. Không dùng room code vĩnh viễn làm link public.
 
-### T076 — Audio realtime 1v1
+### T077 — Chat phòng và `@MindClock`
+
+Chat người thật có phân trang/retention/report; ảnh có preview và xóa; chỉ nội dung được tag `@MindClock` mới gửi AI. Câu AI lưu text; voice là bản dựng lại theo consent/quota, không giả là lời người thật. Người ngoài/phòng đã xóa không đọc được.
+
+### T078 — Audio realtime 1v1
 
 Chọn media provider/signaling; token ngắn hạn từ backend, object authorization, mic tắt mặc định. Nút mic, loa, audio route thật; reconnect/background/audio focus/permission từ chối. Cổng: hai điện thoại Android/tài khoản khác nhau nghe được nhau, tắt mic/loa có tác dụng, không ghi âm mặc định.
 
-### T077 — Camera/lưới 2–4 người
+### T079 — Camera/lưới 2–4 người
 
 Camera opt-in, preview trước join, đổi camera, adaptive bitrate, participant presence, reconnect và Reduce Motion. Cổng 2–4 máy; mất mạng/một người rời/host xóa không làm timer local mất dữ liệu.
 
-### T078 — Chat, ảnh và AI trong phòng
+### T080 — Lịch cá nhân, todo và nhắc đúng giờ
 
-Chat nhóm tách `Hỏi MindClock`; ảnh có preview/crop/recipient/retention/delete; AI chỉ nhận nội dung được chọn và consent. Test A/B, người rời phòng, xóa phòng, quota và ảnh không lưu mặc định.
+Event/task server có owner, timezone, recurrence/exception, version/idempotency; Android lập lịch local từ bản xác nhận. Test quiet hours, timezone, reboot/Doze và hai máy; khóa màn hình ẩn môn mặc định.
 
-### T079 — Nhóm cam kết và pet
-
-Group 2–4 người, owner/member, lời mời/rời/kick; ledger ngày đủ điều kiện từ sự kiện server có idempotency. Pet stage là phép chiếu từ ledger, không do client cộng. Share card opt-in không lộ tên/lịch/giờ dậy của thành viên khác; animation/export có provenance và Reduce Motion.
-
-### T080 — Phiên học nhóm đồng bộ
+### T081 — Phiên học nhóm đồng bộ
 
 Room schedule/start/pause/end, goal riêng/goal chung, deep/interval, timer theo server epoch nhưng vẫn chạy local khi mất mạng; recap và EXP ledger không cộng trùng. Hẹn bạn học tạo local notification sau xác nhận, cho từ chối/đổi giờ/múi giờ.
 
-### T081–T083 — Game thật
+### T082 — Pilot nền tài khoản/alarm/phòng
 
-- T081 G2 giao hữu 1v1: queue, loading, select tướng, question/action window, authoritative events, FX/audio/HP, reconnect/appeal trên hai máy.
-- T082 G3 2v2: party/invite, bốn submission/action, target, team resolve, bốn máy và AFK/uncertain.
-- T083 ranked: chỉ mở khi ngân hàng/rubric/eval/cân bằng/anti-farm/quyền asset đạt; không bán sức mạnh.
+Firebase A/B, staging PostgreSQL, secrets, backup/restore, account delete, thiết bị Android mục tiêu và kiểm Doze. Media chỉ bật feature flag khi cổng hai máy đạt.
 
-### T084 — Pilot Android
+### T083–T085 — Game thật
+
+- T083 G2 giao hữu 1v1: queue, loading, select tướng, question/action window, authoritative events, FX/audio/HP, reconnect/appeal trên hai máy.
+- T084 G3 2v2: party/invite, bốn submission/action, target, team resolve, bốn máy và AFK/uncertain.
+- T085 ranked: chỉ mở khi ngân hàng/rubric/eval/cân bằng/anti-farm/quyền asset đạt; không bán sức mạnh.
+
+### T086 — Pilot Android cuối
 
 Firebase thật A/B, staging PostgreSQL, backup/restore, secrets, monitoring, account export/delete, thiết bị Android mục tiêu, release signing và checklist rollback. iOS vẫn là nhánh sau Android.
 

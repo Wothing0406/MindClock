@@ -1,4 +1,5 @@
 import '../../domain/models/community_models.dart';
+import '../../domain/models/commitment_group_models.dart';
 import '../../domain/services/community_repository.dart';
 
 /// Fixture cục bộ dùng cho chế độ test/offline demo của Gói B (có nhãn rõ ràng).
@@ -126,6 +127,7 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
   late List<PublicStudentProfile> _peers;
   late List<StudyRoomDetail> _rooms;
   final Set<String> _blockedIds = <String>{};
+  CommitmentGroupDetail? _commitmentGroup;
 
   @override
   bool get isDebugFixture => true;
@@ -483,5 +485,83 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
       recommendedRooms: rooms,
       recommendedPeers: peers,
     );
+  }
+
+  @override
+  Future<CommitmentGroupHub> fetchCommitmentGroupHub() async =>
+      CommitmentGroupHub(
+          groups: _commitmentGroup == null
+              ? const <CommitmentGroupDetail>[]
+              : <CommitmentGroupDetail>[_commitmentGroup!],
+          incomingInvites: const <CommitmentGroupInviteItem>[],
+          membershipLimit: 3);
+
+  @override
+  Future<CommitmentGroupDetail> createCommitmentGroup({
+    required String name,
+    String petName = 'Mầm',
+  }) async {
+    _commitmentGroup = CommitmentGroupDetail(
+      groupId: 'fixture_commitment',
+      groupCode: 'MAM123',
+      name: name,
+      ownerId: 'self_user',
+      isOwner: true,
+      maxMembers: 4,
+      members: const <CommitmentGroupMemberItem>[
+        CommitmentGroupMemberItem(
+          userId: 'self_user',
+          alias: 'Bạn',
+          avatarId: 'avatar_sunrise',
+          role: 'owner',
+          isSelf: true,
+        ),
+      ],
+      pendingRequests: const <CommitmentJoinRequestItem>[],
+      pet: CommitmentPetSummary(
+        keyName: 'mam',
+        name: petName,
+        stage: 1,
+        stageLabelVi: 'Mầm non',
+        totalCareDays: 0,
+        currentStreakDays: 0,
+        todayCareCount: 0,
+        totalXp: 0,
+        nextStageXp: 60,
+        progressionVersion: 'pet-progression-v0.1',
+      ),
+    );
+    return _commitmentGroup!;
+  }
+
+  @override
+  Future<void> inviteCommitmentFriend(
+      String groupId, String recipientUserId) async {}
+
+  @override
+  Future<void> respondCommitmentInvite(
+      String inviteId, String decision) async {}
+
+  @override
+  Future<void> requestCommitmentJoin(String groupCode) async {}
+
+  @override
+  Future<CommitmentGroupDetail> respondCommitmentJoinRequest(
+          String groupId, String requestId, String decision) async =>
+      _commitmentGroup!;
+
+  @override
+  Future<CommitmentGroupDetail> removeCommitmentMember(
+          String groupId, String memberUserId) async =>
+      _commitmentGroup!;
+
+  @override
+  Future<void> leaveCommitmentGroup(String groupId) async {
+    _commitmentGroup = null;
+  }
+
+  @override
+  Future<void> deleteCommitmentGroup(String groupId) async {
+    _commitmentGroup = null;
   }
 }

@@ -1,4 +1,5 @@
 import '../models/community_models.dart';
+import '../models/commitment_group_models.dart';
 
 /// Hợp đồng tầng Repository cho Hồ sơ công khai, Kết bạn, Phòng học công khai & AI ghép nhóm (T058).
 abstract interface class CommunityRepository {
@@ -81,4 +82,19 @@ abstract interface class CommunityRepository {
     String? gradeLevel,
     String? targetLevel,
   });
+
+  Future<CommitmentGroupHub> fetchCommitmentGroupHub();
+  Future<CommitmentGroupDetail> createCommitmentGroup({
+    required String name,
+    String petName = 'Mầm',
+  });
+  Future<void> inviteCommitmentFriend(String groupId, String recipientUserId);
+  Future<void> respondCommitmentInvite(String inviteId, String decision);
+  Future<void> requestCommitmentJoin(String groupCode);
+  Future<CommitmentGroupDetail> respondCommitmentJoinRequest(
+      String groupId, String requestId, String decision);
+  Future<CommitmentGroupDetail> removeCommitmentMember(
+      String groupId, String memberUserId);
+  Future<void> leaveCommitmentGroup(String groupId);
+  Future<void> deleteCommitmentGroup(String groupId);
 }

@@ -247,3 +247,24 @@ class StudyAiMatchRequest(ApiModel):
     grade_band: str | None = Field(default=None, alias='gradeLevel', max_length=40)
     target_level: str | None = Field(default=None, alias='targetLevel', max_length=24)
 
+
+class CommitmentGroupCreateRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    name: str = Field(min_length=2, max_length=60)
+    pet_name: str = Field(default='Mầm', alias='petName', min_length=1, max_length=40)
+
+
+class CommitmentGroupInviteRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    recipient_user_id: str = Field(alias='recipientUserId', min_length=1, max_length=36)
+
+
+class CommitmentGroupDecisionRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    decision: str = Field(pattern='^(accept|decline|reject)$')
+
+
+class CommitmentGroupJoinRequestCreate(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    group_code: str = Field(alias='groupCode', min_length=4, max_length=12)
+

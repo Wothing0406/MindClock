@@ -6,7 +6,7 @@
 
 1. [Hiện trạng](00-start/01-hien-trang.md): phần nào có mã, phần nào chưa qua máy thật/DB/AI eval.
 2. [Lộ trình](00-start/02-lo-trinh.md), [gói task đầu tiên](00-start/05-goi-task-dau-tien.md) và [quyết định còn mở](00-start/06-quyet-dinh-va-gia-dinh.md).
-   Ma trận “đã có/chưa là product” và thứ tự T073–T084 nằm ở [kế hoạch hoàn thiện product](00-start/08-ke-hoach-hoan-thien-product.md).
+   Ma trận “đã có/chưa là product” và thứ tự T073–T086 nằm ở [kế hoạch hoàn thiện product](00-start/08-ke-hoach-hoan-thien-product.md).
 3. [Quy trình vibe coding](00-start/03-quy-trinh-vibe-code.md), [quy tắc skill](00-start/07-quy-tac-skills-va-ai-agent.md) và [AGENTS.md](../AGENTS.md): tạo task, AC ↔ test, vòng sửa, bàn giao.
 4. [PRD](01-product/01-prd.md) và [ma trận truy vết](03-quality/03-truy-vet-yeu-cau.md): hành vi cần đạt và test.
 5. Chỉ đọc tài liệu chuyên môn đúng task ở bảng dưới; **không cần đọc 58 file archive**.
@@ -24,7 +24,7 @@ Tiến độ EXP/level và thứ tự triển khai bạn bè/nhóm/phòng/pet: [
 | Backend/tích hợp | [PRD](01-product/01-prd.md) | [Kiến trúc](02-engineering/01-kien-truc.md), [repo](00-start/04-cau-truc-repo.md), [SQL](02-engineering/03-du-lieu-sql.md), [API](02-engineering/04-hop-dong-api.md), [mobile↔API](02-engineering/08-tich-hop-mobile-api.md) | Contract/DB/CI ở [quality](03-quality/01-ke-hoach-kiem-thu.md), [runbook](03-quality/04-moi-truong-chay-thu.md) |
 | AI và nội dung | [Ngân hàng câu](02-engineering/05-ngan-hang-cau-hoi.md) | [EduSkills-VN adapter](02-engineering/11-eduskills-vn-tich-hop.md), [AI/chấm](02-engineering/06-ai-va-cham-bai.md) | CONTENT/EDU/AI eval ở [quality](03-quality/01-ke-hoach-kiem-thu.md) |
 | Phòng học một mình/AI/bạn | [Hành vi phòng](01-product/08-phong-hoc-ai-va-ban-be.md), [UX](01-product/02-hanh-trinh-ux.md) | [Học local](02-engineering/07-khong-gian-hoc.md), [realtime](02-engineering/09-phong-hoc-realtime.md) | FOCUS/ROOM + lifecycle/2 máy/quota |
-| MultiCal, ghép phòng, pet nhóm | [Lịch chung và nhóm](01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | [Ghép phòng/ledger](02-engineering/12-lich-chung-va-ghep-phong.md), [SQL](02-engineering/03-du-lieu-sql.md) | GROUP-01–09, PostgreSQL/2–4 máy/privacy |
+| MultiCal, ghép phòng, pet nhóm | [Lịch chung và nhóm](01-product/12-lich-chung-ghep-phong-va-pet-nhom.md) | [Ghép phòng/ledger](02-engineering/12-lich-chung-va-ghep-phong.md), [nhóm cam kết/pet ledger](02-engineering/13-nhom-cam-ket-va-pet-ledger.md), [SQL](02-engineering/03-du-lieu-sql.md) | GROUP-01–09, PostgreSQL/2–4 máy/privacy |
 | Động lực và thử người dùng | [Vòng giá trị và thí nghiệm](01-product/10-dong-luc-va-kiem-chung.md) | [Quyền dữ liệu](01-product/04-tai-khoan-quyen-rieng-tu.md) | Khó chịu, bỏ dùng, ngủ, consent trước mở rộng |
 | PvP, nhân vật, rank | [GDD 1v1](04-game/01-pvp-gdd.md), [luyện đơn/đội và asset gap](04-game/04-che-do-don-doi-va-asset-gap.md), [prompt task](04-game/05-prompts-trien-khai-dau-truong.md), [rank/mùa/coin](04-game/03-rank-mua-va-kinh-te.md) | [API](02-engineering/04-hop-dong-api.md) chỉ mở task sau cổng | GAME-01–10; một máy luyện, hai máy 1v1, bốn máy 2v2 |
 | Pilot/release/iOS | [Lộ trình](00-start/02-lo-trinh.md) | [Vận hành](03-quality/02-van-hanh-phat-hanh.md), [iOS sau](05-future/01-ios.md) | Máy thật, PostgreSQL, privacy, rollback |

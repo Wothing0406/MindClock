@@ -15,6 +15,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/account_auth_card.dart';
 import '../../personal_flow/views/profile_progress_card.dart';
+import '../../community/views/commitment_group_sheet.dart';
 import '../../study_focus/views/study_community_sheet.dart';
 import '../view_models/guest_workspace_view_model.dart';
 
@@ -149,6 +150,17 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                   spacing: mc.space8,
                   runSpacing: mc.space8,
                   children: <Widget>[
+                    MindClockButton(
+                      key: const ValueKey<String>('me-open-commitment-group'),
+                      label: 'Nhóm cam kết & Pet Mầm',
+                      icon: MindClockIconKind.shield,
+                      expand: false,
+                      onPressed: () => showCommitmentGroupSheet(
+                        context: context,
+                        repository: widget.communityRepository ??
+                            DebugFixtureCommunityRepository(),
+                      ),
+                    ),
                     MindClockButton(
                       key: const ValueKey<String>('me-pick-avatar-btn'),
                       label: _pickingAvatar

@@ -1,4 +1,5 @@
 import '../../domain/models/community_models.dart';
+import '../../domain/models/commitment_group_models.dart';
 import '../../domain/services/community_repository.dart';
 import '../services/local_id_generator.dart';
 import '../services/personal_api_client.dart';
@@ -276,4 +277,71 @@ class RemoteCommunityRepository implements CommunityRepository {
     );
     return StudyAiMatchResult.fromJson(data);
   }
+
+  @override
+  Future<CommitmentGroupHub> fetchCommitmentGroupHub() async =>
+      CommitmentGroupHub.fromJson(
+          await _apiClient.getJson('/commitment-groups/me'));
+
+  @override
+  Future<CommitmentGroupDetail> createCommitmentGroup({
+    required String name,
+    String petName = 'Mầm',
+  }) async =>
+      CommitmentGroupDetail.fromJson(await _apiClient.postJson(
+        '/commitment-groups',
+        body: <String, dynamic>{'name': name, 'petName': petName},
+        idempotencyKey: 'commitment_new_${LocalIdGenerator.nextUuidV4()}',
+      ));
+
+  @override
+  Future<void> inviteCommitmentFriend(
+      String groupId, String recipientUserId) async {
+    await _apiClient.postJson('/commitment-groups/$groupId/invites',
+        body: <String, dynamic>{'recipientUserId': recipientUserId},
+        idempotencyKey: 'commitment_invite_${LocalIdGenerator.nextUuidV4()}');
+  }
+
+  @override
+  Future<void> respondCommitmentInvite(String inviteId, String decision) async {
+    await _apiClient.postJson('/commitment-group-invites/$inviteId/respond',
+        body: <String, dynamic>{'decision': decision},
+        idempotencyKey:
+            'commitment_invite_reply_${LocalIdGenerator.nextUuidV4()}');
+  }
+
+  @override
+  Future<void> requestCommitmentJoin(String groupCode) async {
+    await _apiClient.postJson('/commitment-group-join-requests',
+        body: <String, dynamic>{'groupCode': groupCode.trim().toUpperCase()},
+        idempotencyKey: 'commitment_request_${LocalIdGenerator.nextUuidV4()}');
+  }
+
+  @override
+  Future<CommitmentGroupDetail> respondCommitmentJoinRequest(
+          String groupId, String requestId, String decision) async =>
+      CommitmentGroupDetail.fromJson(await _apiClient.postJson(
+        '/commitment-groups/$groupId/join-requests/$requestId/respond',
+        body: <String, dynamic>{'decision': decision},
+        idempotencyKey: 'commitment_approve_${LocalIdGenerator.nextUuidV4()}',
+      ));
+
+  @override
+  Future<CommitmentGroupDetail> removeCommitmentMember(
+          String groupId, String memberUserId) async =>
+      CommitmentGroupDetail.fromJson(await _apiClient.deleteJson(
+        '/commitment-groups/$groupId/members/$memberUserId',
+        idempotencyKey: 'commitment_remove_${LocalIdGenerator.nextUuidV4()}',
+      ));
+
+  @override
+  Future<void> leaveCommitmentGroup(String groupId) async {
+    await _apiClient.postJson('/commitment-groups/$groupId/leave',
+        body: const <String, dynamic>{},
+        idempotencyKey: 'commitment_leave_${LocalIdGenerator.nextUuidV4()}');
+  }
+
+  @override
+  Future<void> deleteCommitmentGroup(String groupId) =>
+      _apiClient.deleteNoContent('/commitment-groups/$groupId');
 }
