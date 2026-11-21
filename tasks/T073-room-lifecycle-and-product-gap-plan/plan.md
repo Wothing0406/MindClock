@@ -13,7 +13,7 @@ T068/T069 đã có capacity atomic, settings và polling. `StudyRoomMember` casc
 | 3 | Thêm UI host với xác nhận, không giả media | 320dp/200% không vỡ; member không thấy quyền host | [x] |
 | 4 | Ghi ma trận product đầy đủ và cập nhật API/realtime docs | “đã có” khớp bằng chứng | [x] |
 | 5 | Chạy test PostgreSQL/Flutter/analyze/docs/task records, rà secret/diff | Không lỗi trong phạm vi | [x] |
-| 6 | Commit/push riêng T073 và ghi SHA | Remote xác nhận | [ ] |
+| 6 | Commit/push riêng T073 và ghi SHA | Remote xác nhận | [x] |
 
 ## Chuỗi task product sau T073
 
