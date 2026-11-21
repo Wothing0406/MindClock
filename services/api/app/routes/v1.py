@@ -2326,4 +2326,15 @@ def create_v1_router(
         except CommitmentGroupError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
+    @router.post('/commitment-groups/{group_id}/primary')
+    def set_primary_commitment_group(
+        group_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            return CommitmentGroupService(db).set_primary(principal.user.id, group_id)
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
     return router

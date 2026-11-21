@@ -89,6 +89,7 @@ class CommitmentGroupDetail {
     required this.name,
     required this.ownerId,
     required this.isOwner,
+    required this.isPrimary,
     required this.maxMembers,
     required this.members,
     required this.pendingRequests,
@@ -101,6 +102,7 @@ class CommitmentGroupDetail {
         name: json['name'] as String? ?? 'Nhóm cam kết',
         ownerId: json['ownerId'] as String? ?? '',
         isOwner: json['isOwner'] as bool? ?? false,
+        isPrimary: json['isPrimary'] as bool? ?? false,
         maxMembers: json['maxMembers'] as int? ?? 4,
         members: (json['members'] as List<dynamic>? ?? const <dynamic>[])
             .whereType<Map<String, dynamic>>()
@@ -119,6 +121,7 @@ class CommitmentGroupDetail {
   final String name;
   final String ownerId;
   final bool isOwner;
+  final bool isPrimary;
   final int maxMembers;
   final List<CommitmentGroupMemberItem> members;
   final List<CommitmentJoinRequestItem> pendingRequests;

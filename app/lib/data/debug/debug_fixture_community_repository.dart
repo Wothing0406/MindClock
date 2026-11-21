@@ -507,6 +507,7 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
       name: name,
       ownerId: 'self_user',
       isOwner: true,
+      isPrimary: true,
       maxMembers: 4,
       members: const <CommitmentGroupMemberItem>[
         CommitmentGroupMemberItem(
@@ -564,4 +565,8 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
   Future<void> deleteCommitmentGroup(String groupId) async {
     _commitmentGroup = null;
   }
+
+  @override
+  Future<CommitmentGroupHub> setPrimaryCommitmentGroup(String groupId) async =>
+      fetchCommitmentGroupHub();
 }

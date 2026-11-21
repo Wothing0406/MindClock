@@ -552,6 +552,7 @@ class CommitmentGroupMember(Base):
     )
     role: Mapped[str] = mapped_column(String(16), default='member')
     status: Mapped[str] = mapped_column(String(16), default='active', index=True)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

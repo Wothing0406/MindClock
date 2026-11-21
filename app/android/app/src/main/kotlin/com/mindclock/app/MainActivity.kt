@@ -17,6 +17,7 @@ class MainActivity : FlutterActivity() {
     private lateinit var mediaPickerBridge: MediaPickerBridgeHandler
     private lateinit var scheduleWidgetBridge: ScheduleWidgetBridgeHandler
     private lateinit var speechBridge: StudySpeechBridgeHandler
+    private lateinit var petShareBridge: PetShareBridgeHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -25,6 +26,7 @@ class MainActivity : FlutterActivity() {
         studyFocusBridge = StudyFocusBridgeHandler(this)
         mediaPickerBridge = MediaPickerBridgeHandler(this)
         scheduleWidgetBridge = ScheduleWidgetBridgeHandler(this)
+        petShareBridge = PetShareBridgeHandler(this)
         val speechChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mindclock/study_speech")
         speechBridge = StudySpeechBridgeHandler(this, speechChannel)
         speechChannel.setMethodCallHandler { call, result -> speechBridge.handle(call, result) }
@@ -68,6 +70,13 @@ class MainActivity : FlutterActivity() {
             ScheduleWidgetBridgeHandler.CHANNEL_NAME,
         ).setMethodCallHandler { call, result ->
             scheduleWidgetBridge.handleMethodCall(call, result)
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            PetShareBridgeHandler.CHANNEL_NAME,
+        ).setMethodCallHandler { call, result ->
+            petShareBridge.handle(call, result)
         }
     }
 

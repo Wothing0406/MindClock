@@ -344,4 +344,12 @@ class RemoteCommunityRepository implements CommunityRepository {
   @override
   Future<void> deleteCommitmentGroup(String groupId) =>
       _apiClient.deleteNoContent('/commitment-groups/$groupId');
+
+  @override
+  Future<CommitmentGroupHub> setPrimaryCommitmentGroup(String groupId) async =>
+      CommitmentGroupHub.fromJson(await _apiClient.postJson(
+        '/commitment-groups/$groupId/primary',
+        body: const <String, dynamic>{},
+        idempotencyKey: 'commitment_primary_${LocalIdGenerator.nextUuidV4()}',
+      ));
 }

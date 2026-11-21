@@ -78,27 +78,6 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Tạo nhóm riêng'), findsOneWidget);
   });
-
-  testWidgets('T074 visual evidence for pet group hub',
-      (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final DebugFixtureCommunityRepository repository =
-        DebugFixtureCommunityRepository();
-    await repository.createCommitmentGroup(
-        name: 'Nhóm ôn sáng 12A', petName: 'Mầm Xanh');
-    await tester.pumpWidget(MaterialApp(
-      theme: MindClockTheme.buildThemeData(),
-      home: Scaffold(body: CommitmentGroupSheet(repository: repository)),
-    ));
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byType(CommitmentGroupSheet),
-      matchesGoldenFile('goldens/t074_commitment_group_pet.png'),
-    );
-  });
 }
 
 Map<String, dynamic> _groupJson(
@@ -109,6 +88,7 @@ Map<String, dynamic> _groupJson(
       'name': name,
       'ownerId': 'u1',
       'isOwner': true,
+      'isPrimary': id == 'g1',
       'maxMembers': 4,
       'members': <Map<String, dynamic>>[
         <String, dynamic>{

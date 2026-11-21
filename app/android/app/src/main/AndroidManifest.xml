@@ -23,6 +23,10 @@
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/png" />
+        </intent>
         <package android:name="com.google.android.apps.wellbeing" />
         <package android:name="com.samsung.android.forest" />
     </queries>
@@ -99,6 +103,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/mindclock_schedule_widget_info" />
         </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/pet_share_paths" />
+        </provider>
 
         <meta-data
             android:name="flutterEmbedding"

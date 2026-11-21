@@ -2,7 +2,7 @@
 
 ## Trạng thái thật
 
-T070 đã tạo bộ art pet Mầm gốc: master, 4 giai đoạn ngoại hình và 6 reaction **tĩnh**, đóng gói WebP/alpha trong assets/companions và app/assets/companions. [Asset và QA](../../assets/companions/README.md). Chưa có chu kỳ animation toàn thân, group/pet ledger hoặc xuất thẻ share trên app. Các mốc cấp dưới đây vẫn là thiết kế sau khi ngày chăm/nhóm được xác minh, không tự mở tiến hóa chỉ vì có ảnh.
+T070 đã tạo bộ art pet Mầm gốc: master, 4 giai đoạn ngoại hình và 6 reaction **tĩnh**, đóng gói WebP/alpha trong assets/companions và app/assets/companions. [Asset và QA](../../assets/companions/README.md). T074 đã có nhóm kín, pet ledger và EXP nhóm server-authoritative. T075 đưa pet chính lên màn Hôm nay, cho đổi pet chính giữa tối đa 3 nhóm và xuất thẻ PNG 1080×1080 qua Android share sheet. Chu kỳ animation toàn thân vẫn chưa có; ảnh tĩnh không được mô tả như animation.
 
 ## Một pet chung có gì để quay lại?
 
@@ -36,7 +36,9 @@ Nút **Chia sẻ thành tích** sau mốc nhóm hoặc tiến hóa, có preview 
 
 Mặc định không có email, mã phòng riêng, mã mời, TKB, giờ thức dậy, tên thật, vị trí hoặc hình thành viên. Tên nhóm chỉ khi bật chia sẻ; tên/avatar từng bạn chỉ khi người đó đồng ý, không lấy quyền host làm consent thay cả nhóm. Có tùy chọn bỏ toàn bộ tên.
 
-Android dùng share sheet sau thao tác user, xuất ảnh tạm và cấp đọc đúng URI rồi dọn theo TTL; không tự đăng lên TikTok/Facebook, không cần người dùng đăng nhập các mạng này trong MindClock. Nếu app đích không hỗ trợ thì vẫn gửi/lưu ảnh bình thường. Mất mạng chỉ dùng snapshot đã xác nhận kèm thời điểm, không tự tăng số ngày; chưa có dữ liệu thì không dựng thẻ thành tích giả.
+Android dùng share sheet sau thao tác user, xuất ảnh tạm vào cache, cấp đọc bằng `FileProvider` rồi dọn file cũ theo TTL; không tự đăng lên TikTok/Facebook, không cần người dùng đăng nhập các mạng này trong MindClock. Nếu app đích không hỗ trợ thì bridge trả trạng thái rõ, không crash. Mất mạng chỉ dùng snapshot đã xác nhận, không tự tăng số ngày; chưa có dữ liệu thì không dựng thẻ thành tích giả.
+
+T075 mặc định ẩn tên nhóm; switch trong preview mới cho phép hiện. File đã kiểm trên emulator là PNG 1080×1080 và share sheet nhận đúng `image/png`. Máy Android thật vẫn là cổng bắt buộc trước release.
 
 ## Điều kiện nghiệm thu
 

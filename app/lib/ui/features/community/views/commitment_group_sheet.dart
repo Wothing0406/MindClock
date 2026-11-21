@@ -373,6 +373,25 @@ class _CommitmentGroupSheetState extends State<CommitmentGroupSheet> {
           MindClockStatusPill(label: 'Mã ${group.groupCode}'),
         ]),
         SizedBox(height: mc.space8),
+        if (group.isPrimary)
+          const MindClockNoticeBanner(
+            message: 'Pet này đang hiển thị trên màn Hôm nay.',
+            isWarm: false,
+          )
+        else
+          MindClockButton(
+            key: ValueKey<String>('commitment-primary-${group.groupId}'),
+            label: 'Đưa pet này lên Hôm nay',
+            icon: MindClockIconKind.sunrise,
+            variant: MindClockButtonVariant.secondary,
+            onPressed: _saving
+                ? null
+                : () => _act(() async {
+                      await widget.repository
+                          .setPrimaryCommitmentGroup(group.groupId);
+                    }, 'Đã đổi pet trên màn Hôm nay.'),
+          ),
+        SizedBox(height: mc.space8),
         for (final CommitmentGroupMemberItem member in group.members)
           Padding(
             padding: EdgeInsets.only(bottom: mc.space8),

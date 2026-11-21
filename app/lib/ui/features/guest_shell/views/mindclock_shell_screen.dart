@@ -516,6 +516,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             body = TodayScreen(
               viewModel: widget.viewModel,
               studyViewModel: widget.studyViewModel,
+              communityRepository: widget.communityRepository,
               lastActionBanner: _todayBanner,
               onCreateAlarm: () {
                 setState(() {

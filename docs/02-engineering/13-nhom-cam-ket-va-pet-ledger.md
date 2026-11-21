@@ -2,7 +2,7 @@
 
 ## Phạm vi hiện hành
 
-T074 chỉ xây nền nhóm kín và pet có dữ liệu server. Một user có tối đa 3 membership `active`; một nhóm tối đa 4 người. Nhóm không xuất hiện trong tìm kiếm công khai. Owner mời bạn đã kết bạn, duyệt yêu cầu theo mã, mời ra hoặc xóa nhóm. Member có thể rời. Chuyển quyền trưởng nhóm, QR/share, chat/media và PvP không thuộc T074.
+T074 xây nền nhóm kín và pet có dữ liệu server; T075 thêm pet chính đồng bộ đa thiết bị, card Hôm nay và Android share sheet. Một user có tối đa 3 membership `active`; một nhóm tối đa 4 người. Nhóm không xuất hiện trong tìm kiếm công khai. Owner mời bạn đã kết bạn, duyệt yêu cầu theo mã, mời ra hoặc xóa nhóm. Member có thể rời. Chuyển quyền trưởng nhóm, QR, chat/media và PvP chưa thuộc phạm vi hiện hành.
 
 ## Nguồn care và EXP nhóm
 
@@ -18,7 +18,7 @@ Pet `mam` dùng `pet-progression-v0.1`: stage 1/2/3/4 tại 0/60/160/320 EXP. St
 ## Bảng dữ liệu
 
 - `commitment_groups`: owner, mã nhóm, timezone, pet, progression version, capacity và status.
-- `commitment_group_members`: role `owner|member`, status `active|left|removed`, thời điểm tham gia/rời.
+- `commitment_group_members`: role `owner|member`, status `active|left|removed`, thời điểm tham gia/rời và `is_primary`; partial unique index chỉ cho một membership active primary/user trên PostgreSQL.
 - `commitment_group_invites`: người mời/người nhận, trạng thái, TTL 72 giờ.
 - `commitment_group_join_requests`: yêu cầu theo mã, owner accept/reject.
 - `commitment_pet_care`: ledger append-only theo group/user/ngày/source, `xp_delta` do server quyết định.
@@ -38,12 +38,13 @@ Xóa account owner xóa group cascade. Xóa member/account dọn membership, inv
 | `DELETE` | `/v1/commitment-groups/{id}/members/{userId}` | Owner mời member ra, không xóa owner |
 | `POST` | `/v1/commitment-groups/{id}/leave` | Member rời; owner phải xóa group |
 | `DELETE` | `/v1/commitment-groups/{id}` | Owner xóa group và dữ liệu con |
+| `POST` | `/v1/commitment-groups/{id}/primary` | Member chọn pet group này làm pet chính; server hạ primary cũ rồi nâng primary mới trong cùng transaction |
 
 Accept/approve khóa row user và group trên PostgreSQL trước khi kiểm giới hạn. Các response nhóm chỉ trả alias/avatar/role và số tổng hợp. Không trả danh sách người chưa chăm.
 
 ## Cổng kiểm chứng
 
 - SQLite API: quyền owner/member, invite/request state, kick/leave/delete, study/morning care và retry.
-- PostgreSQL disposable DB: migration `0005`, hai approval đồng thời không vượt 3 nhóm.
+- PostgreSQL disposable DB: migration `0005/0006`, hai approval không vượt 3 nhóm và hai lần chọn primary cạnh tranh vẫn còn đúng một primary.
 - Flutter: parse contract đa nhóm, tạo/render pet, 320dp + text 200% + Reduce Motion.
-- T075 mới đưa pet ra dashboard và share sheet; T077 mới thêm chat `@MindClock`.
+- T075 đã đưa pet ra dashboard và share sheet; ảnh/video emulator nằm tại `docs/03-quality/evidence/T075/`. T077 mới thêm chat `@MindClock`.

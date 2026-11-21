@@ -8,6 +8,7 @@ import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/morning_question_selector.dart';
+import '../../../../domain/services/community_repository.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_avatar_view.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../study_focus/view_models/study_focus_view_model.dart';
+import '../../community/views/today_pet_card.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'day_schedule_timeline_card.dart';
 
@@ -27,6 +29,7 @@ class TodayScreen extends StatefulWidget {
     required this.onEditAlarm,
     required this.onOpenTimetableAndProfile,
     this.studyViewModel,
+    this.communityRepository,
     this.onOpenStudySpace,
     this.lastActionBanner,
   });
@@ -36,6 +39,7 @@ class TodayScreen extends StatefulWidget {
   final ValueChanged<AlarmConfig> onEditAlarm;
   final VoidCallback onOpenTimetableAndProfile;
   final StudyFocusViewModel? studyViewModel;
+  final CommunityRepository? communityRepository;
   final VoidCallback? onOpenStudySpace;
   final String? lastActionBanner;
 
@@ -265,6 +269,10 @@ class _TodayScreenState extends State<TodayScreen> {
               message: widget.lastActionBanner!,
               isWarm: false,
             ),
+          ],
+          if (widget.communityRepository != null) ...<Widget>[
+            SizedBox(height: mc.space12),
+            TodayPetCard(repository: widget.communityRepository!),
           ],
           if (widget.viewModel.needsOsPermissions) ...<Widget>[
             SizedBox(height: mc.space12),

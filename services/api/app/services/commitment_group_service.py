@@ -38,6 +38,7 @@ class CommitmentGroupService:
         self.db = db
 
     def create_group(self, user: User, *, name: str, pet_name: str) -> dict[str, Any]:
+        existing_memberships = self._active_memberships(user.id)
         self._require_group_capacity(user.id)
         clean_name = ' '.join(name.split())
         clean_pet = ' '.join(pet_name.split())
@@ -53,7 +54,12 @@ class CommitmentGroupService:
         )
         self.db.add(group)
         self.db.flush()
-        self.db.add(CommitmentGroupMember(group_id=group.id, user_id=user.id, role='owner'))
+        self.db.add(CommitmentGroupMember(
+            group_id=group.id,
+            user_id=user.id,
+            role='owner',
+            is_primary=not existing_memberships,
+        ))
         self.db.commit()
         return self.detail(user.id, group.id)
 
@@ -122,6 +128,7 @@ class CommitmentGroupService:
             'name': group.name,
             'ownerId': group.owner_id,
             'isOwner': viewer.role == 'owner',
+            'isPrimary': viewer.is_primary,
             'maxMembers': group.max_members,
             'members': members,
             'pendingRequests': pending_requests,
@@ -220,6 +227,8 @@ class CommitmentGroupService:
             raise CommitmentGroupError(409, 'MEMBER_NOT_REMOVABLE', 'Không thể xóa thành viên này.')
         member.status = 'removed'
         member.left_at = datetime.now(timezone.utc)
+        member.is_primary = False
+        self._ensure_primary(member_user_id)
         self.db.commit()
         return self.detail(owner_id, group_id)
 
@@ -231,13 +240,35 @@ class CommitmentGroupService:
             raise CommitmentGroupError(409, 'OWNER_MUST_DELETE_GROUP', 'Trưởng nhóm cần xóa nhóm thay vì rời nhóm.')
         member.status = 'left'
         member.left_at = datetime.now(timezone.utc)
+        member.is_primary = False
+        self._ensure_primary(user_id)
         self.db.commit()
         return {'status': 'left'}
 
     def delete_group(self, owner_id: str, group_id: str) -> None:
         group = self._require_owner(owner_id, group_id)
+        affected_users = [item.user_id for item in self._active_group_members(group_id)]
         self.db.delete(group)
+        self.db.flush()
+        for user_id in affected_users:
+            self._ensure_primary(user_id)
         self.db.commit()
+
+    def set_primary(self, user_id: str, group_id: str) -> dict[str, Any]:
+        self.db.execute(select(User.id).where(User.id == user_id).with_for_update()).scalar_one()
+        target = self._active_member(group_id, user_id)
+        if target is None:
+            raise CommitmentGroupError(403, 'GROUP_MEMBER_REQUIRED', 'Bạn không còn ở trong nhóm này.')
+        memberships = self._active_memberships(user_id)
+        for item in memberships:
+            item.is_primary = False
+        # Flush the demotion first. PostgreSQL checks the partial unique index
+        # while each UPDATE batch is applied, so swapping True/False in one
+        # executemany can momentarily look like two primary pets.
+        self.db.flush()
+        target.is_primary = True
+        self.db.commit()
+        return self.hub(user_id)
 
     def record_activity_care(
         self,
@@ -367,7 +398,18 @@ class CommitmentGroupService:
             CommitmentGroupMember.user_id == user_id,
             CommitmentGroupMember.status == 'active',
             CommitmentGroup.status == 'active',
-        ).order_by(CommitmentGroupMember.joined_at.asc())))
+        ).order_by(CommitmentGroupMember.is_primary.desc(), CommitmentGroupMember.joined_at.asc())))
+
+    def _active_group_members(self, group_id: str) -> list[CommitmentGroupMember]:
+        return list(self.db.scalars(select(CommitmentGroupMember).where(
+            CommitmentGroupMember.group_id == group_id,
+            CommitmentGroupMember.status == 'active',
+        )))
+
+    def _ensure_primary(self, user_id: str) -> None:
+        memberships = self._active_memberships(user_id)
+        if memberships and not any(item.is_primary for item in memberships):
+            memberships[0].is_primary = True
 
     def _require_group_capacity(self, user_id: str) -> None:
         # Locking the user serializes competing accepts/approvals on PostgreSQL.
@@ -393,13 +435,19 @@ class CommitmentGroupService:
             CommitmentGroupMember.group_id == group_id,
             CommitmentGroupMember.user_id == user_id,
         ))
+        has_active_membership = bool(self._active_memberships(user_id))
         if old:
             old.status = 'active'
             old.role = 'member'
             old.left_at = None
             old.joined_at = datetime.now(timezone.utc)
+            old.is_primary = not has_active_membership
         else:
-            self.db.add(CommitmentGroupMember(group_id=group_id, user_id=user_id))
+            self.db.add(CommitmentGroupMember(
+                group_id=group_id,
+                user_id=user_id,
+                is_primary=not has_active_membership,
+            ))
         self.db.flush()
 
     def _are_friends(self, a: str, b: str) -> bool:

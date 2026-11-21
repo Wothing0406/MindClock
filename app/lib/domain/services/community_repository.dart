@@ -97,4 +97,5 @@ abstract interface class CommunityRepository {
       String groupId, String memberUserId);
   Future<void> leaveCommitmentGroup(String groupId);
   Future<void> deleteCommitmentGroup(String groupId);
+  Future<CommitmentGroupHub> setPrimaryCommitmentGroup(String groupId);
 }
