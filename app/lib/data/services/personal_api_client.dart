@@ -27,7 +27,8 @@ class PersonalApiClient {
   final HttpClient Function() _httpClientFactory;
   final Duration requestTimeout;
 
-  Uri _resolvePath(String relativePath, [Map<String, String>? queryParameters]) {
+  Uri _resolvePath(String relativePath,
+      [Map<String, String>? queryParameters]) {
     final Uri? base = baseUri;
     if (base == null || base.host.isEmpty) {
       throw const PersonalApiException(
@@ -44,10 +45,9 @@ class PersonalApiClient {
         relativePath.startsWith('/') ? relativePath : '/$relativePath';
     return base.replace(
       path: '$normalizedBase/v1$cleanRel',
-      queryParameters:
-          (queryParameters == null || queryParameters.isEmpty)
-              ? null
-              : queryParameters,
+      queryParameters: (queryParameters == null || queryParameters.isEmpty)
+          ? null
+          : queryParameters,
     );
   }
 
@@ -71,6 +71,7 @@ class PersonalApiClient {
     String path, {
     required Map<String, dynamic> body,
     required String idempotencyKey,
+    Duration? timeout,
   }) {
     return _executeWithSingleAuthRefresh<Map<String, dynamic>>(
       method: 'POST',
@@ -81,6 +82,7 @@ class PersonalApiClient {
         token: token,
         idempotencyKey: idempotencyKey,
         body: body,
+        timeoutOverride: timeout,
       ),
     );
   }
@@ -158,14 +160,16 @@ class PersonalApiClient {
     if (photo.bytes.lengthInBytes > CameraCaptureGateway.maxImageBytes) {
       throw const PersonalApiException(
         code: 'PAYLOAD_TOO_LARGE',
-        messageVi: 'Ảnh vượt quá giới hạn 5 MB. Vui lòng chụp lại hoặc nhập chữ.',
+        messageVi:
+            'Ảnh vượt quá giới hạn 5 MB. Vui lòng chụp lại hoặc nhập chữ.',
         httpStatus: 413,
       );
     }
     if (!CameraCaptureGateway.allowedMimeTypes.contains(photo.mimeType)) {
       throw const PersonalApiException(
         code: 'UNSUPPORTED_MEDIA_TYPE',
-        messageVi: 'Định dạng ảnh chưa được hỗ trợ. Vui lòng chọn ảnh JPEG/PNG/WebP hoặc nhập chữ.',
+        messageVi:
+            'Định dạng ảnh chưa được hỗ trợ. Vui lòng chọn ảnh JPEG/PNG/WebP hoặc nhập chữ.',
         httpStatus: 415,
       );
     }
@@ -249,12 +253,14 @@ class PersonalApiClient {
     required String token,
     String? idempotencyKey,
     Map<String, dynamic>? body,
+    Duration? timeoutOverride,
   }) async {
     final HttpClient client = _httpClientFactory();
-    client.connectionTimeout = requestTimeout;
+    final timeout = timeoutOverride ?? requestTimeout;
+    client.connectionTimeout = timeout;
     try {
       final HttpClientRequest request =
-          await client.openUrl(method, uri).timeout(requestTimeout);
+          await client.openUrl(method, uri).timeout(timeout);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
       if (idempotencyKey != null && idempotencyKey.isNotEmpty) {
@@ -271,16 +277,16 @@ class PersonalApiClient {
       }
 
       final HttpClientResponse response =
-          await request.close().timeout(requestTimeout);
+          await request.close().timeout(timeout);
       final String rawBody = await utf8.decodeStream(response).timeout(
-            requestTimeout,
+            timeout,
           );
       return _decodeResponse(response.statusCode, rawBody);
     } on TimeoutException {
       throw const PersonalApiException(
         code: 'CLIENT_TIMEOUT',
         messageVi:
-            'Quá thời gian chờ phản hồi từ máy chủ (15 giây). Chuông và Dừng khẩn cấp vẫn hoạt động bình thường.',
+            'Quá thời gian chờ phản hồi từ máy chủ. Chuông và Dừng khẩn cấp vẫn hoạt động bình thường.',
         httpStatus: 504,
         retryable: true,
         isTimeout: true,
@@ -296,7 +302,8 @@ class PersonalApiClient {
     } on HttpException {
       throw const PersonalApiException(
         code: 'NETWORK_PROTOCOL_ERROR',
-        messageVi: 'Kết nối máy chủ bị gián đoạn. Bạn có thể thử lại với cùng mã gửi.',
+        messageVi:
+            'Kết nối máy chủ bị gián đoạn. Bạn có thể thử lại với cùng mã gửi.',
         retryable: true,
         isNetworkError: true,
       );
@@ -392,13 +399,11 @@ class PersonalApiClient {
       return parsed;
     }
 
-    final Map<String, dynamic>? err =
-        parsed['error'] as Map<String, dynamic>?;
+    final Map<String, dynamic>? err = parsed['error'] as Map<String, dynamic>?;
     final String code = err?['code'] as String? ?? 'HTTP_$statusCode';
-    final bool retryable = err?['retryable'] as bool? ??
-        (statusCode >= 500 || statusCode == 429);
-    final String serverMessage =
-        (err?['message'] as String?)?.trim() ?? '';
+    final bool retryable =
+        err?['retryable'] as bool? ?? (statusCode >= 500 || statusCode == 429);
+    final String serverMessage = (err?['message'] as String?)?.trim() ?? '';
 
     throw PersonalApiException(
       code: code,

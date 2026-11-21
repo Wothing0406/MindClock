@@ -14,7 +14,7 @@ Repo đã có mã **Flutter/Android Kotlin** trong [`app/`](app/), **FastAPI/SQL
 | Đồng hồ và báo thức | Nhiều chuông, âm, vòng lịch ngủ, mode thường/thử thách, Dừng khẩn cấp offline; DND theo quyền OS | Có mã alarm, cần kiểm máy thật; sleep UI/DND còn đặc tả |
 | Lịch học cá nhân | Nhập/upload TKB, xem việc hôm nay, nhắc opt-in và gợi giờ/câu/việc có xác nhận | Có phần mã, cần test dọc và mở rộng |
 | Ôn tập và AI | Sau alarm xem cảnh ngắn gắn môn học rồi làm câu có trình bày; sai rõ nhiều lần có gợi ý/bỏ lượt không thưởng. EduSkills-VN hỗ trợ soạn câu và hướng dẫn chấm đa môn | Có phần API/luồng; mở màn, adapter EduSkills và AI eval chưa hoàn tất |
-| Không gian học | Chọn solo/AI/bạn, môn/việc/nhịp, timer; giọng nói/avatar AI và phòng bạn theo cổng | Timer/API có phần mã; Live và phòng bạn chưa có production |
+| Không gian học | Solo/AI/bạn, timer; nhập tiếng nói thành nháp, giọng Gemini theo lượt và avatar theo âm thanh | Giọng Gemini/API/Android đã kiểm dev; nhận mic máy thật, Firebase E2E, Live/phòng bạn còn cổng riêng |
 | Hồ sơ và dữ liệu | Xem tiến độ/lịch sử/rank/tiểu sử, kết bạn/mời học, quyền chia sẻ và xóa | Có phần mã; public profile/bạn bè cần task sau |
 | Đấu trường RPG | Giao hữu cùng câu, tướng 2D, ranked theo môn/mùa khi đủ điều kiện | Đặc tả/art nghiên cứu; chưa có PvP live |
 

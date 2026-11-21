@@ -1,0 +1,8 @@
+00:00 +0: loading C:/Users/QuangDev/Downloads/Projects/web/MindClock/app/integration_test/gemini_voice_network_test.dart
+Running Gradle task 'assembleDebug'...                             30.6s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...        2,466ms
+00:00 +0: real API question → Gemini reply → consent → cloud WAV → Android avatar
+T072_NETWORK_PLAYBACK: {realBackendAndGemini: true, nativeEvents: [started, done], authMode: development test principal; not Firebase login, testAccountDeleted: true}
+00:35 +1: (tearDownAll)
+00:37 +1: All tests passed!

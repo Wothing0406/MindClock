@@ -60,3 +60,11 @@ Lời mời QR/link, redeem, chat nhóm và AI turn từ ảnh cũng **chưa có
 ## 5. Offline/retry và bảo vệ server
 
 Alarm/timer local không chờ API. Metadata dismiss có thể queue tối đa 7 ngày với key ổn định sau đăng nhập/consent; không dựa vào giờ máy để cấp XP. Bản nháp chữ gửi sau chỉ khi người dùng xác nhận; ảnh **không queue upload ngầm**. Rate limit theo user/route/device rủi ro, payload length/MIME/magic bytes, timeout AI thấp hơn timeout client, request ID và log redaction. Tắt `/demo`, `/product` ở production, có test. [Kiểm thử](../03-quality/01-ke-hoach-kiem-thu.md).
+
+## 6. Giọng AI theo lượt T072
+
+`POST /v1/study/sessions/{id}/speech`: Firebase token/owner từ token; session phải tồn tại và active/running, chưa ended. Body `{text:string(1..600),consentGranted:true}` không extra; `Idempotency-Key` UUID bắt buộc. Trả `{audioBase64,mimeType:"audio/wav",model}` và Cache-Control:no-store. Không trả key/URL provider. Model/voice backend: GEMINI_TTS_MODEL/GEMINI_TTS_VOICE/GEMINI_TTS_TIMEOUT_SECONDS, mặc định gemini-3.8-flash-tts/Kore/45.
+
+404 không có phiên của owner; 409 ended hoặc SPEECH_REQUEST_USED; 403 chưa consent; 422 input/nonce; 429 quota; 502 WAV hỏng; 503/504 provider/config/timeout. Khóa row user trên PostgreSQL, ghi reservation `idempotency_records.route=speech:v1` trước gọi provider, cap5/phút và30/ngày UTC. Reservation chỉ nonce/policy/status, không text/audio/hash nội dung. Retry cùng nonce không sinh lại âm; lỗi provider vẫn tiêu thụ slot để chống retry tốn tài nguyên. Bấm thử lại dùng nonce mới trong quota. Không là replay cache idempotency trả lại audio vì audio không lưu. Xóa account xóa reservation theo luồng hiện có.
+
+WAV PCM16 mono/stereo8–48kHz, tối đa4MiB/90giây; provider interactions store=false; không log/save text/audio. Client kiểm định dạng và bỏ response quá hạn/scope cũ. Quota không là XP/streak. Cadence chưa lưu server nên Học sâu/solo chặn ở client, không tuyên bố server xác minh nhịp. API chỉ chuyển text user chủ động chọn thành giọng, không tạo/chấm câu hỏi hoặc tự kết luận đúng/sai.

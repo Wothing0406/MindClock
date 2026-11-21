@@ -22,6 +22,7 @@ enum MindClockIconKind {
   shield,
   volumeOff,
   volumeOn,
+  microphone,
 }
 
 /// Icon vector nét mảnh thống nhất (24×24 dp, nét 2 px bo tròn theo `docs/55 §5`).
@@ -72,10 +73,25 @@ class _MindClockIconPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     switch (kind) {
+      case MindClockIconKind.microphone:
+        canvas.drawRRect(
+            RRect.fromRectAndRadius(Rect.fromLTRB(9 * s, 3 * s, 15 * s, 15 * s),
+                Radius.circular(3 * s)),
+            paint);
+        final mic = Path()
+          ..moveTo(6 * s, 10 * s)
+          ..lineTo(6 * s, 12 * s)
+          ..quadraticBezierTo(6 * s, 18 * s, 12 * s, 18 * s)
+          ..quadraticBezierTo(18 * s, 18 * s, 18 * s, 12 * s)
+          ..lineTo(18 * s, 10 * s);
+        canvas.drawPath(mic, paint);
+        canvas.drawLine(Offset(12 * s, 18 * s), Offset(12 * s, 22 * s), paint);
+        canvas.drawLine(Offset(9 * s, 22 * s), Offset(15 * s, 22 * s), paint);
       case MindClockIconKind.clock:
         canvas.drawCircle(Offset(12 * s, 12 * s), 9 * s, paint);
         canvas.drawLine(Offset(12 * s, 7 * s), Offset(12 * s, 12 * s), paint);
-        canvas.drawLine(Offset(12 * s, 12 * s), Offset(15.5 * s, 14 * s), paint);
+        canvas.drawLine(
+            Offset(12 * s, 12 * s), Offset(15.5 * s, 14 * s), paint);
       case MindClockIconKind.book:
         final Path path = Path()
           ..moveTo(4 * s, 6 * s)
@@ -134,7 +150,8 @@ class _MindClockIconPainter extends CustomPainter {
           ..close();
         canvas.drawPath(tri, paint);
         canvas.drawLine(Offset(12 * s, 9.5 * s), Offset(12 * s, 14 * s), paint);
-        canvas.drawLine(Offset(12 * s, 16.5 * s), Offset(12 * s, 16.7 * s), paint);
+        canvas.drawLine(
+            Offset(12 * s, 16.5 * s), Offset(12 * s, 16.7 * s), paint);
       case MindClockIconKind.lock:
         canvas.drawRRect(
           RRect.fromRectAndRadius(
@@ -159,7 +176,8 @@ class _MindClockIconPainter extends CustomPainter {
         canvas.drawLine(Offset(5 * s, 12 * s), Offset(19 * s, 12 * s), paint);
       case MindClockIconKind.trash:
         canvas.drawLine(Offset(5 * s, 7 * s), Offset(19 * s, 7 * s), paint);
-        canvas.drawLine(Offset(9.5 * s, 4.5 * s), Offset(14.5 * s, 4.5 * s), paint);
+        canvas.drawLine(
+            Offset(9.5 * s, 4.5 * s), Offset(14.5 * s, 4.5 * s), paint);
         canvas.drawRect(
           Rect.fromLTWH(7 * s, 7 * s, 10 * s, 12.5 * s),
           paint,
@@ -203,12 +221,18 @@ class _MindClockIconPainter extends CustomPainter {
         );
       case MindClockIconKind.arena:
         // Hai thanh kiếm giao nhau nét mảnh 24x24
-        canvas.drawLine(Offset(5 * s, 19 * s), Offset(18.5 * s, 5.5 * s), paint);
-        canvas.drawLine(Offset(14 * s, 5.5 * s), Offset(18.5 * s, 5.5 * s), paint);
-        canvas.drawLine(Offset(18.5 * s, 5.5 * s), Offset(18.5 * s, 10 * s), paint);
-        canvas.drawLine(Offset(19 * s, 19 * s), Offset(5.5 * s, 5.5 * s), paint);
-        canvas.drawLine(Offset(10 * s, 5.5 * s), Offset(5.5 * s, 5.5 * s), paint);
-        canvas.drawLine(Offset(5.5 * s, 5.5 * s), Offset(5.5 * s, 10 * s), paint);
+        canvas.drawLine(
+            Offset(5 * s, 19 * s), Offset(18.5 * s, 5.5 * s), paint);
+        canvas.drawLine(
+            Offset(14 * s, 5.5 * s), Offset(18.5 * s, 5.5 * s), paint);
+        canvas.drawLine(
+            Offset(18.5 * s, 5.5 * s), Offset(18.5 * s, 10 * s), paint);
+        canvas.drawLine(
+            Offset(19 * s, 19 * s), Offset(5.5 * s, 5.5 * s), paint);
+        canvas.drawLine(
+            Offset(10 * s, 5.5 * s), Offset(5.5 * s, 5.5 * s), paint);
+        canvas.drawLine(
+            Offset(5.5 * s, 5.5 * s), Offset(5.5 * s, 10 * s), paint);
       case MindClockIconKind.shield:
         final Path shield = Path()
           ..moveTo(12 * s, 3.5 * s)
@@ -229,8 +253,10 @@ class _MindClockIconPainter extends CustomPainter {
           ..lineTo(4 * s, 14.5 * s)
           ..close();
         canvas.drawPath(speaker, paint);
-        canvas.drawLine(Offset(15.5 * s, 9.5 * s), Offset(20 * s, 14.5 * s), paint);
-        canvas.drawLine(Offset(20 * s, 9.5 * s), Offset(15.5 * s, 14.5 * s), paint);
+        canvas.drawLine(
+            Offset(15.5 * s, 9.5 * s), Offset(20 * s, 14.5 * s), paint);
+        canvas.drawLine(
+            Offset(20 * s, 9.5 * s), Offset(15.5 * s, 14.5 * s), paint);
       case MindClockIconKind.volumeOn:
         final Path speakerOn = Path()
           ..moveTo(4 * s, 9.5 * s)

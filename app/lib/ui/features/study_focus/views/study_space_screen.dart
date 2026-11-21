@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../data/debug/debug_fixture_community_repository.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../data/services/method_channel_study_speech_gateway.dart';
+import '../../../../data/services/method_channel_study_voice_input.dart';
 import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
@@ -41,6 +42,7 @@ class StudySpaceScreen extends StatefulWidget {
     this.initialRoom,
     this.onRoomChanged,
     this.speechGateway,
+    this.voiceInputGateway,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
@@ -51,6 +53,7 @@ class StudySpaceScreen extends StatefulWidget {
   final StudyRoomDetail? initialRoom;
   final ValueChanged<StudyRoomDetail?>? onRoomChanged;
   final StudySpeechGateway? speechGateway;
+  final StudyVoiceInputGateway? voiceInputGateway;
 
   @override
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
@@ -74,6 +77,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   late final CommunityRepository _roomRepository;
   late final StudySpeechViewModel _speech;
   bool _foreground = true;
+  bool _voiceInputPending = false;
+  String? _voiceInputMessage;
   StudyRoomDetail? get _activeMeetRoom => _roomVm.room;
 
   CommunityRepository get _communityRepo => _roomRepository;
@@ -85,7 +90,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   void initState() {
     super.initState();
     _speech = StudySpeechViewModel(
-        gateway: widget.speechGateway ?? MethodChannelStudySpeechGateway());
+        gateway: widget.speechGateway ??
+            MethodChannelStudySpeechGateway.withAudio(
+                synthesize: widget.studyViewModel.hasCloudVoice
+                    ? widget.studyViewModel.createReplyVoice
+                    : null),
+        startTimeout: widget.studyViewModel.hasCloudVoice
+            ? const Duration(seconds: 65)
+            : const Duration(seconds: 15));
     _configureSpeech();
     _speech.addListener(_onSpeechState);
     widget.studyViewModel.addListener(_configureSpeech);
@@ -123,6 +135,115 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           snapshot?.cadence != StudyCadence.deepSilent &&
           snapshot?.status == StudyFocusStatus.running,
     );
+  }
+
+  Future<void> _readAiReply(StudyFocusViewModel vm, StudyHelpTurn turn) async {
+    if (_speech.isBusy) {
+      _speech.stop();
+      return;
+    }
+    final scope = vm.ownerScopeKey;
+    final session = vm.activeSnapshot?.sessionId;
+    if (vm.hasCloudVoice) {
+      final approved = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+                title: const Text('Nghe giọng MindClock AI'),
+                content: const Text(
+                    'Nội dung câu trả lời này sẽ được gửi tới Google Gemini để tạo giọng nói. Âm thanh được giữ tạm và xóa khi dừng phát. Mic và camera vẫn tắt.'),
+                actions: [
+                  MindClockButton(
+                      key: const ValueKey('study-voice-consent-cancel'),
+                      label: 'Để sau',
+                      variant: MindClockButtonVariant.subtle,
+                      onPressed: () => Navigator.pop(dialogContext, false)),
+                  MindClockButton(
+                      key: const ValueKey('study-voice-consent-accept'),
+                      label: 'Đồng ý nghe',
+                      onPressed: () => Navigator.pop(dialogContext, true)),
+                ],
+              ));
+      if (approved != true || !mounted) return;
+    }
+    // Dialog can outlive account/session. Never speak a previous user's reply.
+    if (!mounted ||
+        vm.ownerScopeKey != scope ||
+        vm.activeSnapshot?.sessionId != session ||
+        !vm.isAuthenticated ||
+        vm.activeSnapshot?.status != StudyFocusStatus.running ||
+        vm.activeSnapshot?.cadence == StudyCadence.deepSilent) {
+      return;
+    }
+    await _speech.readReply([
+      turn.contentVi,
+      if (turn.nextQuestionVi != null) turn.nextQuestionVi!
+    ].join(' '));
+  }
+
+  Future<void> _askByVoice(StudyFocusViewModel vm) async {
+    if (_voiceInputPending ||
+        !vm.isAuthenticated ||
+        vm.activeSnapshot?.cadence == StudyCadence.deepSilent) {
+      return;
+    }
+    final scope = vm.ownerScopeKey;
+    final session = vm.activeSnapshot?.sessionId;
+    final approved = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: const Text('Nhập câu hỏi bằng giọng nói'),
+              content: const Text(
+                  'Bộ nhận giọng nói của thiết bị sẽ dùng mic và có thể xử lý âm thanh trực tuyến. Bạn xem lại bản chữ trước; chỉ khi bấm Gửi câu hỏi thì nội dung mới được gửi cho MindClock.'),
+              actions: [
+                MindClockButton(
+                    key: const ValueKey('study-mic-consent-cancel'),
+                    label: 'Để sau',
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed: () => Navigator.pop(dialogContext, false)),
+                MindClockButton(
+                    key: const ValueKey('study-mic-consent-accept'),
+                    label: 'Mở nhập giọng nói',
+                    onPressed: () => Navigator.pop(dialogContext, true)),
+              ],
+            ));
+    if (approved != true ||
+        !mounted ||
+        vm.ownerScopeKey != scope ||
+        vm.activeSnapshot?.sessionId != session) {
+      return;
+    }
+    _speech.stop();
+    setState(() {
+      _voiceInputPending = true;
+      _voiceInputMessage = null;
+    });
+    try {
+      final text = await (widget.voiceInputGateway ??
+              const MethodChannelStudyVoiceInput())
+          .recognizeQuestion();
+      if (!mounted ||
+          vm.ownerScopeKey != scope ||
+          vm.activeSnapshot?.sessionId != session ||
+          !vm.isAuthenticated) {
+        return;
+      }
+      if (text != null && text.isNotEmpty) {
+        _aiInputController.text = text;
+        _voiceInputMessage =
+            'Đã nhập câu hỏi. Kiểm tra lại rồi bấm Gửi câu hỏi.';
+      }
+    } catch (_) {
+      if (mounted) {
+        _voiceInputMessage =
+            'Chưa nhận được giọng nói trên thiết bị này. Bạn vẫn có thể nhập chữ.';
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _voiceInputPending = false;
+        });
+      }
+    }
   }
 
   void _onRoomState() {
@@ -1112,7 +1233,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                   animate: vm.enablePeriodicTicker &&
                       !vm.isDeepSilentDraft &&
                       vm.activeSnapshot?.cadence != StudyCadence.deepSilent,
-                  isThinking: isLoading,
+                  isThinking:
+                      (isLoading || _speech.isBusy) && !_speech.isSpeaking,
                   isSpeaking: _speech.isSpeaking,
                   onLightBackground: true,
                   mood: vm.aiTurns.isEmpty
@@ -1122,7 +1244,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                       ? 'Đang đọc câu trả lời'
                       : isLoading
                           ? 'Đang gợi mở...'
-                          : 'Sẵn sàng nhận câu hỏi của bạn',
+                          : _speech.isBusy
+                              ? 'Đang tạo giọng AI...'
+                              : 'Sẵn sàng nhận câu hỏi của bạn',
                 ),
                 SizedBox(height: mc.space8),
                 Text(
@@ -1177,22 +1301,14 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                           key: ValueKey<String>('study-ai-read-${e.key}'),
                           label: _speech.isBusy
                               ? 'Dừng giọng đọc'
-                              : 'Nghe câu trả lời',
+                              : (vm.hasCloudVoice
+                                  ? 'Nghe giọng AI'
+                                  : 'Nghe câu trả lời'),
                           icon: _speech.isBusy
                               ? MindClockIconKind.stop
                               : MindClockIconKind.volumeOn,
                           variant: MindClockButtonVariant.secondary,
-                          onPressed: () {
-                            if (_speech.isBusy) {
-                              _speech.stop();
-                            } else {
-                              _speech.readReply([
-                                turn.contentVi,
-                                if (turn.nextQuestionVi != null)
-                                  turn.nextQuestionVi!,
-                              ].join(' '));
-                            }
-                          },
+                          onPressed: () => _readAiReply(vm, turn),
                         ),
                       ],
                     ],
@@ -1239,6 +1355,23 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
               ),
             ),
           ),
+          if (snapshot.cadence != StudyCadence.deepSilent &&
+              vm.isAuthenticated &&
+              snapshot.status == StudyFocusStatus.running) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockButton(
+                key: const ValueKey('study-ai-voice-input'),
+                label: _voiceInputPending
+                    ? 'Đang nhập bằng giọng nói...'
+                    : 'Nói câu hỏi',
+                icon: MindClockIconKind.microphone,
+                variant: MindClockButtonVariant.secondary,
+                onPressed: _voiceInputPending || isLoading
+                    ? null
+                    : () => _askByVoice(vm)),
+            if (_voiceInputMessage != null)
+              Text(_voiceInputMessage!, style: mc.captionStyle),
+          ],
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('study-ai-send-button'),

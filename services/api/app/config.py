@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     gemini_live_token_ttl_seconds: int = 600
     gemini_timeout_seconds: float = 15.0
     gemini_mock_mode: bool = False
+    gemini_tts_model: str = 'gemini-3.8-flash-tts'
+    gemini_tts_voice: str = 'Kore'
+    gemini_tts_timeout_seconds: float = 45.0
 
     firebase_project_id: str = ''
     local_dev_bearer_uid_fallback: bool = True

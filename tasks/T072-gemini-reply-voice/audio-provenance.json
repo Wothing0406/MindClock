@@ -1,0 +1,29 @@
+{
+  "created_on": "2026-11-21",
+  "provider": "Google Gemini Developer API",
+  "model": "gemini-3.8-flash-tts",
+  "voice": "Kore",
+  "sample": {
+    "file": "mindclock-voice-sample.wav",
+    "transcript": "Chào bạn. Mình là trợ lý học tập MindClock. Bạn đang vướng ở bước nào?",
+    "style": "Read in natural Vietnamese, calm, clear, warm, at a moderate pace.",
+    "sample_rate": 24000,
+    "channels": 1,
+    "sample_width": 2,
+    "duration_seconds": 5.48,
+    "bytes": 270748,
+    "sha256": "4b4f1f457b4441a09dbeb945553783f3527c275077deac2b96cccf821f8d42e0",
+    "app_fixture_copy": "app/assets/companions/mindclock-ai/voice-preview.wav",
+    "purpose": "original generic voice preview and native integration fixture; never used as a fallback for a student's reply"
+  },
+  "api_answer_sample": {
+    "file": "live-api-answer.wav",
+    "purpose": "synthetic mathematics question through actual local API and Gemini, not student data",
+    "request_account": "temporary development test principal, deleted through API after verification",
+    "bytes": 491548
+  },
+  "not_verified": ["human Vietnamese microphone input on physical Android", "Firebase login E2E", "Gemini Live full-duplex", "phoneme lip sync"],
+  "no_voice_cloning": true,
+  "no_student_data": true,
+  "no_api_keys_in_artifact": true
+}

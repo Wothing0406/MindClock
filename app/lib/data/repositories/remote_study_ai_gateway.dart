@@ -1,3 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import '../../domain/services/study_reply_voice_source.dart';
+import '../../domain/models/personal_flow_models.dart';
+import '../services/local_id_generator.dart';
 import '../../domain/models/study_ai_models.dart';
 import '../../domain/models/study_focus_models.dart';
 import '../../domain/services/study_ai_gateway.dart';
@@ -8,7 +14,7 @@ import '../services/personal_api_client.dart';
 /// Theo `docs/45 §5`:
 /// - KHÔNG gửi `left_at`, danh sách app, khung hình camera hay XP từ client.
 /// - `POST /v1/study/help` chỉ gửi tối đa 3 lượt hội thoại gần nhất cùng `subject`, `grade`, `task`.
-class RemoteStudyAiGateway implements StudyAiGateway {
+class RemoteStudyAiGateway implements StudyAiGateway, StudyReplyVoiceSource {
   const RemoteStudyAiGateway({required PersonalApiClient apiClient})
       : _apiClient = apiClient;
 
@@ -16,6 +22,31 @@ class RemoteStudyAiGateway implements StudyAiGateway {
 
   @override
   bool get isDebugFixture => false;
+
+  @override
+  Future<Uint8List> synthesizeReply(
+      {required String sessionId, required String text}) async {
+    final data = await _apiClient.postJson('/study/sessions/$sessionId/speech',
+        body: {'text': text, 'consentGranted': true},
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        timeout: const Duration(seconds: 50));
+    final encoded = data['audioBase64'];
+    if (data['mimeType'] != 'audio/wav' ||
+        encoded is! String ||
+        encoded.length > 5592416) {
+      throw const PersonalApiException(
+          code: 'INVALID_VOICE', messageVi: 'Âm thanh AI không hợp lệ.');
+    }
+    final bytes = base64Decode(encoded);
+    if (bytes.length < 45 ||
+        bytes.length > 4194304 ||
+        ascii.decode(bytes.sublist(0, 4), allowInvalid: true) != 'RIFF' ||
+        ascii.decode(bytes.sublist(8, 12), allowInvalid: true) != 'WAVE') {
+      throw const PersonalApiException(
+          code: 'INVALID_VOICE', messageVi: 'Âm thanh AI không hợp lệ.');
+    }
+    return bytes;
+  }
 
   @override
   Future<RemoteStudySessionResult> createStudySession({
@@ -149,7 +180,8 @@ class RemoteStudyAiGateway implements StudyAiGateway {
         'subjectCode': subjectCode.trim().toUpperCase(),
         if (gradeLevel != null && gradeLevel.trim().isNotEmpty)
           'gradeLevel': gradeLevel.trim(),
-        'taskTitle': taskTitle.trim().isEmpty ? 'Ôn tập cá nhân' : taskTitle.trim(),
+        'taskTitle':
+            taskTitle.trim().isEmpty ? 'Ôn tập cá nhân' : taskTitle.trim(),
         'responseModality': responseModality,
         'consentGranted': consentGranted,
       },
@@ -171,7 +203,8 @@ class RemoteStudyAiGateway implements StudyAiGateway {
         if (gradeLevel != null && gradeLevel.trim().isNotEmpty)
           'gradeLevel': gradeLevel.trim(),
         if (selectedSubjects != null) 'selectedSubjects': selectedSubjects,
-        if (liveConsentGranted != null) 'liveConsentGranted': liveConsentGranted,
+        if (liveConsentGranted != null)
+          'liveConsentGranted': liveConsentGranted,
       },
     );
   }

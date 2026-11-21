@@ -48,3 +48,9 @@ Tìm phòng theo sở thích là lát sau của [R7b](../00-start/02-lo-trinh.md
 ## 5. Test bắt buộc
 
 Happy path đăng ký, nhưng local alarm không bị ép đăng nhập khi mạng/Auth lỗi; token sai/hết hạn 401; A không đọc/ghi B; email chưa xác minh không vào bảng; consent rút chặn gửi ảnh/Live; camera từ chối vẫn nhập chữ; không log ảnh/key; logout máy chung không lộ cache; export/xóa có tiến độ và idempotency; opt-out ẩn bảng; album/backup/queue không giữ ảnh ngoài chính sách. Xem [ma trận](../03-quality/01-ke-hoach-kiem-thu.md). AI không được tự kết luận pháp lý hoặc thay review chính sách trước mở người dùng thật.
+
+## 6. Giọng theo lượt T072
+
+Nghe giọng Gemini cần thao tác và đồng ý gửi câu trả lời text sang Google. Không tự gửi audio mic, hồ sơ hay lịch sử nhóm vào TTS. Backend không lưu audio/text của yêu cầu voice; reservation chống trùng/quota chỉ giữ nonce, user, policy, thời điểm, xóa khi xóa account. interactions store=false không phải cam kết thay nhà cung cấp về mọi retention; chính sách Google và review cohort vẫn áp dụng.
+
+Android chỉ giữ WAV trong cache riêng trong khi phát, xóa khi kết thúc/dừng/lỗi và quét khi khởi tạo; crash có thể để file tới lần mở bridge sau. Không album/backup/public URI. Nhập tiếng nói dùng activity hệ thống, giải thích mic và khả năng xử lý mạng trước khi mở; user có thể hủy. MindClock nhận bản chữ nháp tối đa600 ký tự, không ghi âm, không tự gửi; user kiểm tra và gửi chủ động. Không được dùng ghi âm hoặc camera để giám sát. Chưa thay cổng đánh giá nhà cung cấp/tuổi và kiểm quyền máy thật.

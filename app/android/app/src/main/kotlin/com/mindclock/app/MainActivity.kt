@@ -91,6 +91,7 @@ class MainActivity : FlutterActivity() {
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (::speechBridge.isInitialized && speechBridge.onActivityResult(requestCode, resultCode, data)) return
         if (::cameraBridge.isInitialized &&
             cameraBridge.onActivityResult(requestCode, resultCode, data)
         ) {

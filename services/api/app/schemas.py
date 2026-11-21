@@ -118,6 +118,12 @@ class StudyHelpRequest(ApiModel):
     recent_turns: list[StudyHelpTurnIn] = Field(default_factory=list, alias='recentTurns')
 
 
+class StudySpeechRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    text: str = Field(min_length=1, max_length=600)
+    consent_granted: bool = Field(alias='consentGranted', strict=True)
+
+
 class PersonalizedQuestionRequest(ApiModel):
     subject_code: str = Field(alias='subjectCode', min_length=1, max_length=32)
     grade_level: str | None = Field(default=None, alias='gradeLevel')

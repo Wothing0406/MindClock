@@ -37,6 +37,7 @@ from app.db.models import (
 )
 from app.repositories.idempotency import lookup_idempotency, save_idempotency
 from app.services.progression import progress_level, review_streak
+from app.services.speech_service import reserve_speech, synthesize_reply
 from app.schemas import (
     AlarmUpsertRequest,
     ConsentUpdateRequest,
@@ -51,6 +52,7 @@ from app.schemas import (
     SessionFeedbackRequest,
     StudyAiMatchRequest,
     StudyHelpRequest,
+    StudySpeechRequest,
     StudyRoomCreateRequest,
     StudyRoomJoinRequest,
     StudyRoomMediaPatchRequest,
@@ -1723,6 +1725,31 @@ def create_v1_router(
             'safety_status': res.safety_status,
             'model_version': res.model_version,
         }
+
+    @router.post('/study/sessions/{session_id}/speech')
+    async def study_reply_speech(
+        session_id: str, payload: StudySpeechRequest, response: Response,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db), settings: Settings = Depends(get_settings),
+        idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
+    ) -> dict[str, Any]:
+        try:
+            uuid.UUID(idempotency_key or '')
+        except ValueError:
+            raise _api_error(422, 'SPEECH_NONCE_REQUIRED', 'Yêu cầu giọng đọc cần mã hợp lệ.')
+        if not payload.text.strip():
+            raise _api_error(422, 'SPEECH_TEXT_REQUIRED', 'Chưa có nội dung để đọc.')
+        try:
+            reserve_speech(db, user_id=principal.user.id, session_id=session_id,
+                key=idempotency_key, consent=payload.consent_granted)
+            audio, model = await synthesize_reply(_get_gemini(settings), payload.text.strip())
+        except GeminiServiceError as exc:
+            db.rollback()
+            if exc.code == 'GEMINI_KEY_MISSING':
+                raise _api_error(503, exc.code, 'Giọng AI chưa sẵn sàng. Bạn vẫn có thể đọc câu trả lời.', retryable=False)
+            raise _api_error(exc.status_code, exc.code, exc.message_vi, retryable=exc.retryable)
+        response.headers['Cache-Control'] = 'no-store'
+        return {'audioBase64': base64.b64encode(audio).decode('ascii'), 'mimeType': 'audio/wav', 'model': model}
 
     @router.post('/study/live-token')
     async def create_live_token(

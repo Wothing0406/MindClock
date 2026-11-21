@@ -10,6 +10,7 @@ import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../../domain/services/study_focus_bridge.dart';
+import '../../../../domain/services/study_reply_voice_source.dart';
 
 /// ViewModel điều phối Không gian học local & đồng bộ AI qua backend (`docs/45 §§1–6`).
 ///
@@ -19,6 +20,26 @@ import '../../../../domain/services/study_focus_bridge.dart';
 ///   khi đăng xuất/đổi tài khoản, đồng thời không chạm vào báo thức local.
 /// - Mọi lỗi mạng/timeout/429/401 của API không bao giờ chặn timer hoặc giữ kẹt màn học.
 class StudyFocusViewModel extends ChangeNotifier {
+  bool get hasCloudVoice => _aiGateway is StudyReplyVoiceSource;
+
+  Future<Uint8List> createReplyVoice(String text) async {
+    final gateway = _aiGateway;
+    final snapshot = _activeSnapshot;
+    if (!_isAuthenticated ||
+        gateway is! StudyReplyVoiceSource ||
+        snapshot == null ||
+        snapshot.roomMode != StudyRoomMode.withAi ||
+        snapshot.cadence == StudyCadence.deepSilent ||
+        snapshot.status != StudyFocusStatus.running ||
+        snapshot.remoteSessionId == null) {
+      throw const PersonalApiException(
+          code: 'VOICE_NOT_READY',
+          messageVi: 'Phiên học chưa sẵn sàng phát giọng AI.');
+    }
+    return (gateway as StudyReplyVoiceSource)
+        .synthesizeReply(sessionId: snapshot.remoteSessionId!, text: text);
+  }
+
   StudyFocusViewModel({
     required LocalStudyFocusRepository repository,
     required StudyFocusBridge bridge,
@@ -120,7 +141,8 @@ class StudyFocusViewModel extends ChangeNotifier {
   String? get aiErrorVi => _aiErrorVi;
   String? get pendingHelpQuestion => _pendingHelpQuestion;
   String? get remoteSessionErrorVi => _remoteSessionErrorVi;
-  PersonalizedPracticeQuestion? get personalizedQuestion => _personalizedQuestion;
+  PersonalizedPracticeQuestion? get personalizedQuestion =>
+      _personalizedQuestion;
   StudyAiRequestStatus get personalizedStatus => _personalizedStatus;
   String? get personalizedErrorVi => _personalizedErrorVi;
   bool get liveConsentGranted => _liveConsentGranted;
@@ -257,8 +279,9 @@ class StudyFocusViewModel extends ChangeNotifier {
     if (stored.status == StudyFocusStatus.running ||
         stored.status == StudyFocusStatus.paused) {
       final int nowMs = _nowProvider().millisecondsSinceEpoch;
-      final int candidateFreezeMs =
-          stored.pausedAtEpochMs ?? stored.leftAtEpochMs ?? stored.updatedAtEpochMs;
+      final int candidateFreezeMs = stored.pausedAtEpochMs ??
+          stored.leftAtEpochMs ??
+          stored.updatedAtEpochMs;
       final int frozenAtMs = math.min(
         nowMs,
         math.max(stored.startedAtEpochMs, candidateFreezeMs),
@@ -290,8 +313,9 @@ class StudyFocusViewModel extends ChangeNotifier {
   }
 
   void setDraftSubjectCode(String? subjectCode) {
-    final String? clean =
-        subjectCode == null || subjectCode.trim().isEmpty ? null : subjectCode.trim();
+    final String? clean = subjectCode == null || subjectCode.trim().isEmpty
+        ? null
+        : subjectCode.trim();
     if (_draftSubjectCode == clean) return;
     _draftSubjectCode = clean;
     notifyListeners();
@@ -395,9 +419,8 @@ class StudyFocusViewModel extends ChangeNotifier {
     final String rawTitle = (overrideTaskTitle ?? _draftTaskTitle).trim();
     final String resolvedTitle =
         rawTitle.isEmpty ? StudyTaskChoice.freeStudy.title : rawTitle;
-    final String? resolvedSubject = rawTitle.isEmpty
-        ? null
-        : (overrideSubjectCode ?? _draftSubjectCode);
+    final String? resolvedSubject =
+        rawTitle.isEmpty ? null : (overrideSubjectCode ?? _draftSubjectCode);
 
     final int plannedEndMs =
         nowMs + Duration(minutes: _draftDurationMinutes).inMilliseconds;
@@ -564,10 +587,10 @@ class StudyFocusViewModel extends ChangeNotifier {
       return false;
     }
 
-    final String targetSessionId =
-        (refreshed.remoteSessionId != null && refreshed.remoteSessionId!.isNotEmpty)
-            ? refreshed.remoteSessionId!
-            : refreshed.sessionId;
+    final String targetSessionId = (refreshed.remoteSessionId != null &&
+            refreshed.remoteSessionId!.isNotEmpty)
+        ? refreshed.remoteSessionId!
+        : refreshed.sessionId;
 
     try {
       final List<StudyHelpTurn> clippedTurns = _aiTurns.length <= 3
@@ -666,7 +689,8 @@ class StudyFocusViewModel extends ChangeNotifier {
     }
     if (!_isAuthenticated && !gateway.isDebugFixture) {
       _personalizedStatus = StudyAiRequestStatus.authExpired;
-      _personalizedErrorVi = 'Đăng nhập ở tab Cá nhân để tạo câu hỏi cá nhân hóa.';
+      _personalizedErrorVi =
+          'Đăng nhập ở tab Cá nhân để tạo câu hỏi cá nhân hóa.';
       notifyListeners();
       return null;
     }
@@ -753,12 +777,13 @@ class StudyFocusViewModel extends ChangeNotifier {
     try {
       final String? sessionId =
           _activeSnapshot?.remoteSessionId ?? _activeSnapshot?.sessionId;
-      final String effectiveTask = (taskTitle != null && taskTitle.trim().isNotEmpty)
-          ? taskTitle.trim()
-          : (_activeSnapshot?.taskTitle ??
-              (_draftTaskTitle.trim().isEmpty
-                  ? 'Ôn tập cá nhân'
-                  : _draftTaskTitle.trim()));
+      final String effectiveTask =
+          (taskTitle != null && taskTitle.trim().isNotEmpty)
+              ? taskTitle.trim()
+              : (_activeSnapshot?.taskTitle ??
+                  (_draftTaskTitle.trim().isEmpty
+                      ? 'Ôn tập cá nhân'
+                      : _draftTaskTitle.trim()));
       final GeminiLiveSessionToken tok = await gateway.requestLiveToken(
         sessionId: sessionId,
         subjectCode: subjectCode,
@@ -970,8 +995,9 @@ class StudyFocusViewModel extends ChangeNotifier {
       durationMinutes: updatedMinutes,
       status: StudyFocusStatus.running,
       accumulatedPausedMs: current.accumulatedPausedMs + closedDoneDeltaMs,
-      plannedEndAtEpochMs:
-          current.plannedEndAtEpochMs + extraMinutes * 60 * 1000 + closedDoneDeltaMs,
+      plannedEndAtEpochMs: current.plannedEndAtEpochMs +
+          extraMinutes * 60 * 1000 +
+          closedDoneDeltaMs,
       clearEndedAt: true,
       clearPausedAt: true,
       commitmentAwaitingResume: false,
@@ -1104,7 +1130,8 @@ class StudyFocusViewModel extends ChangeNotifier {
   }
 
   Future<bool> retryFinishRecordSync(String sessionId) async {
-    final int idx = _history.indexWhere((StudyFocusRecord r) => r.sessionId == sessionId);
+    final int idx =
+        _history.indexWhere((StudyFocusRecord r) => r.sessionId == sessionId);
     if (idx < 0) return false;
     final Future<bool> work = _syncFinishRecord(_history[idx]);
     _pendingRemoteFinish = work;
@@ -1121,7 +1148,8 @@ class StudyFocusViewModel extends ChangeNotifier {
     final String scopeAtStart = _ownerScopeKey;
     StudyFocusRecord working = record;
     if (working.finishIdempotencyKey.isEmpty) {
-      working = working.copyWith(finishIdempotencyKey: LocalIdGenerator.nextUuidV4());
+      working =
+          working.copyWith(finishIdempotencyKey: LocalIdGenerator.nextUuidV4());
       _history = await _repository.saveRecordIdempotent(working);
     }
 
@@ -1143,11 +1171,12 @@ class StudyFocusViewModel extends ChangeNotifier {
               plannedEndAtEpochMs: working.endedAtEpochMs,
               updatedAtEpochMs: working.endedAtEpochMs,
             );
-        final String createKey =
-            (createSnapshot != null && createSnapshot.createIdempotencyKey.isNotEmpty)
-                ? createSnapshot.createIdempotencyKey
-                : LocalIdGenerator.nextUuidV4();
-        final RemoteStudySessionResult created = await gateway.createStudySession(
+        final String createKey = (createSnapshot != null &&
+                createSnapshot.createIdempotencyKey.isNotEmpty)
+            ? createSnapshot.createIdempotencyKey
+            : LocalIdGenerator.nextUuidV4();
+        final RemoteStudySessionResult created =
+            await gateway.createStudySession(
           snapshot: fallbackSnapshot,
           idempotencyKey: createKey,
         );
@@ -1155,7 +1184,8 @@ class StudyFocusViewModel extends ChangeNotifier {
         _history = await _repository.saveRecordIdempotent(working);
       }
 
-      final RemoteStudySessionResult finished = await gateway.finishStudySession(
+      final RemoteStudySessionResult finished =
+          await gateway.finishStudySession(
         record: working,
         idempotencyKey: working.finishIdempotencyKey,
       );
@@ -1192,7 +1222,8 @@ class StudyFocusViewModel extends ChangeNotifier {
       if (_ownerScopeKey != scopeAtStart) return false;
       final StudyFocusRecord failed = working.copyWith(
         remoteFinishSynced: false,
-        remoteSyncErrorVi: 'Không thể đồng bộ kết thúc phiên lên server lúc này.',
+        remoteSyncErrorVi:
+            'Không thể đồng bộ kết thúc phiên lên server lúc này.',
       );
       _history = await _repository.saveRecordIdempotent(failed);
       _statusBannerVi =

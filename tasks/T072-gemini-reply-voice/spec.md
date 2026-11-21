@@ -1,0 +1,12 @@
+# Đặc tả và quyết định
+
+- AC01: API speech xác minh Auth/owner phiên đang chạy, consent mỗi yêu cầu, text 1–600 ký tự; không nhận key/model tùy ý từ client. Giới hạn 5 yêu cầu/phút và 30/ngày UTC qua reservation trên DB khóa user. Nonce retry không tạo audio lần hai; reservation không chứa text/audio.
+- AC02: Gemini TTS model/voice cấu hình backend, timeout/cap, kiểm WAV trước trả; không mock âm hoặc lưu audio/text mặc định. Có sample câu chung gốc nhóm để kiểm provider, tách dữ liệu thật.
+- AC03: client chỉ gọi sau consent trong phiên AI; Học sâu/solo/auth lỗi chặn. Chờ synth chưa là speaking; phát PCM/WAV thật mới chuyển miệng, stop/background/scope/dispose vô hiệu response muộn. Không tự chuyển sang cloud từ giọng offline khi chưa đồng ý.
+- AC04: lỗi/rate-limit/offline vẫn giữ text/timer; nút dừng khi chờ và khi phát. Cache native chỉ tạm, xóa khi stop/done/error/startup/dispose, không URI public/file log. TTS không xin mic; nhập tiếng nói chỉ nhường mic cho activity hệ thống sau consent riêng.
+- AC05: contract/API owner/consent/quota/nonce; Flutter race và payload; native WAV playback bằng test; analyze/build; ghi rõ bằng chứng provider thật, harness và máy thật riêng.
+- AC06 (user chọn nói/nghe theo lượt): `Nói câu hỏi` mở RecognizerIntent vi-VN chỉ sau consent. Dịch vụ thiết bị quản lý mic và có thể dùng mạng; MindClock không thu file mic hoặc mở luôn mic/camera. Kết quả chỉ điền bản nháp, người dùng xem/sửa rồi bấm gửi. Hủy/thiếu service có text fallback; đổi scope/dispose không chép bản nháp cũ. Học sâu không hiện nút. Nhận tiếng Việt thật trên máy vật lý cần user nói kiểm riêng, không suy từ fake transcript.
+
+Route POST /v1/study/sessions/{id}/speech nhận {text,consentGranted:true}, Idempotency-Key bắt buộc là UUID. Trả {audioBase64,mimeType:audio/wav,model}, Cache-Control:no-store. Nonce được tiêu thụ ngay cả khi provider lỗi để chống phát sinh chi phí do retry; bấm thử lại dùng nonce mới trong quota. Reuse idempotency_records như quota reservation route speech:v1, payload_hash hằng policy (không hash nội dung học). Một worker/người không là nguồn quota; PostgreSQL row lock chốt. Client Học sâu chặn playback; backend hiện chưa lưu cadence, không tuyên bố server chứng minh chế độ học. Giới hạn này cần migration cadence ở lát riêng.
+
+Chọn mặc định gemini-3.8-flash-tts / Kore sau khi GET models thật có model. Hợp đồng REST interactions theo tài liệu Google chính thức đọc 21/11/2026, không lấy tên model trong archive.

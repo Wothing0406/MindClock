@@ -79,3 +79,9 @@ Học cùng bạn và Live voice/video là feature flags độc lập; không xu
 ## Đọc câu trả lời AI trên Android — T071
 
 Sau khi hỏi bằng chữ trong phiên AI nhịp ngắt quãng, người dùng có thể bấm **Nghe câu trả lời** hoặc **Dừng giọng đọc**. Mặc định im lặng, không tự đọc câu mới. Dùng giọng tiếng Việt ngoại tuyến đã cài trên thiết bị; thiếu giọng thì báo chưa khả dụng, vẫn đọc chữ và tiếp tục timer. Học sâu, một mình, phiên chưa bắt đầu/đã kết thúc hoặc đã đăng xuất không phát giọng. Rời màn/app, đổi phiên/tài khoản hoặc âm thanh khác được ưu tiên thì dừng, quay lại không tự phát tiếp. Avatar chỉ chuyển khẩu hình trong khoảng callback phát của engine; Reduce Motion giữ ảnh tĩnh. Đây là đọc text theo lượt, chưa phải nói chuyện hai chiều/Gemini Live.
+
+## Nói và nghe theo lượt — T072
+
+Phòng AI nối backend thật có hai thao tác: **Nói câu hỏi** → dịch vụ nhận giọng nói Android → xem/sửa bản chữ → **Gửi câu hỏi**; AI trả gợi mở → **Nghe giọng AI** → đồng ý tạo giọng Gemini → phát và chuyển khẩu hình. Có **Dừng giọng đọc** ngay cả khi đang chờ tạo âm. Không tự mở mic, tự gửi bản ghi/bản chữ hoặc tự đọc tin nhắn mới. Cách nhập chữ vẫn đầy đủ.
+
+Giọng Gemini không cần cài tiếng Việt ngoại tuyến trên máy, cần backend có key/model và mạng. Dịch vụ nhận câu nói là của thiết bị, không được quảng cáo là Gemini đang nghe trực tiếp; app giải thích trước khi mở và có fallback khi thiết bị không hỗ trợ. Học sâu và một mình giữ im lặng, không hiện hai nút này. Avatar theo callback phát thật, chưa lip-sync âm vị. Giới hạn kỹ thuật/kiểm máy thật xem T072, chưa gọi là cuộc gọi Meet/Live.

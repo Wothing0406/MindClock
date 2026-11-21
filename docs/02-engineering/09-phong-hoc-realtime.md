@@ -20,7 +20,7 @@ Mic/cam chỉ sau thao tác user và quyền OS, indicator trong app, stop ngay 
 
 ## Avatar AI
 
-T070 tạo art mentor gốc 2D và nền góc học; 9 biểu cảm UI nằm tại [asset companions](../../assets/companions/README.md). Flutter chọn frame theo neutral/listening/thinking/encouraging/focused; blink dùng ảnh nhắm mắt riêng. Mouth frame chỉ chạy khi caller cung cấp isSpeaking từ audio đang phát; có audioLevel thì đổi độ mở miệng theo mức âm, chưa là lip sync theo âm vị. Text chat hiện không có audio playback state nên isSpeaking=false, không suy từ việc đã có tin nhắn. Reduce Motion/animate=false/TickerMode tắt đều giữ ảnh tĩnh. Chưa có Live media từ việc thêm avatar.
+T070 tạo art mentor gốc 2D và nền góc học; 9 biểu cảm UI nằm tại [asset companions](../../assets/companions/README.md). Flutter chọn frame theo neutral/listening/thinking/encouraging/focused; blink dùng ảnh nhắm mắt riêng. Mouth frame chỉ chạy khi caller cung cấp isSpeaking từ audio đang phát; có audioLevel thì đổi độ mở miệng theo mức âm, chưa là lip sync theo âm vị. Text chat không tự phát tiếng; T072 cấp speaking từ playback sau thao tác Nghe, không suy từ việc đã có tin nhắn. Reduce Motion/animate=false/TickerMode tắt đều giữ ảnh tĩnh. Chưa có Live media từ việc thêm avatar.
 
 Avatar là nhân vật 2D gốc, nhãn `MindClock AI`, animation `idle/listening/speaking/thinking` theo **trạng thái kết nối và audio thật**; không giả đang nhìn user. Miệng theo âm lượng nếu chưa có viseme; không tạo ảnh mặt người thật từ video học sinh. Giới hạn frame/memory, fallback ảnh tĩnh khi Reduce Motion/pin yếu. SFX/nhạc phòng tách âm báo thức. Không cho avatar nói khi mic/cam tắt mà UI không giải thích nguồn phản hồi.
 
@@ -50,3 +50,13 @@ Bridge `mindclock/study_speech` version 1: `speak {id,text}` (tối đa 2000 ký
 Controller bỏ callback không khớp utterance hiện hành; queued chưa là speaking. Init quá 15 giây hoặc playback thiếu terminal quá 3 phút thì stop. Khi dừng/đổi scope, vô hiệu id trước await để không có giọng muộn. Native hủy pending init khi stop, dừng onPause/audio focus loss, shutdown khi destroy. Không tự phát tiếp khi resume. Flutter dừng thêm khi màn bị dispose/đổi account/phiên/không còn quyền đọc; Reduce Motion chỉ làm tĩnh hình, không đổi quyết định nghe chủ động. Frame miệng dùng cadence UI trong khoảng engine callback started–terminal, không đo âm lượng hay lip-sync âm vị và không chứng minh loa có tiếng nếu hệ thống đang mute.
 
 Pet Mầm vẫn chỉ là bộ art T070, chưa có nhóm/ledger/tiến hóa trên server; chức năng TTS này không cấp pet level/EXP. Cổng máy thật, voice availability, audio focus và end-to-end backend thật phải kiểm riêng, xem task T071.
+
+## T072 — Giọng Gemini và nhập câu hỏi theo lượt
+
+Client thật `RemoteStudyAiGateway` hỗ trợ nguồn WAV qua backend. Nút `Nghe giọng AI` hỏi consent mỗi lần: gửi đúng text câu trả lời đã chọn tới Google; không mic/cam. Không tự chuyển từ offline TTS sang cloud sau lỗi. Giọng tạo theo [Gemini TTS REST interactions](https://aistudio.google.com/docs/speech-generation), mặc định `gemini-3.8-flash-tts`/`Kore`, cấu hình chỉ ở backend. Đã kiểm model hiện hữu và tạo WAV thật, không dùng file mẫu làm câu trả lời fallback.
+
+Native bridge thêm `playWav {bridgeVersion:1,id,wav:Uint8List}`. MediaPlayer chuẩn bị bất đồng bộ, lấy audio focus rồi start, callback started/done/error mới điều khiển avatar. WAV riêng trong cache/mindclock_speech, xóa khi stop/done/error/dispose và quét file riêng lúc bridge khởi tạo; không URI chia sẻ/album. Response cloud trễ sau stop/dispose/scope đổi bị bỏ, không tự phát khi quay lại. Client HTTP voice timeout50s, controller chờ65s; backend provider45s, không thay timeout các route khác.
+
+`Nói câu hỏi` dùng Android [RecognizerIntent](https://developer.android.com/reference/android/speech/RecognizerIntent) vi-VN, sau dialog giải thích dịch vụ thiết bị có thể dùng mạng/mic. Mic do activity hệ thống quản lý; app không thêm RECORD_AUDIO hoặc giữ recording. Trả về tối đa600 ký tự chỉ điền ô nháp, không gửi AI; user xem/sửa rồi bấm Gửi. Hủy/không có service vẫn nhập chữ. Không gắn nhãn AI đang nghe khi app nhường sang activity nhận giọng nói, không gọi đây là Live. Camera luôn độc lập. Học sâu/solo không có nút nói/nghe.
+
+Test T072 phân biệt: provider thật + HTTP local thật qua tài khoản development test; Android phát sample Gemini gốc và dọn cache thật; widget test consent/STT chỉ là fake transcript. Chưa có kiểm nhận tiếng Việt từ mic trên máy vật lý, Firebase E2E hoặc hội thoại full-duplex.

@@ -16,3 +16,8 @@ abstract interface class StudySpeechGateway {
   Future<void> stop();
   void dispose();
 }
+
+/// Returns a user-reviewed draft; never sends speech to AI automatically.
+abstract interface class StudyVoiceInputGateway {
+  Future<String?> recognizeQuestion();
+}

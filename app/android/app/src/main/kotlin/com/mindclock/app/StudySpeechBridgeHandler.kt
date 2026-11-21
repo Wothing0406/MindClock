@@ -1,9 +1,13 @@
 package com.mindclock.app
 
 import android.app.Activity
+import android.content.Intent
+import android.content.ActivityNotFoundException
+import android.speech.RecognizerIntent
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -11,8 +15,9 @@ import android.speech.tts.UtteranceProgressListener
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.util.Locale
+import java.io.File
 
-/** Opt-in offline Vietnamese TTS. Never captures audio or persists reply text. */
+/** Opt-in reply playback and delegated system voice input. No persistent audio/transcript. */
 class StudySpeechBridgeHandler(
     private val activity: Activity,
     private val channel: MethodChannel,
@@ -29,6 +34,15 @@ class StudySpeechBridgeHandler(
     private var initTimeout: Runnable? = null
     private var focus: AudioFocusRequest? = null
     private var initGeneration = 0
+    private var inputResult: MethodChannel.Result? = null
+    private val inputRequestCode = 7102
+    private var player: MediaPlayer? = null
+    private var audioFile: File? = null
+    private val speechCache = File(activity.cacheDir, "mindclock_speech").apply {
+        mkdirs()
+        listFiles()?.filter { it.isFile && it.name.startsWith("reply-") && it.extension == "wav" }
+            ?.forEach { it.delete() }
+    }
 
     fun handle(call: MethodCall, result: MethodChannel.Result) {
         if (call.argument<Number>("bridgeVersion")?.toInt() != 1) {
@@ -37,6 +51,31 @@ class StudySpeechBridgeHandler(
         }
         when (call.method) {
             "stop" -> { stop(); result.success(null) }
+            "playWav" -> playWav(call, result)
+            "recognizeQuestion" -> {
+                if (!foreground || destroyed || inputResult != null) {
+                    result.error("VOICE_INPUT_BUSY", "Chưa thể mở nhập giọng nói.", null)
+                    return
+                }
+                stop()
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN")
+                    putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói câu hỏi của bạn")
+                }
+                inputResult = result
+                try {
+                    @Suppress("DEPRECATION")
+                    activity.startActivityForResult(intent, inputRequestCode)
+                } catch (_: ActivityNotFoundException) {
+                    inputResult = null
+                    result.error("VOICE_INPUT_UNAVAILABLE", "Thiết bị chưa có dịch vụ nhận giọng nói. Bạn vẫn có thể nhập chữ.", null)
+                } catch (_: SecurityException) {
+                    inputResult = null
+                    result.error("VOICE_INPUT_DENIED", "Không mở được mic của dịch vụ nhận giọng nói.", null)
+                }
+            }
             "speak" -> {
                 val id = call.argument<String>("id")
                 val text = call.argument<String>("text")?.trim()
@@ -114,16 +153,7 @@ class StudySpeechBridgeHandler(
         val id = currentId ?: return
         val text = pendingText ?: return
         if (!foreground || destroyed) { stop(); return }
-        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
-            .setOnAudioFocusChangeListener({ change ->
-                if (change == AudioManager.AUDIOFOCUS_LOSS ||
-                    change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
-                    change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) stop()
-            }, main).build()
-        focus = request
-        if (audio.requestAudioFocus(request) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        if (!acquireFocus()) {
             fail("AUDIO_FOCUS", "Thiết bị đang ưu tiên âm thanh khác.")
             return
         }
@@ -136,6 +166,66 @@ class StudySpeechBridgeHandler(
         pending = null
     }
 
+    private fun acquireFocus(): Boolean {
+        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            .setOnAudioFocusChangeListener({ change ->
+                if (change == AudioManager.AUDIOFOCUS_LOSS ||
+                    change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+                    change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) stop()
+            }, main).build()
+        focus = request
+        return audio.requestAudioFocus(request) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+    }
+
+    private fun playWav(call: MethodCall, result: MethodChannel.Result) {
+        val id = call.argument<String>("id")
+        val bytes = call.argument<ByteArray>("wav")
+        if (!foreground || destroyed || id.isNullOrBlank() || id.length > 80 ||
+            bytes == null || bytes.size !in 45..4194304 ||
+            String(bytes, 0, 4, Charsets.US_ASCII) != "RIFF" ||
+            String(bytes, 8, 4, Charsets.US_ASCII) != "WAVE") {
+            result.error("INVALID_AUDIO", "Âm thanh chưa khả dụng.", null)
+            return
+        }
+        stop()
+        currentId = id
+        pending = result
+        try {
+            audioFile = File.createTempFile("reply-", ".wav", speechCache).apply { writeBytes(bytes) }
+            val media = MediaPlayer()
+            player = media
+            media.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            media.setDataSource(audioFile!!.absolutePath)
+            media.setOnPreparedListener {
+                if (currentId != id || !foreground || destroyed) return@setOnPreparedListener
+                try {
+                    if (!acquireFocus()) { fail("AUDIO_FOCUS", "Thiết bị đang ưu tiên âm thanh khác."); return@setOnPreparedListener }
+                    media.start()
+                    pending?.success(null)
+                    pending = null
+                    postState(id, "started")
+                } catch (_: RuntimeException) { fail("PLAYBACK_FAILED", "Không phát được giọng AI.") }
+            }
+            media.setOnCompletionListener { postState(id, "done") }
+            media.setOnErrorListener { _, _, _ ->
+                if (currentId == id) fail("PLAYBACK_FAILED", "Giọng AI bị gián đoạn.")
+                true
+            }
+            media.prepareAsync()
+        } catch (_: Exception) { fail("PLAYBACK_FAILED", "Không phát được giọng AI.") }
+    }
+
+    private fun releaseWave() {
+        val previous = player
+        player = null
+        previous?.release()
+        audioFile?.delete()
+        audioFile = null
+    }
+
     private fun postState(id: String?, state: String) {
         main.post {
             if (destroyed || id == null || currentId != id) return@post
@@ -143,6 +233,7 @@ class StudySpeechBridgeHandler(
             channel.invokeMethod("speechState", mapOf("id" to id, "state" to state))
             if (state != "started") {
                 currentId = null
+                releaseWave()
                 releaseFocus()
             }
         }
@@ -156,6 +247,7 @@ class StudySpeechBridgeHandler(
             channel.invokeMethod("speechState", mapOf("id" to it, "state" to "error", "messageVi" to message))
         }
         currentId = null
+        releaseWave()
         releaseFocus()
     }
 
@@ -166,6 +258,7 @@ class StudySpeechBridgeHandler(
         pending = null
         pendingText = null
         engine?.stop()
+        releaseWave()
         releaseFocus()
         if (id != null && !destroyed) {
             channel.invokeMethod("speechState", mapOf("id" to id, "state" to "stopped"))
@@ -182,8 +275,21 @@ class StudySpeechBridgeHandler(
         if (!value) stop()
     }
 
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode != inputRequestCode) return false
+        val result = inputResult
+        inputResult = null
+        val text = if (resultCode == Activity.RESULT_OK)
+            data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()?.take(600)
+            else null
+        result?.success(text?.takeIf { it.isNotEmpty() })
+        return true
+    }
+
     fun dispose() {
         stop()
+        inputResult?.error("CANCELLED", "Đã đóng phiên nhập giọng nói.", null)
+        inputResult = null
         destroyed = true
         ++initGeneration
         initTimeout?.let(main::removeCallbacks)

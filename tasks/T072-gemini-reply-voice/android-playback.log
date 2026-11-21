@@ -1,0 +1,8 @@
+00:00 +0: loading C:/Users/QuangDev/Downloads/Projects/web/MindClock/app/integration_test/gemini_voice_playback_test.dart
+Running Gradle task 'assembleDebug'...                             32.7s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...        2,460ms
+00:00 +0: Gemini-generated WAV plays through Android and avatar follows playback
+T072_NATIVE_PLAYBACK: {geminiSamplePlayed: true, cacheEmptyAfterPlayback: true, events: [started, done]}
+00:19 +1: (tearDownAll)
+00:23 +1: All tests passed!

@@ -1,5 +1,9 @@
 # Hiện trạng có bằng chứng
 
+## Cập nhật 21/11/2026 — T072 voice
+
+Đã có Gemini TTS server thật và nút nghe có consent, phát WAV qua Android/callback avatar, hủy response muộn; provider đã tạo sample gốc và API Docker local đã xử lý hỏi→giọng thành công bằng tài khoản development test rồi xóa. Native integration phát sample Gemini `started→done`, cache sau phát rỗng. 22 Flutter tests và analyze sạch ở lượt trước chốt icon mic; 27 API tests + test quota PostgreSQL riêng đạt. `Nói câu hỏi` đã nối activity nhận giọng Android và bản nháp xác nhận gửi, widget test; chưa kiểm nhận tiếng Việt thật từ mic/máy vật lý, Firebase E2E hoặc Live full-duplex. Task T072 giữ bằng chứng/giới hạn, không gọi toàn bộ sản phẩm hoàn thành.
+
 ## Các lát cập nhật gần nhất 20/11/2026
 
 - T071 verifying: nối nút nghe câu trả lời AI với TTS Android ngoại tuyến và callback avatar, stop khi background/scope đổi; Học sâu/solo không phát. 18 Flutter tests, Kotlin compile/APK build và 2 integration tests trên API37 đạt. Native chỉ trả fallback/error (playbackStarted=false), chưa chứng minh phát tiếng Việt thành công hoặc voice trên máy thật; chưa là Live full-duplex. Pet nhóm chưa có ledger/tiến hóa server.
