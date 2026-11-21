@@ -7,7 +7,7 @@
 | 3 | Domain/repository/debug fixture Flutter | Contract đa nhóm/EXP parse đúng | [x] |
 | 4 | Group hub UI trong tab Tôi, chuyển pet, pet asset runtime | 320dp/200%, Reduce Motion, không raw color/emoji | [x] |
 | 5 | Test full scope, docs, diff/secret | Không P0/P1 trong lát | [x] |
-| 6 | Commit/push/verify/handoff | SHA remote đúng | [ ] |
+| 6 | Commit/push/verify/handoff | SHA remote đúng | [x] |
 
 ## Ngoài phạm vi và task tiếp
 
