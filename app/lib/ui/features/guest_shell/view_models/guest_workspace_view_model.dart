@@ -56,6 +56,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   String? _serverSyncMessageVi;
   Future<void>? _pendingServerSync;
 
+  GuestWorkspaceRepository get repository => _repository;
   GuestWorkspace get workspace => _workspace;
   StudyProfile get profile => _workspace.profile;
   WeeklyTimetable get timetable => _workspace.timetable;

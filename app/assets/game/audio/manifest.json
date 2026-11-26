@@ -1,0 +1,32 @@
+{
+  "source": "procedural original",
+  "rate_hz": 22050,
+  "peak_target_dbfs": -12,
+  "characters": {
+    "ha-nhan": {
+      "basic": "characters/ha-nhan/audio/basic.wav",
+      "skill1": "characters/ha-nhan/audio/skill1.wav",
+      "skill2": "characters/ha-nhan/audio/skill2.wav",
+      "stun": "characters/ha-nhan/audio/stun.wav",
+      "victory": "characters/ha-nhan/audio/victory.wav"
+    },
+    "han-boi-phap": {
+      "basic": "characters/han-boi-phap/audio/basic.wav",
+      "skill1": "characters/han-boi-phap/audio/skill1.wav",
+      "skill2": "characters/han-boi-phap/audio/skill2.wav",
+      "stun": "characters/han-boi-phap/audio/stun.wav",
+      "victory": "characters/han-boi-phap/audio/victory.wav"
+    },
+    "tuyet-dinh": {
+      "basic": "characters/tuyet-dinh/audio/basic.wav",
+      "skill1": "characters/tuyet-dinh/audio/skill1.wav",
+      "skill2": "characters/tuyet-dinh/audio/skill2.wav",
+      "stun": "characters/tuyet-dinh/audio/stun.wav",
+      "victory": "characters/tuyet-dinh/audio/victory.wav"
+    }
+  },
+  "common": {
+    "impact": "audio/impact.wav",
+    "heal": "audio/heal.wav"
+  }
+}

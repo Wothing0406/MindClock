@@ -182,9 +182,22 @@ class PersonalFlowViewModel extends ChangeNotifier {
     } on AuthException catch (e) {
       _errorMessageVi = e.messageVi;
       return false;
+    } on Exception catch (e) {
+      _errorMessageVi =
+          'Không thể hoàn tất xác thực lúc này (${e.runtimeType}). Báo thức trên máy vẫn chạy bình thường.';
+      return false;
     } finally {
       _isBusy = false;
       notifyListeners();
+    }
+  }
+
+  Future<StudyProfile?> fetchRemoteProfileIfSignedIn() async {
+    if (!_authSession.isAuthenticated) return null;
+    try {
+      return await _repository.fetchProfileSnapshot();
+    } on Exception {
+      return null;
     }
   }
 

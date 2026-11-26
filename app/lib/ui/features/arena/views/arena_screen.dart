@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../data/debug/debug_fixture_pvp_gateway.dart';
+import '../../../../data/repositories/arena_cosmetic_store.dart';
 import '../../../../domain/game/combat_catalog.dart';
 import '../../../../domain/game/solo_combat_engine.dart';
 import '../../../../domain/game/solo_training_question_bank.dart';
@@ -17,11 +18,23 @@ import '../../../core/widgets/mindclock_pressable.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/pvp_arena_view_model.dart';
 import '../view_models/solo_arena_view_model.dart';
+import 'arena_lobby_panel.dart';
 import 'arena_pvp_lobby.dart';
 import 'arena_sprite_stage.dart';
 import 'arena_stage_widget.dart';
+import 'arena_skill_hand.dart';
 
-/// Màn hình Đấu trường G1/G2 (Hub 3 mode + Luyện đơn cục bộ + PvP 1v1 giao hữu).
+enum _ArenaLobbyTab {
+  lobby('lobby', 'Sảnh đấu'),
+  leaderboard('leaderboard', 'Bảng xếp hạng'),
+  shop('shop', 'Daily Shop');
+
+  const _ArenaLobbyTab(this.code, this.labelVi);
+  final String code;
+  final String labelVi;
+}
+
+/// Màn hình Đấu trường G1/G2 (Sảnh chờ + BXH + Daily Shop + Luyện đơn + PvP 1v1).
 class ArenaScreen extends StatefulWidget {
   const ArenaScreen({
     super.key,
@@ -29,12 +42,14 @@ class ArenaScreen extends StatefulWidget {
     required this.arenaViewModel,
     this.pvpGateway,
     this.currentUserId,
+    this.cosmeticStore,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final SoloArenaViewModel arenaViewModel;
   final PvpGateway? pvpGateway;
   final String? currentUserId;
+  final ArenaCosmeticStore? cosmeticStore;
 
   @override
   State<ArenaScreen> createState() => _ArenaScreenState();
@@ -46,15 +61,26 @@ class _ArenaScreenState extends State<ArenaScreen>
   final TextEditingController _reasoningController = TextEditingController();
   bool _showRulesCard = false;
   bool _showPvp1v1 = false;
+  _ArenaLobbyTab _lobbyTab = _ArenaLobbyTab.lobby;
+  ChampionId _lobbyPreviewChampion = ChampionId.haNhan;
+  int? _lastAwardedMatchCoins;
   final Set<int> _expandedSummaryRounds = <int>{};
   late final AnimationController _loadingController;
   PvpArenaViewModel? _pvpViewModel;
+  ArenaCosmeticStore? _ownedCosmeticStore;
   bool _loadingPrecacheStarted = false;
 
   PvpArenaViewModel get _pvpVm => _pvpViewModel ??= PvpArenaViewModel(
         gateway: widget.pvpGateway ?? DebugFixturePvpGateway(),
         enableAutoPolling: false,
       );
+
+  ArenaCosmeticStore get _cosmeticStore =>
+      widget.cosmeticStore ??
+      (_ownedCosmeticStore ??= ArenaCosmeticStore(
+        store: widget.guestViewModel.repository.store,
+        ownerScopeKey: widget.guestViewModel.ownerScopeKey,
+      ));
 
   @override
   void initState() {
@@ -70,6 +96,11 @@ class _ArenaScreenState extends State<ArenaScreen>
         }
       });
     widget.arenaViewModel.addListener(_onArenaChanged);
+    widget.guestViewModel.addListener(_onGuestChanged);
+    _cosmeticStore.addListener(_onCosmeticsChanged);
+    if (!_cosmeticStore.isLoaded) {
+      _cosmeticStore.load();
+    }
   }
 
   @override
@@ -77,21 +108,57 @@ class _ArenaScreenState extends State<ArenaScreen>
     _loadingController.dispose();
     _pvpViewModel?.dispose();
     widget.arenaViewModel.removeListener(_onArenaChanged);
+    widget.guestViewModel.removeListener(_onGuestChanged);
+    _cosmeticStore.removeListener(_onCosmeticsChanged);
+    _ownedCosmeticStore?.dispose();
     _answerController.dispose();
     _reasoningController.dispose();
     super.dispose();
+  }
+
+  void _onCosmeticsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onGuestChanged() {
+    if (!mounted) return;
+    _cosmeticStore.switchScope(widget.guestViewModel.ownerScopeKey);
   }
 
   void _onArenaChanged() {
     if (!mounted) return;
     final SoloArenaViewModel vm = widget.arenaViewModel;
     if (vm.section == ArenaSection.loading) {
+      _lastAwardedMatchCoins = null;
       _beginLoadingSequence();
     } else {
       _loadingController.stop();
       _loadingPrecacheStarted = false;
     }
+    if (vm.section == ArenaSection.summary) {
+      _maybeAwardSoloMatchCoins(vm);
+    }
     setState(() {});
+  }
+
+  Future<void> _maybeAwardSoloMatchCoins(SoloArenaViewModel vm) async {
+    final String matchKey =
+        'solo_${vm.seed}_${vm.history.length}_${vm.playerState.hp}_${vm.botState.hp}';
+    final int correctRounds = vm.history
+        .where((SoloRoundHistoryItem i) => i.playerGrade == SoloGradeStatus.correct)
+        .length;
+    final bool won = vm.playerState.hp > vm.botState.hp ||
+        (vm.botState.hp == 0 && vm.playerState.hp > 0);
+    final int awarded = await _cosmeticStore.awardMatchResult(
+      matchKey: matchKey,
+      won: won,
+      correctRounds: correctRounds,
+      totalRounds: vm.history.length,
+      isPvp: false,
+    );
+    if (mounted && awarded > 0) {
+      setState(() => _lastAwardedMatchCoins = awarded);
+    }
   }
 
   void _beginLoadingSequence() {
@@ -178,146 +245,199 @@ class _ArenaScreenState extends State<ArenaScreen>
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text('Đấu trường', style: mc.screenTitleStyle),
-              const MindClockStatusPill(label: 'G1 · Luyện đơn cục bộ'),
+              const MindClockStatusPill(label: 'Võ đường · Mùa Giao hữu'),
             ],
           ),
-          SizedBox(height: mc.space8),
-          Text(
-            'Luyện chiêu, nắm luật Qi và làm quen nhịp giải câu có bước trình bày trước khi mở giao hữu.',
-            style: mc.bodyStyle,
+          SizedBox(height: mc.space12),
+          ArenaLobbyProfileBanner(
+            profile: widget.guestViewModel.profile,
+            cosmeticStore: _cosmeticStore,
           ),
           SizedBox(height: mc.space12),
-          MindClockButton(
-            key: const ValueKey<String>('arena-toggle-rules'),
-            label: _showRulesCard
-                ? 'Ẩn luật chơi v0.1'
-                : 'Xem Luật chơi (solo-three-v0.1)',
-            icon: MindClockIconKind.info,
-            variant: MindClockButtonVariant.subtle,
-            onPressed: () => setState(() => _showRulesCard = !_showRulesCard),
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            children: _ArenaLobbyTab.values.map((_ArenaLobbyTab tab) {
+              final bool selected = _lobbyTab == tab;
+              return MindClockPressable(
+                key: ValueKey<String>('arena-lobby-tab-${tab.code}'),
+                selected: selected,
+                semanticLabel: 'Mở mục ${tab.labelVi}',
+                onPressed: () => setState(() => _lobbyTab = tab),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: mc.space12,
+                    vertical: mc.space8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected ? mc.primary : mc.surface,
+                    borderRadius: BorderRadius.circular(mc.radiusChip),
+                    border: Border.all(
+                      color: selected ? mc.primary : mc.outline,
+                    ),
+                  ),
+                  child: Text(
+                    tab.labelVi,
+                    style: mc.chipLabelStyle.copyWith(
+                      color: selected ? mc.onPrimary : mc.ink,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-          if (_showRulesCard) ...<Widget>[
+          SizedBox(height: mc.space12),
+          if (_lobbyTab == _ArenaLobbyTab.leaderboard)
+            ArenaLeaderboardPanel(
+              profile: widget.guestViewModel.profile,
+              cosmeticStore: _cosmeticStore,
+            )
+          else if (_lobbyTab == _ArenaLobbyTab.shop)
+            ArenaDailyShopPanel(cosmeticStore: _cosmeticStore)
+          else ...<Widget>[
+            ArenaLobbyChampionShowcase(
+              selectedChampion: _lobbyPreviewChampion,
+              equippedAuraId: _cosmeticStore.state.equippedAuraId,
+              onSelectChampion: (ChampionId id) {
+                setState(() => _lobbyPreviewChampion = id);
+                vm.selectPlayerChampion(id);
+              },
+              onInspectChampion: (ChampionSpec spec) =>
+                  _showChampionDetailSheet(context, spec),
+            ),
             SizedBox(height: mc.space12),
+            MindClockButton(
+              key: const ValueKey<String>('arena-toggle-rules'),
+              label: _showRulesCard
+                  ? 'Ẩn luật chơi v0.1'
+                  : 'Xem Luật chơi (solo-three-v0.1)',
+              icon: MindClockIconKind.info,
+              variant: MindClockButtonVariant.subtle,
+              onPressed: () => setState(() => _showRulesCard = !_showRulesCard),
+            ),
+            if (_showRulesCard) ...<Widget>[
+              SizedBox(height: mc.space12),
+              MindClockCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Luật chơi ($combatRuleVersion)',
+                        style: mc.sectionTitleStyle),
+                    SizedBox(height: mc.space8),
+                    Text(
+                      '• Mỗi bên bắt đầu với $maxHp HP, $maxArmor Giáp, 0 Chắn, 0 Qi; tối đa $maxCombatRounds round.\n'
+                      '• Chỉ câu trả lời đúng rõ (kèm bước trình bày) mới kích hoạt hành động và cộng +1 Qi sau round (tối đa $maxQi Qi; round 3 bí mật +1 Qi thêm).\n'
+                      '• Sát thương trừ đồng thời: Chắn → Giáp → HP. Hồi phục sau khi chịu đòn; về 0 HP không hồi cứu.\n'
+                      '• Luyện đơn chạy cục bộ với Máy tập theo seed, không cộng RP/MMR hay xếp hạng.',
+                      style: mc.captionStyle.copyWith(color: mc.ink),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            SizedBox(height: mc.space16),
+
+            // Cửa 1: Luyện đơn (G1 — mở)
+            MindClockCard(
+              highlighted: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text('Luyện đơn', style: mc.sectionTitleStyle),
+                      const MindClockStatusPill(label: 'Sẵn sàng · Offline'),
+                    ],
+                  ),
+                  SizedBox(height: mc.space8),
+                  Text(
+                    'Đấu tập cùng Máy tập mô phỏng theo luật công khai (có seed & phát lại). Không tính RP hay bảng xếp hạng.',
+                    style: mc.bodyStyle,
+                  ),
+                  SizedBox(height: mc.space12),
+                  MindClockButton(
+                    key: const ValueKey<String>('arena-enter-solo'),
+                    label: 'Vào Luyện đơn',
+                    icon: MindClockIconKind.arena,
+                    onPressed: () => vm.openSoloSetup(
+                      profile: widget.guestViewModel.profile,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: mc.space12),
+
+            // Cửa 2: Đấu đơn 1v1 (G2 — Giao hữu cùng server /v1/pvp/*, 0 RP)
             MindClockCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Luật chơi ($combatRuleVersion)',
-                      style: mc.sectionTitleStyle),
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text('Đấu đơn 1v1', style: mc.sectionTitleStyle),
+                      const MindClockStatusPill(
+                        label: 'Giao hữu thật · G2',
+                        accentWarm: false,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: mc.space8),
                   Text(
-                    '• Mỗi bên bắt đầu với $maxHp HP, $maxArmor Giáp, 0 Chắn, 0 Qi; tối đa $maxCombatRounds round.\n'
-                    '• Chỉ câu trả lời đúng rõ (kèm bước trình bày) mới kích hoạt hành động và cộng +1 Qi sau round (tối đa $maxQi Qi; round 3 bí mật +1 Qi thêm).\n'
-                    '• Sát thương trừ đồng thời: Chắn → Giáp → HP. Hồi phục sau khi chịu đòn; về 0 HP không hồi cứu.\n'
-                    '• Luyện đơn chạy cục bộ với Máy tập theo seed, không cộng RP/MMR hay xếp hạng.',
+                    'Giao hữu 1v1 cùng người thật, cùng câu hỏi GDPT 2018 & rubric, máy chủ chốt HP/Qi (0 điểm xếp hạng).',
                     style: mc.captionStyle.copyWith(color: mc.ink),
+                  ),
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey<String>('arena-enter-1v1'),
+                    label: 'Vào Đấu đơn 1v1 (Giao hữu)',
+                    icon: MindClockIconKind.arena,
+                    variant: MindClockButtonVariant.secondary,
+                    onPressed: () => setState(() => _showPvp1v1 = true),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: mc.space12),
+
+            // Cửa 3: Đấu đội 2v2 (G3 — chưa mở)
+            MindClockCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Text('Đấu đội 2v2', style: mc.sectionTitleStyle),
+                      const MindClockStatusPill(
+                          label: 'Chưa mở · G3', accentWarm: true),
+                    ],
+                  ),
+                  SizedBox(height: mc.space8),
+                  Text(
+                    'Hai bạn lập đội đấu giao hữu 2v2. Chỉ mở sau khi hoàn tất playtest 1v1 ở G2.',
+                    style: mc.captionStyle.copyWith(color: mc.ink),
+                  ),
+                  SizedBox(height: mc.space8),
+                  const MindClockButton(
+                    key: ValueKey<String>('arena-enter-2v2-locked'),
+                    label: 'Mở sau cổng giao hữu 1v1',
+                    icon: MindClockIconKind.lock,
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed: null,
                   ),
                 ],
               ),
             ),
           ],
-          SizedBox(height: mc.space16),
-
-          // Cửa 1: Luyện đơn (G1 — mở)
-          MindClockCard(
-            highlighted: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    Text('Luyện đơn', style: mc.sectionTitleStyle),
-                    const MindClockStatusPill(label: 'Sẵn sàng · Offline'),
-                  ],
-                ),
-                SizedBox(height: mc.space8),
-                Text(
-                  'Đấu tập cùng Máy tập mô phỏng theo luật công khai (có seed & phát lại). Không tính RP hay bảng xếp hạng.',
-                  style: mc.bodyStyle,
-                ),
-                SizedBox(height: mc.space12),
-                MindClockButton(
-                  key: const ValueKey<String>('arena-enter-solo'),
-                  label: 'Vào Luyện đơn',
-                  icon: MindClockIconKind.arena,
-                  onPressed: () => vm.openSoloSetup(
-                    profile: widget.guestViewModel.profile,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: mc.space12),
-
-          // Cửa 2: Đấu đơn 1v1 (G2 — Giao hữu cùng server /v1/pvp/*, 0 RP)
-          MindClockCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    Text('Đấu đơn 1v1', style: mc.sectionTitleStyle),
-                    const MindClockStatusPill(
-                      label: 'Giao hữu thật · G2',
-                      accentWarm: false,
-                    ),
-                  ],
-                ),
-                SizedBox(height: mc.space8),
-                Text(
-                  'Giao hữu 1v1 cùng người thật, cùng câu hỏi GDPT 2018 & rubric, máy chủ chốt HP/Qi (0 điểm xếp hạng).',
-                  style: mc.captionStyle.copyWith(color: mc.ink),
-                ),
-                SizedBox(height: mc.space8),
-                MindClockButton(
-                  key: const ValueKey<String>('arena-enter-1v1'),
-                  label: 'Vào Đấu đơn 1v1 (Giao hữu)',
-                  icon: MindClockIconKind.arena,
-                  variant: MindClockButtonVariant.secondary,
-                  onPressed: () => setState(() => _showPvp1v1 = true),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: mc.space12),
-
-          // Cửa 3: Đấu đội 2v2 (G3 — chưa mở)
-          MindClockCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    Text('Đấu đội 2v2', style: mc.sectionTitleStyle),
-                    const MindClockStatusPill(
-                        label: 'Chưa mở · G3', accentWarm: true),
-                  ],
-                ),
-                SizedBox(height: mc.space8),
-                Text(
-                  'Hai bạn lập đội đấu giao hữu 2v2. Chỉ mở sau khi hoàn tất playtest 1v1 ở G2.',
-                  style: mc.captionStyle.copyWith(color: mc.ink),
-                ),
-                SizedBox(height: mc.space8),
-                const MindClockButton(
-                  key: ValueKey<String>('arena-enter-2v2-locked'),
-                  label: 'Mở sau cổng giao hữu 1v1',
-                  icon: MindClockIconKind.lock,
-                  variant: MindClockButtonVariant.subtle,
-                  onPressed: null,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -920,7 +1040,13 @@ class _ArenaScreenState extends State<ArenaScreen>
           ),
           SizedBox(height: mc.space12),
 
-          // Khu vực chính ưu tiên: Đề bài + Ô nhập chữ & bước trình bày
+          ArenaSkillHand(
+            champion: vm.playerState.championId,
+            options: vm.actionOptions,
+            onAction: vm.chooseAction,
+          ),
+          SizedBox(height: mc.space12),
+          // Đề bài mở quyền ra đòn; bộ chiêu luôn có mặt trên sân.
           if (q != null)
             MindClockCard(
               highlighted: vm.phase == SoloBattlePhase.answering,
@@ -1007,6 +1133,12 @@ class _ArenaScreenState extends State<ArenaScreen>
                           borderSide: BorderSide(color: mc.outline),
                         ),
                       ),
+                    ),
+                    SizedBox(height: mc.space8),
+                    MathInputKeypad(
+                      key: const ValueKey<String>('arena-reasoning-keypad'),
+                      controller: _reasoningController,
+                      compact: true,
                     ),
                     SizedBox(height: mc.space16),
                     MindClockButton(
@@ -1144,94 +1276,6 @@ class _ArenaScreenState extends State<ArenaScreen>
                   SizedBox(height: mc.space8),
                   Text(vm.lastGrading!.feedbackVi, style: mc.captionStyle),
                   SizedBox(height: mc.space12),
-                  ...vm.actionOptions.map((SoloActionAvailability opt) {
-                    final ChampionSpec activeSpec =
-                        CombatCatalog.getSpec(vm.playerState.championId);
-                    final String skillAsset =
-                        activeSpec.assetForAction(opt.actionType);
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: mc.space8),
-                      child: MindClockPressable(
-                        key: ValueKey<String>(
-                            'arena-action-${opt.actionType.code}'),
-                        semanticLabel: opt.enabled
-                            ? '${opt.titleVi}, ${opt.effectSummaryVi}'
-                            : '${opt.titleVi} không khả dụng: ${opt.disabledReasonVi ?? ""}',
-                        onPressed: opt.enabled
-                            ? () => vm.chooseAction(opt.actionType)
-                            : null,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(mc.space12),
-                          decoration: BoxDecoration(
-                            color: opt.enabled ? mc.surface : mc.paper,
-                            borderRadius:
-                                BorderRadius.circular(mc.radiusControl),
-                            border: Border.all(
-                              color: opt.enabled ? mc.primary : mc.outline,
-                              width: opt.enabled ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              if (!vm.simulateAssetFallback) ...<Widget>[
-                                _SkillIconThumb(
-                                  assetPath: skillAsset,
-                                  size: 44,
-                                  dimmed: !opt.enabled,
-                                ),
-                                SizedBox(width: mc.space12),
-                              ],
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Wrap(
-                                      spacing: mc.space8,
-                                      runSpacing: mc.space4,
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      children: <Widget>[
-                                        Text(
-                                          opt.titleVi,
-                                          style: mc.bodyStrongStyle.copyWith(
-                                            color: opt.enabled
-                                                ? mc.ink
-                                                : mc.inkMuted,
-                                          ),
-                                        ),
-                                        MindClockStatusPill(
-                                          label: '${opt.qiCost} Qi',
-                                          accentWarm: !opt.enabled,
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: mc.space4),
-                                    Text(opt.effectSummaryVi,
-                                        style: mc.captionStyle),
-                                    if (!opt.enabled &&
-                                        opt.disabledReasonVi !=
-                                            null) ...<Widget>[
-                                      SizedBox(height: mc.space4),
-                                      Text(
-                                        'Lý do khóa: ${opt.disabledReasonVi!}',
-                                        key: ValueKey<String>(
-                                          'arena-action-reason-${opt.actionType.code}',
-                                        ),
-                                        style: mc.captionStyle
-                                            .copyWith(color: mc.error),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
                   MindClockButton(
                     key: const ValueKey<String>('arena-toggle-rubric'),
                     label:
@@ -1377,6 +1421,10 @@ class _ArenaScreenState extends State<ArenaScreen>
     final MindClockTheme mc = context.mc;
     final ChampionSpec playerSpec = CombatCatalog.getSpec(vm.playerChampion);
     final ChampionSpec botSpec = CombatCatalog.getSpec(vm.botChampion);
+    final bool playerWon = vm.playerState.hp > vm.botState.hp ||
+        (vm.botState.hp == 0 && vm.playerState.hp > 0);
+    final bool disableMotion =
+        vm.reduceMotionOverride || MediaQuery.disableAnimationsOf(context);
 
     return SingleChildScrollView(
       key: const ValueKey<String>('arena-summary-scroll'),
@@ -1389,13 +1437,43 @@ class _ArenaScreenState extends State<ArenaScreen>
             label: 'Lượt luyện cục bộ · 0 RP / Không xếp hạng',
           ),
           SizedBox(height: mc.space8),
-          Text(
-            vm.summaryOutcomeTitleVi(),
-            key: const ValueKey<String>('arena-summary-outcome'),
-            style: mc.screenTitleStyle,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              ArenaSpriteActor(
+                spec: playerSpec,
+                facingRight: true,
+                isBot: false,
+                disableMotion: disableMotion,
+                assetFallbackMode: vm.simulateAssetFallback,
+                isWinner: playerWon,
+                size: 74,
+              ),
+              SizedBox(width: mc.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      vm.summaryOutcomeTitleVi(),
+                      key: const ValueKey<String>('arena-summary-outcome'),
+                      style: mc.screenTitleStyle,
+                    ),
+                    SizedBox(height: mc.space4),
+                    Text(vm.summaryFinishReasonVi(), style: mc.bodyStyle),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: mc.space4),
-          Text(vm.summaryFinishReasonVi(), style: mc.bodyStyle),
+          if (_lastAwardedMatchCoins != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockStatusPill(
+              key: const ValueKey<String>('arena-summary-coins-pill'),
+              label: 'Thưởng mỹ thuật: +$_lastAwardedMatchCoins Xu',
+              accentWarm: false,
+            ),
+          ],
           SizedBox(height: mc.space12),
           MindClockCard(
             highlighted: true,
@@ -1549,11 +1627,13 @@ class _ArenaScreenState extends State<ArenaScreen>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    _ChampionPortraitThumb(
-                      assetPath: spec.portraitAssetPath,
-                      fallbackInitials: spec.nameVi,
+                    ArenaSpriteActor(
+                      spec: spec,
+                      facingRight: true,
+                      isBot: false,
+                      disableMotion: MediaQuery.disableAnimationsOf(context),
+                      assetFallbackMode: false,
                       size: 88,
-                      highlighted: true,
                     ),
                     SizedBox(width: mc.space12),
                     Expanded(
@@ -1678,12 +1758,11 @@ class _SkillIconThumb extends StatelessWidget {
   const _SkillIconThumb({
     required this.assetPath,
     required this.size,
-    this.dimmed = false,
   });
 
   final String assetPath;
   final double size;
-  final bool dimmed;
+  final bool dimmed = false;
 
   @override
   Widget build(BuildContext context) {

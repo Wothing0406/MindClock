@@ -35,17 +35,16 @@ def upgrade() -> None:
             WHERE row_no = 1
         )
     """))
-    if op.get_bind().dialect.name == 'postgresql':
-        op.create_index(
-            'uq_commitment_primary_per_user',
-            'commitment_group_members',
-            ['user_id'],
-            unique=True,
-            postgresql_where=sa.text("status = 'active' AND is_primary = true"),
-        )
+    op.create_index(
+        'uq_commitment_primary_per_user',
+        'commitment_group_members',
+        ['user_id'],
+        unique=True,
+        postgresql_where=sa.text("status = 'active' AND is_primary = true"),
+        sqlite_where=sa.text("status = 'active' AND is_primary = 1"),
+    )
 
 
 def downgrade() -> None:
-    if op.get_bind().dialect.name == 'postgresql':
-        op.drop_index('uq_commitment_primary_per_user', table_name='commitment_group_members')
+    op.drop_index('uq_commitment_primary_per_user', table_name='commitment_group_members')
     op.drop_column('commitment_group_members', 'is_primary')

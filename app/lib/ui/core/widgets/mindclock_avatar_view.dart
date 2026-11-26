@@ -22,9 +22,9 @@ class MindClockAvatarCatalog {
     'rua-xanh': 'assets/avatars/avatar_rua_xanh.png',
     'may_nho': 'assets/avatars/avatar_may_nho.png',
     'may-nho': 'assets/avatars/avatar_may_nho.png',
-    'ha_nhan': 'assets/arena/champ_ha_nhan.png',
-    'tuyet_dinh': 'assets/arena/champ_tuyet_dinh.png',
-    'han_boi_phap': 'assets/arena/champ_han_boi_phap.png',
+    'ha_nhan': 'assets/game/characters/ha-nhan/poses/idle.webp',
+    'tuyet_dinh': 'assets/game/characters/tuyet-dinh/poses/idle.webp',
+    'han_boi_phap': 'assets/game/characters/han-boi-phap/poses/idle.webp',
   };
 
   static const List<Map<String, dynamic>> presets = <Map<String, dynamic>>[
@@ -68,19 +68,19 @@ class MindClockAvatarCatalog {
       'id': 'ha_nhan',
       'label': 'Hà Nhân',
       'icon': MindClockIconKind.user,
-      'assetPath': 'assets/arena/champ_ha_nhan.png',
+      'assetPath': 'assets/game/characters/ha-nhan/poses/idle.webp',
     },
     <String, dynamic>{
       'id': 'tuyet_dinh',
       'label': 'Tuyệt Đỉnh',
       'icon': MindClockIconKind.arena,
-      'assetPath': 'assets/arena/champ_tuyet_dinh.png',
+      'assetPath': 'assets/game/characters/tuyet-dinh/poses/idle.webp',
     },
     <String, dynamic>{
       'id': 'han_boi_phap',
-      'label': 'Hàn Bội Pháp',
+      'label': 'Hàn Bối Pháp',
       'icon': MindClockIconKind.shield,
-      'assetPath': 'assets/arena/champ_han_boi_phap.png',
+      'assetPath': 'assets/game/characters/han-boi-phap/poses/idle.webp',
     },
   ];
 

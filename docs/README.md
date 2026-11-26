@@ -40,6 +40,7 @@ docs/
 ├─ 03-quality/               test, nghiệm thu, môi trường, release, truy vết
 ├─ 04-game/                  PvP v0.1, art/asset, rank/mùa/coin thử nghiệm
 ├─ 05-future/                iOS và các nhánh chưa mở
+├─ 06-devfest/               tài liệu trình bày DevFest (tách bạch khỏi spec dài hạn)
 └─ archive/2026-11/          58 tài liệu đánh số cũ, chỉ để truy nguồn
 ```
 

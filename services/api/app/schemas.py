@@ -268,3 +268,21 @@ class CommitmentGroupJoinRequestCreate(ApiModel):
     model_config = ConfigDict(populate_by_name=True, extra='forbid')
     group_code: str = Field(alias='groupCode', min_length=4, max_length=12)
 
+
+class AuthRegisterRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=8, max_length=128)
+    alias: str | None = Field(default=None, max_length=80)
+
+
+class AuthLoginRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class AuthRefreshRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    refresh_token: str = Field(alias='refreshToken', min_length=10, max_length=2048)
+

@@ -31,6 +31,7 @@ class TodayScreen extends StatefulWidget {
     this.studyViewModel,
     this.communityRepository,
     this.onOpenStudySpace,
+    this.onSelectTab,
     this.lastActionBanner,
   });
 
@@ -41,6 +42,7 @@ class TodayScreen extends StatefulWidget {
   final StudyFocusViewModel? studyViewModel;
   final CommunityRepository? communityRepository;
   final VoidCallback? onOpenStudySpace;
+  final ValueChanged<int>? onSelectTab;
   final String? lastActionBanner;
 
   @override
@@ -73,13 +75,15 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   String _formatAlarmCountdown(AlarmConfig alarm, DateTime now) {
-    DateTime candidate = DateTime(now.year, now.month, now.day, alarm.hour, alarm.minute);
+    DateTime candidate =
+        DateTime(now.year, now.month, now.day, alarm.hour, alarm.minute);
     if (!candidate.isAfter(now)) {
       candidate = candidate.add(const Duration(days: 1));
     }
     if (alarm.repeatWeekdays.isNotEmpty) {
       for (int i = 0; i < 7; i++) {
-        final DateTime d = DateTime(now.year, now.month, now.day + i, alarm.hour, alarm.minute);
+        final DateTime d = DateTime(
+            now.year, now.month, now.day + i, alarm.hour, alarm.minute);
         if (alarm.repeatWeekdays.contains(d.weekday) && d.isAfter(now)) {
           candidate = d;
           break;
@@ -175,7 +179,8 @@ class _TodayScreenState extends State<TodayScreen> {
                         children: <Widget>[
                           Text(
                             '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}',
-                            key: const ValueKey<String>('today-realtime-clock-hm'),
+                            key: const ValueKey<String>(
+                                'today-realtime-clock-hm'),
                             style: mc.alarmHeroStyle.copyWith(
                               fontSize: 32,
                               letterSpacing: -1,
@@ -184,7 +189,8 @@ class _TodayScreenState extends State<TodayScreen> {
                           SizedBox(width: mc.space4),
                           Text(
                             ':${_currentTime.second.toString().padLeft(2, '0')}',
-                            key: const ValueKey<String>('today-realtime-clock-sec'),
+                            key: const ValueKey<String>(
+                                'today-realtime-clock-sec'),
                             style: mc.alarmHeroStyle.copyWith(
                               fontSize: 20,
                               color: mc.sunrise,
@@ -197,11 +203,13 @@ class _TodayScreenState extends State<TodayScreen> {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: mc.nightSurface,
                           borderRadius: BorderRadius.circular(mc.radiusChip),
-                          border: Border.all(color: mc.sunrise.withValues(alpha: 0.6)),
+                          border: Border.all(
+                              color: mc.sunrise.withValues(alpha: 0.6)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -217,7 +225,8 @@ class _TodayScreenState extends State<TodayScreen> {
                             const SizedBox(width: 6),
                             Text(
                               'Thời gian thực',
-                              style: mc.captionStyle.copyWith(color: mc.nightText),
+                              style:
+                                  mc.captionStyle.copyWith(color: mc.nightText),
                             ),
                           ],
                         ),
@@ -228,12 +237,14 @@ class _TodayScreenState extends State<TodayScreen> {
                 SizedBox(height: mc.space4),
                 Text(
                   '${WeeklyTimetable.weekdayLabel(_currentTime.weekday)}, ngày ${_currentTime.day.toString().padLeft(2, '0')}/${_currentTime.month.toString().padLeft(2, '0')}/${_currentTime.year}',
-                  style: mc.bodyStyle.copyWith(color: mc.nightText.withValues(alpha: 0.8)),
+                  style: mc.bodyStyle
+                      .copyWith(color: mc.nightText.withValues(alpha: 0.8)),
                 ),
                 SizedBox(height: mc.space12),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: mc.space12, vertical: mc.space8),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: mc.space12, vertical: mc.space8),
                   decoration: BoxDecoration(
                     color: mc.nightSurface,
                     borderRadius: BorderRadius.circular(mc.radiusControl),
@@ -270,10 +281,14 @@ class _TodayScreenState extends State<TodayScreen> {
               isWarm: false,
             ),
           ],
-          if (widget.communityRepository != null) ...<Widget>[
-            SizedBox(height: mc.space12),
-            TodayPetCard(repository: widget.communityRepository!),
-          ],
+          SizedBox(height: mc.space12),
+          _buildFeatureDirectory(
+            context: context,
+            mc: mc,
+            activeAlarm: activeAlarm,
+            morningProposal: morningProposal,
+            selectedDaySchedule: selectedDaySchedule,
+          ),
           if (widget.viewModel.needsOsPermissions) ...<Widget>[
             SizedBox(height: mc.space12),
             Container(
@@ -363,8 +378,7 @@ class _TodayScreenState extends State<TodayScreen> {
                         padding: EdgeInsets.all(mc.space12),
                         decoration: BoxDecoration(
                           color: mc.paper,
-                          borderRadius:
-                              BorderRadius.circular(mc.radiusControl),
+                          borderRadius: BorderRadius.circular(mc.radiusControl),
                           border: Border.all(color: mc.outline),
                         ),
                         child: Column(
@@ -452,9 +466,7 @@ class _TodayScreenState extends State<TodayScreen> {
                               width: 4,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: isSelected
-                                    ? mc.onPrimary
-                                    : mc.sunrise,
+                                color: isSelected ? mc.onPrimary : mc.sunrise,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -676,7 +688,8 @@ class _TodayScreenState extends State<TodayScreen> {
                       morningProposal.explanationVi,
                       style: mc.captionStyle.copyWith(color: mc.ink),
                     ),
-                    if (morningProposal.sampleQuestionPrompt != null) ...<Widget>[
+                    if (morningProposal.sampleQuestionPrompt !=
+                        null) ...<Widget>[
                       SizedBox(height: mc.space8),
                       Container(
                         width: double.infinity,
@@ -749,12 +762,12 @@ class _TodayScreenState extends State<TodayScreen> {
                                     key: ValueKey<String>(
                                         'alarm-os-status-${alarm.id}'),
                                     label: statusText,
-                                    accentWarm:
-                                        !widget.viewModel.isOsBridgeConnected ||
-                                            alarm.syncStatus !=
-                                                AlarmSyncStatus.scheduledReady ||
-                                            !widget.viewModel.permissionSnapshot
-                                                .allGranted,
+                                    accentWarm: !widget
+                                            .viewModel.isOsBridgeConnected ||
+                                        alarm.syncStatus !=
+                                            AlarmSyncStatus.scheduledReady ||
+                                        !widget.viewModel.permissionSnapshot
+                                            .allGranted,
                                   ),
                                 ],
                               ),
@@ -764,7 +777,8 @@ class _TodayScreenState extends State<TodayScreen> {
                           Text(
                             '$repeatText · ${alarm.soundOption.labelVi} · '
                             '${alarm.vibrateEnabled ? "Có rung" : "Không rung"}',
-                            style: mc.captionStyle.copyWith(color: mc.nightText),
+                            style:
+                                mc.captionStyle.copyWith(color: mc.nightText),
                           ),
                           SizedBox(height: mc.space4),
                           Text(
@@ -852,6 +866,219 @@ class _TodayScreenState extends State<TodayScreen> {
             SizedBox(height: mc.space16),
             _buildStudySpaceEntryCard(context, mc),
           ],
+          if (widget.communityRepository != null) ...<Widget>[
+            SizedBox(height: mc.space16),
+            Text(
+              'Động lực & Nhóm cam kết',
+              style: mc.sectionTitleStyle,
+            ),
+            SizedBox(height: mc.space8),
+            TodayPetCard(repository: widget.communityRepository!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureDirectory({
+    required BuildContext context,
+    required MindClockTheme mc,
+    required AlarmConfig? activeAlarm,
+    required MorningQuestionProposal? morningProposal,
+    required DaySchedule selectedDaySchedule,
+  }) {
+    final StudyFocusSessionSnapshot? activeStudy =
+        widget.studyViewModel?.activeSnapshot;
+    final int pendingTodos =
+        widget.viewModel.dailyTasks.where((t) => !t.isDone).length;
+
+    final List<
+        ({
+          String key,
+          String title,
+          String subtitle,
+          MindClockIconKind icon,
+          VoidCallback? onTap,
+          bool highlight,
+        })> tiles = <({
+      String key,
+      String title,
+      String subtitle,
+      MindClockIconKind icon,
+      VoidCallback? onTap,
+      bool highlight,
+    })>[
+      (
+        key: 'today-dir-alarm',
+        title: 'Báo thức',
+        subtitle: activeAlarm != null
+            ? '${activeAlarm.formattedTime} · ${activeAlarm.mode == AlarmMode.challenge ? "Thử thách" : "Thường"}'
+            : 'Chưa đặt chuông',
+        icon: MindClockIconKind.bell,
+        onTap: activeAlarm != null
+            ? () => widget.onEditAlarm(activeAlarm)
+            : widget.onCreateAlarm,
+        highlight: activeAlarm == null,
+      ),
+      (
+        key: 'today-dir-practice',
+        title: 'Luyện tập',
+        subtitle: morningProposal != null
+            ? 'Môn ${morningProposal.subjectNameVi}'
+            : 'Câu ôn GDPT 2018',
+        icon: MindClockIconKind.book,
+        onTap: widget.onSelectTab != null ? () => widget.onSelectTab!(1) : null,
+        highlight: false,
+      ),
+      (
+        key: 'today-dir-study',
+        title: 'Không gian học',
+        subtitle: (activeStudy != null && activeStudy.status.isOngoing)
+            ? 'Đang mở · ${activeStudy.taskTitle}'
+            : 'Tự học · Đốt nến · AI',
+        icon: MindClockIconKind.clock,
+        onTap: widget.onOpenStudySpace ??
+            (widget.onSelectTab != null ? () => widget.onSelectTab!(1) : null),
+        highlight: activeStudy != null && activeStudy.status.isOngoing,
+      ),
+      (
+        key: 'today-dir-timetable',
+        title: 'TKB & Việc ngày',
+        subtitle:
+            '${selectedDaySchedule.entries.length} tiết · $pendingTodos việc',
+        icon: MindClockIconKind.calendar,
+        onTap: widget.onOpenTimetableAndProfile,
+        highlight: false,
+      ),
+      (
+        key: 'today-dir-arena',
+        title: 'Đấu trường',
+        subtitle: '3 Tướng · BXH · Shop',
+        icon: MindClockIconKind.arena,
+        onTap: widget.onSelectTab != null ? () => widget.onSelectTab!(2) : null,
+        highlight: false,
+      ),
+      (
+        key: 'today-dir-profile',
+        title: 'Nhóm & Hồ sơ',
+        subtitle: 'Pet nhóm · Quyền OS',
+        icon: MindClockIconKind.user,
+        onTap: widget.onSelectTab != null ? () => widget.onSelectTab!(3) : null,
+        highlight: false,
+      ),
+    ];
+
+    Widget buildTile(
+      ({
+        String key,
+        String title,
+        String subtitle,
+        MindClockIconKind icon,
+        VoidCallback? onTap,
+        bool highlight,
+      }) item,
+    ) {
+      return MindClockPressable(
+        key: ValueKey<String>(item.key),
+        semanticLabel: '${item.title}: ${item.subtitle}',
+        onPressed: item.onTap,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(mc.space12),
+          decoration: BoxDecoration(
+            color: item.highlight ? mc.sunriseSoft : mc.surface,
+            borderRadius: BorderRadius.circular(mc.radiusControl),
+            border: Border.all(
+              color: item.highlight ? mc.sunrise : mc.outline,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.all(mc.space8),
+                decoration: BoxDecoration(
+                  color: item.highlight ? mc.surface : mc.primarySoft,
+                  borderRadius: BorderRadius.circular(mc.radiusChip),
+                ),
+                child: MindClockIcon(item.icon, color: mc.primary, size: 18),
+              ),
+              SizedBox(width: mc.space8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      item.title,
+                      style: mc.bodyStrongStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: mc.space4 / 2),
+                    Text(
+                      item.subtitle,
+                      style: mc.captionStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return MindClockCard(
+      key: const ValueKey<String>('today-feature-directory'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Danh mục tính năng', style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space4),
+          Text(
+            'Chọn nhanh từng phần trong MindClock để bắt đầu ngay:',
+            style: mc.captionStyle,
+          ),
+          SizedBox(height: mc.space12),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              if (constraints.maxWidth < 300) {
+                return Column(
+                  children: tiles
+                      .map((t) => Padding(
+                            padding: EdgeInsets.only(bottom: mc.space8),
+                            child: buildTile(t),
+                          ))
+                      .toList(),
+                );
+              }
+              final List<Widget> rows = <Widget>[];
+              for (int i = 0; i < tiles.length; i += 2) {
+                rows.add(
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i + 2 < tiles.length ? mc.space8 : 0,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(child: buildTile(tiles[i])),
+                        SizedBox(width: mc.space8),
+                        Expanded(
+                          child: i + 1 < tiles.length
+                              ? buildTile(tiles[i + 1])
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return Column(children: rows);
+            },
+          ),
         ],
       ),
     );

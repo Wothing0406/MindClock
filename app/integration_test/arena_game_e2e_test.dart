@@ -93,11 +93,39 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Vào tab Đấu trường -> Hub -> Setup
+      // 1. Vào tab Đấu trường -> Sảnh chờ 3 tướng gốc -> BXH -> Daily Shop -> quay lại Sảnh
       await _tapVisible(
           tester, find.byKey(const ValueKey<String>('nav-arena')));
       expect(find.byKey(const ValueKey<String>('arena-hub-scroll')),
           findsOneWidget);
+      expect(
+          find.byKey(const ValueKey<String>('arena-lobby-champion-showcase')),
+          findsOneWidget);
+
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey<String>('arena-lobby-champ-tuyet_dinh')),
+      );
+      expect(find.textContaining('Tập Trung Đột Phá'), findsOneWidget);
+
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey<String>('arena-lobby-tab-leaderboard')),
+      );
+      expect(find.byKey(const ValueKey<String>('arena-leaderboard-panel')),
+          findsOneWidget);
+
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey<String>('arena-lobby-tab-shop')),
+      );
+      expect(find.byKey(const ValueKey<String>('arena-daily-shop-panel')),
+          findsOneWidget);
+
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey<String>('arena-lobby-tab-lobby')),
+      );
       await _tapVisible(
           tester, find.byKey(const ValueKey<String>('arena-enter-solo')));
 
@@ -148,7 +176,8 @@ void main() {
       expect(arenaVm.section, ArenaSection.battle);
       expect(find.byKey(const ValueKey<String>('arena-stage-map-image')),
           findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('arena-round-countdown')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('arena-round-countdown')),
+          findsOneWidget);
       expect(find.text('Thời gian còn: 30s'), findsOneWidget);
 
       // 4. Kiểm tra uncertain không phạt HP

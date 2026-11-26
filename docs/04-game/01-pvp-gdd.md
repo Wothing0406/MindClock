@@ -24,11 +24,11 @@ Trận tối đa 6 round. Khi AI `uncertain`, câu lỗi, model/rubric đổi gi
 - Đánh thường `28 damage`, 0 qi. Mỗi skill dùng tối đa 1 lần/trận. Damage đồng thời từ snapshot đầu round: `ward → armor → HP`, buff chắn trong round chặn damage cùng round; hồi sau damage, HP 0 không hồi cứu. Cả hai HP 0 hòa; sau round 6 so HP, rồi armor, còn bằng hòa. Tốc độ nộp không cộng damage/RP.
 - Secret round 3 hoặc 5 do server chọn trước bằng seed/pool khóa; cùng câu cho hai bên, bonus qi cosmetic, không damage thêm. Thiếu pool chuẩn thì bỏ secret và báo trước.
 
-| Nhân vật (ID tạm) | Vai/đánh đổi | Nội tại | Chiêu 1 · 1 qi | Chiêu 2 · 2 qi |
-| --- | --- | --- | --- | --- |
-| Hà Nhân `ha_nhan` | Bền bỉ, burst thấp | 2 round đúng liên tiếp hồi 8 armor sau settle, tối đa 2 lần | Bước Vững: 25 damage + hồi 6 armor | Tĩnh Tâm Phản Kích: 32 damage + hồi 8 HP nếu sống |
-| Tuyệt Đỉnh `tuyet_dinh` | Sát thương, ít thủ | 2 round đúng liên tiếp buff Đánh thường kế +6, tối đa 2 lần, không cộng dồn | Một Nét Thành Chiêu: 38 damage | Đường Kiếm Cuối Trang: 46 damage, Đánh thường round sau 22; không dùng round 6 |
-| Hàn Bối Pháp `han_boi_phap` (alias `han_boi_thap`) | Tanker, kết trận chậm | Armor về 0 lần đầu tạo 12 ward round kế, một lần/trận | Dựng Tháp: 18 damage +14 ward trong round | Trấn Tháp: 28 damage + hồi 16 armor |
+| Nhân vật (ID tạm)                                  | Vai/đánh đổi          | Nội tại                                                                     | Chiêu 1 · 1 qi                            | Chiêu 2 · 2 qi                                                                 |
+| -------------------------------------------------- | --------------------- | --------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Hà Nhân `ha_nhan`                                  | Bền bỉ, burst thấp    | 2 round đúng liên tiếp hồi 8 armor sau settle, tối đa 2 lần                 | Bước Vững: 25 damage + hồi 6 armor        | Tĩnh Tâm Phản Kích: 32 damage + hồi 8 HP nếu sống                              |
+| Tuyệt Đỉnh `tuyet_dinh`                            | Sát thương, ít thủ    | 2 round đúng liên tiếp buff Đánh thường kế +6, tối đa 2 lần, không cộng dồn | Một Nét Thành Chiêu: 38 damage            | Đường Kiếm Cuối Trang: 46 damage, Đánh thường round sau 22; không dùng round 6 |
+| Hàn Bối Pháp `han_boi_phap` (alias `han_boi_thap`) | Tanker, kết trận chậm | Armor về 0 lần đầu tạo 12 ward round kế, một lần/trận                       | Dựng Tháp: 18 damage +14 ward trong round | Trấn Tháp: 28 damage + hồi 16 armor                                            |
 
 Đã chuẩn hóa ID chính thức là `han_boi_phap` (khớp slug `han-boi-phap` trong `assets/game/manifest.json`), đồng thời backend và client duy trì bộ giải mã alias tương thích ngược 100% với định danh legacy `han_boi_thap`. Phiên bản luật chính thức: `combat_rule_version=solo-three-v0.1`; server lưu version trong match/event và không thay đổi giữa trận.
 
@@ -37,6 +37,14 @@ Trận tối đa 6 round. Khi AI `uncertain`, câu lỗi, model/rubric đổi gi
 Màn dọc: sân đấu với map nền (`study-courtyard`), bộ sprite animation nhiều frame của 2 tướng đối mặt theo đúng `anchor/facing` (`idle`, `basic`, `skill1`, `skill2`, `hurt`, `stun`, `heal`, `victory`) + 6 avatar hồ sơ phân biệt (`ca-chep`, `cao-giay`, `cu-meo`, `may-nho`, `rua-xanh`, `tho-so`) — phần dùng file `assets/game/` chỉ đóng gói phát hành sau khi chủ dự án hoàn tất cổng rà soát/duyệt quyền; thanh HP/giáp/qi và trạng thái chữ rõ; ba nút `Đánh thường (0 qi)`, `Chiêu 1 (1 qi)`, `Chiêu 2 (2 qi)` ghi cost, used/disabled reason; thẻ tướng có vai/nội tại/đánh đổi. Sau khi nộp, UI hiện `Đang kiểm tra bài làm`, action window chỉ mở theo event server. FX xuất phát từ attacker, projectile chạm defender, self-heal/buff ở chủ, passive đúng nhân vật; giảm chuyển động/bỏ qua hiệu ứng không đổi số. Không dùng animation để giả có kết quả sớm. [Asset](02-nhan-vat-asset.md).
 
 ## 4. Server authoritative và data/API cần làm
+
+### Bố cục thẻ chiêu trên màn dọc (T065)
+
+- Hai tướng vẫn hiện trong giai đoạn trả lời; không thay sân đấu bằng riêng các thanh chỉ số.
+- Bộ ba thẻ chiêu nằm ngay dưới sân, trước đề bài; cuộn ngang trên màn hẹp. Mỗi thẻ dùng frame đúng nhân vật, tên, khí lực, tác dụng và lý do khóa. Nội tại được giải thích riêng, không có nút kích hoạt thủ công.
+- Luyện đơn lấy khả dụng từ combat engine. PvP chỉ mở thẻ khi snapshot xác nhận bài của mình `correct` và lượt đang `action_window`; backend vẫn xác thực mọi action. Không thêm chiêu phòng thủ thứ tư hoặc đổi luật `solo-three-v0.1` chỉ vì thay bố cục.
+- Hàng ký hiệu dùng được cho đáp án và trình bày; phần xem trước hiển thị chỉ số trên/dưới, phần trăm và đơn vị phổ biến. Đây chưa phải bộ render LaTeX đầy đủ (ma trận, phân số lồng và môi trường align cần task riêng).
+- Màn chờ hiển thị tướng đã chọn và tiêu chí môn/lớp, cho phép hủy; không dựng đối thủ hoặc tiến độ ghép giả. Bố cục mới chưa chứng minh hiệu năng máy thật hoặc PvP hai tài khoản.
 
 Các bảng đề xuất: `character_catalog`, `character_skills`, `matches`, `match_players`, `match_rounds`, `round_submissions`, `round_actions`, `round_results`, `match_events`, `match_results`, `rank_ledger` **chỉ khi ranked**. Unique `(match_id,round_no,user_id)` cho submit/action; settle theo transaction khóa match, append sequence, ledger một lần. API mục tiêu: queue/cancel, match snapshot, submit, chọn action, event stream/reconnect, result/appeal; đều auth participant, rate/idempotency/version. Client nhận event `round_started`, `submission_accepted`, `grading_pending`, `action_window`, `settled`, `void`, `match_finished`; không gửi damage/HP/RP từ client. Khi network đứt, server deadline vẫn chạy; reconnect từ last sequence, nếu không đủ dữ liệu thì void theo policy, không xử thua do AI lỗi.
 

@@ -14,6 +14,8 @@ abstract interface class PersonalFlowRepository {
     required StudyProfile profile,
   });
 
+  Future<StudyProfile?> fetchProfileSnapshot();
+
   Future<void> recordConsent({
     required String scope,
     required String version,

@@ -1,5 +1,37 @@
 # Hiện trạng có bằng chứng
 
+## Cập nhật 21/11/2026 — T076: Đăng nhập/Đăng ký PostgreSQL 16 thật & Chuẩn hóa Dashboard Hub 6 tính năng MVP
+
+- **Mở thông luồng Đăng ký / Đăng nhập kết nối PostgreSQL 16 trên APK thật:** Bổ sung `local_auth_accounts` (Alembic `0007_local_auth_accounts`), helper `scrypt` + HS256 JWT (`services/api/app/auth/local_auth.py`), xác minh JWT kép tại `verify_token.py` và router `/v1/auth/{register,login,refresh}` trên FastAPI. Trên Flutter, `FirebaseAuthGateway` tự nối `backendBaseUri` khi Firebase trả `OPERATION_NOT_ALLOWED` / chưa bật Email/Password (đã sửa lỗi đọc `error.code` kiểu `int` phát hiện qua logcat khi test trực tiếp APK trên Emulator).
+- **Chuẩn hóa `TodayScreen` thành MVP Command Center:** Bổ sung khối **Danh mục tính năng (`today-feature-directory`) gồm 6 ô 1 chạm** (`Báo thức`, `Luyện tập`, `Không gian học`, `TKB & Việc ngày`, `Đấu trường`, `Nhóm & Hồ sơ`) ngay dưới đồng hồ thời gian thực; chuyển thẻ `Mầm Xanh` (`TodayPetCard`) xuống vùng `Động lực & Nhóm cam kết` bên dưới.
+- **Kết quả kiểm thử thực tế sau T076 (`21/11/2026`):**
+  - Backend `pytest -q` (SQLite + Docker **PostgreSQL 16** `postgres:16-alpine`): **96 passed**, 0 failed.
+  - Flutter `flutter analyze --no-pub`: **0 issues** (`TODAY_RAW_HEX_HITS=0`).
+  - Flutter `flutter test --no-pub -j 1`: **162/162 passed** (bao gồm `t076_mvp_hub_and_backend_auth_test.dart`, `T047`–`T075`, `T064`, `T065`).
+  - E2E live trên `emulator-5554` + Docker `api-api-1`/`api-postgres-1`: Cài `dist/mindclock-debug.apk` (`163.20 MB`), đăng ký thật `e2ehs76@mindclock.vn` (`MinhKhang12A`), hoàn tất Onboarding `Lớp 12` (`GDCD`), vào Dashboard Hub 6 ô và mở Đấu trường 3 tướng gốc (`Hà Nhân`). DB ghi nhận bản ghi trong `local_auth_accounts` và `users` (`4d232a21-2f59-4b39-9cc6-86d92126e6a9`).
+
+## Cập nhật 21/11/2026 — Kiểm toán toàn repo (Phase 0–5), vá T075/T064/T065 & cài APK chính thức `lib/main.dart`
+
+- **Nguyên nhân màn hình Emulator chỉ hiện 1 thẻ `Mầm Xanh` (`media_1795273102908_6a581768.png`):** Phiên chạy T075 trước đã biên dịch và cài harness kiểm thử `app/integration_test/t075_pet_dashboard_evidence_app.dart` (chỉ render `TodayPetCard` đơn lẻ) lên `com.mindclock.app` thay vì `app/lib/main.dart` (`MindClockApp` 4 tab đầy đủ). Khắc phục bằng build & cài lại `dist/mindclock-debug.apk` từ `app/lib/main.dart`.
+- **Hai lỗi hồi quy T075 được phát hiện và sửa khi kiểm chứng toàn diện:**
+  1. `services/api/app/db/models.py` + `services/api/alembic/versions/0006_add_primary_commitment_pet.py`: bổ sung index bán phần `uq_commitment_primary_per_user` đồng bộ giữa SQLAlchemy `Base.metadata` và Alembic trên cả **PostgreSQL 16** và **SQLite** (trước đó `test_live_postgresql_migration_and_health_when_configured` fail `compare_metadata`).
+  2. `app/test/personal_flow_real_service_test.dart` (`PF-TC-02`): bổ sung `DebugFixtureCommunityRepository` cho fixture `MindClockApp` để `TodayPetCard` không mở timer HTTP 15 giây thật trong widget test.
+- **Kết quả kiểm thử thực tế trên worktree hiện tại (21/11/2026):**
+  - `flutter analyze --no-pub`: **0 issues**.
+  - `flutter test --no-pub -j 1`: **160/160 PASS** (gồm `T047`–`T075`, `T064` Lobby/BXH/Daily Shop & 3 tướng gốc, `T065` LaTeX/hand cards, `PF-TC-01`–`08b`).
+  - Kotlin native `:app:testDebugUnitTest`: **12/12 PASS**.
+  - Backend `pytest -q` với **PostgreSQL 16 thật** (`postgres:16-alpine`, `alembic downgrade base -> upgrade head`): **94/94 PASS, 0 skipped, 0 failed**.
+  - Docs & Assets QA (`check_docs_links.py`, `check_task_records.py`, `check_game_assets.py`): **PASS**.
+- **Ma trận hoàn thiện theo nhóm tính năng (`DONE / PARTIAL / NOT STARTED / BLOCKED / UNVERIFIED`):**
+  - **A. Tài khoản & hồ sơ (`Auth/Onboarding`):** `PARTIAL` (đã có UI mật khẩu mạnh, consent v2026-11, sync `/v1/me`, cô lập A/B, 94 pytest & Flutter widget PASS; **chưa** bật Firebase Email/Password console & test 2 tài khoản thật trên staging).
+  - **B. Báo thức Android & giấc ngủ:** `PARTIAL` (Kotlin `AlarmManager`/`EmergencyStop`/MP3/Widget 12/12 unit test PASS; **UNVERIFIED** trên **2 máy Android vật lý** qua kill/reboot/Doze/lock-screen).
+  - **C. TKB, To-Do & Lập kế hoạch ngày:** `PARTIAL` (có lịch 7 ngày, OCR Vision, To-Do, Home Widget, Reminder receiver local; **NOT STARTED** đồng bộ sự kiện/lịch hẹn đa thiết bị trên server `T080`).
+  - **D. Thử thách buổi sáng:** `DONE (dev)` / `UNVERIFIED (real eval)` (có MorningCard, 37 câu offline, 3-trạng thái, hint lần 3, bỏ lượt lần 5, 0 phạt `uncertain`; chờ tập đánh giá AI độc lập R4 & nguồn video mở màn có quyền).
+  - **E. Tích hợp AI (Gemini + EduSkills-VN):** `PARTIAL` (adapter 11 môn GDPT 2018, live API OCR & tái tạo câu & TTS WAV đã có mã/test mock; thiếu bộ benchmark accuracy/latency/cost R4).
+  - **F. Không gian học & Phòng bạn bè / Pet nhóm:** `PARTIAL` (đã xong `T073`–`T075` REST lifecycle, nhóm cam kết ≤4, primary pet, PNG share 1080, Đốt nến, TTS/voice draft; **NOT STARTED** QR/waitlist/chat `@MindClock`/WebRTC mic & cam realtime `T076`–`T079`).
+  - **G. Game Đấu trường:** `PARTIAL` (G1 offline, 3 tướng gốc `assets/game/` animated, Sảnh/BXH/Daily Shop T064 & UI dọc T065 đã PASS widget test; **UNVERIFIED** 2 máy 1v1 thật G2, **NOT STARTED** G3 2v2, **BLOCKED** G4 Ranked chờ cổng cân bằng & duyệt bản quyền thương mại meme/asset).
+- **Gói trình bày DevFest tách bạch:** xem [`docs/06-devfest/01-ho-so-trinh-bay-devfest.md`](../06-devfest/01-ho-so-trinh-bay-devfest.md).
+
 ## Cập nhật 21/11/2026 — T073 vòng đời phòng
 
 Đã bổ sung contract host-only để mời thành viên ra, chặn thành viên đó tự vào lại, và xóa hẳn room/member rows theo cascade; Flutter có xác nhận kick/xóa và clear room state trong khi study timer local không bị xóa. Test API SQLite, PostgreSQL thật và Flutter đã chạy trong task T073. Phần này vẫn là REST room lifecycle: mic/cam/loa realtime, QR TTL, waitlist, lịch hẹn, chat, pet ledger và game nhiều máy chưa nằm trong T073. [Ma trận product](08-ke-hoach-hoan-thien-product.md).

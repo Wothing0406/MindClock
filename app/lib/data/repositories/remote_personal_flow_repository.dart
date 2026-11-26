@@ -19,12 +19,33 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   Future<void> syncProfile({required StudyProfile profile}) async {
     final Map<String, dynamic> body = <String, dynamic>{
       if (profile.alias.trim().isNotEmpty) 'alias': profile.alias.trim(),
+      if (profile.avatarId.trim().isNotEmpty)
+        'avatarId': profile.avatarId.trim(),
       if (profile.gradeLevel != null && profile.gradeLevel!.trim().isNotEmpty)
         'gradeLevel': profile.gradeLevel!.trim(),
       'selectedSubjects': profile.selectedSubjectCodes,
       'goalLabel': profile.goalLabel.trim(),
     };
     await _apiClient.patchJson('/me', body: body);
+  }
+
+  @override
+  Future<StudyProfile?> fetchProfileSnapshot() async {
+    final Map<String, dynamic> json = await _apiClient.getJson('/me');
+    final Object? rawSubjects = json['selectedSubjects'];
+    final List<String> subjects = rawSubjects is List<dynamic>
+        ? rawSubjects.whereType<String>().toList(growable: false)
+        : const <String>[];
+    final String rawAvatar = (json['avatarId'] as String? ?? 'sunrise').trim();
+    final String normalizedAvatar =
+        rawAvatar.startsWith('avatar_') ? rawAvatar.substring(7) : rawAvatar;
+    return StudyProfile(
+      alias: (json['alias'] as String? ?? '').trim(),
+      avatarId: normalizedAvatar.isNotEmpty ? normalizedAvatar : 'sunrise',
+      gradeLevel: json['gradeLevel'] as String?,
+      selectedSubjectCodes: subjects,
+      goalLabel: (json['goalLabel'] as String? ?? '').trim(),
+    );
   }
 
   @override

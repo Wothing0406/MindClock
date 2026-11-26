@@ -90,6 +90,8 @@ class SkillSpec {
 class ChampionSpec {
   const ChampionSpec({
     required this.id,
+    required this.assetSlug,
+    required this.nativeFacingRight,
     required this.nameVi,
     required this.roleVi,
     required this.loreVi,
@@ -102,6 +104,8 @@ class ChampionSpec {
   });
 
   final ChampionId id;
+  final String assetSlug;
+  final bool nativeFacingRight;
   final String nameVi;
   final String roleVi;
   final String loreVi;
@@ -111,6 +115,44 @@ class ChampionSpec {
   final String basicAttackDescriptionVi;
   final SkillSpec skill1;
   final SkillSpec skill2;
+
+  String get animatedIdleAssetPath =>
+      'assets/game/characters/$assetSlug/runtime/idle.webp';
+
+  String poseAssetFor(String action) {
+    if (action == 'victory') {
+      return 'assets/game/characters/$assetSlug/runtime/frames/victory/f05.webp';
+    }
+    if (action == 'heal') {
+      return 'assets/game/characters/$assetSlug/runtime/frames/heal/f03.webp';
+    }
+    return 'assets/game/characters/$assetSlug/poses/$action.webp';
+  }
+
+  List<String> framesForAction(String action) {
+    final int count = switch (action) {
+      'basic' || 'skill1' || 'skill2' || 'victory' => 6,
+      'hurt' || 'stun' || 'heal' => 4,
+      _ => 0,
+    };
+    if (count == 0) {
+      return <String>[portraitAssetPath];
+    }
+    return List<String>.generate(
+      count,
+      (int idx) =>
+          'assets/game/characters/$assetSlug/runtime/frames/$action/f0$idx.webp',
+    );
+  }
+
+  int durationMsForAction(String action) {
+    return switch (action) {
+      'basic' || 'skill1' || 'skill2' => 760,
+      'victory' => 900,
+      'hurt' || 'stun' || 'heal' => 580,
+      _ => 650,
+    };
+  }
 
   String assetForAction(CombatActionType action) {
     switch (action) {
@@ -127,18 +169,21 @@ class ChampionSpec {
 class CombatCatalog {
   const CombatCatalog._();
 
-  static const String mapCourtyardAssetPath = 'assets/arena/map_courtyard.png';
+  static const String mapCourtyardAssetPath =
+      'assets/game/maps/study-courtyard.webp';
   static const String basicAttackAssetPath = 'assets/arena/skill_basic.png';
 
   static const Map<ChampionId, ChampionSpec> champions =
       <ChampionId, ChampionSpec>{
     ChampionId.haNhan: ChampionSpec(
       id: ChampionId.haNhan,
+      assetSlug: 'ha-nhan',
+      nativeFacingRight: true,
       nameVi: 'Hà Nhân',
       roleVi: 'Bền bỉ, burst thấp',
       loreVi:
           'Môn sinh giữ nhịp học đều đặn mỗi sáng. Mạnh ở khả năng hồi giáp, hồi phục ổn định qua từng vòng giải đúng liên tiếp.',
-      portraitAssetPath: 'assets/arena/champ_ha_nhan.png',
+      portraitAssetPath: 'assets/game/characters/ha-nhan/poses/idle.webp',
       passiveNameVi: 'Kiên Định',
       passiveDescriptionVi:
           '2 round đúng liên tiếp hồi 8 giáp sau settle, tối đa 2 lần/trận.',
@@ -167,11 +212,13 @@ class CombatCatalog {
     ),
     ChampionId.tuyetDinh: ChampionSpec(
       id: ChampionId.tuyetDinh,
+      assetSlug: 'tuyet-dinh',
+      nativeFacingRight: false,
       nameVi: 'Tuyệt Đỉnh',
       roleVi: 'Sát thương, ít thủ',
       loreVi:
           'Kiếm sĩ thư pháp chú trọng tốc độ tư duy và độ sắc bén. Dứt điểm nhanh khi duy trì được chuỗi trả lời đúng chính xác.',
-      portraitAssetPath: 'assets/arena/champ_tuyet_dinh.png',
+      portraitAssetPath: 'assets/game/characters/tuyet-dinh/poses/idle.webp',
       passiveNameVi: 'Tập Trung Đột Phá',
       passiveDescriptionVi:
           '2 round đúng liên tiếp buff Đánh thường kế +6 damage, tối đa 2 lần, không dồn.',
@@ -200,11 +247,13 @@ class CombatCatalog {
     ),
     ChampionId.hanBoiPhap: ChampionSpec(
       id: ChampionId.hanBoiPhap,
+      assetSlug: 'han-boi-phap',
+      nativeFacingRight: true,
       nameVi: 'Hàn Bối Pháp',
       roleVi: 'Tanker, kết trận chậm',
       loreVi:
           'Hộ vệ giữ cổ thư với lớp Chắn và Giáp dày. Chịu đòn tốt ở nửa đầu trận rồi áp đảo bằng lượng phòng ngự vượt trội về cuối.',
-      portraitAssetPath: 'assets/arena/champ_han_boi_phap.png',
+      portraitAssetPath: 'assets/game/characters/han-boi-phap/poses/idle.webp',
       passiveNameVi: 'Bích Chướng Cổ Giới',
       passiveDescriptionVi:
           'Giáp về 0 lần đầu tạo 12 ward round kế, một lần/trận.',

@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -541,6 +542,13 @@ class CommitmentGroupMember(Base):
     __tablename__ = 'commitment_group_members'
     __table_args__ = (
         UniqueConstraint('group_id', 'user_id', name='uq_commitment_group_member'),
+        Index(
+            'uq_commitment_primary_per_user',
+            'user_id',
+            unique=True,
+            postgresql_where=text("status = 'active' AND is_primary = true"),
+            sqlite_where=text("status = 'active' AND is_primary = 1"),
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
@@ -619,3 +627,21 @@ class CommitmentPetCare(Base):
     source_id: Mapped[str] = mapped_column(String(64))
     xp_delta: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class LocalAuthAccount(Base):
+    __tablename__ = 'local_auth_accounts'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey('users.id', ondelete='CASCADE'),
+        unique=True,
+        index=True,
+    )
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(256))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )

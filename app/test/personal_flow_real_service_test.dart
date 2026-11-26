@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/app.dart';
 import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_community_repository.dart';
 import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/repositories/remote_personal_flow_repository.dart';
@@ -361,6 +362,7 @@ void main() {
               enableStudyTicker: false,
               authGateway: DebugFixtureAuthGateway(),
               personalRepository: DebugFixturePersonalFlowRepository(),
+              communityRepository: DebugFixtureCommunityRepository(),
               cameraGateway: _FakeCameraGateway(),
             ),
           ),

@@ -6,11 +6,34 @@ import '../../../../domain/game/combat_catalog.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 
-/// Hoạt cảnh 2D cho từng đấu thủ + vệt chiêu thức trong Đấu trường (`T061 AC-01`).
+/// Xác định clip diễn hoạt hiện tại cho tướng dựa trên kết quả round (`T064`).
+String resolveArenaSpriteClip({
+  CombatActionType? actionUsed,
+  int damageTaken = 0,
+  int healAmount = 0,
+  bool isStunned = false,
+  bool isWinner = false,
+}) {
+  if (isWinner) return 'victory';
+  if (isStunned) return 'stun';
+  if (actionUsed != null) {
+    return switch (actionUsed) {
+      CombatActionType.basic => 'basic',
+      CombatActionType.skill1 => 'skill1',
+      CombatActionType.skill2 => 'skill2',
+    };
+  }
+  if (damageTaken > 0) return 'hurt';
+  if (healAmount > 0) return 'heal';
+  return 'idle';
+}
+
+/// Hoạt cảnh 2D theo chuỗi frame gốc của từng tướng trong Đấu trường (`T061`/`T064`).
 ///
-/// - Diễn hoạt nhịp thở `idle`, xung kích khi dùng `Đánh thường / Chiêu 1 / Chiêu 2`,
-///   tia/vệt hiệu ứng riêng tướng và nhãn sát thương nổi.
-/// - Tự động tắt chuyển động lặp khi `disableMotion == true` hoặc `!animate`.
+/// - Tự động dùng `runtime/idle.webp` khi ở trạng thái chờ và `runtime/frames/<action>/f00..f05.webp`
+///   cho các pha đánh thường, tung chiêu 1/2, trúng đòn, choáng, hồi phục và chiến thắng.
+/// - Tôn trọng hướng vẽ gốc (`spec.nativeFacingRight`) để hai bên luôn nhìn về nhau.
+/// - Khi `disableMotion == true` hoặc `!animate`: chỉ hiển thị pose tĩnh tương ứng, không giữ ticker lặp.
 class ArenaSpriteActor extends StatefulWidget {
   const ArenaSpriteActor({
     super.key,
@@ -22,7 +45,11 @@ class ArenaSpriteActor extends StatefulWidget {
     this.animate = true,
     this.actionUsed,
     this.damageTaken = 0,
+    this.healAmount = 0,
+    this.isStunned = false,
     this.isWinner = false,
+    this.size = 86.0,
+    this.showAnimatedIdle = true,
   });
 
   final ChampionSpec spec;
@@ -33,7 +60,11 @@ class ArenaSpriteActor extends StatefulWidget {
   final bool animate;
   final CombatActionType? actionUsed;
   final int damageTaken;
+  final int healAmount;
+  final bool isStunned;
   final bool isWinner;
+  final double size;
+  final bool showAnimatedIdle;
 
   @override
   State<ArenaSpriteActor> createState() => _ArenaSpriteActorState();
@@ -45,28 +76,51 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
 
   bool get _shouldAnimate => !widget.disableMotion && widget.animate;
 
+  String get _activeClip => resolveArenaSpriteClip(
+        actionUsed: widget.actionUsed,
+        damageTaken: widget.damageTaken,
+        healAmount: widget.healAmount,
+        isStunned: widget.isStunned,
+        isWinner: widget.isWinner,
+      );
+
   @override
   void initState() {
     super.initState();
-    _syncController(triggerBurst: _shouldAnimate);
+    _syncController(
+      triggerBurst: _shouldAnimate && _activeClip != 'idle',
+      clip: _activeClip,
+    );
   }
 
   @override
   void didUpdateWidget(covariant ArenaSpriteActor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final bool burst = _shouldAnimate &&
-        (oldWidget.actionUsed != widget.actionUsed ||
-            oldWidget.damageTaken != widget.damageTaken ||
-            (!oldWidget.isWinner && widget.isWinner));
-    _syncController(triggerBurst: burst);
+    final String prevClip = resolveArenaSpriteClip(
+      actionUsed: oldWidget.actionUsed,
+      damageTaken: oldWidget.damageTaken,
+      healAmount: oldWidget.healAmount,
+      isStunned: oldWidget.isStunned,
+      isWinner: oldWidget.isWinner,
+    );
+    final String nextClip = _activeClip;
+    final bool stateChanged = prevClip != nextClip ||
+        oldWidget.spec.id != widget.spec.id ||
+        oldWidget.damageTaken != widget.damageTaken ||
+        oldWidget.healAmount != widget.healAmount;
+    final bool burst = _shouldAnimate && nextClip != 'idle' && stateChanged;
+    _syncController(triggerBurst: burst, clip: nextClip);
   }
 
-  void _syncController({required bool triggerBurst}) {
-    if (_shouldAnimate) {
-      _controller ??= AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 650),
-      );
+  void _syncController({required bool triggerBurst, required String clip}) {
+    final Duration duration = Duration(
+      milliseconds: widget.spec.durationMsForAction(clip),
+    );
+    if (_shouldAnimate && clip != 'idle') {
+      _controller ??= AnimationController(vsync: this, duration: duration);
+      if (_controller!.duration != duration) {
+        _controller!.duration = duration;
+      }
       if (triggerBurst) {
         _controller!.forward(from: 0.0);
       }
@@ -81,9 +135,37 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
     super.dispose();
   }
 
+  String _resolveAssetPath(String clip, double progress, bool isAnimating) {
+    if (!_shouldAnimate) {
+      return widget.spec.poseAssetFor(clip);
+    }
+    if (clip == 'idle') {
+      return widget.showAnimatedIdle
+          ? widget.spec.animatedIdleAssetPath
+          : widget.spec.portraitAssetPath;
+    }
+    final List<String> frames = widget.spec.framesForAction(clip);
+    if (frames.isEmpty) {
+      return widget.spec.poseAssetFor(clip);
+    }
+    if (isAnimating) {
+      final int idx =
+          (progress * frames.length).floor().clamp(0, frames.length - 1);
+      return frames[idx];
+    }
+    if (clip == 'victory' || clip == 'stun') {
+      return widget.spec.poseAssetFor(clip);
+    }
+    return widget.showAnimatedIdle
+        ? widget.spec.animatedIdleAssetPath
+        : widget.spec.poseAssetFor('idle');
+  }
+
   @override
   Widget build(BuildContext context) {
     final MindClockTheme mc = context.mc;
+    final double actorSize = widget.size;
+    final String clip = _activeClip;
     final Color fxColor = switch (widget.spec.id) {
       ChampionId.haNhan => mc.primary,
       ChampionId.tuyetDinh => mc.sunrise,
@@ -92,8 +174,8 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
 
     if (widget.assetFallbackMode) {
       return Container(
-        width: 72,
-        height: 72,
+        width: actorSize,
+        height: actorSize,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: mc.night,
@@ -107,24 +189,31 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
       );
     }
 
+    final bool flipHorizontal =
+        widget.facingRight != widget.spec.nativeFacingRight;
+
     return AnimatedBuilder(
       animation: _controller ?? const AlwaysStoppedAnimation<double>(0),
       builder: (BuildContext context, _) {
-        final double t = _shouldAnimate ? (_controller?.value ?? 0.0) : 0.0;
-        final double bobY =
-            _shouldAnimate ? math.sin(t * math.pi) * (widget.isWinner ? -6.0 : -3.0) : 0.0;
-        final double lungeX = (!widget.disableMotion && widget.actionUsed != null)
-            ? (widget.facingRight ? 6.0 : -6.0)
+        final bool isAnimating =
+            _shouldAnimate && (_controller?.isAnimating ?? false);
+        final double t = isAnimating ? (_controller?.value ?? 0.0) : 0.0;
+        final String assetPath = _resolveAssetPath(clip, t, isAnimating);
+        final double lungeX = (isAnimating && widget.actionUsed != null)
+            ? math.sin(t * math.pi) * (widget.facingRight ? 8.0 : -8.0)
+            : 0.0;
+        final double hopY = (isAnimating && widget.isWinner)
+            ? math.sin(t * math.pi) * -6.0
             : 0.0;
 
         return SizedBox(
-          width: 92,
-          height: 88,
+          width: actorSize + 18,
+          height: actorSize + 14,
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: <Widget>[
-              if (widget.actionUsed != null && !widget.disableMotion)
+              if (widget.actionUsed != null && isAnimating)
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _ArenaVfxOverlayPainter(
@@ -137,28 +226,34 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
                   ),
                 ),
               Transform.translate(
-                offset: Offset(lungeX, bobY),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(mc.radiusControl),
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: widget.facingRight
-                        ? Matrix4.identity()
-                        : Matrix4.diagonal3Values(-1.0, 1.0, 1.0),
-                    child: Image.asset(
-                      widget.spec.portraitAssetPath,
-                      width: 74,
-                      height: 74,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 74,
-                        height: 74,
-                        alignment: Alignment.center,
+                offset: Offset(lungeX, hopY),
+                child: Transform(
+                  alignment: Alignment.center,
+                  transform: flipHorizontal
+                      ? Matrix4.diagonal3Values(-1.0, 1.0, 1.0)
+                      : Matrix4.identity(),
+                  child: Image.asset(
+                    assetPath,
+                    key: ValueKey<String>(
+                      'arena-sprite-${widget.spec.assetSlug}-${widget.isBot ? "bot" : "self"}-$clip',
+                    ),
+                    width: actorSize,
+                    height: actorSize,
+                    fit: BoxFit.contain,
+                    gaplessPlayback: true,
+                    filterQuality: FilterQuality.medium,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: actorSize,
+                      height: actorSize,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
                         color: mc.night,
-                        child: Text(
-                          widget.spec.nameVi.substring(0, 2).toUpperCase(),
-                          style: mc.bodyStrongStyle.copyWith(color: mc.nightText),
-                        ),
+                        borderRadius: BorderRadius.circular(mc.radiusControl),
+                        border: Border.all(color: mc.outline),
+                      ),
+                      child: Text(
+                        widget.spec.nameVi.substring(0, 2).toUpperCase(),
+                        style: mc.bodyStrongStyle.copyWith(color: mc.nightText),
                       ),
                     ),
                   ),
@@ -179,6 +274,25 @@ class _ArenaSpriteActorState extends State<ArenaSpriteActor>
                     ),
                     child: Text(
                       '-${widget.damageTaken}',
+                      style: mc.chipLabelStyle.copyWith(color: mc.onPrimary),
+                    ),
+                  ),
+                )
+              else if (widget.healAmount > 0)
+                Positioned(
+                  top: -2,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: mc.space4,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: mc.primary,
+                      borderRadius: BorderRadius.circular(mc.radiusChip),
+                    ),
+                    child: Text(
+                      '+${widget.healAmount}',
                       style: mc.chipLabelStyle.copyWith(color: mc.onPrimary),
                     ),
                   ),

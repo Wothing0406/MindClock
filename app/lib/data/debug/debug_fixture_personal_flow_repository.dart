@@ -23,6 +23,9 @@ class DebugFixturePersonalFlowRepository implements PersonalFlowRepository {
   Future<void> syncProfile({required StudyProfile profile}) async {}
 
   @override
+  Future<StudyProfile?> fetchProfileSnapshot() async => null;
+
+  @override
   Future<void> recordConsent({
     required String scope,
     required String version,

@@ -12,30 +12,30 @@
 
 ## 2. Quyền và consent riêng
 
-| Quyền/dữ liệu | Khi hỏi | Mặc định/thu hồi |
-| --- | --- | --- |
-| Exact alarm/notification/full-screen Android | Giải thích ở onboarding, xin quyền khi lưu/kiểm báo thức | Theo OS; hiển thị trạng thái thật, fallback, hướng mở cài đặt. |
-| DND/chế độ ngủ | Khi người dùng bật lịch ngủ/Không làm phiền | Opt-in; Android có thể từ chối hoặc chỉ cho rule riêng của app. Không báo đã bật toàn máy nếu chưa xác nhận OS. |
-| Camera ảnh bài làm | Khi bấm `Chụp bài` | Tắt; có nhập chữ. Xem lại/xác nhận trước upload, không lưu ảnh mặc định. |
-| Mic/AI Live | Khi bấm dùng giọng nói | Tắt; nêu giới hạn phút/chi phí, indicator và nút dừng. Quyền cho Live khác quyền cho push-to-talk nếu dữ liệu/retention khác. |
-| Camera/video phòng bạn | Khi vào phòng và bấm bật cam | Tắt; xem preview, không ghi/lưu mặc định, người kia không ép bật. |
-| Nhắc lịch | Khi bật loại nhắc cụ thể | Tắt hoặc cấu hình ít làm phiền; không tiết lộ môn/điểm trên màn khóa nếu người dùng chọn ẩn. |
-| Bảng/PvP | Khi bật thi đấu/chia sẻ | Opt-in; chỉ alias/avatar/rank trong phạm vi đã chọn, rút dễ dàng, không hiển thị giờ dậy. |
-| Giáo viên/phụ huynh | Giai đoạn sau, theo quan hệ đã xác minh | Không có quyền mặc định vì cùng lớp hoặc khai báo quan hệ. |
+| Quyền/dữ liệu                                | Khi hỏi                                                  | Mặc định/thu hồi                                                                                                              |
+| -------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Exact alarm/notification/full-screen Android | Giải thích ở onboarding, xin quyền khi lưu/kiểm báo thức | Theo OS; hiển thị trạng thái thật, fallback, hướng mở cài đặt.                                                                |
+| DND/chế độ ngủ                               | Khi người dùng bật lịch ngủ/Không làm phiền              | Opt-in; Android có thể từ chối hoặc chỉ cho rule riêng của app. Không báo đã bật toàn máy nếu chưa xác nhận OS.               |
+| Camera ảnh bài làm                           | Khi bấm `Chụp bài`                                       | Tắt; có nhập chữ. Xem lại/xác nhận trước upload, không lưu ảnh mặc định.                                                      |
+| Mic/AI Live                                  | Khi bấm dùng giọng nói                                   | Tắt; nêu giới hạn phút/chi phí, indicator và nút dừng. Quyền cho Live khác quyền cho push-to-talk nếu dữ liệu/retention khác. |
+| Camera/video phòng bạn                       | Khi vào phòng và bấm bật cam                             | Tắt; xem preview, không ghi/lưu mặc định, người kia không ép bật.                                                             |
+| Nhắc lịch                                    | Khi bật loại nhắc cụ thể                                 | Tắt hoặc cấu hình ít làm phiền; không tiết lộ môn/điểm trên màn khóa nếu người dùng chọn ẩn.                                  |
+| Bảng/PvP                                     | Khi bật thi đấu/chia sẻ                                  | Opt-in; chỉ alias/avatar/rank trong phạm vi đã chọn, rút dễ dàng, không hiển thị giờ dậy.                                     |
+| Giáo viên/phụ huynh                          | Giai đoạn sau, theo quan hệ đã xác minh                  | Không có quyền mặc định vì cùng lớp hoặc khai báo quan hệ.                                                                    |
 
 ## 3. Dữ liệu, lưu trữ và xóa
 
-| Loại | Nguồn | Mặc định | Cổng xóa |
-| --- | --- | --- | --- |
-| Alarm/local TKB | Thiết bị | Local trước khi đăng nhập; server chỉ khi đồng bộ rõ | Người dùng xóa/sửa; khi đổi tài khoản không tự gán cho người khác. |
-| Email/Auth token | Firebase | Chỉ phần cần xác thực; token không log | Luồng xóa tài khoản/Auth; TTL theo provider và chính sách duyệt. |
-| Câu hỏi/rubric | PostgreSQL | Nội dung do đội duyệt, đáp án/rubric không gửi trước hoàn thành | Retire revision, giữ vết nội bộ phù hợp. |
-| Bài chữ/attempt/XP | PostgreSQL khi online; nháp local tùy chọn | Nháp chữ local tối đa 24h nếu người dùng chọn; server theo chính sách thời hạn trước pilot | Export/xóa tài khoản, TTL job và backup policy. |
-| Ảnh bài làm | Bộ nhớ xử lý tạm thời | **Không lưu mặc định**, không log; xóa cả khi exception | Test temp-file/queue/backup không sót. |
-| Video/frame/cảm xúc tập trung | Không thu ở P0 | Không quay liên tục, không suy đoán tập trung từ mặt hoặc app khác | Bất kỳ thử nghiệm mới cần PRD, consent, retention riêng. |
-| Âm/ảnh phòng học và AI | Chỉ khi user bật mic/cam/Live | Không lưu mặc định; frame gửi AI phải được user chọn/xem lại; telemetry chỉ kỹ thuật | Dừng streaming khi tắt/rời; delete/export theo chính sách tính năng trước mở. |
-| Chat/ảnh phòng bạn và QR mời | Khi user gửi tin/ảnh hoặc tạo lời mời | Chat chỉ cho thành viên; AI chỉ nhận tin/ảnh được tag và consent; QR chứa token có hạn, không chứa dữ liệu học | Thu hồi link, rời/chặn, xóa ảnh tạm/TTL chat; lịch sử dài hạn cần consent riêng. |
-| Khung rảnh MultiCal/nhóm | Khi user bật chia sẻ khung rảnh hoặc tham gia nhóm | Chỉ free/busy và số người rảnh; TKB, giờ ngủ/báo và nguyên nhân bận vẫn riêng | Rút chia sẻ/hủy nhóm dừng projection/nhắc; retention proposal phải chốt trước mở. |
+| Loại                          | Nguồn                                              | Mặc định                                                                                                       | Cổng xóa                                                                          |
+| ----------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Alarm/local TKB               | Thiết bị                                           | Local trước khi đăng nhập; server chỉ khi đồng bộ rõ                                                           | Người dùng xóa/sửa; khi đổi tài khoản không tự gán cho người khác.                |
+| Email/Auth token              | Firebase                                           | Chỉ phần cần xác thực; token không log                                                                         | Luồng xóa tài khoản/Auth; TTL theo provider và chính sách duyệt.                  |
+| Câu hỏi/rubric                | PostgreSQL                                         | Nội dung do đội duyệt, đáp án/rubric không gửi trước hoàn thành                                                | Retire revision, giữ vết nội bộ phù hợp.                                          |
+| Bài chữ/attempt/XP            | PostgreSQL khi online; nháp local tùy chọn         | Nháp chữ local tối đa 24h nếu người dùng chọn; server theo chính sách thời hạn trước pilot                     | Export/xóa tài khoản, TTL job và backup policy.                                   |
+| Ảnh bài làm                   | Bộ nhớ xử lý tạm thời                              | **Không lưu mặc định**, không log; xóa cả khi exception                                                        | Test temp-file/queue/backup không sót.                                            |
+| Video/frame/cảm xúc tập trung | Không thu ở P0                                     | Không quay liên tục, không suy đoán tập trung từ mặt hoặc app khác                                             | Bất kỳ thử nghiệm mới cần PRD, consent, retention riêng.                          |
+| Âm/ảnh phòng học và AI        | Chỉ khi user bật mic/cam/Live                      | Không lưu mặc định; frame gửi AI phải được user chọn/xem lại; telemetry chỉ kỹ thuật                           | Dừng streaming khi tắt/rời; delete/export theo chính sách tính năng trước mở.     |
+| Chat/ảnh phòng bạn và QR mời  | Khi user gửi tin/ảnh hoặc tạo lời mời              | Chat chỉ cho thành viên; AI chỉ nhận tin/ảnh được tag và consent; QR chứa token có hạn, không chứa dữ liệu học | Thu hồi link, rời/chặn, xóa ảnh tạm/TTL chat; lịch sử dài hạn cần consent riêng.  |
+| Khung rảnh MultiCal/nhóm      | Khi user bật chia sẻ khung rảnh hoặc tham gia nhóm | Chỉ free/busy và số người rảnh; TKB, giờ ngủ/báo và nguyên nhân bận vẫn riêng                                  | Rút chia sẻ/hủy nhóm dừng projection/nhắc; retention proposal phải chốt trước mở. |
 
 Thời hạn retention cụ thể, nơi lưu trữ, quyền nhà cung cấp và văn bản chính sách phải được owner chốt **trước pilot**; docs không tự đặt con số tùy tiện để coi đã tuân thủ.
 

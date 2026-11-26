@@ -26,3 +26,32 @@ flutter:
     - assets/companions/pet-mam/
     - assets/arena/
     - assets/avatars/
+    - assets/game/maps/
+    - assets/game/ui/avatars/
+    - assets/game/characters/ha-nhan/poses/
+    - assets/game/characters/ha-nhan/runtime/
+    - assets/game/characters/ha-nhan/runtime/frames/basic/
+    - assets/game/characters/ha-nhan/runtime/frames/heal/
+    - assets/game/characters/ha-nhan/runtime/frames/hurt/
+    - assets/game/characters/ha-nhan/runtime/frames/skill1/
+    - assets/game/characters/ha-nhan/runtime/frames/skill2/
+    - assets/game/characters/ha-nhan/runtime/frames/stun/
+    - assets/game/characters/ha-nhan/runtime/frames/victory/
+    - assets/game/characters/han-boi-phap/poses/
+    - assets/game/characters/han-boi-phap/runtime/
+    - assets/game/characters/han-boi-phap/runtime/frames/basic/
+    - assets/game/characters/han-boi-phap/runtime/frames/heal/
+    - assets/game/characters/han-boi-phap/runtime/frames/hurt/
+    - assets/game/characters/han-boi-phap/runtime/frames/skill1/
+    - assets/game/characters/han-boi-phap/runtime/frames/skill2/
+    - assets/game/characters/han-boi-phap/runtime/frames/stun/
+    - assets/game/characters/han-boi-phap/runtime/frames/victory/
+    - assets/game/characters/tuyet-dinh/poses/
+    - assets/game/characters/tuyet-dinh/runtime/
+    - assets/game/characters/tuyet-dinh/runtime/frames/basic/
+    - assets/game/characters/tuyet-dinh/runtime/frames/heal/
+    - assets/game/characters/tuyet-dinh/runtime/frames/hurt/
+    - assets/game/characters/tuyet-dinh/runtime/frames/skill1/
+    - assets/game/characters/tuyet-dinh/runtime/frames/skill2/
+    - assets/game/characters/tuyet-dinh/runtime/frames/stun/
+    - assets/game/characters/tuyet-dinh/runtime/frames/victory/

@@ -26,8 +26,25 @@ class MathFormulaText extends StatelessWidget {
     // \frac{a}{b} -> a/b
     out = out.replaceAllMapped(
       RegExp(r'\\frac\{([^{}]+)\}\{([^{}]+)\}'),
-      (Match m) => '${m.group(1)}/${m.group(2)}',
+      (Match m) {
+        String group(String value) =>
+            RegExp(r'^[A-Za-z0-9.]+$').hasMatch(value) ? value : '($value)';
+        return '${group(m.group(1)!)}/${group(m.group(2)!)}';
+      },
     );
+    out = out.replaceAllMapped(
+      RegExp(r'\\(?:mathrm|text)\{([^{}]*)\}'),
+      (Match m) => m.group(1)!,
+    );
+    out = out
+        .replaceAll(r'\%', '%')
+        .replaceAll(r'\left', '')
+        .replaceAll(r'\right', '')
+        .replaceAll(r'\,', ' ')
+        .replaceAll(r'\;', ' ')
+        .replaceAll(r'\leq', '≤')
+        .replaceAll(r'\geq', '≥')
+        .replaceAll(r'\neq', '≠');
     // \sqrt{...} or sqrt(...)
     out = out.replaceAllMapped(
       RegExp(r'\\sqrt\{([^{}]+)\}'),
@@ -63,7 +80,7 @@ class MathFormulaText extends StatelessWidget {
     final String normalized = normalizeReadableSymbols(input);
     final List<InlineSpan> spans = <InlineSpan>[];
     final RegExp supPattern = RegExp(
-      r'\^\{([^{}]+)\}|\^(-?[A-Za-z0-9]+)',
+      r'([\^_])(?:\{([^{}]+)\}|(-?\d+|[A-Za-z]))',
     );
 
     int cursor = 0;
@@ -71,13 +88,14 @@ class MathFormulaText extends StatelessWidget {
       if (match.start > cursor) {
         spans.add(TextSpan(text: normalized.substring(cursor, match.start)));
       }
-      final String exponent = match.group(1) ?? match.group(2) ?? '';
+      final String exponent = match.group(2) ?? match.group(3) ?? '';
+      final bool subscript = match.group(1) == '_';
       final double baseSize = baseStyle.fontSize ?? 15;
       spans.add(
         WidgetSpan(
           alignment: PlaceholderAlignment.top,
           child: Transform.translate(
-            offset: Offset(0, -baseSize * 0.22),
+            offset: Offset(0, baseSize * (subscript ? 0.22 : -0.22)),
             child: Text(
               exponent,
               style: baseStyle.copyWith(

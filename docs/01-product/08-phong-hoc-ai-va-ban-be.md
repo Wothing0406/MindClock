@@ -35,6 +35,7 @@ Trợ lý Socratic nhận môn/lớp/mục tiêu/câu hỏi và lịch sử đ�
 ## Cộng đồng, Hồ sơ công khai, Kết bạn & Phòng học kiểu Google Meet (Gói B — T058)
 
 User đã xác thực (không dùng guest ẩn danh) có **Hồ sơ học sinh công khai (Public Profile)** hiển thị opt-in cho bạn học xem: `avatarId/avatarUrl`, `alias`, `gradeLevel`, `selectedSubjectCodes`, `goalLabel`, cấp bậc/chuỗi học tóm tắt, trạng thái kết bạn và nút `Kết bạn` / `Hủy lời mời` / `Chặn`. **Tuyệt đối không lộ** giờ dậy, TKB chi tiết, email, điểm yếu hoặc ảnh bài làm. Hệ thống hỗ trợ:
+
 1. **Tìm bạn & Kết bạn hai chiều:** tìm theo biệt danh/tổ hợp môn, gửi/nhận/chấp nhận/từ chối lời mời kết bạn, chặn và báo cáo người dùng vi phạm.
 2. **Quét phòng học công khai & Phòng riêng tư:** chủ phòng chọn chế độ `Công khai (Ai cũng có thể tìm & xin vào)` hoặc `Chỉ mời (Mã/link/QR)`. Màn `Quét phòng` hiển thị danh sách phòng công khai đang học (tên phòng, môn/tổ hợp, trình độ mục tiêu, số thành viên hiện tại/tối đa, chủ phòng) để tham gia nhanh.
 3. **AI ghép nhóm theo trình độ:** dựa trên `gradeLevel`, `selectedSubjectCodes`, mức tự đánh giá (`beginner/basic/exam_prep/challenge`) và mục tiêu, backend/AI gợi ý phòng công khai hoặc bạn học phù hợp trình độ nhất kèm lý do ngắn (`Cùng khối 11 · Ôn Toán nâng cao`).
@@ -60,22 +61,21 @@ Lịch rảnh chung, nhóm 2–4 người, tìm phòng theo môn hoặc chỉ c�
 
 ## Acceptance
 
-| ID | Khi | Phải xảy ra |
-| --- | --- | --- |
-| ROOM-01 | Chọn một mình hoặc cùng AI, xem gợi ý, xác nhận/sửa mục tiêu và recap | Không bắt chọn môn lại; đúng chế độ/nhịp; mic/cam/âm tắt khi vào. |
-| ROOM-07 | Chọn Học sâu ở một trong hai chế độ | Không phát âm nền, tiếng chuyển chặng, nhắc hay giọng AI; AI chỉ trả chữ sau thao tác hỏi. |
-| ROOM-08 | Hoàn thành phiên, tạm dừng/nghỉ/offline/retry finish | EXP theo phút running trọn vẹn, đúng trần; chưa sync chỉ hiện dự kiến; ledger ghi một lần; phiên ngắn/hủy không thưởng. |
-| ROOM-02 | Từ chối mic/camera hoặc tắt giữa phiên | Timer/text tiếp tục; indicator và đường bật quyền đúng. |
-| ROOM-03 | AI lỗi/quota/Live rớt mạng | Hạ cấp về text/timer, không mất phiên hoặc phát audio giả. |
-| ROOM-04 | Rời app/tạm nghỉ/rời phòng | Không chửi/phạt/giữ app; có nhắc chỉ nếu đã opt-in. |
-| ROOM-05 | Mời bạn/đổi account/block | Người lạ không vào, không lộ việc riêng; kick/report có audit. |
-| ROOM-06 | Hỏi ngoài chủ đề hoặc yêu cầu lời giải | AI chuyển về mục tiêu bằng lời trung tính, gợi một bước, không lộ đáp án trước nỗ lực. |
-| ROOM-09 | Chia sẻ link/mã/QR và thu hồi; người chưa đăng nhập hoặc không được mời mở link | Xem trước phòng, xác thực/quyền rồi mới xin vào; hết hạn/chặn/đủ chỗ không join; QR không lộ dữ liệu riêng. |
-| ROOM-10 | Nhắn nhóm, gửi ảnh, tag hỏi AI trong/sau phiên | Chọn rõ người nhận/xem trước; chat nhóm không tự vào AI; ảnh tạm không lưu mặc định; text vẫn có khi voice lỗi. |
-| ROOM-11 | Bật AI voice/avatar, chuyển Học sâu/Reduce Motion/mạng yếu | Avatar chuyển động theo audio thật, dừng khi audio dừng; Học sâu không tự phát tiếng, luôn có chữ và nút tắt. |
+| ID      | Khi                                                                             | Phải xảy ra                                                                                                             |
+| ------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| ROOM-01 | Chọn một mình hoặc cùng AI, xem gợi ý, xác nhận/sửa mục tiêu và recap           | Không bắt chọn môn lại; đúng chế độ/nhịp; mic/cam/âm tắt khi vào.                                                       |
+| ROOM-07 | Chọn Học sâu ở một trong hai chế độ                                             | Không phát âm nền, tiếng chuyển chặng, nhắc hay giọng AI; AI chỉ trả chữ sau thao tác hỏi.                              |
+| ROOM-08 | Hoàn thành phiên, tạm dừng/nghỉ/offline/retry finish                            | EXP theo phút running trọn vẹn, đúng trần; chưa sync chỉ hiện dự kiến; ledger ghi một lần; phiên ngắn/hủy không thưởng. |
+| ROOM-02 | Từ chối mic/camera hoặc tắt giữa phiên                                          | Timer/text tiếp tục; indicator và đường bật quyền đúng.                                                                 |
+| ROOM-03 | AI lỗi/quota/Live rớt mạng                                                      | Hạ cấp về text/timer, không mất phiên hoặc phát audio giả.                                                              |
+| ROOM-04 | Rời app/tạm nghỉ/rời phòng                                                      | Không chửi/phạt/giữ app; có nhắc chỉ nếu đã opt-in.                                                                     |
+| ROOM-05 | Mời bạn/đổi account/block                                                       | Người lạ không vào, không lộ việc riêng; kick/report có audit.                                                          |
+| ROOM-06 | Hỏi ngoài chủ đề hoặc yêu cầu lời giải                                          | AI chuyển về mục tiêu bằng lời trung tính, gợi một bước, không lộ đáp án trước nỗ lực.                                  |
+| ROOM-09 | Chia sẻ link/mã/QR và thu hồi; người chưa đăng nhập hoặc không được mời mở link | Xem trước phòng, xác thực/quyền rồi mới xin vào; hết hạn/chặn/đủ chỗ không join; QR không lộ dữ liệu riêng.             |
+| ROOM-10 | Nhắn nhóm, gửi ảnh, tag hỏi AI trong/sau phiên                                  | Chọn rõ người nhận/xem trước; chat nhóm không tự vào AI; ảnh tạm không lưu mặc định; text vẫn có khi voice lỗi.         |
+| ROOM-11 | Bật AI voice/avatar, chuyển Học sâu/Reduce Motion/mạng yếu                      | Avatar chuyển động theo audio thật, dừng khi audio dừng; Học sâu không tự phát tiếng, luôn có chữ và nút tắt.           |
 
 Học cùng bạn và Live voice/video là feature flags độc lập; không xuất hiện như phòng hoạt động thật trước khi có backend, moderation, thiết bị thật và ngân sách. [Kỹ thuật realtime](../02-engineering/09-phong-hoc-realtime.md).
-
 ## Đọc câu trả lời AI trên Android — T071
 
 Sau khi hỏi bằng chữ trong phiên AI nhịp ngắt quãng, người dùng có thể bấm **Nghe câu trả lời** hoặc **Dừng giọng đọc**. Mặc định im lặng, không tự đọc câu mới. Dùng giọng tiếng Việt ngoại tuyến đã cài trên thiết bị; thiếu giọng thì báo chưa khả dụng, vẫn đọc chữ và tiếp tục timer. Học sâu, một mình, phiên chưa bắt đầu/đã kết thúc hoặc đã đăng xuất không phát giọng. Rời màn/app, đổi phiên/tài khoản hoặc âm thanh khác được ưu tiên thì dừng, quay lại không tự phát tiếp. Avatar chỉ chuyển khẩu hình trong khoảng callback phát của engine; Reduce Motion giữ ảnh tĩnh. Đây là đọc text theo lượt, chưa phải nói chuyện hai chiều/Gemini Live.

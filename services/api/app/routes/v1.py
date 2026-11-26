@@ -25,6 +25,7 @@ from app.db.models import (
     FriendRequest,
     Friendship,
     IdempotencyRecord,
+    LocalAuthAccount,
     MatchPlayer,
     MatchQueue,
     Question,
@@ -512,6 +513,7 @@ def create_v1_router(
         db.execute(delete(Alarm).where(Alarm.user_id == uid))
         db.execute(delete(StudySession).where(StudySession.user_id == uid))
         db.execute(delete(AlarmSession).where(AlarmSession.user_id == uid))
+        db.execute(delete(LocalAuthAccount).where(LocalAuthAccount.user_id == uid))
         db.execute(delete(User).where(User.id == uid))
         db.commit()
         return {

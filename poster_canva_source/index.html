@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>MindClock – Poster KHKT</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e9edf0;font-family:Arial,"Segoe UI",sans-serif;color:#14213d}
+.page{width:1920px;height:1080px;background:#fbfaf5;position:relative;overflow:hidden;padding:72px 86px;page-break-after:always}
+.page:before{content:"";position:absolute;right:-180px;top:-220px;width:650px;height:650px;border:20px solid rgba(20,125,128,.10);border-radius:50%}
+.kicker{font-size:28px;letter-spacing:3px;color:#147d80;font-weight:700;text-transform:uppercase}.title{font-size:76px;line-height:1.02;margin:12px 0 18px;font-weight:800}.subtitle{font-size:34px;line-height:1.25;max-width:980px}.field{display:inline-block;margin-top:22px;padding:12px 22px;border:3px solid #147d80;border-radius:18px;font-size:28px;font-weight:700;color:#147d80}
+.grid{display:grid;grid-template-columns:1fr 1.12fr;gap:54px;align-items:center;height:calc(100% - 80px)}.grid.reverse{grid-template-columns:1.12fr 1fr}.copy h2{font-size:50px;margin:0 0 22px;color:#147d80}.copy h3{font-size:32px;margin:24px 0 8px}.copy p,.copy li{font-size:29px;line-height:1.35}.copy ul{padding-left:28px;margin-top:8px}.hero{max-height:830px;max-width:100%;object-fit:contain;border-radius:26px;border:3px solid #d4e1e5;box-shadow:0 16px 40px rgba(20,33,61,.12);background:#fff}.source{position:absolute;left:86px;bottom:24px;font-size:18px;color:#5f6d7a}.page-no{position:absolute;right:86px;bottom:24px;font-size:20px;color:#5f6d7a}.statement{font-size:39px;line-height:1.25;font-weight:700;background:#e8f3f1;border-left:10px solid #147d80;border-radius:18px;padding:24px 30px;margin:22px 0}.chips{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.chip{font-size:27px;line-height:1.25;padding:22px;border-radius:18px;background:#fff;border:3px solid #d4e1e5}.chip strong{display:block;color:#147d80;font-size:30px;margin-bottom:7px}.timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}.step{background:#fff;border-top:8px solid #147d80;padding:20px;border-radius:16px;font-size:27px;font-weight:700;min-height:120px}.step b{color:#f2ad3d;font-size:34px;margin-right:8px}.two-images{display:grid;grid-template-columns:1fr 1fr;gap:22px}.two-images img{width:100%;height:650px;object-fit:contain;background:#fff;border-radius:22px;border:3px solid #d4e1e5}.conclusion{font-size:34px;line-height:1.4}.small{font-size:25px!important;color:#58677b!important}
+</style>
+</head>
+<body>
+<section class="page" data-document-role="page" data-label="Mục tiêu và phương pháp">
+ <div class="grid">
+  <div class="copy">
+   <div class="kicker">Dự án nghiên cứu khoa học kỹ thuật</div>
+   <div class="title">MindClock</div>
+   <div class="subtitle">Ứng dụng Android hỗ trợ quản lý thời gian, báo thức và nhịp học tập cho học sinh THPT</div>
+   <div class="field">Lĩnh vực: Công nghệ thông tin</div>
+   <div class="statement">Thức dậy đúng giờ – Học cùng nhau – Tiến bộ mỗi ngày</div>
+   <h3>Vấn đề</h3><p>Học sinh dễ tắt báo thức rồi ngủ lại; lịch học, luyện tập và động lực bạn bè còn rời rạc.</p>
+   <h3>Mục tiêu</h3><p>Kết nối giờ thức dậy với kế hoạch học, thử thách ôn tập và động lực duy trì thói quen.</p>
+   <p class="small">Android-first · Flutter + Kotlin native · FastAPI + PostgreSQL · thử nghiệm theo kịch bản</p>
+  </div>
+  <img class="hero" src="plan.png" alt="Kế hoạch học tập trong MindClock">
+ </div>
+ <div class="source">Nguồn ảnh: ảnh chụp màn hình bản chạy thử MindClock trong repo dự án.</div><div class="page-no">01 / 04</div>
+</section>
+<section class="page" data-document-role="page" data-label="Quá trình thực hiện">
+ <div class="grid reverse">
+  <div class="copy">
+   <div class="kicker">02</div><div class="title" style="font-size:62px">Quá trình thực hiện</div>
+   <div class="timeline">
+    <div class="step"><b>1</b>Phát hiện vấn đề</div><div class="step"><b>2</b>Thiết kế luồng học</div><div class="step"><b>3</b>Xây dựng nguyên mẫu</div>
+    <div class="step"><b>4</b>Tích hợp báo thức, TKB và AI</div><div class="step"><b>5</b>Thêm streak, không gian học và đấu trường</div><div class="step"><b>6</b>Thử nghiệm, ghi nhận và cải tiến</div>
+   </div>
+   <div class="statement">Báo thức có đường dự phòng cục bộ; AI chỉ hỗ trợ khi người học đồng ý.</div>
+  </div>
+  <div class="two-images"><img src="ai_space.png" alt="Không gian học cùng AI"><img src="plan.png" alt="Kế hoạch và thời khóa biểu"></div>
+ </div>
+ <div class="source">Nguồn ảnh: ảnh chụp màn hình bản chạy thử MindClock trong repo dự án.</div><div class="page-no">02 / 04</div>
+</section>
+<section class="page" data-document-role="page" data-label="Kết quả">
+ <div class="grid">
+  <div class="copy">
+   <div class="kicker">03</div><div class="title" style="font-size:64px">Kết quả</div>
+   <div class="chips">
+    <div class="chip"><strong>Báo thức thử thách</strong>Mở câu hỏi ôn tập sau khi thức dậy.</div>
+    <div class="chip"><strong>Streak bạn bè</strong>Nhóm cam kết và theo dõi chuỗi ngày học.</div>
+    <div class="chip"><strong>Không gian học cùng AI</strong>Timer tập trung; học một mình hoặc cùng MindClock AI.</div>
+    <div class="chip"><strong>Luyện tập theo môn</strong>Nhập đáp án, trình bày cách làm và nhận gợi ý.</div>
+    <div class="chip" style="grid-column:1/3"><strong>Đấu trường kiến thức</strong>Luyện đơn đã có; giao hữu/rank nhiều máy đang ở lộ trình thử nghiệm.</div>
+   </div>
+  </div>
+  <div class="two-images"><img src="arena_hub.png" alt="Đấu trường các chế độ"><img src="arena_battle.png" alt="Lượt đấu kiến thức"></div>
+ </div>
+ <div class="source">Nguồn ảnh: ảnh chụp màn hình bản chạy thử MindClock trong repo dự án.</div><div class="page-no">03 / 04</div>
+</section>
+<section class="page" data-document-role="page" data-label="Ý nghĩa và kết luận">
+ <div class="grid reverse">
+  <div class="copy">
+   <div class="kicker">04</div><div class="title" style="font-size:58px">Ý nghĩa / Kết luận</div>
+   <p class="conclusion">MindClock kết nối báo thức, kế hoạch học tập, thử thách ôn tập và động lực bạn bè trong một ứng dụng Android thống nhất. Sản phẩm giúp học sinh bắt đầu ngày mới bằng một hoạt động học ngắn, duy trì thói quen qua streak và học tập có định hướng hơn.</p>
+   <h3>Đóng góp</h3><ul><li>Quản lý thời gian chủ động hơn.</li><li>Biến thử thách buổi sáng thành cơ hội ôn tập.</li><li>Tạo môi trường học cùng AI và cạnh tranh kiến thức có kiểm soát.</li></ul>
+   <h3>Hướng phát triển</h3><p>Hoàn thiện streak nhóm · đồng bộ bạn bè · rank nhiều máy · kiểm thử Android thật · đánh giá AI trên dữ liệu độc lập.</p>
+   <p class="small"><b>Giới hạn hiện tại:</b> Giao hữu/rank nhiều máy và báo thức trên thiết bị Android vật lý cần được kiểm thử thêm.</p>
+  </div>
+  <img class="hero" src="arena_battle.png" alt="Lượt đấu kiến thức">
+ </div>
+ <div class="source">Nguồn ảnh: ảnh chụp màn hình bản chạy thử MindClock trong repo dự án.</div><div class="page-no">04 / 04</div>
+</section>
+</body></html>

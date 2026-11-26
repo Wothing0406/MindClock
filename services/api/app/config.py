@@ -40,6 +40,12 @@ class Settings(BaseSettings):
 
     firebase_project_id: str = ''
     local_dev_bearer_uid_fallback: bool = True
+    local_auth_enabled: bool = True
+    local_auth_jwt_secret: SecretStr = Field(
+        default=SecretStr('mindclock-local-auth-dev-secret-change-me')
+    )
+    local_auth_access_ttl_seconds: int = 3600
+    local_auth_refresh_ttl_seconds: int = 2592000
 
     @property
     def cors_origins_list(self) -> List[str]:
@@ -59,6 +65,9 @@ class Settings(BaseSettings):
 
     def get_gemini_secret(self) -> str:
         return self.gemini_api_key.get_secret_value().strip()
+
+    def get_local_auth_secret(self) -> str:
+        return self.local_auth_jwt_secret.get_secret_value().strip()
 
 
 @lru_cache

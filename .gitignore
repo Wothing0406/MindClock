@@ -5,11 +5,16 @@
 __pycache__/
 *.pyc
 
+# Tool dependencies/cache; install locally when working on promo tooling.
+/tools/**/node_modules/
+
 # Biến môi trường cục bộ không đưa lên git (dùng .env.example làm mẫu)
 .env
 *.env.local
 app/.env
 app/*.env.local
+app/google-services.json
+app/android/app/google-services.json
 services/api/.env
 services/api/*.env.local
 

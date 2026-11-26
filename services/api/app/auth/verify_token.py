@@ -9,6 +9,7 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError, PyJWKError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.local_auth import LOCAL_AUTH_ISSUER, decode_local_auth_token
 from app.config import Settings, get_settings
 from app.db.models import User
 
@@ -91,6 +92,43 @@ def verify_bearer_token(
         dev_uid = _decode_local_dev_uid(token)
         if dev_uid:
             return dev_uid
+
+    if settings.local_auth_enabled and token.count('.') == 2:
+        try:
+            header = jwt.get_unverified_header(token)
+            unverified_claims = jwt.decode(
+                token,
+                options={'verify_signature': False},
+            )
+            if (
+                header.get('alg') == 'HS256'
+                and unverified_claims.get('iss') == LOCAL_AUTH_ISSUER
+            ):
+                payload = decode_local_auth_token(
+                    token,
+                    settings,
+                    expected_type='access',
+                )
+                uid = str(payload.get('sub', '')).strip()
+                if not uid:
+                    _raise_api_error(
+                        status.HTTP_401_UNAUTHORIZED,
+                        'AUTH_EXPIRED',
+                        'Token đăng nhập không chứa định danh người dùng.',
+                    )
+                return uid
+        except ExpiredSignatureError:
+            _raise_api_error(
+                status.HTTP_401_UNAUTHORIZED,
+                'AUTH_EXPIRED',
+                'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+            )
+        except InvalidTokenError as exc:
+            _raise_api_error(
+                status.HTTP_401_UNAUTHORIZED,
+                'AUTH_EXPIRED',
+                f'Token đăng nhập không hợp lệ: {str(exc)}',
+            )
 
     project_id = (settings.firebase_project_id or '').strip()
     if not project_id:

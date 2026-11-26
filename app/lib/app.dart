@@ -40,8 +40,8 @@ import 'ui/features/guest_shell/views/mindclock_shell_screen.dart';
 import 'ui/features/personal_flow/view_models/personal_flow_view_model.dart';
 import 'ui/features/study_focus/view_models/study_focus_view_model.dart';
 
-const String _envApiBaseUrl =
-    String.fromEnvironment('MINDCLOCK_API_BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+const String _envApiBaseUrl = String.fromEnvironment('MINDCLOCK_API_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000');
 const String _envFirebaseWebApiKey = String.fromEnvironment(
   'MINDCLOCK_FIREBASE_WEB_API_KEY',
   defaultValue: 'AIzaSyA3t_iZR9YuWH2zazi-6zA8PllbQ_-a90Y',
@@ -105,16 +105,15 @@ class _MindClockAppState extends State<MindClockApp> {
     _mediaPickerGateway =
         widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway();
     final LocalKeyValueStore kvStore = widget.repository.store;
-    final AuthSessionGateway authGateway = widget.authGateway ??
-        createDefaultAuthGateway(store: kvStore);
+    final AuthSessionGateway authGateway =
+        widget.authGateway ?? createDefaultAuthGateway(store: kvStore);
     final PersonalApiClient sharedApiClient =
         createDefaultPersonalApiClient(authGateway: authGateway);
 
     final AlarmSyncGateway alarmSyncGateway = widget.alarmSyncGateway ??
         createDefaultAlarmSyncGateway(apiClient: sharedApiClient);
     final PendingAlarmEventStore pendingEventStore =
-        widget.pendingAlarmEventStore ??
-            PendingAlarmEventStore(store: kvStore);
+        widget.pendingAlarmEventStore ?? PendingAlarmEventStore(store: kvStore);
 
     _viewModel = GuestWorkspaceViewModel(
       repository: widget.repository,
@@ -122,8 +121,8 @@ class _MindClockAppState extends State<MindClockApp> {
           widget.alarmScheduler ?? createDefaultAlarmSchedulerService(),
       alarmSyncGateway: alarmSyncGateway,
       pendingAlarmEventStore: pendingEventStore,
-      scheduleWidgetBridge: widget.scheduleWidgetBridge ??
-          createDefaultScheduleWidgetBridge(),
+      scheduleWidgetBridge:
+          widget.scheduleWidgetBridge ?? createDefaultScheduleWidgetBridge(),
     );
 
     final PersonalFlowRepository personalRepository =
@@ -134,8 +133,8 @@ class _MindClockAppState extends State<MindClockApp> {
             );
     _communityRepository = widget.communityRepository ??
         createDefaultCommunityRepository(apiClient: sharedApiClient);
-    _pvpGateway =
-        widget.pvpGateway ?? createDefaultPvpGateway(apiClient: sharedApiClient);
+    _pvpGateway = widget.pvpGateway ??
+        createDefaultPvpGateway(apiClient: sharedApiClient);
     final CameraCaptureGateway cameraGateway =
         widget.cameraGateway ?? const MethodChannelCameraCaptureGateway();
     final OfflineTextDraftStore draftStore =
@@ -226,6 +225,16 @@ ScheduleWidgetBridge createDefaultScheduleWidgetBridge() {
   return const UnboundScheduleWidgetBridge();
 }
 
+Uri? resolveDefaultApiBaseUri() {
+  String rawUrl = _envApiBaseUrl.trim();
+  if (rawUrl == 'http://127.0.0.1:8000' &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
+    rawUrl = 'http://10.0.2.2:8000';
+  }
+  return rawUrl.isNotEmpty ? Uri.tryParse(rawUrl) : null;
+}
+
 AuthSessionGateway createDefaultAuthGateway({
   required LocalKeyValueStore store,
 }) {
@@ -235,21 +244,15 @@ AuthSessionGateway createDefaultAuthGateway({
   return FirebaseAuthGateway(
     store: store,
     firebaseWebApiKey: _envFirebaseWebApiKey,
+    backendBaseUri: resolveDefaultApiBaseUri(),
   );
 }
 
 PersonalApiClient createDefaultPersonalApiClient({
   required AuthSessionGateway authGateway,
 }) {
-  String rawUrl = _envApiBaseUrl.trim();
-  if (rawUrl == 'http://127.0.0.1:8000' &&
-      !kIsWeb &&
-      defaultTargetPlatform == TargetPlatform.android) {
-    rawUrl = 'http://10.0.2.2:8000';
-  }
-  final Uri? baseUri = rawUrl.isNotEmpty ? Uri.tryParse(rawUrl) : null;
   return PersonalApiClient(
-    baseUri: baseUri,
+    baseUri: resolveDefaultApiBaseUri(),
     authGateway: authGateway,
   );
 }

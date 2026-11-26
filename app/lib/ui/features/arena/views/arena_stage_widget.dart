@@ -22,6 +22,8 @@ class ArenaStageWidget extends StatelessWidget {
     required this.soundEnabled,
     required this.assetFallbackMode,
     this.lastResolution,
+    this.playerIsWinner = false,
+    this.botIsWinner = false,
   });
 
   final SoloCombatantState playerState;
@@ -32,6 +34,8 @@ class ArenaStageWidget extends StatelessWidget {
   final bool soundEnabled;
   final bool assetFallbackMode;
   final SoloRoundResolution? lastResolution;
+  final bool playerIsWinner;
+  final bool botIsWinner;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +134,10 @@ class ArenaStageWidget extends StatelessWidget {
                       disableMotion: disableMotion,
                       assetFallbackMode: assetFallbackMode,
                       deltaDamageTaken: lastResolution?.settle.playerADelta.damageTaken ?? 0,
+                      deltaHealAmount: (lastResolution?.settle.playerADelta.hpHealed ?? 0) +
+                          (lastResolution?.settle.playerADelta.armorHealed ?? 0),
                       deltaActionUsed: lastResolution?.settle.playerADelta.actionUsed,
+                      isWinner: playerIsWinner,
                     );
                     final Widget rightCard = _CombatantSlotCard(
                       key: const ValueKey<String>('arena-slot-bot'),
@@ -141,7 +148,10 @@ class ArenaStageWidget extends StatelessWidget {
                       disableMotion: disableMotion,
                       assetFallbackMode: assetFallbackMode,
                       deltaDamageTaken: lastResolution?.settle.playerBDelta.damageTaken ?? 0,
+                      deltaHealAmount: (lastResolution?.settle.playerBDelta.hpHealed ?? 0) +
+                          (lastResolution?.settle.playerBDelta.armorHealed ?? 0),
                       deltaActionUsed: lastResolution?.settle.playerBDelta.actionUsed,
+                      isWinner: botIsWinner,
                     );
 
                     if (narrow) {
@@ -222,7 +232,9 @@ class _CombatantSlotCard extends StatelessWidget {
     required this.disableMotion,
     required this.assetFallbackMode,
     required this.deltaDamageTaken,
+    required this.deltaHealAmount,
     required this.deltaActionUsed,
+    required this.isWinner,
   });
 
   final SoloCombatantState state;
@@ -232,7 +244,9 @@ class _CombatantSlotCard extends StatelessWidget {
   final bool disableMotion;
   final bool assetFallbackMode;
   final int deltaDamageTaken;
+  final int deltaHealAmount;
   final CombatActionType? deltaActionUsed;
+  final bool isWinner;
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +301,7 @@ class _CombatantSlotCard extends StatelessWidget {
               '${spec.nameVi} · ${facingRight ? "Nhìn phải →" : "← Nhìn trái"}',
               style: mc.captionStyle.copyWith(color: mc.sunrise),
             ),
-            if (!compact) ...<Widget>[
+            ...<Widget>[
               SizedBox(height: mc.space8),
               Center(
                 child: ArenaSpriteActor(
@@ -298,6 +312,8 @@ class _CombatantSlotCard extends StatelessWidget {
                   assetFallbackMode: assetFallbackMode,
                   actionUsed: deltaActionUsed,
                   damageTaken: deltaDamageTaken,
+                  healAmount: deltaHealAmount,
+                  isWinner: isWinner,
                 ),
               ),
             ],

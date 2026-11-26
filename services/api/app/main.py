@@ -16,6 +16,7 @@ try:
     from app.product_ui import create_product_router
 except ImportError:  # pragma: no cover
     create_product_router = None
+from app.routes.auth import create_auth_router
 from app.routes.v1 import create_v1_router
 from app.services.gemini_service import GeminiService
 
@@ -71,6 +72,7 @@ def create_app(
             return JSONResponse(status_code=exc.status_code, content=exc.detail)
         return JSONResponse(status_code=exc.status_code, content={'detail': exc.detail})
 
+    app.include_router(create_auth_router(get_db=_get_db))
     app.include_router(
         create_v1_router(
             get_db=_get_db,

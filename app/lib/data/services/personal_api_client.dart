@@ -403,11 +403,21 @@ class PersonalApiClient {
   Map<String, dynamic> _decodeResponse(int statusCode, String rawBody) {
     Map<String, dynamic> parsed = const <String, dynamic>{};
     if (rawBody.trim().isNotEmpty) {
-      final Object? decoded = jsonDecode(rawBody);
-      if (decoded is Map<String, dynamic>) {
-        parsed = decoded;
-      } else if (decoded is List<dynamic>) {
-        parsed = <String, dynamic>{'items': decoded};
+      try {
+        final Object? decoded = jsonDecode(rawBody);
+        if (decoded is Map<String, dynamic>) {
+          parsed = decoded;
+        } else if (decoded is List<dynamic>) {
+          parsed = <String, dynamic>{'items': decoded};
+        }
+      } on FormatException {
+        if (statusCode >= 200 && statusCode < 300) {
+          throw PersonalApiException(
+            code: 'INVALID_JSON_RESPONSE',
+            httpStatus: statusCode,
+            messageVi: 'Dữ liệu phản hồi từ máy chủ không hợp lệ.',
+          );
+        }
       }
     }
 
@@ -415,11 +425,18 @@ class PersonalApiClient {
       return parsed;
     }
 
-    final Map<String, dynamic>? err = parsed['error'] as Map<String, dynamic>?;
-    final String code = err?['code'] as String? ?? 'HTTP_$statusCode';
+    final Object? rawErr = parsed['error'] ?? parsed['detail'];
+    final Map<String, dynamic>? err =
+        rawErr is Map<String, dynamic> ? rawErr : null;
+    final String code =
+        err?['code']?.toString().trim().isNotEmpty == true
+            ? err!['code'].toString().trim()
+            : 'HTTP_$statusCode';
     final bool retryable =
-        err?['retryable'] as bool? ?? (statusCode >= 500 || statusCode == 429);
-    final String serverMessage = (err?['message'] as String?)?.trim() ?? '';
+        err?['retryable'] == true || (statusCode >= 500 || statusCode == 429);
+    final String serverMessage =
+        (err?['message']?.toString() ?? (rawErr is String ? rawErr : ''))
+            .trim();
 
     throw PersonalApiException(
       code: code,

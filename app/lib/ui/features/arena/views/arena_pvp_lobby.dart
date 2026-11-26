@@ -15,6 +15,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../view_models/pvp_arena_view_model.dart';
 import 'arena_sprite_stage.dart';
 import 'arena_stage_widget.dart';
+import 'arena_skill_hand.dart';
 
 /// Màn giao hữu PvP 1v1 kết nối backend `/v1/pvp/*` (`T061 AC-03`).
 class ArenaPvpLobby extends StatefulWidget {
@@ -208,6 +209,17 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text('Đang chờ ghép đối thủ...', style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space12),
+          Center(child: ArenaSpriteActor(
+            spec: CombatCatalog.getSpec(vm.champion),
+            facingRight: true,
+            isBot: false,
+            disableMotion: MediaQuery.disableAnimationsOf(context),
+            assetFallbackMode: false,
+            size: 148,
+          )),
+          SizedBox(height: mc.space8),
+          Text('Đang tìm người chơi cùng lớp và môn học. Bạn có thể hủy bất cứ lúc nào.', style: mc.bodyStyle),
           SizedBox(height: mc.space8),
           Text(
             'Môn ${SubjectCatalog.nameFor(vm.subjectCode)} · ${vm.gradeBand} · Tướng ${CombatCatalog.getSpec(vm.champion).nameVi}',
@@ -298,7 +310,6 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
 
     final PvpRoundInfo? round = snap.currentRoundInfo;
     final bool disableMotion = MediaQuery.disableAnimationsOf(context);
-    final ChampionSpec mySpec = CombatCatalog.getSpec(me.championId);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,6 +325,19 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
         ),
         SizedBox(height: mc.space12),
         ArenaQiGuideStrip(currentQi: me.qi, maxQi: maxQi),
+        SizedBox(height: mc.space12),
+        ArenaSkillHand(
+          champion: me.championId,
+          keyPrefix: 'pvp-action',
+          options: evaluateActionAvailability(
+            state: meState,
+            roundNo: round?.roundNo ?? 1,
+            playerGrade: round?.mySubmission.gradeStatus == 'correct'
+                ? SoloGradeStatus.correct : null,
+            actionWindowOpen: !vm.isBusy && round?.state == 'action_window',
+          ),
+          onAction: vm.chooseAction,
+        ),
         SizedBox(height: mc.space12),
         if (round != null) ...<Widget>[
           MindClockCard(
@@ -393,6 +417,12 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  SizedBox(height: mc.space8),
+                  MathInputKeypad(
+                    key: const ValueKey<String>('pvp-reasoning-keypad'),
+                    controller: _reasoningController,
+                    compact: true,
+                  ),
                   SizedBox(height: mc.space12),
                   MindClockButton(
                     key: const ValueKey<String>('pvp-submit-answer-btn'),
@@ -406,47 +436,6 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                               reasoningText: _reasoningController.text,
                             );
                           },
-                  ),
-                ] else if (round.state == 'action_window') ...<Widget>[
-                  SizedBox(height: mc.space12),
-                  Text(
-                    'Chọn chiêu (Qi hiện có: ${me.qi}/$maxQi)',
-                    style: mc.bodyStrongStyle,
-                  ),
-                  SizedBox(height: mc.space8),
-                  MindClockButton(
-                    key: const ValueKey<String>('pvp-action-basic'),
-                    label: 'Đánh thường (28 ST · 0 Qi · Tích +1 Qi)',
-                    icon: MindClockIconKind.arena,
-                    onPressed: vm.isBusy
-                        ? null
-                        : () => vm.chooseAction(CombatActionType.basic),
-                  ),
-                  SizedBox(height: mc.space8),
-                  MindClockButton(
-                    key: const ValueKey<String>('pvp-action-skill_1'),
-                    label:
-                        'Chiêu 1 · ${mySpec.skill1.nameVi} (${mySpec.skill1.qiCost} Qi${me.skill1Used ? " · Đã dùng" : ""})',
-                    icon: MindClockIconKind.sunrise,
-                    variant: MindClockButtonVariant.secondary,
-                    onPressed: (vm.isBusy ||
-                            me.skill1Used ||
-                            me.qi < mySpec.skill1.qiCost)
-                        ? null
-                        : () => vm.chooseAction(CombatActionType.skill1),
-                  ),
-                  SizedBox(height: mc.space8),
-                  MindClockButton(
-                    key: const ValueKey<String>('pvp-action-skill_2'),
-                    label:
-                        'Chiêu 2 · ${mySpec.skill2.nameVi} (${mySpec.skill2.qiCost} Qi${me.skill2Used ? " · Đã dùng" : ""})',
-                    icon: MindClockIconKind.shield,
-                    variant: MindClockButtonVariant.secondary,
-                    onPressed: (vm.isBusy ||
-                            me.skill2Used ||
-                            me.qi < mySpec.skill2.qiCost)
-                        ? null
-                        : () => vm.chooseAction(CombatActionType.skill2),
                   ),
                 ],
                 SizedBox(height: mc.space12),
@@ -471,22 +460,62 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
     PvpMatchSnapshot snap,
   ) {
     final bool iWon = snap.winnerUserId == widget.userId;
+    final PvpPlayerSnapshot me = snap.players.firstWhere(
+      (PvpPlayerSnapshot p) => p.userId == widget.userId,
+      orElse: () => PvpPlayerSnapshot(
+        userId: widget.userId,
+        alias: widget.profile.alias,
+        championId: vm.champion,
+        hp: 100,
+        armor: 50,
+        ward: 0,
+        qi: 0,
+        skill1Used: false,
+        skill2Used: false,
+        isAlive: true,
+      ),
+    );
+    final ChampionSpec mySpec = CombatCatalog.getSpec(me.championId);
     return MindClockCard(
       key: const ValueKey<String>('pvp-completed-card'),
       highlighted: iWon,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            snap.status == 'void'
-                ? 'Trận hủy an toàn (Void)'
-                : (iWon ? 'Chiến thắng giao hữu!' : 'Hoàn thành trận giao hữu'),
-            style: mc.sectionTitleStyle,
-          ),
-          SizedBox(height: mc.space8),
-          Text(
-            'Lý do: ${snap.finishReason ?? "Đã kết thúc"} · 0 RP (Giao hữu học tập)',
-            style: mc.bodyStyle,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              ArenaSpriteActor(
+                spec: mySpec,
+                facingRight: true,
+                isBot: false,
+                disableMotion: MediaQuery.disableAnimationsOf(context),
+                assetFallbackMode: false,
+                isWinner: iWon,
+                size: 76,
+              ),
+              SizedBox(width: mc.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      snap.status == 'void'
+                          ? 'Trận hủy an toàn (Void)'
+                          : (iWon
+                              ? 'Chiến thắng giao hữu!'
+                              : 'Hoàn thành trận giao hữu'),
+                      style: mc.sectionTitleStyle,
+                    ),
+                    SizedBox(height: mc.space4),
+                    Text(
+                      'Lý do: ${snap.finishReason ?? "Đã kết thúc"} · 0 RP (Giao hữu học tập)',
+                      style: mc.bodyStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           SizedBox(height: mc.space12),
           MindClockButton(

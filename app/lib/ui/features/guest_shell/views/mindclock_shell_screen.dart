@@ -322,10 +322,55 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                     updatedProfile,
                   );
                 }
+                if (!mounted) return;
+                setState(() {
+                  _stage = _GuestFlowStage.onboardingSetup;
+                });
+                return;
+              }
+
+              // Đăng nhập tài khoản cũ: khôi phục hồ sơ từ server/cục bộ và vào thẳng Hôm nay nếu đã có môn học.
+              final StudyProfile? remoteProfile =
+                  await widget.personalViewModel.fetchRemoteProfileIfSignedIn();
+              if (remoteProfile != null &&
+                  (remoteProfile.selectedSubjectCodes.isNotEmpty ||
+                      remoteProfile.alias.isNotEmpty)) {
+                final StudyProfile merged = widget.viewModel.profile.copyWith(
+                  alias: remoteProfile.alias.isNotEmpty
+                      ? remoteProfile.alias
+                      : widget.viewModel.profile.alias,
+                  avatarId: remoteProfile.avatarId,
+                  gradeLevel: remoteProfile.gradeLevel ??
+                      widget.viewModel.profile.gradeLevel,
+                  selectedSubjectCodes:
+                      remoteProfile.selectedSubjectCodes.isNotEmpty
+                          ? remoteProfile.selectedSubjectCodes
+                          : widget.viewModel.profile.selectedSubjectCodes,
+                  goalLabel: remoteProfile.goalLabel.isNotEmpty
+                      ? remoteProfile.goalLabel
+                      : widget.viewModel.profile.goalLabel,
+                );
+                await widget.viewModel.saveStudyProfile(merged);
+              }
+
+              final StudyProfile effectiveProfile = widget.viewModel.profile;
+              final bool hasCompletedSetup =
+                  effectiveProfile.selectedSubjectCodes.isNotEmpty;
+              if (hasCompletedSetup) {
+                await widget.viewModel.completeOnboardingAsLater(
+                  alarmOnly: false,
+                );
               }
               if (!mounted) return;
               setState(() {
-                _stage = _GuestFlowStage.onboardingSetup;
+                if (hasCompletedSetup) {
+                  _todayBanner =
+                      'Chào mừng ${effectiveProfile.alias.isNotEmpty ? effectiveProfile.alias : 'bạn'} quay lại!';
+                  _stage = _GuestFlowStage.mainTabs;
+                  _selectedTabIndex = 0;
+                } else {
+                  _stage = _GuestFlowStage.onboardingSetup;
+                }
               });
             },
             onUseAlarmOnly: () async {
@@ -518,6 +563,9 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               studyViewModel: widget.studyViewModel,
               communityRepository: widget.communityRepository,
               lastActionBanner: _todayBanner,
+              onSelectTab: (int tabIdx) {
+                setState(() => _selectedTabIndex = tabIdx);
+              },
               onCreateAlarm: () {
                 setState(() {
                   _editingAlarm = null;

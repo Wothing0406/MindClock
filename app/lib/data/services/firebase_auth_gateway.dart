@@ -15,6 +15,7 @@ class FirebaseAuthGateway implements AuthSessionGateway {
   FirebaseAuthGateway({
     required LocalKeyValueStore store,
     required String firebaseWebApiKey,
+    this.backendBaseUri,
     Uri? identityBaseUri,
     Uri? secureTokenBaseUri,
     HttpClient Function()? httpClientFactory,
@@ -31,6 +32,7 @@ class FirebaseAuthGateway implements AuthSessionGateway {
 
   final LocalKeyValueStore _store;
   final String _apiKey;
+  final Uri? backendBaseUri;
   final Uri _identityBaseUri;
   final Uri _secureTokenBaseUri;
   final HttpClient Function() _httpClientFactory;
@@ -110,20 +112,43 @@ class FirebaseAuthGateway implements AuthSessionGateway {
     );
   }
 
+  bool _isBackendConfigFallbackCode(String code) {
+    final String c = code.toUpperCase();
+    return c.contains('OPERATION_NOT_ALLOWED') ||
+        c.contains('CONFIGURATION_NOT_FOUND') ||
+        c.contains('API_KEY_INVALID') ||
+        c.contains('FIREBASE_NOT_CONFIGURED') ||
+        c.contains('ADMIN_ONLY_OPERATION') ||
+        c.contains('PROJECT_NOT_FOUND');
+  }
+
+  bool _shouldFallbackToBackend(
+    AuthException e, {
+    required bool isSignUp,
+  }) {
+    if (backendBaseUri == null) return false;
+    if (_isBackendConfigFallbackCode(e.code)) return true;
+    final String c = e.code.toUpperCase();
+    if (c == 'AUTH_TIMEOUT' || c == 'NETWORK_UNAVAILABLE') {
+      return true;
+    }
+    if (!isSignUp &&
+        (c.contains('EMAIL_NOT_FOUND') ||
+            c.contains('INVALID_LOGIN_CREDENTIALS') ||
+            c.contains('INVALID_PASSWORD') ||
+            c.contains('USER_DISABLED'))) {
+      return true;
+    }
+    return false;
+  }
+
   Future<AuthSession> _authenticate({
     required String action,
     required String email,
     required String password,
   }) async {
-    if (!isConfigured) {
-      throw const AuthException(
-        code: 'FIREBASE_NOT_CONFIGURED',
-        messageVi:
-            'Chưa cấu hình dự án Firebase Authentication cho bản dựng này.',
-      );
-    }
-
     final String normalizedEmail = email.trim().toLowerCase();
+    final bool isSignUp = action == 'accounts:signUp';
     if (normalizedEmail.isEmpty || !normalizedEmail.contains('@')) {
       throw const AuthException(
         code: 'INVALID_EMAIL',
@@ -137,40 +162,158 @@ class FirebaseAuthGateway implements AuthSessionGateway {
       );
     }
 
-    final Uri endpoint = _buildEndpoint(_identityBaseUri, action);
+    if (!isConfigured) {
+      if (backendBaseUri != null) {
+        return _authenticateWithBackend(
+          isSignUp: isSignUp,
+          email: normalizedEmail,
+          password: password,
+        );
+      }
+      throw const AuthException(
+        code: 'FIREBASE_NOT_CONFIGURED',
+        messageVi:
+            'Chưa cấu hình dự án Firebase Authentication cho bản dựng này.',
+      );
+    }
+
+    try {
+      final Uri endpoint = _buildEndpoint(_identityBaseUri, action);
+      final Map<String, dynamic> response = await _postJson(
+        endpoint,
+        <String, dynamic>{
+          'email': normalizedEmail,
+          'password': password,
+          'returnSecureToken': true,
+        },
+      );
+
+      final Object? rawUid = response['localId'];
+      final Object? rawEmail = response['email'];
+      final Object? rawIdToken = response['idToken'];
+      final Object? rawRefreshToken = response['refreshToken'];
+      final AuthSession next = AuthSession(
+        status: AuthStatus.authenticated,
+        uid: rawUid is String ? rawUid : null,
+        email: (rawEmail is String ? rawEmail : normalizedEmail).toLowerCase(),
+        idToken: rawIdToken is String ? rawIdToken : null,
+        refreshToken: rawRefreshToken is String ? rawRefreshToken : null,
+        emailVerified: response['emailVerified'] == true,
+        isDebugFixture: false,
+      );
+      if (!next.isAuthenticated) {
+        throw const AuthException(
+          code: 'AUTH_INVALID_RESPONSE',
+          messageVi: 'Phản hồi đăng nhập chưa hợp lệ.',
+        );
+      }
+      await _persistSession(next);
+      return next;
+    } on AuthException catch (e) {
+      if (_shouldFallbackToBackend(e, isSignUp: isSignUp)) {
+        return _authenticateWithBackend(
+          isSignUp: isSignUp,
+          email: normalizedEmail,
+          password: password,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<AuthSession> _authenticateWithBackend({
+    required bool isSignUp,
+    required String email,
+    required String password,
+  }) async {
+    final Uri base = backendBaseUri!;
+    final String suffix = isSignUp ? 'v1/auth/register' : 'v1/auth/login';
+    final Uri endpoint = _buildBackendEndpoint(base, suffix);
     final Map<String, dynamic> response = await _postJson(
       endpoint,
       <String, dynamic>{
-        'email': normalizedEmail,
+        'email': email,
         'password': password,
-        'returnSecureToken': true,
       },
     );
-
+    final Object? rawUid = response['uid'];
+    final Object? rawEmail = response['email'];
+    final Object? rawIdToken = response['idToken'];
+    final Object? rawRefreshToken = response['refreshToken'];
     final AuthSession next = AuthSession(
       status: AuthStatus.authenticated,
-      uid: response['localId'] as String?,
-      email: (response['email'] as String? ?? normalizedEmail).toLowerCase(),
-      idToken: response['idToken'] as String?,
-      refreshToken: response['refreshToken'] as String?,
-      emailVerified: response['emailVerified'] as bool? ?? false,
+      uid: rawUid is String ? rawUid : null,
+      email: (rawEmail is String ? rawEmail : email).toLowerCase(),
+      idToken: rawIdToken is String ? rawIdToken : null,
+      refreshToken: rawRefreshToken is String ? rawRefreshToken : null,
+      emailVerified: response['emailVerified'] != false,
       isDebugFixture: false,
     );
     if (!next.isAuthenticated) {
       throw const AuthException(
         code: 'AUTH_INVALID_RESPONSE',
-        messageVi: 'Phản hồi đăng nhập chưa hợp lệ.',
+        messageVi: 'Phản hồi đăng nhập từ máy chủ chưa hợp lệ.',
       );
     }
     await _persistSession(next);
     return next;
   }
 
+  Uri _buildBackendEndpoint(Uri base, String suffix) {
+    final String cleanBase = base.path.endsWith('/')
+        ? base.path.substring(0, base.path.length - 1)
+        : base.path;
+    final String cleanSuffix = suffix.startsWith('/') ? suffix.substring(1) : suffix;
+    return base.replace(
+      path: '$cleanBase/$cleanSuffix',
+      queryParameters: null,
+    );
+  }
+
   @override
   Future<AuthSession> refreshIdToken() async {
     final AuthSession current = await loadSavedSession();
     final String? refresh = current.refreshToken;
-    if (!isConfigured || refresh == null || refresh.isEmpty) {
+    if (refresh == null || refresh.isEmpty) {
+      return markSessionExpired(
+        messageVi:
+            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại (chuông local vẫn giữ nguyên).',
+      );
+    }
+
+    if (backendBaseUri != null &&
+        ((current.uid?.startsWith('loc_') ?? false) || !isConfigured)) {
+      try {
+        final Uri endpoint =
+            _buildBackendEndpoint(backendBaseUri!, 'v1/auth/refresh');
+        final Map<String, dynamic> response = await _postJson(
+          endpoint,
+          <String, dynamic>{'refreshToken': refresh},
+        );
+        final Object? rawId = response['idToken'];
+        final Object? rawRefresh = response['refreshToken'];
+        final Object? rawUid = response['uid'];
+        final String? newIdToken = rawId is String ? rawId : null;
+        final String? newRefreshToken = rawRefresh is String ? rawRefresh : null;
+        final String? uid = (rawUid is String ? rawUid : null) ?? current.uid;
+        if (newIdToken == null || newIdToken.isEmpty || uid == null) {
+          return await markSessionExpired();
+        }
+        final AuthSession updated = current.copyWith(
+          status: AuthStatus.authenticated,
+          uid: uid,
+          idToken: newIdToken,
+          refreshToken: newRefreshToken ?? refresh,
+          clearMessage: true,
+        );
+        await _persistSession(updated);
+        return updated;
+      } on AuthException catch (e) {
+        return markSessionExpired(messageVi: e.messageVi);
+      }
+    }
+
+    if (!isConfigured) {
       return markSessionExpired(
         messageVi:
             'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại (chuông local vẫn giữ nguyên).',
@@ -186,9 +329,12 @@ class FirebaseAuthGateway implements AuthSessionGateway {
           'refresh_token': refresh,
         },
       );
-      final String? newIdToken = response['id_token'] as String?;
-      final String? newRefreshToken = response['refresh_token'] as String?;
-      final String? uid = response['user_id'] as String? ?? current.uid;
+      final Object? rawId = response['id_token'];
+      final Object? rawRefresh = response['refresh_token'];
+      final Object? rawUid = response['user_id'];
+      final String? newIdToken = rawId is String ? rawId : null;
+      final String? newRefreshToken = rawRefresh is String ? rawRefresh : null;
+      final String? uid = (rawUid is String ? rawUid : null) ?? current.uid;
       if (newIdToken == null || newIdToken.isEmpty || uid == null) {
         return await markSessionExpired();
       }
@@ -256,19 +402,43 @@ class FirebaseAuthGateway implements AuthSessionGateway {
       final HttpClientResponse res = await req.close().timeout(requestTimeout);
       final String raw =
           await utf8.decodeStream(res).timeout(requestTimeout);
-      final Map<String, dynamic> jsonMap = raw.trim().isNotEmpty
-          ? (jsonDecode(raw) as Map<String, dynamic>? ?? <String, dynamic>{})
-          : <String, dynamic>{};
+      Map<String, dynamic> jsonMap = <String, dynamic>{};
+      if (raw.trim().isNotEmpty) {
+        try {
+          final Object? decoded = jsonDecode(raw);
+          if (decoded is Map<String, dynamic>) {
+            jsonMap = decoded;
+          }
+        } on FormatException {
+          throw AuthException(
+            code: 'AUTH_INVALID_JSON_${res.statusCode}',
+            messageVi:
+                'Phản hồi xác thực chưa đúng định dạng (HTTP ${res.statusCode}).',
+          );
+        }
+      }
 
       if (res.statusCode >= 200 && res.statusCode < 300) {
         return jsonMap;
       }
+      final Object? rawErr = jsonMap['error'];
       final Map<String, dynamic>? err =
-          jsonMap['error'] as Map<String, dynamic>?;
-      final String code = err?['message'] as String? ?? 'AUTH_FAILED';
+          rawErr is Map<String, dynamic> ? rawErr : null;
+      final Object? rawCode = err?['code'];
+      final String? stringCode =
+          rawCode is String && rawCode.trim().isNotEmpty ? rawCode.trim() : null;
+      final String? msgField = err?['message']?.toString();
+      final String code = stringCode ??
+          (msgField != null && msgField.trim().isNotEmpty
+              ? msgField.trim()
+              : null) ??
+          'AUTH_FAILED';
+      final String? serverMsg = stringCode != null ? msgField : null;
       throw AuthException(
         code: code,
-        messageVi: _mapAuthErrorVi(code),
+        messageVi: (serverMsg != null && serverMsg.trim().isNotEmpty)
+            ? serverMsg
+            : _mapAuthErrorVi(code),
       );
     } on TimeoutException {
       throw const AuthException(

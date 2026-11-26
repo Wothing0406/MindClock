@@ -1,0 +1,52 @@
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert/strict');
+const html = fs.readFileSync('services/api/app/mobile.html','utf8');
+const source = fs.readFileSync('services/api/app/product.js','utf8');
+const elements = new Map();
+function el(id='') { return {id,value:'',textContent:'',hidden:false,disabled:false,checked:false,listeners:{},style:{setProperty(){}},classList:{toggle(){}},children:[],append(...v){this.children.push(...v)},replaceChildren(...v){this.children=v},addEventListener(type,fn){this.listeners[type]=fn},setAttribute(){},focus(){},scrollIntoView(){},remove(){},pause(){this.paused=true},play(){return Promise.resolve()},requestSubmit(){}}; }
+const doc = {getElementById(id){if(!elements.has(id))elements.set(id,el(id));return elements.get(id)},createElement:()=>el(),createTextNode:t=>t,querySelector:()=>el(),querySelectorAll:()=>[],addEventListener(){}};
+let requests=[], stored=null;
+const ctx={document:doc,localStorage:{getItem:()=>stored,setItem(k,v){stored=v}},location:{port:'8010'},window:{addEventListener(){},scrollTo(){}},matchMedia:()=>({matches:true}),setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},AbortController,crypto:require('crypto').webcrypto,Intl,Date,console,fetch:async(url,options)=>{requests.push({url,options});return {ok:true,json:async()=>({message_vi:'Hãy thử chia hai vế cho 2.',next_question_vi:'Khi đó vế phải bằng bao nhiêu?'})}}};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+async function run(){
+  vm.runInContext('setMinutes(10)',ctx);assert.equal(doc.getElementById('timer').textContent,'10:00');
+  doc.getElementById('studyTask').value='Ôn phương trình';
+  await vm.runInContext('toggleTimer()',ctx);assert.equal(vm.runInContext('state.timer.deadline !== null',ctx),true);
+  const deadline = vm.runInContext('state.timer.deadline',ctx);
+  vm.runInContext('state.timer.deadline=null;restore()',ctx);
+  assert.equal(vm.runInContext('state.timer.deadline',ctx),deadline,'Restore timer deadline');
+  await vm.runInContext('toggleTimer()',ctx);assert.equal(vm.runInContext('state.timer.deadline',ctx),null);
+  await vm.runInContext('toggleTimer()',ctx);assert.equal(vm.runInContext('state.timer.deadline !== null',ctx),true);
+  await vm.runInContext('finishStudy()',ctx);assert.equal(vm.runInContext('state.timer.started',ctx),null);
+  vm.runInContext("navigate('alarm')",ctx);assert.equal(doc.getElementById('page-alarm').hidden,false);assert.equal(doc.getElementById('page-home').hidden,true);
+  vm.runInContext("navigate('profile')",ctx);assert.equal(doc.getElementById('page-profile').hidden,false);
+  vm.runInContext("navigate('untrusted')",ctx);assert.equal(doc.getElementById('page-home').hidden,false);
+  vm.runInContext("studyView('chat')",ctx);assert.equal(doc.getElementById('study-chat').hidden,false);assert.equal(doc.getElementById('study-focus').hidden,true);
+  vm.runInContext("studyView('focus')",ctx);assert.equal(doc.getElementById('study-focus').hidden,false);
+  vm.runInContext('state.ringing=true;stopAlarm()',ctx);assert.equal(vm.runInContext('state.ringing',ctx),false);assert.equal(doc.getElementById('audio').paused,true);
+  await vm.runInContext('sendChat("Mình chưa hiểu đổi vế")',ctx);
+  assert(requests.some(r=>r.url==='/v1/study/help'));
+  assert(doc.getElementById('messages').children.some(b=>b.children?.some(t=>typeof t==='string'&&t.includes('Hãy thử chia'))));
+  ctx.fetch=async()=>({ok:false,status:503,json:async()=>({error:{message:'Không thể kết nối Gemini'}})});
+  await vm.runInContext('sendChat("Thử lỗi mạng")',ctx);
+  assert.equal(doc.getElementById('retryChat').hidden,false);
+  assert(doc.getElementById('messages').children.some(b=>b.className?.includes('error')));
+  assert.equal(vm.runInContext('state.busy',ctx),false);
+  ctx.fetch=async()=>({ok:true,json:async()=>({sessionId:'synced-mobile-session'})});
+  await vm.runInContext('syncPending()',ctx);assert.equal(vm.runInContext('state.pending.length',ctx),0,'Offline finish retry removes only synced metadata');
+  const alarmRequests=[];
+  ctx.fetch=async(url,options)=>{alarmRequests.push({url,options});throw Error('Offline')};
+  const saveAlarm=doc.getElementById('alarmForm').listeners.submit;
+  await saveAlarm({preventDefault(){}});await saveAlarm({preventDefault(){}});
+  assert.equal(alarmRequests[0].options.headers['Idempotency-Key'],alarmRequests[1].options.headers['Idempotency-Key'],'Alarm timeout retry preserves key');
+  ctx.fetch=async(url,options)=>{alarmRequests.push({url,options});return {ok:true,json:async()=>({id:'alarm-synced'})}};
+  await saveAlarm({preventDefault(){}});await saveAlarm({preventDefault(){}});
+  assert.equal(alarmRequests.at(-1).options.method,'PATCH','Saving again updates existing alarm');
+  assert.equal(doc.getElementById('alarmSave').disabled,false);
+  assert(!source.includes('xpAwarded ||'));
+  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length,'Duplicate DOM IDs');
+  const references=[...source.matchAll(/\$\('([^']+)'\)/g)].map(m=>m[1]);for(const id of references){if(!id.startsWith('page-')&&!id.startsWith('nav-'))assert(ids.includes(id),'Missing control '+id)}
+  console.log('PASS: timer start/pause/resume/finish, local emergency stop, AI mapping/error/retry, no synthetic XP');
+}
+run().catch(e=>{console.error(e);process.exit(1)});

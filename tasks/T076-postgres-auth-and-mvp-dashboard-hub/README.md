@@ -1,0 +1,9 @@
+# T076 — Đăng nhập/Đăng ký qua Backend PostgreSQL + Chuẩn hóa Dashboard Danh mục tính năng MVP
+
+- **Trạng thái:** `verifying` (đạt 100% test & E2E Emulator+PostgreSQL 16; giữ ở `verifying` đến khi người phụ trách cho phép commit/push theo ràng buộc phiên).
+- **Mục tiêu:** Giải quyết triệt để hai vấn đề người dùng gặp trực tiếp trên app Android:
+  1. Cho phép người dùng **đăng ký & đăng nhập thật kết nối PostgreSQL 16** qua FastAPI (`/v1/auth/register`, `/v1/auth/login`, `/v1/auth/refresh`) khi Firebase Console Email/Password chưa bật (`OPERATION_NOT_ALLOWED`) hoặc chưa cấu hình, giữ nguyên xác minh chữ ký JWT HS256/Firebase RS256 và xóa tài khoản CASCADE (`DELETE /v1/me`).
+  2. Chuẩn hóa màn **Hôm nay** (`TodayScreen`) theo phong cách MVP gọn gàng, không slop: hiển thị **Danh mục chức năng chính 6 ô** (`Báo thức & Giấc ngủ`, `Luyện tập & Câu sáng`, `Không gian học AI`, `Thời khóa biểu & To-Do`, `Đấu trường 3 Tướng`, `Nhóm cam kết & Hồ sơ`) ở phần trên để người dùng vào ngay được mọi chức năng ngay khi vào app, đồng thời đặt thẻ `Mầm Xanh` (`TodayPetCard`) xuống vùng Động lực/Cộng đồng ở phía dưới thay vì che hết màn đầu.
+- **Nguồn yêu cầu:** Phản hồi trực tiếp của chủ dự án ngày `21/11/2026`.
+- **Source refs:** `AGENTS.md §3–§4`, `docs/01-product/04-tai-khoan-quyen-rieng-tu.md`, `docs/01-product/03-he-thiet-ke.md`, `docs/02-engineering/04-hop-dong-api.md`, `docs/02-engineering/03-du-lieu-sql.md`.
+- **Phạm vi file:** `services/api/app/{config.py,db/models.py,auth/local_auth.py,auth/verify_token.py,routes/auth.py,routes/v1.py,main.py,schemas.py}`, `services/api/alembic/versions/0007_add_local_auth_accounts.py`, `services/api/tests/test_local_auth_postgres.py`, `app/lib/{app.dart,data/services/firebase_auth_gateway.dart,ui/features/guest_shell/views/today_screen.dart,ui/features/guest_shell/views/mindclock_shell_screen.dart}`, `app/test/t076_mvp_hub_and_backend_auth_test.dart`.
