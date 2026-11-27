@@ -167,7 +167,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
       case OsPermissionState.denied:
         return 'Chưa cấp';
       case OsPermissionState.unknown:
-        return 'Chưa kiểm tra (chưa nối OS)';
+        return 'Chưa kiểm tra';
     }
   }
 
@@ -299,12 +299,6 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                                       'me-season-rank-pill'),
                                   label: rankLabel,
                                   accentWarm: true,
-                                ),
-                                MindClockStatusPill(
-                                  label: isAuthed
-                                      ? 'Đã đồng bộ tài khoản'
-                                      : 'Chưa đăng nhập',
-                                  accentWarm: !isAuthed,
                                 ),
                               ],
                             ),
@@ -625,12 +619,12 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Bạn học, Kết bạn & Hồ sơ công khai',
+                  'Bạn học & Kết bạn',
                   style: mc.sectionTitleStyle,
                 ),
                 SizedBox(height: mc.space4),
                 Text(
-                  'Tìm bạn cùng khối/môn, xem hồ sơ công khai, gửi lời mời kết bạn hoặc quét phòng học Meet. Giờ dậy, TKB chi tiết và email luôn ẩn.',
+                  'Tìm bạn cùng khối/môn, xem hồ sơ công khai và kết bạn. Giờ dậy, TKB chi tiết và email luôn ẩn.',
                   style: mc.captionStyle,
                 ),
                 SizedBox(height: mc.space12),
@@ -640,7 +634,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                   children: <Widget>[
                     MindClockButton(
                       key: const ValueKey<String>('me-open-community-hub'),
-                      label: 'Tìm bạn & Phòng học Meet',
+                      label: 'Tìm bạn & Phòng học',
                       icon: MindClockIconKind.user,
                       expand: false,
                       onPressed: () async {
@@ -703,13 +697,13 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Trạng thái dịch vụ báo thức',
+                Text('Quyền báo thức',
                     style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space8),
                 Text(
                   viewModel.isOsBridgeConnected
                       ? 'Báo thức đã sẵn sàng.'
-                      : 'Đang sử dụng chế độ báo thức tiêu chuẩn trên máy.',
+                      : 'Báo thức hoạt động bình thường trên máy.',
                   style: mc.bodyStrongStyle,
                 ),
                 SizedBox(height: mc.space8),
@@ -752,7 +746,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                 ] else
                   const MindClockNoticeBanner(
                     message:
-                        'Android đã cấp đủ quyền cốt lõi (Exact Alarm, Thông báo, Toàn màn hình khóa).',
+                        'Đã cấp đủ quyền báo thức, thông báo và màn hình khóa.',
                     isWarm: false,
                   ),
                 if (viewModel.isOsBridgeConnected) ...<Widget>[

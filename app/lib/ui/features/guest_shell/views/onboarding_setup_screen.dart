@@ -4,6 +4,7 @@ import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/daily_study_plan.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
+import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../../domain/services/rule_based_plan_generator.dart';
 import '../../../core/theme/mindclock_theme.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
+import '../view_models/guest_workspace_view_model.dart';
 
 /// Màn hình `S03` Thiết lập hồ sơ THPT Lớp 10–12, nhiều môn, avatar và xác nhận kế hoạch (`docs/07`).
 class OnboardingSetupScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class OnboardingSetupScreen extends StatefulWidget {
     required this.onSkipLater,
     required this.onAlarmOnly,
     this.mediaPickerGateway,
+    this.workspaceViewModel,
   });
 
   final StudyProfile initialProfile;
@@ -28,6 +31,7 @@ class OnboardingSetupScreen extends StatefulWidget {
   final VoidCallback onSkipLater;
   final VoidCallback onAlarmOnly;
   final MediaPickerGateway? mediaPickerGateway;
+  final GuestWorkspaceViewModel? workspaceViewModel;
 
   @override
   State<OnboardingSetupScreen> createState() => _OnboardingSetupScreenState();
@@ -633,6 +637,64 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 },
               ),
               SizedBox(height: mc.space16),
+              if (widget.workspaceViewModel != null &&
+                  widget.workspaceViewModel!.isOsBridgeConnected) ...<Widget>[
+                ListenableBuilder(
+                  listenable: widget.workspaceViewModel!,
+                  builder: (BuildContext context, _) {
+                    final GuestWorkspaceViewModel vm =
+                        widget.workspaceViewModel!;
+                    return MindClockCard(
+                      key: const ValueKey<String>('onboarding-permissions-card'),
+                      highlighted: vm.needsOsPermissions,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '5. Cấp quyền báo thức & thông báo',
+                            style: mc.sectionTitleStyle,
+                          ),
+                          SizedBox(height: mc.space4),
+                          Text(
+                            vm.needsOsPermissions
+                                ? 'Cấp quyền ngay để chuông báo thức và nhắc học hoạt động đúng giờ trên điện thoại.'
+                                : 'Đã cấp đủ quyền báo thức và thông báo.',
+                            style: mc.captionStyle,
+                          ),
+                          if (vm.needsOsPermissions) ...<Widget>[
+                            SizedBox(height: mc.space12),
+                            ...vm.missingPermissionActions.map(
+                              (AlarmPermissionAction action) => Padding(
+                                padding: EdgeInsets.only(bottom: mc.space8),
+                                child: MindClockButton(
+                                  key: ValueKey<String>(
+                                    'onboarding-perm-${action.wireAction}',
+                                  ),
+                                  label: vm.labelForPermissionAction(action),
+                                  icon: MindClockIconKind.bell,
+                                  variant: MindClockButtonVariant.secondary,
+                                  onPressed: () =>
+                                      vm.openPermissionSettings(action),
+                                ),
+                              ),
+                            ),
+                            MindClockButton(
+                              key: const ValueKey<String>(
+                                'onboarding-perm-refresh',
+                              ),
+                              label: 'Kiểm tra lại quyền',
+                              icon: MindClockIconKind.check,
+                              variant: MindClockButtonVariant.subtle,
+                              onPressed: vm.refreshOsStatus,
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: mc.space16),
+              ],
               MindClockButton(
                 key: const ValueKey<String>('onboarding-save'),
                 label: 'Xác nhận kế hoạch & Vào Hôm nay',

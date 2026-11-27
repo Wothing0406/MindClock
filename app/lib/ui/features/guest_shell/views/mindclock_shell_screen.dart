@@ -589,6 +589,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             initialProfile: widget.viewModel.profile,
             mediaPickerGateway:
                 widget.mediaPickerGateway ?? MethodChannelMediaPickerGateway(),
+            workspaceViewModel: widget.viewModel,
             onSaveProfile: (StudyProfile nextProfile) async {
               await widget.viewModel.saveStudyProfile(nextProfile);
               if (widget.personalViewModel.authSession.isAuthenticated) {
