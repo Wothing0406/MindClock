@@ -42,6 +42,17 @@ services:
       - mindclock_internal
       - mindclock_public
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --credentials-file /etc/cloudflared/c5d3eeea-c197-4d05-8cb8-d893fa9d49b4.json --url http://api:8000 mindclock-exam
+    volumes:
+      - ${USERPROFILE}/.cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - api
+    networks:
+      - mindclock_public
+
 networks:
   mindclock_internal:
     driver: bridge
