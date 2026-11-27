@@ -1,6 +1,7 @@
 # Bàn giao nhiệm vụ T094
 
 - **Trạng thái cuối:** `verifying` (đã PASS 100% trên PostgreSQL 16 thật, Docker `api` và Flutter VM; giữ `verifying` cho bước kiểm nối nhiều máy Android vật lý).
+- **Git commit & nhánh:** `22c23a7` trên nhánh `main` (đã push và xác nhận trên `origin/main`).
 - **Đã thay đổi:**
   - `services/api/alembic/versions/0011_study_room_lifecycle_and_invites.py`, `services/api/app/db/models.py`, `services/api/app/db/backup.py`: bổ sung `expires_at`, `last_heartbeat_at`, `closed_at` trên `study_rooms`, `last_heartbeat_at` trên `study_room_members`, và bảng `study_room_invites` lưu SHA-256 `token_hash`.
   - `services/api/app/services/community_service.py`, `services/api/app/schemas.py`, `services/api/app/routes/v1.py`: hiện thực máy trạng thái `waiting -> active -> closing -> closed | expired`, heartbeat thành viên/phòng, chuyển chủ phòng tự động khi mất mạng (hoặc `transferHost=true`), thu hồi & kiểm hạn mã mời không chứa PII, và bảo toàn lịch sử cá nhân khi dọn phòng.
