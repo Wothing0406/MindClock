@@ -595,10 +595,10 @@ void main() {
         await tester.pumpAndSettle();
 
         await tester.ensureVisible(
-          find.byKey(const ValueKey<String>('today-open-study-space')),
+          find.byKey(const ValueKey<String>('today-dir-study')),
         );
         await tester.tap(
-          find.byKey(const ValueKey<String>('today-open-study-space')),
+          find.byKey(const ValueKey<String>('today-dir-study')),
         );
         await tester.pumpAndSettle();
         expect(find.text(AppStrings.studySpaceTitle), findsOneWidget);
@@ -625,8 +625,9 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(alarmScheduler.emergencyStopCalled, isTrue);
-        // Quay lại Hôm nay vẫn thấy nút Quay lại phiên học đang mở
-        expect(find.text('Quay lại phiên học'), findsOneWidget);
+        // Quay lại Hôm nay vẫn thấy ô Không gian học duy nhất báo trạng thái đang mở
+        expect(find.byKey(const ValueKey<String>('today-dir-study')), findsOneWidget);
+        expect(find.textContaining('Đang mở · '), findsOneWidget);
       },
     );
 

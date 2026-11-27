@@ -242,7 +242,7 @@ void main() {
       await tester
           .tap(find.byKey(const ValueKey<String>('today-dir-practice')));
       await tester.pumpAndSettle();
-      expect(find.text('Tiến độ học tập riêng tư'), findsOneWidget);
+      expect(find.text('Tiến độ học tập'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

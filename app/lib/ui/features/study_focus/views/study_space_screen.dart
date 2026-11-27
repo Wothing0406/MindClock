@@ -5,6 +5,7 @@ import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../data/services/method_channel_study_speech_gateway.dart';
 import '../../../../data/services/method_channel_study_voice_input.dart';
 import '../../../../domain/models/community_models.dart';
+import '../../../../domain/models/daily_todo_task.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/subject_catalog.dart';
@@ -59,6 +60,10 @@ class StudySpaceScreen extends StatefulWidget {
   State<StudySpaceScreen> createState() => _StudySpaceScreenState();
 }
 
+enum _StudyEntryBranch { solo, withAi, withFriends }
+
+enum _StudyStartScheduleMode { startNow, scheduleLater }
+
 class _StudySpaceScreenState extends State<StudySpaceScreen>
     with WidgetsBindingObserver {
   final TextEditingController _customTaskController = TextEditingController();
@@ -69,6 +74,12 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   final TextEditingController _personalizedTopicController =
       TextEditingController();
   String? _selectedPersonalizedSubject;
+  late _StudyEntryBranch _entryBranch;
+  _StudyStartScheduleMode _scheduleMode = _StudyStartScheduleMode.startNow;
+  int _scheduleStartMinutes = 20 * 60;
+  String? _scheduleSavedBannerVi;
+  String? _attachedQuestionPhotoName;
+  String? _photoInputMessageVi;
   bool _socraticStepLockEnabled = false;
   String? _socraticLockWarningVi;
   bool _microCheckExpanded = false;
@@ -95,6 +106,13 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   @override
   void initState() {
     super.initState();
+    if (widget.initialRoom != null) {
+      _entryBranch = _StudyEntryBranch.withFriends;
+    } else if (widget.studyViewModel.draftRoomMode == StudyRoomMode.solo) {
+      _entryBranch = _StudyEntryBranch.solo;
+    } else {
+      _entryBranch = _StudyEntryBranch.withAi;
+    }
     _speech = StudySpeechViewModel(
         gateway: widget.speechGateway ??
             MethodChannelStudySpeechGateway.withAudio(
@@ -123,6 +141,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
 
   void _changeRoom(StudyRoomDetail? room) {
     _speech.stop();
+    if (room != null) {
+      _entryBranch = _StudyEntryBranch.withFriends;
+    }
     _roomVm.attach(room);
   }
 
@@ -398,18 +419,101 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   }
 
   String _headerScopeLabel(StudyFocusViewModel vm) {
+    if (_activeMeetRoom != null ||
+        (vm.activeSnapshot == null &&
+            _entryBranch == _StudyEntryBranch.withFriends)) {
+      return 'Học cùng bạn · Mic & camera tắt mặc định';
+    }
     final StudyRoomMode activeMode =
         vm.activeSnapshot?.roomMode ?? vm.draftRoomMode;
     if (activeMode == StudyRoomMode.solo) {
       return 'Học một mình · Không có AI';
     }
     if (!vm.hasAiGateway) {
-      return 'Học cùng MindClock AI · Chế độ local';
+      return 'Học cùng MindClock AI · Chế độ trên máy';
     }
     if (vm.isAuthenticated) {
       return 'Học cùng MindClock AI';
     }
     return 'Học cùng MindClock AI · Đăng nhập để hỏi AI';
+  }
+
+  String _formatMinutesOfDay(int minutes) {
+    final int clamped = minutes.clamp(0, 1439);
+    final int h = clamped ~/ 60;
+    final int m = clamped % 60;
+    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _confirmScheduleStudy({
+    required StudyFocusViewModel vm,
+    required String title,
+    required String? subjectCode,
+    required int durationMinutes,
+  }) async {
+    final String cleanTitle = title.trim().isEmpty ? 'Phiên tự học' : title.trim();
+    await widget.guestViewModel.addDailyTodoTask(
+      title: cleanTitle,
+      date: vm.currentTime,
+      startMinutes: _scheduleStartMinutes,
+      durationMinutes: durationMinutes,
+      subjectCode: subjectCode,
+      category: DailyTodoCategory.selfStudy,
+      remindOnTime: true,
+    );
+    if (!mounted) return;
+    setState(() {
+      _scheduleSavedBannerVi =
+          'Đã hẹn giờ "$cleanTitle" lúc ${_formatMinutesOfDay(_scheduleStartMinutes)} trong lịch hôm nay.';
+    });
+  }
+
+  Future<void> _attachQuestionPhotoWithConsent(StudyFocusViewModel vm) async {
+    final String scope = vm.ownerScopeKey;
+    final String? session = vm.activeSnapshot?.sessionId;
+    final bool? approved = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Gửi ảnh đề bài cho câu hỏi này'),
+        content: const Text(
+          'MindClock chỉ đọc ảnh bạn chủ động chọn cho lượt hỏi hiện tại, không bật camera nền và không lưu ảnh bài làm mặc định trên máy chủ.',
+        ),
+        actions: <Widget>[
+          MindClockButton(
+            key: const ValueKey<String>('study-photo-consent-cancel'),
+            label: 'Để sau',
+            variant: MindClockButtonVariant.subtle,
+            onPressed: () => Navigator.pop(dialogContext, false),
+          ),
+          MindClockButton(
+            key: const ValueKey<String>('study-photo-consent-accept'),
+            label: 'Đồng ý chọn ảnh',
+            onPressed: () => Navigator.pop(dialogContext, true),
+          ),
+        ],
+      ),
+    );
+    if (approved != true ||
+        !mounted ||
+        vm.ownerScopeKey != scope ||
+        vm.activeSnapshot?.sessionId != session) {
+      return;
+    }
+    final MediaPickResult res = await _mediaPicker.pickAvatarImage();
+    if (!mounted ||
+        vm.ownerScopeKey != scope ||
+        vm.activeSnapshot?.sessionId != session) {
+      return;
+    }
+    setState(() {
+      if (res.picked) {
+        _attachedQuestionPhotoName = res.displayName ?? 'anh_de_bai.jpg';
+        _photoInputMessageVi =
+            'Đã chọn ảnh $_attachedQuestionPhotoName. Nhập câu hỏi rồi bấm Gửi câu hỏi.';
+      } else if (!res.cancelled && res.errorMessageVi != null) {
+        _photoInputMessageVi = res.errorMessageVi;
+      }
+    });
   }
 
   static const List<Map<String, dynamic>> _microChecks = <Map<String, dynamic>>[
@@ -450,15 +554,30 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     }
     setState(() => _socraticLockWarningVi = null);
     final String rawQ = _aiInputController.text.trim();
-    final String composed = (tried.isNotEmpty && rawQ.isNotEmpty)
-        ? '[Bước đã tự thử: $tried] $rawQ'
-        : _aiInputController.text;
+    final String effectiveRawQ = (rawQ.isEmpty && _attachedQuestionPhotoName != null)
+        ? 'Nhờ gợi mở cách tiếp cận đề trong ảnh đã chọn.'
+        : rawQ;
+    final List<String> prefixes = <String>[
+      if (_attachedQuestionPhotoName != null)
+        '[Ảnh đề bài đã chọn: $_attachedQuestionPhotoName]',
+      if (tried.isNotEmpty) '[Bước đã tự thử: $tried]',
+    ];
+    final String composed = prefixes.isNotEmpty && effectiveRawQ.isNotEmpty
+        ? '${prefixes.join(' ')} $effectiveRawQ'
+        : effectiveRawQ;
     final bool ok = await vm.requestAiHelp(
       questionText: composed,
       gradeLevel: widget.guestViewModel.profile.gradeLevel,
+      goalLabel: widget.guestViewModel.profile.goalLabel,
+      fallbackSubjectCode:
+          widget.guestViewModel.profile.selectedSubjectCodes.firstOrNull,
     );
     if (ok && mounted) {
       _aiInputController.clear();
+      setState(() {
+        _attachedQuestionPhotoName = null;
+        _photoInputMessageVi = null;
+      });
     }
   }
 
@@ -469,6 +588,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     final bool ok = await vm.requestAiHelp(
       questionText: textToSend,
       gradeLevel: widget.guestViewModel.profile.gradeLevel,
+      goalLabel: widget.guestViewModel.profile.goalLabel,
+      fallbackSubjectCode:
+          widget.guestViewModel.profile.selectedSubjectCodes.firstOrNull,
     );
     if (ok && mounted) {
       _aiInputController.clear();
@@ -516,7 +638,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                     key: const ValueKey<String>('study-scope-pill'),
                     label: _headerScopeLabel(vm),
                   ),
-                  if (vm.statusBannerVi != null) ...<Widget>[
+                  if (vm.statusBannerVi != null &&
+                      _activeMeetRoom == null) ...<Widget>[
                     SizedBox(height: mc.space12),
                     MindClockNoticeBanner(
                       message: vm.statusBannerVi!,
@@ -524,18 +647,26 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                     ),
                   ],
                   SizedBox(height: mc.space16),
-                  if (_roomVm.message != null) ...[
+                  if (_roomVm.message != null) ...<Widget>[
                     MindClockNoticeBanner(message: _roomVm.message!),
                     SizedBox(height: mc.space8),
                   ],
-                  if (_activeMeetRoom != null) ...[
+                  if (_activeMeetRoom != null) ...<Widget>[
                     StudyRoomSessionPanel(
-                        viewModel: _roomVm,
-                        repository: _communityRepo,
-                        animateAi: vm.enablePeriodicTicker),
-                    SizedBox(height: mc.space16),
-                  ],
-                  if (snapshot == null)
+                      viewModel: _roomVm,
+                      repository: _communityRepo,
+                      animateAi: vm.enablePeriodicTicker,
+                    ),
+                    if (snapshot != null && !snapshot.status.isTerminal) ...<Widget>[
+                      SizedBox(height: mc.space12),
+                      MindClockNoticeBanner(
+                        key: const ValueKey<String>('study-room-bg-timer-banner'),
+                        message:
+                            'Đồng hồ cá nhân (${snapshot.taskTitle}) vẫn đếm nền khi bạn học cùng phòng.',
+                        isWarm: false,
+                      ),
+                    ],
+                  ] else if (snapshot == null)
                     _buildSetupAndHistory(context, mc, vm, reduceMotion)
                   else if (snapshot.status.isTerminal)
                     _buildSummaryAndSave(context, mc, vm, snapshot)
@@ -551,6 +682,279 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     );
   }
 
+  Widget _buildModeSelectorCard(MindClockTheme mc, StudyFocusViewModel vm) {
+    final List<
+        ({
+          _StudyEntryBranch branch,
+          String key,
+          String title,
+          String subtitle,
+          String? badge,
+        })> options = <({
+      _StudyEntryBranch branch,
+      String key,
+      String title,
+      String subtitle,
+      String? badge,
+    })>[
+      (
+        branch: _StudyEntryBranch.solo,
+        key: 'study-mode-solo',
+        title: 'Học một mình',
+        subtitle: 'Đồng hồ tập trung, mục tiêu và ghi chú chỗ vướng; không bật AI.',
+        badge: null,
+      ),
+      (
+        branch: _StudyEntryBranch.withAi,
+        key: 'study-mode-ai',
+        title: 'Học cùng MindClock AI',
+        subtitle: 'Phiên hỏi đáp gợi mở từng bước theo môn và lớp; không giải hộ.',
+        badge: 'MindClock AI',
+      ),
+      (
+        branch: _StudyEntryBranch.withFriends,
+        key: 'study-mode-friends',
+        title: 'Học cùng bạn',
+        subtitle: 'Sảnh phòng học bạn bè, mic và camera tắt mặc định.',
+        badge: null,
+      ),
+    ];
+
+    return MindClockCard(
+      key: const ValueKey<String>('study-three-modes-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Chọn cách học', style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space8),
+          ...options.map((item) {
+            final bool selected = _entryBranch == item.branch;
+            return Padding(
+              padding: EdgeInsets.only(bottom: mc.space8),
+              child: MindClockPressable(
+                key: ValueKey<String>(item.key),
+                selected: selected,
+                semanticLabel: '${item.title}. ${item.subtitle}',
+                borderRadius: BorderRadius.circular(mc.radiusControl),
+                onPressed: () {
+                  setState(() {
+                    _entryBranch = item.branch;
+                    _scheduleSavedBannerVi = null;
+                  });
+                  if (item.branch == _StudyEntryBranch.solo) {
+                    vm.setRoomMode(StudyRoomMode.solo);
+                  } else if (item.branch == _StudyEntryBranch.withAi) {
+                    vm.setRoomMode(StudyRoomMode.withAi);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(mc.space12),
+                  decoration: BoxDecoration(
+                    color: selected ? mc.primarySoft : mc.paper,
+                    borderRadius: BorderRadius.circular(mc.radiusControl),
+                    border: Border.all(
+                      color: selected ? mc.primary : mc.outline,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Wrap(
+                        spacing: mc.space8,
+                        runSpacing: mc.space4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: <Widget>[
+                          Text(item.title, style: mc.bodyStrongStyle),
+                          if (item.badge != null)
+                            MindClockStatusPill(label: item.badge!),
+                        ],
+                      ),
+                      SizedBox(height: mc.space4),
+                      Text(item.subtitle, style: mc.captionStyle),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStartOrScheduleSection({
+    required BuildContext context,
+    required MindClockTheme mc,
+    required StudyFocusViewModel vm,
+    required String scheduleTitle,
+    required String? subjectCode,
+    required int durationMinutes,
+    required Widget startNowButton,
+  }) {
+    final bool isSchedule =
+        _scheduleMode == _StudyStartScheduleMode.scheduleLater;
+    return MindClockCard(
+      key: const ValueKey<String>('study-start-or-schedule-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Thời điểm bắt đầu', style: mc.sectionTitleStyle),
+          SizedBox(height: mc.space8),
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            children: <Widget>[
+              _SelectableChip(
+                key: const ValueKey<String>('study-timing-start-now'),
+                label: 'Bắt đầu ngay',
+                selected: !isSchedule,
+                onTap: () => setState(() {
+                  _scheduleMode = _StudyStartScheduleMode.startNow;
+                  _scheduleSavedBannerVi = null;
+                }),
+              ),
+              _SelectableChip(
+                key: const ValueKey<String>('study-timing-schedule-later'),
+                label: 'Hẹn giờ',
+                selected: isSchedule,
+                onTap: () => setState(() {
+                  _scheduleMode = _StudyStartScheduleMode.scheduleLater;
+                  _scheduleSavedBannerVi = null;
+                }),
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space12),
+          if (!isSchedule)
+            startNowButton
+          else ...<Widget>[
+            Text(
+              'Chọn giờ hẹn trong ngày (chỉ tạo lịch khi bạn bấm xác nhận):',
+              style: mc.captionStyle,
+            ),
+            SizedBox(height: mc.space8),
+            Wrap(
+              spacing: mc.space8,
+              runSpacing: mc.space8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: <Widget>[
+                MindClockButton(
+                  key: const ValueKey<String>('study-schedule-minus-15'),
+                  label: '-15 phút',
+                  icon: MindClockIconKind.minus,
+                  variant: MindClockButtonVariant.subtle,
+                  expand: false,
+                  onPressed: () => setState(() {
+                    _scheduleStartMinutes =
+                        (_scheduleStartMinutes - 15 + 1440) % 1440;
+                  }),
+                ),
+                Text(
+                  _formatMinutesOfDay(_scheduleStartMinutes),
+                  key: const ValueKey<String>('study-schedule-time-display'),
+                  style: mc.sectionTitleStyle,
+                ),
+                MindClockButton(
+                  key: const ValueKey<String>('study-schedule-plus-15'),
+                  label: '+15 phút',
+                  icon: MindClockIconKind.plus,
+                  variant: MindClockButtonVariant.subtle,
+                  expand: false,
+                  onPressed: () => setState(() {
+                    _scheduleStartMinutes = (_scheduleStartMinutes + 15) % 1440;
+                  }),
+                ),
+              ],
+            ),
+            if (_scheduleSavedBannerVi != null) ...<Widget>[
+              SizedBox(height: mc.space8),
+              MindClockNoticeBanner(
+                key: const ValueKey<String>('study-schedule-saved-banner'),
+                message: _scheduleSavedBannerVi!,
+                isWarm: false,
+              ),
+            ],
+            SizedBox(height: mc.space12),
+            MindClockButton(
+              key: const ValueKey<String>('study-confirm-schedule-button'),
+              label: 'Xác nhận hẹn giờ học',
+              icon: MindClockIconKind.calendar,
+              onPressed: () => _confirmScheduleStudy(
+                vm: vm,
+                title: scheduleTitle,
+                subjectCode: subjectCode,
+                durationMinutes: durationMinutes,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFriendsSetup(
+    BuildContext context,
+    MindClockTheme mc,
+    StudyFocusViewModel vm,
+  ) {
+    final List<String> profileSubjects = _availablePersonalSubjects(vm);
+    final String firstSubject = profileSubjects.first;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        MindClockCard(
+          key: const ValueKey<String>('study-friends-setup-card'),
+          highlighted: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Phòng học cùng bạn', style: mc.sectionTitleStyle),
+              SizedBox(height: mc.space8),
+              Text(
+                'Tạo phòng mới, vào bằng mã mời hoặc ghép nhóm theo môn và lớp bạn đang học.',
+                style: mc.captionStyle,
+              ),
+              SizedBox(height: mc.space12),
+              const MindClockNoticeBanner(
+                key: ValueKey<String>('study-friends-media-notice'),
+                message:
+                    'Mic và camera tắt mặc định. Phòng hiện đồng bộ thành viên và trạng thái học, chưa truyền cuộc gọi âm thanh/video trực tiếp.',
+                isWarm: false,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: mc.space16),
+        _buildStartOrScheduleSection(
+          context: context,
+          mc: mc,
+          vm: vm,
+          scheduleTitle:
+              'Học cùng bạn môn ${SubjectCatalog.nameFor(firstSubject)}',
+          subjectCode: firstSubject,
+          durationMinutes: 45,
+          startNowButton: MindClockButton(
+            key: const ValueKey<String>('study-open-community-hub'),
+            label: 'Mở sảnh phòng học cùng bạn',
+            icon: MindClockIconKind.user,
+            onPressed: () async {
+              final StudyRoomDetail? joined = await showStudyCommunityHub(
+                context: context,
+                repository: _communityRepo,
+                currentProfile: widget.guestViewModel.profile,
+              );
+              if (joined != null && mounted) {
+                _changeRoom(joined);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSetupAndHistory(
     BuildContext context,
     MindClockTheme mc,
@@ -563,101 +967,21 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
       now: vm.currentTime,
     );
 
+    if (_entryBranch == _StudyEntryBranch.withFriends) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _buildModeSelectorCard(mc, vm),
+          SizedBox(height: mc.space16),
+          _buildFriendsSetup(context, mc, vm),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (_activeMeetRoom == null) ...<Widget>[
-          MindClockCard(
-            key: const ValueKey<String>('study-community-entry-card'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Phòng học Meet công khai & AI ghép nhóm',
-                  style: mc.sectionTitleStyle,
-                ),
-                SizedBox(height: mc.space4),
-                Text(
-                  'Quét phòng công khai đang mở, tìm bạn theo trình độ/môn hoặc mở phòng lưới Google Meet cùng avatar 2D MindClock AI.',
-                  style: mc.captionStyle,
-                ),
-                SizedBox(height: mc.space12),
-                MindClockButton(
-                  key: const ValueKey<String>('study-open-community-hub'),
-                  label: 'Mở Phòng Meet & Tìm bạn học',
-                  icon: MindClockIconKind.user,
-                  variant: MindClockButtonVariant.secondary,
-                  onPressed: () async {
-                    final StudyRoomDetail? joined = await showStudyCommunityHub(
-                      context: context,
-                      repository: _communityRepo,
-                      currentProfile: widget.guestViewModel.profile,
-                    );
-                    if (joined != null && mounted) {
-                      _changeRoom(joined);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: mc.space16),
-        ],
-        MindClockCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('Chọn chế độ phòng học', style: mc.sectionTitleStyle),
-              SizedBox(height: mc.space8),
-              ...StudyRoomMode.values.map((StudyRoomMode mode) {
-                final bool selected = vm.draftRoomMode == mode;
-                final String keyName = mode == StudyRoomMode.solo
-                    ? 'study-mode-solo'
-                    : 'study-mode-ai';
-                return Padding(
-                  padding: EdgeInsets.only(bottom: mc.space8),
-                  child: MindClockPressable(
-                    key: ValueKey<String>(keyName),
-                    selected: selected,
-                    semanticLabel: '${mode.labelVi}. ${mode.shortBehaviorVi}',
-                    borderRadius: BorderRadius.circular(mc.radiusControl),
-                    onPressed: () => vm.setRoomMode(mode),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(mc.space12),
-                      decoration: BoxDecoration(
-                        color: selected ? mc.primarySoft : mc.paper,
-                        borderRadius: BorderRadius.circular(mc.radiusControl),
-                        border: Border.all(
-                          color: selected ? mc.primary : mc.outline,
-                          width: selected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Wrap(
-                            spacing: mc.space8,
-                            runSpacing: mc.space4,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: <Widget>[
-                              Text(mode.labelVi, style: mc.bodyStrongStyle),
-                              if (mode == StudyRoomMode.withAi)
-                                const MindClockStatusPill(
-                                    label: 'MindClock AI'),
-                            ],
-                          ),
-                          SizedBox(height: mc.space4),
-                          Text(mode.shortBehaviorVi, style: mc.captionStyle),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
+        _buildModeSelectorCard(mc, vm),
         SizedBox(height: mc.space16),
         MindClockCard(
           highlighted: true,
@@ -954,26 +1278,36 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
         MindClockNoticeBanner(
           key: const ValueKey<String>('study-prestart-review'),
           message:
-              'Xem lại trước khi bắt đầu: ${vm.draftRoomMode.labelVi} · ${vm.draftDurationMinutes} phút · ${vm.draftCadence.labelVi} · Cam & mic tắt mặc định.',
+              'Xem lại: ${vm.draftRoomMode.labelVi} · ${vm.draftDurationMinutes} phút · ${vm.draftCadence.labelVi} · Cam & mic tắt mặc định.',
           isWarm: false,
         ),
         SizedBox(height: mc.space8),
         MindClockNoticeBanner(
           message: vm.draftRoomMode == StudyRoomMode.solo
               ? 'Chế độ Học một mình: màn học chỉ hiện đồng hồ, mục tiêu và ghi chú; không khởi tạo AI.'
-              : (vm.hasAiGateway
-                  ? 'Camera và micro luôn tắt ở màn này. Khi đăng nhập và bấm gửi, phần Hỏi MindClock đi qua máy chủ backend (tối đa 3 lượt gần nhất); bộ đếm vẫn chạy local.'
-                  : AppStrings.studyNoCameraAiScopeNotice),
+              : 'Camera và micro luôn tắt ở màn này. Khi đăng nhập và bấm gửi, MindClock AI gợi mở từng bước theo môn/lớp đã chọn.',
           isWarm: false,
         ),
-        SizedBox(height: mc.space12),
-        MindClockButton(
-          key: const ValueKey<String>('study-start-button'),
-          label: AppStrings.studyStartCta,
-          icon: MindClockIconKind.play,
-          onPressed: () {
-            vm.startSession(overrideTaskTitle: _customTaskController.text);
-          },
+        SizedBox(height: mc.space16),
+        _buildStartOrScheduleSection(
+          context: context,
+          mc: mc,
+          vm: vm,
+          scheduleTitle: _customTaskController.text.trim().isNotEmpty
+              ? _customTaskController.text.trim()
+              : (vm.draftTaskTitle.trim().isNotEmpty
+                  ? vm.draftTaskTitle.trim()
+                  : 'Học tự do'),
+          subjectCode: vm.draftSubjectCode ?? _availablePersonalSubjects(vm).first,
+          durationMinutes: vm.draftDurationMinutes,
+          startNowButton: MindClockButton(
+            key: const ValueKey<String>('study-start-button'),
+            label: AppStrings.studyStartCta,
+            icon: MindClockIconKind.play,
+            onPressed: () {
+              vm.startSession(overrideTaskTitle: _customTaskController.text);
+            },
+          ),
         ),
         if (vm.history.isNotEmpty) ...<Widget>[
           SizedBox(height: mc.space20),
@@ -1205,17 +1539,38 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             vm.finishSession(early: early);
           },
         ),
-        if (snapshot.roomMode == StudyRoomMode.withAi) ...<Widget>[
+        if (snapshot.roomMode == StudyRoomMode.solo) ...<Widget>[
           SizedBox(height: mc.space16),
-          _buildMicroCheckCard(context, mc, vm),
+          MindClockCard(
+            key: const ValueKey<String>('study-solo-stuck-card'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('Ghi chú chỗ vướng mắc', style: mc.sectionTitleStyle),
+                SizedBox(height: mc.space8),
+                TextField(
+                  key: const ValueKey<String>('study-solo-stuck-note-input'),
+                  controller: _stuckController,
+                  onChanged: (String text) =>
+                      vm.updateReflectionNotes(stuck: text),
+                  minLines: 1,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Ý cần tra cứu hoặc xem lại sau phiên',
+                    hintText: 'Ví dụ: Xem lại điều kiện xác định của hàm logarit...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(mc.radiusControl),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else if (snapshot.roomMode == StudyRoomMode.withAi) ...<Widget>[
           SizedBox(height: mc.space16),
           _buildAiHelpCard(context, mc, vm, snapshot),
           SizedBox(height: mc.space16),
-          _buildPersonalizedPracticeCard(context, mc, vm),
-          if (snapshot.cadence != StudyCadence.deepSilent) ...<Widget>[
-            SizedBox(height: mc.space16),
-            _buildGeminiLiveOptInCard(context, mc, vm),
-          ],
+          _buildMicroCheckCard(context, mc, vm),
         ],
         SizedBox(height: mc.space16),
         _buildAmbientAudioCard(
@@ -1393,7 +1748,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 ),
                 SizedBox(height: mc.space8),
                 Text(
-                  'Gia sư Socratic (không giải hộ): chỉ gợi mở 1 bước để bạn tự nghĩ tiếp.',
+                  'MindClock AI gợi mở từng bước theo môn và lớp bạn chọn · Không giải hộ và không quan sát người học.',
                   textAlign: TextAlign.center,
                   style: mc.captionStyle.copyWith(color: mc.ink),
                 ),
@@ -1471,8 +1826,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             SizedBox(height: mc.space8),
             const MindClockNoticeBanner(
               key: ValueKey<String>('study-ai-loading-banner'),
-              message:
-                  'Đang gửi câu hỏi tới MindClock qua backend (/v1/study/help)...',
+              message: 'MindClock AI đang phân tích và chuẩn bị gợi ý...',
               isWarm: false,
             ),
           ] else if (hasRetryableError && vm.aiErrorVi != null) ...<Widget>[
@@ -1549,22 +1903,63 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
               ),
             ),
           ),
-          if (snapshot.cadence != StudyCadence.deepSilent &&
-              vm.isAuthenticated &&
-              snapshot.status == StudyFocusStatus.running) ...<Widget>[
+          if (snapshot.status == StudyFocusStatus.running) ...<Widget>[
             SizedBox(height: mc.space8),
-            MindClockButton(
-                key: const ValueKey('study-ai-voice-input'),
-                label: _voiceInputPending
-                    ? 'Đang nhập bằng giọng nói...'
-                    : 'Nói câu hỏi',
-                icon: MindClockIconKind.microphone,
-                variant: MindClockButtonVariant.secondary,
-                onPressed: _voiceInputPending || isLoading
-                    ? null
-                    : () => _askByVoice(vm)),
-            if (_voiceInputMessage != null)
+            Wrap(
+              spacing: mc.space8,
+              runSpacing: mc.space8,
+              children: <Widget>[
+                MindClockButton(
+                  key: const ValueKey<String>('study-ai-photo-consent-btn'),
+                  label: _attachedQuestionPhotoName != null
+                      ? 'Đổi ảnh ($_attachedQuestionPhotoName)'
+                      : 'Gửi ảnh đề bài',
+                  icon: MindClockIconKind.book,
+                  variant: MindClockButtonVariant.secondary,
+                  expand: false,
+                  onPressed: isLoading
+                      ? null
+                      : () => _attachQuestionPhotoWithConsent(vm),
+                ),
+                if (_attachedQuestionPhotoName != null)
+                  MindClockButton(
+                    key: const ValueKey<String>('study-ai-photo-clear-btn'),
+                    label: 'Bỏ ảnh',
+                    variant: MindClockButtonVariant.subtle,
+                    expand: false,
+                    onPressed: () => setState(() {
+                      _attachedQuestionPhotoName = null;
+                      _photoInputMessageVi = null;
+                    }),
+                  ),
+                if (snapshot.cadence != StudyCadence.deepSilent &&
+                    vm.isAuthenticated)
+                  MindClockButton(
+                    key: const ValueKey<String>('study-ai-voice-input'),
+                    label: _voiceInputPending
+                        ? 'Đang nhập bằng giọng nói...'
+                        : 'Nói câu hỏi',
+                    icon: MindClockIconKind.microphone,
+                    variant: MindClockButtonVariant.secondary,
+                    expand: false,
+                    onPressed: _voiceInputPending || isLoading
+                        ? null
+                        : () => _askByVoice(vm),
+                  ),
+              ],
+            ),
+            if (_photoInputMessageVi != null) ...<Widget>[
+              SizedBox(height: mc.space4),
+              Text(
+                _photoInputMessageVi!,
+                key: const ValueKey<String>('study-ai-photo-status'),
+                style: mc.captionStyle,
+              ),
+            ],
+            if (_voiceInputMessage != null) ...<Widget>[
+              SizedBox(height: mc.space4),
               Text(_voiceInputMessage!, style: mc.captionStyle),
+            ],
           ],
           SizedBox(height: mc.space12),
           MindClockButton(
@@ -1733,7 +2128,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text(
-                'Câu hỏi cá nhân hóa theo môn & lớp',
+                'Tạo câu luyện (tùy chọn)',
                 style: mc.sectionTitleStyle,
               ),
               MindClockStatusPill(
@@ -1744,7 +2139,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           ),
           SizedBox(height: mc.space8),
           Text(
-            'Tạo bản nháp luyện tập vừa sức theo trình độ $gradeLabel và môn bạn đã chọn (0 XP, không thay ngân hàng báo thức đã duyệt).',
+            'Tạo một câu luyện vừa sức theo $gradeLabel và môn trong hồ sơ khi bạn muốn khởi động trước phiên học.',
             style: mc.captionStyle,
           ),
           SizedBox(height: mc.space12),
@@ -1798,7 +2193,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    '${SubjectCatalog.nameFor(effectiveSubject)} · ${question.gradeBand} · ${question.modelVersion}',
+                    '${SubjectCatalog.nameFor(effectiveSubject)} · ${question.gradeBand}',
                     style: mc.chipLabelStyle,
                   ),
                   SizedBox(height: mc.space4),
@@ -1814,7 +2209,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                   ],
                   SizedBox(height: mc.space4),
                   Text(
-                    'Bản nháp cá nhân · ${question.xpAwarded} XP',
+                    'Câu luyện tự do trong phiên học',
                     style: mc.captionStyle,
                   ),
                 ],
@@ -1824,9 +2219,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('study-personalized-generate-button'),
-            label: isLoading
-                ? 'Đang tạo câu hỏi cá nhân...'
-                : 'Tạo câu hỏi cá nhân hóa',
+            label: isLoading ? 'Đang tạo câu luyện...' : 'Tạo câu luyện',
             icon: MindClockIconKind.book,
             variant: MindClockButtonVariant.secondary,
             onPressed: isLoading
@@ -1877,7 +2270,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           ),
           SizedBox(height: mc.space8),
           Text(
-            'Chỉ mở phiên khi bạn đồng ý rõ ràng. Máy chủ cấp token ngắn hạn 1 lần (gemini-3.8-live), không lưu âm thanh nền và không đặt API key ở ứng dụng.',
+            'Chỉ mở phiên thoại khi bạn chủ động đồng ý. Không lưu âm thanh nền khi dừng phiên.',
             style: mc.captionStyle,
           ),
           SizedBox(height: mc.space12),
@@ -1910,7 +2303,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Đã cấp phiên ${token.model} (${token.isMock ? "ngoại tuyến" : "ephemeral token"})',
+                    token.isMock
+                        ? 'Đã mở phiên thoại thử nghiệm'
+                        : 'Đã mở phiên thoại trực tiếp',
                     style: mc.bodyStrongStyle,
                   ),
                   SizedBox(height: mc.space4),

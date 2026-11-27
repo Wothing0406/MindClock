@@ -68,7 +68,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Mở Phòng Meet & Tìm bạn học
+      // 1. Chọn nhánh Học cùng bạn -> Mở sảnh phòng học cùng bạn
+      await tester.ensureVisible(
+        find.byKey(const ValueKey<String>('study-mode-friends')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey<String>('study-mode-friends')),
+      );
+      await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const ValueKey<String>('study-open-community-hub')),
       );

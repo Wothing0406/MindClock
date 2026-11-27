@@ -419,8 +419,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     final String rawTitle = (overrideTaskTitle ?? _draftTaskTitle).trim();
     final String resolvedTitle =
         rawTitle.isEmpty ? StudyTaskChoice.freeStudy.title : rawTitle;
-    final String? resolvedSubject =
-        rawTitle.isEmpty ? null : (overrideSubjectCode ?? _draftSubjectCode);
+    final String? resolvedSubject = overrideSubjectCode ?? _draftSubjectCode;
 
     final int plannedEndMs =
         nowMs + Duration(minutes: _draftDurationMinutes).inMilliseconds;
@@ -538,6 +537,8 @@ class StudyFocusViewModel extends ChangeNotifier {
   Future<bool> requestAiHelp({
     required String questionText,
     String? gradeLevel,
+    String? goalLabel,
+    String? fallbackSubjectCode,
   }) async {
     final String cleanQuestion = questionText.trim();
     if (cleanQuestion.isEmpty) return false;
@@ -596,10 +597,15 @@ class StudyFocusViewModel extends ChangeNotifier {
       final List<StudyHelpTurn> clippedTurns = _aiTurns.length <= 3
           ? List<StudyHelpTurn>.from(_aiTurns)
           : _aiTurns.sublist(_aiTurns.length - 3);
+      final String cleanGoal = (goalLabel ?? '').trim();
+      final String effectiveTaskTitle = (cleanGoal.isNotEmpty &&
+              !refreshed.taskTitle.contains(cleanGoal))
+          ? '${refreshed.taskTitle} · Mục tiêu: $cleanGoal'
+          : refreshed.taskTitle;
       final StudyHelpResponse response = await gateway.requestHelp(
         sessionId: targetSessionId,
-        taskTitle: refreshed.taskTitle,
-        subjectCode: refreshed.subjectCode,
+        taskTitle: effectiveTaskTitle,
+        subjectCode: refreshed.subjectCode ?? fallbackSubjectCode,
         gradeLevel: gradeLevel ?? _gradeLevel,
         questionText: cleanQuestion,
         recentTurns: clippedTurns,

@@ -604,7 +604,13 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
   bool _loading = true;
   bool _showCreateRoomForm = false;
   bool _newRoomPublic = true;
-  bool _newRoomAiEnabled = true;
+  bool _newRoomAiEnabled = false;
+  String? _newRoomSubjectCode;
+
+  List<String> get _profileSubjectCodes =>
+      widget.currentProfile.selectedSubjectCodes.isNotEmpty
+          ? widget.currentProfile.selectedSubjectCodes
+          : const <String>['math'];
 
   List<PublicStudyRoomSummary> _publicRooms = <PublicStudyRoomSummary>[];
   List<PublicStudentProfile> _searchResults = <PublicStudentProfile>[];
@@ -709,9 +715,11 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
     }
     setState(() => _loading = true);
     try {
-      final String subj = widget.currentProfile.selectedSubjectCodes.isNotEmpty
-          ? widget.currentProfile.selectedSubjectCodes.first
-          : 'math';
+      final List<String> allowed = _profileSubjectCodes;
+      final String subj = (_newRoomSubjectCode != null &&
+              allowed.contains(_newRoomSubjectCode))
+          ? _newRoomSubjectCode!
+          : allowed.first;
       final StudyRoomDetail detail = await widget.repository.createRoom(
         title: title,
         subjectCode: subj,
@@ -939,6 +947,32 @@ class _StudyCommunityHubBodyState extends State<_StudyCommunityHubBody> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text('Tạo phòng học nhóm mới', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                Text('Môn phòng học (theo hồ sơ của bạn)',
+                    style: mc.captionStyle),
+                SizedBox(height: mc.space4),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    for (final String code in _profileSubjectCodes)
+                      MindClockPressable(
+                        key: ValueKey<String>('community-create-subject-$code'),
+                        selected: (_newRoomSubjectCode ??
+                                _profileSubjectCodes.first) ==
+                            code,
+                        semanticLabel: SubjectCatalog.nameFor(code),
+                        onPressed: () =>
+                            setState(() => _newRoomSubjectCode = code),
+                        child: MindClockStatusPill(
+                          label: SubjectCatalog.nameFor(code),
+                          accentWarm: (_newRoomSubjectCode ??
+                                  _profileSubjectCodes.first) ==
+                              code,
+                        ),
+                      ),
+                  ],
+                ),
                 SizedBox(height: mc.space8),
                 TextField(
                   key: const ValueKey<String>('community-room-title-input'),

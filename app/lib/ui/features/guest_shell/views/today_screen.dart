@@ -900,10 +900,6 @@ class _TodayScreenState extends State<TodayScreen> {
               ],
             ),
           ],
-          if (widget.onOpenStudySpace != null) ...<Widget>[
-            SizedBox(height: mc.space16),
-            _buildStudySpaceEntryCard(context, mc),
-          ],
           if (widget.communityRepository != null) ...<Widget>[
             SizedBox(height: mc.space16),
             Text(
@@ -916,7 +912,7 @@ class _TodayScreenState extends State<TodayScreen> {
               refreshTick: _petRefreshTick,
             ),
           ],
-          const SizedBox(height: 76),
+          const SizedBox(height: 96),
         ],
       ),
     );
@@ -976,8 +972,10 @@ class _TodayScreenState extends State<TodayScreen> {
         key: 'today-dir-study',
         title: 'Không gian học',
         subtitle: (activeStudy != null && activeStudy.status.isOngoing)
-            ? 'Đang mở · ${activeStudy.taskTitle}'
-            : 'Tự học · Đốt nến · AI',
+            ? (activeStudy.status == StudyFocusStatus.interrupted
+                ? 'Tạm gián đoạn · ${activeStudy.taskTitle}'
+                : 'Đang mở · ${activeStudy.taskTitle}')
+            : 'Một mình · Cùng AI · Cùng bạn',
         icon: MindClockIconKind.clock,
         onTap: widget.onOpenStudySpace ??
             (widget.onSelectTab != null ? () => widget.onSelectTab!(1) : null),
@@ -1120,50 +1118,6 @@ class _TodayScreenState extends State<TodayScreen> {
               }
               return Column(children: rows);
             },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudySpaceEntryCard(BuildContext context, MindClockTheme mc) {
-    final StudyFocusSessionSnapshot? active =
-        widget.studyViewModel?.activeSnapshot;
-    final List<StudyTaskChoice> suggestions = StudyTaskChoice.buildSuggestions(
-      profile: widget.viewModel.profile,
-      timetable: widget.viewModel.timetable,
-      now: widget.studyViewModel?.currentTime ?? DateTime.now(),
-    );
-    final String suggestedTitle = suggestions.first.title;
-    final bool hasOngoing = active != null && active.status.isOngoing;
-    final String ctaLabel;
-    if (active != null && active.status == StudyFocusStatus.interrupted) {
-      ctaLabel = 'Mở phiên đã gián đoạn';
-    } else if (hasOngoing) {
-      ctaLabel = 'Quay lại phiên học';
-    } else {
-      ctaLabel = AppStrings.studyStartCta;
-    }
-
-    return MindClockCard(
-      highlighted: hasOngoing,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(AppStrings.studySpaceTitle, style: mc.sectionTitleStyle),
-          SizedBox(height: mc.space8),
-          Text(
-            hasOngoing
-                ? 'Đang mở: ${active.taskTitle} (${formatDurationClock(widget.studyViewModel!.remainingSeconds)})'
-                : 'Gợi ý hôm nay: $suggestedTitle · Bấm để bắt đầu tập trung.',
-            style: mc.bodyStyle,
-          ),
-          SizedBox(height: mc.space12),
-          MindClockButton(
-            key: const ValueKey<String>('today-open-study-space'),
-            label: ctaLabel,
-            icon: MindClockIconKind.play,
-            onPressed: widget.onOpenStudySpace,
           ),
         ],
       ),
