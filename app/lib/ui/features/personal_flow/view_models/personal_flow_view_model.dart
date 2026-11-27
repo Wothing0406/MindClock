@@ -516,6 +516,24 @@ class PersonalFlowViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    final String today = _formatYmd(_nowProvider());
+    final saved = await _draftStore.loadActiveChallenge(
+      ownerScopeKey: _authSession.ownerScopeKey,
+      alarmId: alarmId,
+      localDate: today,
+    );
+    if (saved != null &&
+        saved.session.state != 'completed' &&
+        saved.session.state != 'abandoned') {
+      _activeAlarmId = alarmId;
+      _currentQuestion = saved.question;
+      _activeSession = saved.session;
+      _challengeModeSession = saved.challengeMode;
+      _lastResult = null;
+      _errorMessageVi = null;
+      notifyListeners();
+      return;
+    }
     await startSession(
       alarmId: alarmId,
       subjectCode: subjectCode,
@@ -590,6 +608,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
       );
       _currentQuestion = question;
       _activeSession = session;
+      if (_activeAlarmId != null) {
+        await _draftStore.saveActiveChallenge(
+          ownerScopeKey: _authSession.ownerScopeKey,
+          alarmId: _activeAlarmId!,
+          localDate: localDate,
+          question: question,
+          session: session,
+          challengeMode: challengeMode,
+        );
+      }
       _emitAlarmOccurrence('question_open', hasSyncError: false);
       if (isDebugFixture) {
         _bannerMessageVi =
@@ -743,13 +771,14 @@ class PersonalFlowViewModel extends ChangeNotifier {
       return _lastResult;
     }
     final String cleanAnswer = answerValue.trim();
-    final String cleanReasoning = reasoningText.trim();
-    if (cleanAnswer.isEmpty || cleanReasoning.isEmpty) {
-      _errorMessageVi =
-          'Vui lòng nhập cả đáp án và ít nhất một bước giải thích trước khi gửi.';
+    if (cleanAnswer.isEmpty) {
+      _errorMessageVi = 'Vui lòng nhập đáp án trước khi gửi.';
       notifyListeners();
       return null;
     }
+    final String rawReasoning = reasoningText.trim();
+    final String cleanReasoning =
+        rawReasoning.isNotEmpty ? rawReasoning : 'Đáp án: $cleanAnswer';
 
     final ChallengeQuestion? question = _currentQuestion;
     final StudySessionRecord? session = _activeSession;

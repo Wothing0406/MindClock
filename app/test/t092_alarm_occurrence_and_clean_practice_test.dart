@@ -149,10 +149,6 @@ void main() {
       find.byKey(const ValueKey<String>('practice-answer-field')),
       '8',
     );
-    await tester.enterText(
-      find.byKey(const ValueKey<String>('practice-reasoning-field')),
-      '2(x - 3) = 10 => x - 3 = 5 => x = 8',
-    );
     await tester.ensureVisible(
       find.byKey(const ValueKey<String>('practice-submit-text')),
     );

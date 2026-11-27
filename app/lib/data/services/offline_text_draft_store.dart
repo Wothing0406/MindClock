@@ -76,4 +76,74 @@ class OfflineTextDraftStore {
   Future<void> clearDraft(String ownerScopeKey) async {
     await _store.remove(_storageKey(ownerScopeKey));
   }
+
+  String _activeChallengeKey(
+    String ownerScopeKey,
+    String alarmId,
+    String localDate,
+  ) =>
+      'mindclock_active_challenge_v1_${ownerScopeKey}_${alarmId}_$localDate';
+
+  Future<void> saveActiveChallenge({
+    required String ownerScopeKey,
+    required String alarmId,
+    required String localDate,
+    required ChallengeQuestion question,
+    required StudySessionRecord session,
+    required bool challengeMode,
+  }) async {
+    await _store.writeString(
+      _activeChallengeKey(ownerScopeKey, alarmId, localDate),
+      jsonEncode(<String, dynamic>{
+        'question': question.toJson(),
+        'session': session.toJson(),
+        'challengeMode': challengeMode,
+      }),
+    );
+  }
+
+  Future<({ChallengeQuestion question, StudySessionRecord session, bool challengeMode})?>
+      loadActiveChallenge({
+    required String ownerScopeKey,
+    required String alarmId,
+    required String localDate,
+  }) async {
+    final String? raw = await _store.readString(
+      _activeChallengeKey(ownerScopeKey, alarmId, localDate),
+    );
+    if (raw == null || raw.trim().isEmpty) return null;
+    try {
+      final Object? decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      final Object? qMap = decoded['question'];
+      final Object? sMap = decoded['session'];
+      if (qMap is! Map<String, dynamic> || sMap is! Map<String, dynamic>) {
+        return null;
+      }
+      final ChallengeQuestion question = ChallengeQuestion.fromJson(qMap);
+      final StudySessionRecord session = StudySessionRecord(
+        sessionId: sMap['sessionId'] as String? ?? '',
+        localSessionId: sMap['localSessionId'] as String? ?? '',
+        state: sMap['state'] as String? ?? 'active',
+        version: (sMap['version'] as num?)?.toInt() ?? 1,
+        isOfflineLocal: sMap['isOfflineLocal'] as bool? ?? false,
+      );
+      if (session.sessionId.isEmpty || question.prompt.isEmpty) return null;
+      return (
+        question: question,
+        session: session,
+        challengeMode: decoded['challengeMode'] as bool? ?? true,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearActiveChallenge({
+    required String ownerScopeKey,
+    required String alarmId,
+    required String localDate,
+  }) async {
+    await _store.remove(_activeChallengeKey(ownerScopeKey, alarmId, localDate));
+  }
 }

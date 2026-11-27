@@ -40,6 +40,8 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
   String _selectedDifficulty = 'basic';
   final Map<int, int> _miniQuizSelections = <int, int>{};
   bool _reRingWarningActive = false;
+  bool _showMathKeypad = false;
+  bool _showReasoningField = false;
 
   @override
   void initState() {
@@ -127,6 +129,10 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
         pvm.activeSession?.state != 'completed' &&
         pvm.activeSession?.state != 'abandoned' &&
         result?.verdict != GradingVerdict.correct;
+    final bool hasActiveUnfinishedQuestion = question != null &&
+        pvm.activeSession?.state != 'completed' &&
+        pvm.activeSession?.state != 'abandoned' &&
+        result?.verdict != GradingVerdict.correct;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(mc.space20),
@@ -166,8 +172,8 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                if (!inOpenAlarmSession) ...<Widget>[
-                  Text('Ôn bài theo thời khóa biểu', style: mc.sectionTitleStyle),
+                if (!hasActiveUnfinishedQuestion) ...<Widget>[
+                  Text('Ôn bài nhanh', style: mc.sectionTitleStyle),
                   SizedBox(height: mc.space8),
                   Wrap(
                     spacing: mc.space8,
@@ -235,7 +241,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                       if (pvm.authSession.isAuthenticated)
                         MindClockButton(
                           key: const ValueKey<String>('practice-start-ai-regen'),
-                          label: 'Tạo biến thể câu mới',
+                          label: 'Đổi câu mới',
                           icon: MindClockIconKind.sunrise,
                           variant: MindClockButtonVariant.secondary,
                           expand: false,
@@ -403,34 +409,77 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                     TextField(
                       key: const ValueKey<String>('practice-answer-field'),
                       controller: _answerController,
-                      decoration: const InputDecoration(
-                        labelText: 'Đáp án ngắn',
-                        border: OutlineInputBorder(),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) {
+                        if (!pvm.isBusy) {
+                          pvm.submitTextAnswer(
+                            answerValue: _answerController.text,
+                            reasoningText: _reasoningController.text,
+                          );
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Đáp án của bạn',
+                        hintText: 'Nhập đáp án (VD: x = 3, 12, A...)',
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(mc.radiusControl),
+                        ),
                       ),
                     ),
                     SizedBox(height: mc.space8),
-                    MathInputKeypad(
-                      controller: _answerController,
-                      compact: true,
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space4,
+                      children: <Widget>[
+                        FilterChip(
+                          key: const ValueKey<String>('practice-toggle-keypad'),
+                          label: const Text('Ký hiệu toán'),
+                          selected: _showMathKeypad,
+                          onSelected: (bool next) =>
+                              setState(() => _showMathKeypad = next),
+                        ),
+                        FilterChip(
+                          key: const ValueKey<String>(
+                            'practice-toggle-reasoning',
+                          ),
+                          label: const Text('+ Giải thích (tùy chọn)'),
+                          selected: _showReasoningField,
+                          onSelected: (bool next) =>
+                              setState(() => _showReasoningField = next),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: mc.space12),
-                    TextField(
-                      key: const ValueKey<String>('practice-reasoning-field'),
-                      controller: _reasoningController,
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: question.reasoningPromptVi.isNotEmpty
-                            ? question.reasoningPromptVi
-                            : 'Cách làm ngắn gọn (1–2 bước)',
-                        border: const OutlineInputBorder(),
+                    if (_showMathKeypad) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      MathInputKeypad(
+                        controller: _answerController,
+                        compact: true,
                       ),
-                    ),
+                    ],
+                    if (_showReasoningField) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      TextField(
+                        key: const ValueKey<String>('practice-reasoning-field'),
+                        controller: _reasoningController,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          labelText: question.reasoningPromptVi.isNotEmpty
+                              ? question.reasoningPromptVi
+                              : 'Cách làm ngắn gọn (tùy chọn)',
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(mc.radiusControl),
+                          ),
+                        ),
+                      ),
+                    ],
                     SizedBox(height: mc.space12),
                     MindClockButton(
                       key: const ValueKey<String>('practice-submit-text'),
                       label: pvm.hasRetryableTextFailure
                           ? 'Thử gửi lại bài làm'
-                          : 'Gửi bài để chấm',
+                          : 'Gửi đáp án',
                       icon: MindClockIconKind.check,
                       onPressed: pvm.isBusy
                           ? null
@@ -445,7 +494,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                       MindClockButton(
                         key: const ValueKey<String>(
                             'practice-check-offline-bank'),
-                        label: 'Kiểm tra đáp án trên máy',
+                        label: 'Kiểm tra đáp án',
                         icon: MindClockIconKind.book,
                         variant: MindClockButtonVariant.secondary,
                         onPressed: pvm.isBusy
@@ -456,41 +505,38 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                                 ),
                       ),
                     ],
-                    SizedBox(height: mc.space8),
-                    MindClockButton(
-                      key: const ValueKey<String>('practice-save-draft'),
-                      label: 'Lưu nháp trên máy (tối đa 24 giờ)',
-                      icon: MindClockIconKind.edit,
-                      variant: MindClockButtonVariant.subtle,
-                      onPressed: pvm.isBusy
-                          ? null
-                          : () => pvm.saveOfflineTextDraft(
-                                answerValue: _answerController.text,
-                                reasoningText: _reasoningController.text,
-                              ),
-                    ),
                   ],
                   if (pvm.activeSession?.state != 'completed' &&
                       pvm.activeSession?.state != 'abandoned') ...<Widget>[
                     SizedBox(height: mc.space8),
-                    MindClockButton(
-                      key: const ValueKey<String>('practice-quit-challenge'),
-                      label: 'Bỏ cuộc (0 EXP · xem lời giải)',
-                      icon: MindClockIconKind.clock,
-                      variant: MindClockButtonVariant.subtle,
-                      onPressed: pvm.isBusy
-                          ? null
-                          : () => pvm.abandonActiveSession(immediate: true),
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space4,
+                      children: <Widget>[
+                        MindClockButton(
+                          key: const ValueKey<String>('practice-quit-challenge'),
+                          label: 'Bỏ cuộc',
+                          icon: MindClockIconKind.clock,
+                          variant: MindClockButtonVariant.subtle,
+                          expand: false,
+                          onPressed: pvm.isBusy
+                              ? null
+                              : () => pvm.abandonActiveSession(immediate: true),
+                        ),
+                        MindClockButton(
+                          key: const ValueKey<String>(
+                            'practice-complete-ungraded',
+                          ),
+                          label: 'Xong không chấm',
+                          icon: MindClockIconKind.check,
+                          variant: MindClockButtonVariant.subtle,
+                          expand: false,
+                          onPressed:
+                              pvm.isBusy ? null : pvm.completeSessionUngraded,
+                        ),
+                      ],
                     ),
                   ],
-                  SizedBox(height: mc.space8),
-                  MindClockButton(
-                    key: const ValueKey<String>('practice-complete-ungraded'),
-                    label: 'Hoàn thành không chấm',
-                    icon: MindClockIconKind.clock,
-                    variant: MindClockButtonVariant.subtle,
-                    onPressed: pvm.isBusy ? null : pvm.completeSessionUngraded,
-                  ),
                 ],
                 if (result != null) ...<Widget>[
                   SizedBox(height: mc.space16),

@@ -168,6 +168,28 @@ class ChallengeQuestion {
       currentChapter: json['currentChapter'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'questionId': questionId,
+        'questionRevision': questionRevision,
+        'validForDate': validForDate,
+        'subject': subjectCode,
+        'topicId': topicId,
+        'difficulty': difficulty,
+        'prompt': prompt,
+        'reasoningPromptVi': reasoningPromptVi,
+        'offlinePolicy': offlinePolicy,
+        'estimatedSeconds': estimatedSeconds,
+        'fallback': fallback,
+        'questionFormat': questionFormat,
+        'difficultyMode': difficultyMode,
+        'options': options,
+        'passThreshold': passThreshold,
+        if (sourceScheduleReasonVi != null)
+          'sourceScheduleReasonVi': sourceScheduleReasonVi,
+        if (schoolWeek != null) 'schoolWeek': schoolWeek,
+        if (currentChapter != null) 'currentChapter': currentChapter,
+      };
 }
 
 class StudySessionRecord {
@@ -206,6 +228,14 @@ class StudySessionRecord {
       isOfflineLocal: isOfflineLocal,
     );
   }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'sessionId': sessionId,
+        'localSessionId': localSessionId,
+        'state': state,
+        'version': version,
+        'isOfflineLocal': isOfflineLocal,
+      };
 }
 
 class GradingResult {
