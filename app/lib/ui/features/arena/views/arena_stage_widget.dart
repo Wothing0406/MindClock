@@ -24,6 +24,7 @@ class ArenaStageWidget extends StatelessWidget {
     this.lastResolution,
     this.playerIsWinner = false,
     this.botIsWinner = false,
+    this.mapId = 'courtyard',
   });
 
   final SoloCombatantState playerState;
@@ -36,6 +37,7 @@ class ArenaStageWidget extends StatelessWidget {
   final SoloRoundResolution? lastResolution;
   final bool playerIsWinner;
   final bool botIsWinner;
+  final String mapId;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +65,7 @@ class ArenaStageWidget extends StatelessWidget {
           if (!assetFallbackMode)
             Positioned.fill(
               child: Opacity(
-                opacity: compact ? 0.24 : 0.38,
+                opacity: compact ? 0.35 : 0.65,
                 child: Image.asset(
                   CombatCatalog.mapCourtyardAssetPath,
                   key: const ValueKey<String>('arena-stage-map-image'),

@@ -58,6 +58,8 @@ class SoloArenaViewModel extends ChangeNotifier {
   SoloBattlePhase _phase = SoloBattlePhase.answering;
 
   String _selectedSubjectCode = 'math';
+  String? _gradeLevel;
+  String _selectedMapId = 'courtyard';
   ChampionId _playerChampion = ChampionId.haNhan;
   ChampionId _botChampion = ChampionId.hanBoiPhap;
   BotDifficulty _botDifficulty = BotDifficulty.tieuChuan;
@@ -154,8 +156,23 @@ class SoloArenaViewModel extends ChangeNotifier {
       );
 
   // --- Navigation & Setup ---
+  String? get gradeLevel => _gradeLevel;
+  String get selectedMapId => _selectedMapId;
+
+  void selectMap(String mapId) {
+    _selectedMapId = mapId;
+    notifyListeners();
+  }
+
+  void setGradeLevel(String? gradeLevel) {
+    _gradeLevel = gradeLevel;
+  }
+
   void openSoloSetup({StudyProfile? profile}) {
     _setupErrorVi = null;
+    if (profile != null) {
+      _gradeLevel = profile.gradeLevel;
+    }
     if (profile != null && profile.selectedSubjectCodes.isNotEmpty) {
       final String? preferred =
           profile.selectedSubjectCodes.cast<String?>().firstWhere(
@@ -362,11 +379,13 @@ class SoloArenaViewModel extends ChangeNotifier {
       _deck = SoloTrainingQuestionBank.selectDeterministicDeck(
         subjectCode: _selectedSubjectCode,
         seed: _seed,
+        gradeLevel: _gradeLevel,
       );
       if (_deck.isEmpty) {
         _deck = SoloTrainingQuestionBank.selectDeterministicDeck(
           subjectCode: 'math',
           seed: _seed,
+          gradeLevel: _gradeLevel,
         );
       }
     }

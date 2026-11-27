@@ -493,6 +493,33 @@ class _ArenaScreenState extends State<ArenaScreen>
                   style: mc.captionStyle,
                 ),
                 SizedBox(height: mc.space12),
+                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-courtyard'),
+                      label: 'Võ đường Bình minh',
+                      active: vm.selectedMapId == 'courtyard',
+                      onTap: () => vm.selectMap('courtyard'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-dawn_peak'),
+                      label: 'Đỉnh Tri thức',
+                      active: vm.selectedMapId == 'dawn_peak',
+                      onTap: () => vm.selectMap('dawn_peak'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-night_library'),
+                      label: 'Thư viện Đêm',
+                      active: vm.selectedMapId == 'night_library',
+                      onTap: () => vm.selectMap('night_library'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
                   runSpacing: mc.space8,
@@ -698,6 +725,33 @@ class _ArenaScreenState extends State<ArenaScreen>
                 SizedBox(height: mc.space4),
                 Text(vm.botDifficulty.descriptionVi, style: mc.captionStyle),
                 SizedBox(height: mc.space12),
+                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-courtyard'),
+                      label: 'Võ đường Bình minh',
+                      active: vm.selectedMapId == 'courtyard',
+                      onTap: () => vm.selectMap('courtyard'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-dawn_peak'),
+                      label: 'Đỉnh Tri thức',
+                      active: vm.selectedMapId == 'dawn_peak',
+                      onTap: () => vm.selectMap('dawn_peak'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-night_library'),
+                      label: 'Thư viện Đêm',
+                      active: vm.selectedMapId == 'night_library',
+                      onTap: () => vm.selectMap('night_library'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
                   runSpacing: mc.space8,
@@ -737,6 +791,33 @@ class _ArenaScreenState extends State<ArenaScreen>
                   ],
                 ),
                 SizedBox(height: mc.space12),
+                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-courtyard'),
+                      label: 'Võ đường Bình minh',
+                      active: vm.selectedMapId == 'courtyard',
+                      onTap: () => vm.selectMap('courtyard'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-dawn_peak'),
+                      label: 'Đỉnh Tri thức',
+                      active: vm.selectedMapId == 'dawn_peak',
+                      onTap: () => vm.selectMap('dawn_peak'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-night_library'),
+                      label: 'Thư viện Đêm',
+                      active: vm.selectedMapId == 'night_library',
+                      onTap: () => vm.selectMap('night_library'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
                   runSpacing: mc.space8,
@@ -752,6 +833,33 @@ class _ArenaScreenState extends State<ArenaScreen>
                       variant: MindClockButtonVariant.subtle,
                       expand: false,
                       onPressed: vm.nextPresetSeed,
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
+                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space8,
+                  children: <Widget>[
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-courtyard'),
+                      label: 'Võ đường Bình minh',
+                      active: vm.selectedMapId == 'courtyard',
+                      onTap: () => vm.selectMap('courtyard'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-dawn_peak'),
+                      label: 'Đỉnh Tri thức',
+                      active: vm.selectedMapId == 'dawn_peak',
+                      onTap: () => vm.selectMap('dawn_peak'),
+                    ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-night_library'),
+                      label: 'Thư viện Đêm',
+                      active: vm.selectedMapId == 'night_library',
+                      onTap: () => vm.selectMap('night_library'),
                     ),
                   ],
                 ),
@@ -977,7 +1085,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
                   Text(
-                    'Lượt luyện · Round ${vm.currentRound}/$maxCombatRounds',
+                    'Chiến đấu KO · Bạn ${vm.playerState.hp} HP vs ${vm.botState.hp} HP',
                     key: const ValueKey<String>('arena-round-header'),
                     style: mc.sectionTitleStyle,
                   ),
@@ -1029,6 +1137,7 @@ class _ArenaScreenState extends State<ArenaScreen>
             skipEffects: vm.skipEffects,
             soundEnabled: vm.soundEnabled,
             assetFallbackMode: vm.simulateAssetFallback,
+            mapId: vm.selectedMapId,
             lastResolution: vm.phase == SoloBattlePhase.roundFeedback
                 ? vm.lastResolution
                 : null,

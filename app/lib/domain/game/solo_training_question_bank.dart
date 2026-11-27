@@ -964,23 +964,32 @@ class SoloTrainingQuestionBank {
   static bool hasApprovedCacheFor(String subjectCode) =>
       questionsForSubject(subjectCode).length >= 6;
 
-  /// Xáo trộn câu hỏi hoàn toàn deterministic theo `seed` để hỗ trợ Replay.
+  /// Xáo trộn câu hỏi hoàn toàn deterministic theo `seed` và ưu tiên đúng khối lớp.
   static List<SoloApprovedQuestion> selectDeterministicDeck({
     required String subjectCode,
     required int seed,
+    String? gradeLevel,
   }) {
-    final List<SoloApprovedQuestion> list =
+    final List<SoloApprovedQuestion> all =
         List<SoloApprovedQuestion>.from(questionsForSubject(subjectCode));
-    if (list.length <= 1) return list;
+    if (all.length <= 1) return all;
     int state = seed & 0x7FFFFFFF;
-    for (int i = list.length - 1; i > 0; i--) {
+    for (int i = all.length - 1; i > 0; i--) {
       state = ((state * 1103515245) + 12345) & 0x7FFFFFFF;
       final int j = state % (i + 1);
-      final SoloApprovedQuestion tmp = list[i];
-      list[i] = list[j];
-      list[j] = tmp;
+      final SoloApprovedQuestion tmp = all[i];
+      all[i] = all[j];
+      all[j] = tmp;
     }
-    return list;
+    final String cleanGrade = (gradeLevel ?? '').trim();
+    if (cleanGrade.isEmpty) return all;
+    final List<SoloApprovedQuestion> matched = all
+        .where((SoloApprovedQuestion q) => q.gradeBand.trim() == cleanGrade)
+        .toList(growable: false);
+    final List<SoloApprovedQuestion> others = all
+        .where((SoloApprovedQuestion q) => q.gradeBand.trim() != cleanGrade)
+        .toList(growable: false);
+    return <SoloApprovedQuestion>[...matched, ...others];
   }
 }
 
