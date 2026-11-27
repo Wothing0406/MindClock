@@ -1,3 +1,4 @@
+import '../models/study_ai_models.dart';
 import '../services/answer_normalizer.dart';
 import 'solo_combat_engine.dart';
 
@@ -20,6 +21,7 @@ class SoloApprovedQuestion {
     required this.oneStepHintVi,
     required this.gradingRubricStepsVi,
     required this.explanationAfterRevealVi,
+    this.isAiGenerated = false,
   });
 
   final String id;
@@ -36,6 +38,7 @@ class SoloApprovedQuestion {
   final String oneStepHintVi;
   final List<String> gradingRubricStepsVi;
   final String explanationAfterRevealVi;
+  final bool isAiGenerated;
 }
 
 /// Kết quả chấm bài 3 trạng thái trong Luyện đơn cục bộ (không chấm RP/XP online).
@@ -859,6 +862,178 @@ class SoloTrainingQuestionBank {
       ],
       explanationAfterRevealVi: 'Up = 380 / √3 ≈ 220 V.',
     ),
+    // --- BỘ CÂU DUYỆT LỚP 12 GDPT 2018 CHO ĐẤU TRƯỜNG ---
+    SoloApprovedQuestion(
+      id: 'g1-math12-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Cho hàm số y = x^3 - 3x + 2. Giá trị cực đại của hàm số bằng bao nhiêu?',
+      reasoningPromptVi: 'Tính y\' = 0 để tìm điểm cực đại rồi suy ra y cực đại.',
+      acceptedAnswers: <String>['4', 'y=4', 'y = 4'],
+      reasoningKeywords: <String>['3x^2', 'x = -1', 'x=-1', 'đạo hàm', 'y\''],
+      oneStepHintVi: 'Giải y\' = 3x^2 - 3 = 0 tìm nghiệm làm y\' đổi dấu từ + sang -.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: y\' = 3x^2 - 3 = 0 => x = -1 hoặc x = 1.',
+        'Bước 2: Hàm đạt cực đại tại x = -1 => y(-1) = 4.',
+      ],
+      explanationAfterRevealVi: 'y\' = 3x^2 - 3; tại x = -1 hàm đạt cực đại y = (-1)^3 - 3(-1) + 2 = 4.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-math12-002',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Tính tích phân I = ∫(từ 0 đến 2) 2x dx.',
+      reasoningPromptVi: 'Nêu nguyên hàm của 2x và thế cận 0, 2.',
+      acceptedAnswers: <String>['4', 'i=4', 'i = 4'],
+      reasoningKeywords: <String>['x^2', 'nguyên hàm', '2^2', 'thế cận'],
+      oneStepHintVi: 'Nguyên hàm của 2x là x^2, sau đó tính F(2) - F(0).',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Nguyên hàm F(x) = x^2.',
+        'Bước 2: I = 2^2 - 0^2 = 4.',
+      ],
+      explanationAfterRevealVi: 'I = [x^2] từ 0 đến 2 = 4 - 0 = 4.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-math12-003',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Đồ thị hàm số y = (2x + 1)/(x - 3) có tiệm cận ngang y bằng bao nhiêu?',
+      reasoningPromptVi: 'Tính giới hạn của y khi x tiến ra vô cực.',
+      acceptedAnswers: <String>['2', 'y=2', 'y = 2'],
+      reasoningKeywords: <String>['lim', '2/1', 'hệ số', 'vô cực'],
+      oneStepHintVi: 'Lấy tỉ số hệ số của x trên tử và dưới mẫu khi x -> ±∞.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Tính lim(x->±∞) (2x + 1)/(x - 3) = 2/1.',
+        'Bước 2: Tiệm cận ngang là y = 2.',
+      ],
+      explanationAfterRevealVi: 'lim(x->±∞) y = 2 nên tiệm cận ngang là y = 2.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-math12-004',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Trong không gian Oxyz, độ dài vectơ a = (2; -1; 2) bằng bao nhiêu?',
+      reasoningPromptVi: 'Áp dụng công thức căn bậc hai tổng bình phương tọa độ.',
+      acceptedAnswers: <String>['3', '|a|=3', '|a| = 3'],
+      reasoningKeywords: <String>['căn', 'sqrt', '4 + 1 + 4', '= 9', '=9'],
+      oneStepHintVi: 'Tính √(2^2 + (-1)^2 + 2^2).',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: |a| = √(2^2 + (-1)^2 + 2^2) = √9.',
+        'Bước 2: |a| = 3.',
+      ],
+      explanationAfterRevealVi: '|a| = √(4 + 1 + 4) = 3.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-math12-005',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Cho P(B) = 0,5 và P(AB) = 0,2. Xác suất có điều kiện P(A|B) bằng bao nhiêu?',
+      reasoningPromptVi: 'Viết công thức P(A|B) = P(AB) / P(B).',
+      acceptedAnswers: <String>['0,4', '0.4', '2/5', '40%'],
+      reasoningKeywords: <String>['0,2', '0.2', '0,5', '0.5', 'p(ab)', 'chia'],
+      oneStepHintVi: 'Dùng định nghĩa P(A|B) = P(AB) / P(B) = 0,2 / 0,5.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: P(A|B) = P(AB) / P(B) = 0,2 / 0,5.',
+        'Bước 2: Kết quả P(A|B) = 0,4.',
+      ],
+      explanationAfterRevealVi: 'P(A|B) = 0,2 / 0,5 = 0,4.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-math12-006',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'math',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Mặt cầu (S): (x - 1)^2 + (y + 2)^2 + z^2 = 25 có bán kính R bằng bao nhiêu?',
+      reasoningPromptVi: 'Đối chiếu phương trình mặt cầu chuẩn R^2 = 25.',
+      acceptedAnswers: <String>['5', 'r=5', 'r = 5'],
+      reasoningKeywords: <String>['r^2', '25', 'căn', 'sqrt'],
+      oneStepHintVi: 'Phương trình mặt cầu có vế phải là R^2 = 25 (R > 0).',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Từ phương trình mặt cầu có R^2 = 25.',
+        'Bước 2: Suy ra R = 5.',
+      ],
+      explanationAfterRevealVi: 'R = √25 = 5.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-phys12-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'physics',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Hạt nhân Carbon C-14 (Z = 6, A = 14) có bao nhiêu neutron?',
+      reasoningPromptVi: 'Áp dụng N = A - Z.',
+      acceptedAnswers: <String>['8', 'n=8', '8 hạt'],
+      reasoningKeywords: <String>['14 - 6', '14-6', 'a - z'],
+      oneStepHintVi: 'Số neutron N bằng số khối A trừ số hiệu nguyên tử Z.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: N = A - Z = 14 - 6.',
+        'Bước 2: N = 8.',
+      ],
+      explanationAfterRevealVi: 'N = 14 - 6 = 8 neutron.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-eng12-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'english',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Điền giới từ đúng (Unit Green Living): We should cut down ___ plastic waste.',
+      reasoningPromptVi: 'Giải thích cụm động từ cut down ___ mang nghĩa cắt giảm.',
+      acceptedAnswers: <String>['on'],
+      reasoningKeywords: <String>['cut down on', 'giảm', 'cụm động từ', 'phrasal'],
+      oneStepHintVi: 'Cụm động từ cố định nghĩa là cắt giảm: cut down + giới từ chỉ bề mặt.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Cụm phrasal verb "cut down on sth" = giảm lượng tiêu thụ/thải ra.',
+        'Bước 2: Điền "on".',
+      ],
+      explanationAfterRevealVi: '"Cut down on" = cắt giảm.',
+    ),
+    SoloApprovedQuestion(
+      id: 'g1-bio12-001',
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: 'biology',
+      gradeBand: 'Lớp 12',
+      curriculum: 'gdpt_2018',
+      approvedBy: 'curriculum_seed_v1',
+      prompt: 'Phép lai Aa × Aa (trội hoàn toàn) cho tỉ lệ kiểu hình trội ở F1 là bao nhiêu phần trăm?',
+      reasoningPromptVi: 'Viết tỉ lệ phân li kiểu gen F1 (AA, Aa, aa).',
+      acceptedAnswers: <String>['75%', '75', '3/4', '0,75', '0.75'],
+      reasoningKeywords: <String>['1aa', '2aa', '3/4', 'aa', 'kiểu gen'],
+      oneStepHintVi: 'Tỉ lệ kiểu gen F1 là 1AA : 2Aa : 1aa; tính tổng tỉ lệ mang alen A.',
+      gradingRubricStepsVi: <String>[
+        'Bước 1: Aa × Aa -> 1/4 AA : 2/4 Aa : 1/4 aa.',
+        'Bước 2: Kiểu hình trội (A-) chiếm 3/4 = 75%.',
+      ],
+      explanationAfterRevealVi: 'Tỉ lệ kiểu hình trội A- = 3/4 = 75%.',
+    ),
   ];
 
   static const List<String> supportedSubjectCodes = <String>[
@@ -990,6 +1165,62 @@ class SoloTrainingQuestionBank {
         .where((SoloApprovedQuestion q) => q.gradeBand.trim() != cleanGrade)
         .toList(growable: false);
     return <SoloApprovedQuestion>[...matched, ...others];
+  }
+
+  /// Chuyển câu hỏi AI cá nhân hóa (`POST /v1/questions/personalized`, 0 XP) sang câu chơi Đấu trường.
+  static SoloApprovedQuestion? fromPersonalizedQuestion(
+    PersonalizedPracticeQuestion pq,
+  ) {
+    final String prompt = pq.prompt.trim();
+    if (prompt.isEmpty || pq.acceptedAnswers.isEmpty) {
+      return null;
+    }
+    final List<String> cleanAccepted = pq.acceptedAnswers
+        .map((String e) => e.trim())
+        .where((String e) => e.isNotEmpty)
+        .toList(growable: false);
+    if (cleanAccepted.isEmpty) return null;
+
+    final List<String> steps = pq.steps.isNotEmpty
+        ? pq.steps
+        : <String>['Bước 1: Áp dụng công thức hoặc biến đổi hợp lệ để ra kết quả.'];
+    final String hint = (pq.hintVi ?? '').trim().isNotEmpty
+        ? pq.hintVi!.trim()
+        : steps.first;
+    final String normSubject = normalizeSubjectKey(pq.subjectCode);
+    final Set<String> kw = <String>{'='};
+    for (final String step in steps) {
+      for (final String token in step.toLowerCase().split(RegExp(r'\s+'))) {
+        final String clean = token.replaceAll(RegExp(r'^[.,:;()]+|[.,:;()]+$'), '');
+        if (clean.length >= 3) {
+          kw.add(clean);
+          if (kw.length >= 10) break;
+        }
+      }
+      if (kw.length >= 10) break;
+    }
+
+    return SoloApprovedQuestion(
+      id: pq.questionId.isEmpty
+          ? 'ai-${DateTime.now().millisecondsSinceEpoch}'
+          : pq.questionId,
+      revision: 1,
+      rubricRevision: 1,
+      subjectCode: normSubject,
+      gradeBand: pq.gradeBand.trim().isEmpty ? 'Lớp 12' : pq.gradeBand.trim(),
+      curriculum: 'gdpt_2018',
+      approvedBy: pq.modelVersion,
+      prompt: prompt,
+      reasoningPromptVi: pq.reasoningPromptVi.trim().isEmpty
+          ? 'Viết ít nhất 1 bước biến đổi hoặc lý do chọn đáp án.'
+          : pq.reasoningPromptVi.trim(),
+      acceptedAnswers: cleanAccepted,
+      reasoningKeywords: kw.toList(growable: false),
+      oneStepHintVi: hint,
+      gradingRubricStepsVi: steps,
+      explanationAfterRevealVi: steps.join(' '),
+      isAiGenerated: !pq.fallbackUsed,
+    );
   }
 }
 

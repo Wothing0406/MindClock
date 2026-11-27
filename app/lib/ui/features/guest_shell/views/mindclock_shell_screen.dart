@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/community_models.dart';
+import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
@@ -12,6 +15,7 @@ import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../../domain/services/morning_question_selector.dart';
 import '../../../../domain/services/pvp_gateway.dart';
+import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_brand_mark.dart';
@@ -87,6 +91,51 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   SoloArenaViewModel get _arenaVm =>
       widget.arenaViewModel ?? _ownedArenaViewModel;
 
+  bool? _arenaAiWired;
+
+  static String _backendSubjectCode(String code) => switch (code) {
+        'math' => 'TOAN',
+        'literature' => 'NGU_VAN',
+        'english' => 'TIENG_ANH',
+        'physics' => 'VAT_LY',
+        'chemistry' => 'HOA_HOC',
+        'biology' => 'SINH_HOC',
+        'history' => 'LICH_SU',
+        'geography' => 'DIA_LY',
+        'informatics' => 'TIN_HOC',
+        _ => code.toUpperCase(),
+      };
+
+  /// Đồng bộ lớp của hồ sơ và nối AI sinh câu (0 XP) cho Đấu trường khi đã đăng nhập.
+  void _wireArenaAi({required bool isAuth, StudyFocusViewModel? studyVm}) {
+    if (widget.viewModel.isLoaded) {
+      _arenaVm.setGradeLevel(widget.viewModel.profile.gradeLevel);
+    }
+    final StudyAiGateway? gateway = studyVm?.aiGateway;
+    final bool canUseAi =
+        isAuth && gateway != null && !gateway.isDebugFixture;
+    if (_arenaAiWired == canUseAi) return;
+    _arenaAiWired = canUseAi;
+    if (!canUseAi) {
+      _arenaVm.setContinuousQuestionProvider(null);
+      return;
+    }
+    _arenaVm.setContinuousQuestionProvider(({
+      required String subjectCode,
+      required String seedQuestionId,
+      required int roundNo,
+    }) async {
+      final PersonalizedPracticeQuestion pq =
+          await gateway.generatePersonalizedQuestion(
+        subjectCode: _backendSubjectCode(subjectCode),
+        gradeLevel: widget.viewModel.profile.gradeLevel,
+        difficulty: 1,
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+      );
+      return SoloTrainingQuestionBank.fromPersonalizedQuestion(pq);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +209,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     }
 
     final StudyFocusViewModel? studyVm = widget.studyViewModel;
+    _wireArenaAi(isAuth: isAuth, studyVm: studyVm);
     if (studyVm != null && studyVm.isLoaded) {
       if (studyVm.ownerScopeKey != scope) {
         studyVm.setOwnerScope(scope);

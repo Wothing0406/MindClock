@@ -1,0 +1,5 @@
+# Nhật ký làm việc T091
+
+- 2026-11-27 (Vòng 1): Rà soát toàn bộ diff `T091` đang mở trên repo. Phát hiện 3 khối chọn bản đồ lặp trong `arena_screen.dart`, 9 hằng màu hex trực tiếp trong `arena_stage_widget.dart`, thứ tự gán `_matchFinished` trong `_settleCurrentRound` và thiếu câu `Lớp 12` cho môn Toán/Lý/Anh/Sinh trong `solo_training_question_bank.dart`.
+- 2026-11-27 (Vòng 2): Chuẩn hóa `ArenaMapTheme` sang token `MindClockTheme` (`RAW_HEX_COUNT=0`), căn quỹ đạo `_Projectile` từ tọa độ người đánh đến đúng tọa độ mục tiêu, bổ sung `arena-hit-impact-bot` / `arena-hit-impact-player` chỉ xuất hiện ở phía nhận sát thương, cập nhật `ArenaSkillHand` (`Đánh thường`, `Chiêu 1`, `Chiêu 2`, `Chiêu 3`, `arena-passive-auto-badge`), thêm bộ câu GDPT 2018 Lớp 12 vào `solo_training_question_bank.dart`.
+- 2026-11-27 (Vòng 3): Kiểm tra hiện trạng Unity trên toàn bộ repo (`0` file `.unity` / `ProjectVersion.txt` / `flutter_unity_widget`), ghi báo cáo kỹ thuật đầy đủ vào `spec.md`. Chạy `flutter analyze --no-pub` (`0 issues`), `t091_arena_spatial_dodge_and_ai_test.dart` + `solo_arena_widget_test.dart` (`10/10 PASS`) và `pytest` (`PASS`).

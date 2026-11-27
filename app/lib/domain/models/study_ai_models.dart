@@ -131,6 +131,7 @@ class PersonalizedPracticeQuestion {
     required this.prompt,
     required this.reasoningPromptVi,
     required this.steps,
+    this.acceptedAnswers = const <String>[],
     this.hintVi,
     required this.status,
     required this.sourceType,
@@ -148,6 +149,7 @@ class PersonalizedPracticeQuestion {
   final String prompt;
   final String reasoningPromptVi;
   final List<String> steps;
+  final List<String> acceptedAnswers;
   final String? hintVi;
   final String status;
   final String sourceType;
@@ -162,6 +164,8 @@ class PersonalizedPracticeQuestion {
   }) {
     final List<dynamic> rawSteps =
         (json['steps'] as List<dynamic>?) ?? const <dynamic>[];
+    final List<dynamic> rawAccepted =
+        (json['acceptedAnswers'] as List<dynamic>?) ?? const <dynamic>[];
     final String rawHint = (json['hintVi'] ?? '').toString().trim();
     return PersonalizedPracticeQuestion(
       questionId: (json['questionId'] ?? '').toString(),
@@ -172,6 +176,10 @@ class PersonalizedPracticeQuestion {
       prompt: (json['prompt'] ?? '').toString(),
       reasoningPromptVi: (json['reasoningPromptVi'] ?? '').toString(),
       steps: rawSteps
+          .map((dynamic e) => e.toString().trim())
+          .where((String s) => s.isNotEmpty)
+          .toList(growable: false),
+      acceptedAnswers: rawAccepted
           .map((dynamic e) => e.toString().trim())
           .where((String s) => s.isNotEmpty)
           .toList(growable: false),

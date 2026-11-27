@@ -51,6 +51,11 @@ class SoloArenaViewModel extends ChangeNotifier {
 
   static const int defaultSecretRoundNo = 3;
   static const List<int> timePresetSeconds = <int>[30, 45, 60, 90];
+  static const List<String> concreteMapIds = <String>[
+    'courtyard',
+    'dawn_peak',
+    'night_library',
+  ];
 
   final bool enableRoundTimer;
 
@@ -60,6 +65,14 @@ class SoloArenaViewModel extends ChangeNotifier {
   String _selectedSubjectCode = 'math';
   String? _gradeLevel;
   String _selectedMapId = 'courtyard';
+  String _resolvedMapId = 'courtyard';
+  int _playerLane = 1;
+  int _botAttackLane = 1;
+  bool _dodgeActiveThisTurn = false;
+  int _dodgeCountThisMatch = 0;
+  String? _dodgeNoticeVi;
+  bool _autoCastSpecial = false;
+  bool _isFetchingAiQuestion = false;
   ChampionId _playerChampion = ChampionId.haNhan;
   ChampionId _botChampion = ChampionId.hanBoiPhap;
   BotDifficulty _botDifficulty = BotDifficulty.tieuChuan;
@@ -158,14 +171,54 @@ class SoloArenaViewModel extends ChangeNotifier {
   // --- Navigation & Setup ---
   String? get gradeLevel => _gradeLevel;
   String get selectedMapId => _selectedMapId;
+  String get resolvedMapId => _resolvedMapId;
+  int get playerLane => _playerLane;
+  int get botAttackLane => _botAttackLane;
+  bool get dodgeActiveThisTurn => _dodgeActiveThisTurn;
+  int get dodgeCountThisMatch => _dodgeCountThisMatch;
+  String? get dodgeNoticeVi => _dodgeNoticeVi;
+  bool get autoCastSpecial => _autoCastSpecial;
+  bool get isFetchingAiQuestion => _isFetchingAiQuestion;
+  bool get hasContinuousQuestionProvider => _continuousQuestionProvider != null;
 
   void selectMap(String mapId) {
     _selectedMapId = mapId;
+    if (concreteMapIds.contains(mapId)) {
+      _resolvedMapId = mapId;
+    }
     notifyListeners();
   }
 
   void setGradeLevel(String? gradeLevel) {
     _gradeLevel = gradeLevel;
+  }
+
+  void toggleAutoCastSpecial() {
+    _autoCastSpecial = !_autoCastSpecial;
+    if (_autoCastSpecial && _phase == SoloBattlePhase.choosingAction) {
+      final CombatActionType autoPick = _bestAvailableAction();
+      chooseAction(autoPick);
+      return;
+    }
+    notifyListeners();
+  }
+
+  /// Bên người chơi chủ động lách làn trên sân để né đòn báo trước từ đối thủ.
+  void triggerPlayerDodge() {
+    if (_section != ArenaSection.battle) return;
+    if (_phase == SoloBattlePhase.roundFeedback) return;
+    int nextLane = (_playerLane + 1) % 3;
+    if (nextLane == _botAttackLane) {
+      nextLane = (nextLane + 1) % 3;
+    }
+    _playerLane = nextLane;
+    if (!_dodgeActiveThisTurn) {
+      _dodgeActiveThisTurn = true;
+      _dodgeCountThisMatch++;
+    }
+    _dodgeNoticeVi =
+        'Lách sang làn ${_playerLane + 1} · Sẵn sàng né đòn đối thủ!';
+    notifyListeners();
   }
 
   void openSoloSetup({StudyProfile? profile}) {
@@ -302,13 +355,26 @@ class SoloArenaViewModel extends ChangeNotifier {
     }
 
     _setupErrorVi = null;
+    if (_selectedMapId == 'random') {
+      _resolvedMapId = concreteMapIds[_seed.abs() % concreteMapIds.length];
+    } else if (concreteMapIds.contains(_selectedMapId)) {
+      _resolvedMapId = _selectedMapId;
+    } else {
+      _resolvedMapId = 'courtyard';
+    }
     _deck = SoloTrainingQuestionBank.selectDeterministicDeck(
       subjectCode: _selectedSubjectCode,
       seed: _seed,
+      gradeLevel: _gradeLevel,
     );
     _deckCursor = 0;
     _currentRound = 1;
     _currentQuestion = _drawNextQuestion();
+    _playerLane = 1;
+    _botAttackLane = (_seed + 1) % 3;
+    _dodgeActiveThisTurn = false;
+    _dodgeCountThisMatch = 0;
+    _dodgeNoticeVi = null;
 
     final String cleanName =
         (playerName != null && playerName.trim().isNotEmpty)
@@ -394,12 +460,14 @@ class SoloArenaViewModel extends ChangeNotifier {
           SoloTrainingQuestionBank.selectDeterministicDeck(
         subjectCode: _selectedSubjectCode,
         seed: _seed + _deckCursor + 17,
+        gradeLevel: _gradeLevel,
       );
       _deck.addAll(fresh.isNotEmpty
           ? fresh
           : SoloTrainingQuestionBank.selectDeterministicDeck(
               subjectCode: 'math',
               seed: _seed + _deckCursor + 17,
+              gradeLevel: _gradeLevel,
             ));
     }
     SoloApprovedQuestion q = _deck[_deckCursor];
@@ -482,6 +550,64 @@ class SoloArenaViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Chủ động kéo 1 câu hỏi AI mới theo hồ sơ/môn hiện tại để chơi ngay.
+  Future<bool> fetchAiQuestionNow() async {
+    final provider = _continuousQuestionProvider;
+    final SoloApprovedQuestion? current = _currentQuestion;
+    if (provider == null || current == null || _isFetchingAiQuestion) {
+      return false;
+    }
+    _isFetchingAiQuestion = true;
+    notifyListeners();
+    try {
+      final SoloApprovedQuestion? generated = await provider(
+        subjectCode: _selectedSubjectCode,
+        seedQuestionId: current.id,
+        roundNo: _currentRound,
+      );
+      if (generated == null) return false;
+      final bool duplicate =
+          _deck.any((SoloApprovedQuestion e) => e.id == generated.id);
+      if (!duplicate) {
+        _deck.insert(_deckCursor.clamp(0, _deck.length), generated);
+      }
+      if (_phase == SoloBattlePhase.answering) {
+        _currentQuestion = generated;
+        _lastSubmittedAnswer = '';
+        _lastSubmittedReasoning = '';
+        _lastGrading = null;
+        _showRubricReveal = false;
+        _startRoundTimer();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _isFetchingAiQuestion = false;
+      notifyListeners();
+    }
+  }
+
+  CombatActionType _bestAvailableAction() {
+    final List<SoloActionAvailability> opts = evaluateActionAvailability(
+      state: _playerState,
+      roundNo: _currentRound,
+      playerGrade: SoloGradeStatus.correct,
+      actionWindowOpen: true,
+    );
+    for (final CombatActionType preferred in const <CombatActionType>[
+      CombatActionType.skill2,
+      CombatActionType.skill1,
+      CombatActionType.basic,
+    ]) {
+      final bool ok = opts.any(
+        (SoloActionAvailability a) => a.actionType == preferred && a.enabled,
+      );
+      if (ok) return preferred;
+    }
+    return CombatActionType.basic;
+  }
+
   /// Chấm bài làm 3 trạng thái (`correct | incorrect | uncertain`).
   SoloGradingFeedback submitAnswer({
     required String answerText,
@@ -502,6 +628,14 @@ class SoloArenaViewModel extends ChangeNotifier {
     switch (grading.status) {
       case SoloGradeStatus.correct:
         _stopRoundTimer();
+        if (_autoCastSpecial) {
+          _phase = SoloBattlePhase.choosingAction;
+          _settleCurrentRound(
+            playerGrade: SoloGradeStatus.correct,
+            playerAction: _bestAvailableAction(),
+          );
+          return grading;
+        }
         _phase = SoloBattlePhase.choosingAction;
       case SoloGradeStatus.uncertain:
         _stopRoundTimer();
@@ -598,10 +732,31 @@ class SoloArenaViewModel extends ChangeNotifier {
 
     _playerState = res.nextPlayerState;
     _botState = res.nextBotState;
-    _lastResolution = res;
     _matchFinished = res.settle.matchFinished;
     _winnerActorId = res.settle.winnerUserId;
     _finishReason = res.settle.finishReason;
+    final int rawDamageToPlayer = res.settle.playerADelta.damageTaken;
+    if (_dodgeActiveThisTurn &&
+        _playerLane != _botAttackLane &&
+        rawDamageToPlayer > 0) {
+      final int mitigated =
+          (rawDamageToPlayer * 0.65).round().clamp(1, rawDamageToPlayer);
+      final int restoredHp = (_playerState.hp + mitigated).clamp(0, maxHp);
+      _playerState = _playerState.copyWith(hp: restoredHp);
+      _dodgeNoticeVi =
+          'Né thành công ở làn ${_playerLane + 1}! Giảm $mitigated sát thương đòn đối thủ.';
+      if (_matchFinished && _playerState.isAlive && _botState.isAlive) {
+        _matchFinished = false;
+        _winnerActorId = null;
+        _finishReason = null;
+      }
+    } else if (_dodgeActiveThisTurn) {
+      _dodgeNoticeVi = 'Đã giữ thế né ở làn ${_playerLane + 1}.';
+    } else {
+      _dodgeNoticeVi = null;
+    }
+    _dodgeActiveThisTurn = false;
+    _lastResolution = res;
 
     if (_currentQuestion != null) {
       _history.add(
@@ -629,6 +784,9 @@ class SoloArenaViewModel extends ChangeNotifier {
       return;
     }
     _currentRound++;
+    _botAttackLane = (_seed + _currentRound) % 3;
+    _dodgeActiveThisTurn = false;
+    _dodgeNoticeVi = null;
     _currentQuestion = _drawNextQuestion();
     _lastSubmittedAnswer = '';
     _lastSubmittedReasoning = '';

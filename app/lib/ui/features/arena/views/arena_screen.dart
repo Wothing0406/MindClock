@@ -517,6 +517,12 @@ class _ArenaScreenState extends State<ArenaScreen>
                       active: vm.selectedMapId == 'night_library',
                       onTap: () => vm.selectMap('night_library'),
                     ),
+                    _ToggleChip(
+                      key: const ValueKey<String>('arena-map-random'),
+                      label: 'Ngẫu nhiên',
+                      active: vm.selectedMapId == 'random',
+                      onTap: () => vm.selectMap('random'),
+                    ),
                   ],
                 ),
                 SizedBox(height: mc.space12),
@@ -724,33 +730,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 ),
                 SizedBox(height: mc.space4),
                 Text(vm.botDifficulty.descriptionVi, style: mc.captionStyle),
-                SizedBox(height: mc.space12),
-                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
-                SizedBox(height: mc.space8),
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  children: <Widget>[
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-courtyard'),
-                      label: 'Võ đường Bình minh',
-                      active: vm.selectedMapId == 'courtyard',
-                      onTap: () => vm.selectMap('courtyard'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-dawn_peak'),
-                      label: 'Đỉnh Tri thức',
-                      active: vm.selectedMapId == 'dawn_peak',
-                      onTap: () => vm.selectMap('dawn_peak'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-night_library'),
-                      label: 'Thư viện Đêm',
-                      active: vm.selectedMapId == 'night_library',
-                      onTap: () => vm.selectMap('night_library'),
-                    ),
-                  ],
-                ),
+
                 SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
@@ -790,33 +770,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                     }),
                   ],
                 ),
-                SizedBox(height: mc.space12),
-                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
-                SizedBox(height: mc.space8),
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  children: <Widget>[
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-courtyard'),
-                      label: 'Võ đường Bình minh',
-                      active: vm.selectedMapId == 'courtyard',
-                      onTap: () => vm.selectMap('courtyard'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-dawn_peak'),
-                      label: 'Đỉnh Tri thức',
-                      active: vm.selectedMapId == 'dawn_peak',
-                      onTap: () => vm.selectMap('dawn_peak'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-night_library'),
-                      label: 'Thư viện Đêm',
-                      active: vm.selectedMapId == 'night_library',
-                      onTap: () => vm.selectMap('night_library'),
-                    ),
-                  ],
-                ),
+
                 SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
@@ -836,33 +790,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: mc.space12),
-                Text('Chọn bản đồ chiến đấu', style: mc.bodyStrongStyle),
-                SizedBox(height: mc.space8),
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  children: <Widget>[
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-courtyard'),
-                      label: 'Võ đường Bình minh',
-                      active: vm.selectedMapId == 'courtyard',
-                      onTap: () => vm.selectMap('courtyard'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-dawn_peak'),
-                      label: 'Đỉnh Tri thức',
-                      active: vm.selectedMapId == 'dawn_peak',
-                      onTap: () => vm.selectMap('dawn_peak'),
-                    ),
-                    _ToggleChip(
-                      key: const ValueKey<String>('arena-map-night_library'),
-                      label: 'Thư viện Đêm',
-                      active: vm.selectedMapId == 'night_library',
-                      onTap: () => vm.selectMap('night_library'),
-                    ),
-                  ],
-                ),
+
                 SizedBox(height: mc.space12),
                 Wrap(
                   spacing: mc.space8,
@@ -968,7 +896,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 ),
                 SizedBox(height: mc.space4),
                 Text(
-                  'Sân đấu: Võ đường Bình minh · ${SubjectCatalog.nameFor(vm.selectedSubjectCode)} · $maxCombatRounds lượt',
+                  'Sân đấu: ${ArenaMapTheme.byId(vm.resolvedMapId).nameVi} · ${SubjectCatalog.nameFor(vm.selectedSubjectCode)} · $maxCombatRounds lượt',
                   textAlign: TextAlign.center,
                   style: mc.captionStyle.copyWith(color: mc.nightText),
                 ),
@@ -1137,22 +1065,40 @@ class _ArenaScreenState extends State<ArenaScreen>
             skipEffects: vm.skipEffects,
             soundEnabled: vm.soundEnabled,
             assetFallbackMode: vm.simulateAssetFallback,
-            mapId: vm.selectedMapId,
+            mapId: vm.resolvedMapId,
+            playerLane: vm.playerLane,
+            botAttackLane: vm.botAttackLane,
+            dodgeActive: vm.dodgeActiveThisTurn,
+            dodgeNoticeVi: vm.dodgeNoticeVi,
+            onDodge: vm.phase == SoloBattlePhase.roundFeedback
+                ? null
+                : vm.triggerPlayerDodge,
             lastResolution: vm.phase == SoloBattlePhase.roundFeedback
                 ? vm.lastResolution
                 : null,
           ),
           SizedBox(height: mc.space8),
-          ArenaQiGuideStrip(
-            currentQi: vm.playerState.qi,
-            maxQi: maxQi,
+          Center(
+            child: _RoundDial(
+              roundNo: vm.currentRound,
+              secondsLeft: vm.noTimeLimit
+                  ? null
+                  : (vm.remainingRoundSeconds ?? vm.roundTimeLimitSeconds),
+            ),
           ),
-          SizedBox(height: mc.space12),
-
+          SizedBox(height: mc.space8),
           ArenaSkillHand(
             champion: vm.playerState.championId,
             options: vm.actionOptions,
             onAction: vm.chooseAction,
+            qi: vm.playerState.qi,
+            passiveTriggerCount: vm.playerState.passiveTriggerCount,
+            onDodge: vm.phase == SoloBattlePhase.roundFeedback
+                ? null
+                : vm.triggerPlayerDodge,
+            dodgeActive: vm.dodgeActiveThisTurn,
+            autoCastSpecial: vm.autoCastSpecial,
+            onToggleAutoCast: vm.toggleAutoCastSpecial,
           ),
           SizedBox(height: mc.space12),
           // Đề bài mở quyền ra đòn; bộ chiêu luôn có mặt trên sân.
@@ -1170,7 +1116,9 @@ class _ArenaScreenState extends State<ArenaScreen>
                         label: SubjectCatalog.nameFor(q.subjectCode),
                       ),
                       MindClockStatusPill(
-                        label: '${q.gradeBand} · Câu duyệt rev ${q.revision}',
+                        label: q.isAiGenerated
+                            ? '${q.gradeBand} · Câu cá nhân hóa'
+                            : q.gradeBand,
                       ),
                       if (vm.noTimeLimit)
                         const MindClockStatusPill(
@@ -1230,25 +1178,13 @@ class _ArenaScreenState extends State<ArenaScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'Chọn nhanh 1 chạm (lật thẻ đáp án để ra đòn)',
+                              'Chọn đáp án để kích hoạt chiêu',
                               style: mc.captionStyle,
                             ),
                             SizedBox(height: mc.space4),
-                            Wrap(
-                              spacing: mc.space8,
-                              runSpacing: mc.space8,
-                              children: <Widget>[
-                                for (int idx = 0;
-                                    idx < quickChoices.length;
-                                    idx++)
-                                  MindClockButton(
-                                    key: ValueKey<String>(
-                                        'arena-quick-card-$idx'),
-                                    label:
-                                        '${<String>['A', 'B', 'C', 'D'][idx]}. ${quickChoices[idx].label}',
-                                    variant: MindClockButtonVariant.secondary,
-                                    expand: false,
-                                    onPressed: () {
+                            _AnswerCardGrid(
+                              choices: quickChoices,
+                              onPick: (int idx) {
                                       _answerController.text =
                                           quickChoices[idx].answerValue;
                                       _reasoningController.text =
@@ -1260,15 +1196,13 @@ class _ArenaScreenState extends State<ArenaScreen>
                                             quickChoices[idx].reasoningStep,
                                       );
                                     },
-                                  ),
-                              ],
                             ),
                             SizedBox(height: mc.space12),
                           ],
                         );
                       },
                     ),
-                    Text('Đáp án của bạn', style: mc.bodyStrongStyle),
+                    Text('Hoặc tự nhập đáp án', style: mc.bodyStrongStyle),
                     SizedBox(height: mc.space4),
                     TextField(
                       key: const ValueKey<String>('arena-answer-input'),
@@ -2106,5 +2040,127 @@ class _LoadingFighterBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Đồng hồ tròn giữa sân: số giây còn lại (khi có giới hạn) hoặc số lượt.
+class _RoundDial extends StatelessWidget {
+  const _RoundDial({required this.roundNo, required this.secondsLeft});
+
+  final int roundNo;
+  final int? secondsLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    final bool urgent = secondsLeft != null && secondsLeft! <= 10;
+    return Semantics(
+      label: secondsLeft == null
+          ? 'Lượt $roundNo, không giới hạn thời gian'
+          : 'Lượt $roundNo, còn $secondsLeft giây',
+      child: Container(
+        key: const ValueKey<String>('arena-round-dial'),
+        width: 64,
+        height: 64,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: mc.night,
+          border: Border.all(color: urgent ? mc.error : mc.sunrise, width: 3),
+        ),
+        child: ExcludeSemantics(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                secondsLeft == null ? '$roundNo' : '$secondsLeft',
+                textScaler: TextScaler.noScaling,
+                style: mc.sectionTitleStyle.copyWith(
+                  color: urgent ? mc.error : mc.nightText,
+                ),
+              ),
+              Text(
+                secondsLeft == null ? 'lượt' : 'giây',
+                textScaler: TextScaler.noScaling,
+                style: mc.captionStyle.copyWith(color: mc.sunrise, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lưới 2×2 thẻ đáp án A–D; chạm một thẻ là nộp kèm bước trình bày ngắn.
+class _AnswerCardGrid extends StatelessWidget {
+  const _AnswerCardGrid({required this.choices, required this.onPick});
+
+  final List<SoloQuickChoice> choices;
+  final ValueChanged<int> onPick;
+
+  static const List<String> _letters = <String>['A', 'B', 'C', 'D'];
+
+  @override
+  Widget build(BuildContext context) {
+    final MindClockTheme mc = context.mc;
+    Widget card(int idx) => MindClockPressable(
+          key: ValueKey<String>('arena-quick-card-$idx'),
+          semanticLabel: 'Đáp án ${_letters[idx]}: ${choices[idx].label}',
+          onPressed: () => onPick(idx),
+          child: Container(
+            padding: EdgeInsets.all(mc.space8),
+            decoration: BoxDecoration(
+              color: mc.sunriseSoft,
+              borderRadius: BorderRadius.circular(mc.radiusControl),
+              border: Border.all(color: mc.sunrise, width: 1.5),
+            ),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 28,
+                  height: 28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: mc.night,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _letters[idx],
+                    textScaler: TextScaler.noScaling,
+                    style: mc.bodyStrongStyle.copyWith(color: mc.sunrise),
+                  ),
+                ),
+                SizedBox(width: mc.space8),
+                Expanded(
+                  child: MathFormulaText(
+                    choices[idx].label,
+                    style: mc.bodyStrongStyle.copyWith(color: mc.ink),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+    final List<Widget> rows = <Widget>[];
+    for (int i = 0; i < choices.length; i += 2) {
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: mc.space8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(child: card(i)),
+              SizedBox(width: mc.space8),
+              Expanded(
+                child: i + 1 < choices.length ? card(i + 1) : const SizedBox(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 }

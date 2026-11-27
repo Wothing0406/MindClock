@@ -1,0 +1,31 @@
+# Bàn giao nhiệm vụ T091
+
+- **Trạng thái cuối:** `verifying` (đạt toàn bộ analyze + unit/widget/API/PostgreSQL tests; chờ xác minh trực quan trên thiết bị Android vật lý khi cắm máy).
+- **Đã làm:**
+  - Thiết kế lại `ArenaStageWidget` thành sân đấu 2D không gian dọc 3 làn (bỏ 2 hộp chữ nhật đóng khung nhân vật), hai nhân vật đối diện nhau đúng hướng, projectile bay tới đúng tọa độ đối thủ, hiệu ứng nhận đòn (`arena-hit-impact-*`) chỉ hiển thị ở phía thực sự mất máu, toàn bộ màu sắc dẫn xuất từ `MindClockTheme` (`0` raw hex).
+  - Thêm cơ chế `Né chiêu` (`arena-dodge-btn` trên sân và `Chiêu 3` trên thanh kỹ năng) đổi làn thoát khỏi vùng báo trước của Máy tập và giảm 65% sát thương nhận vào.
+  - Thu gọn `ArenaSkillHand` dùng đúng `assets/arena/skill_*.png`, nhãn gọn (`Đánh thường`, `Chiêu 1`, `Chiêu 2`, `Chiêu 3`), hiển thị rõ nội tại tự kích hoạt theo luật tướng (`arena-passive-auto-badge`) và tùy chọn `Tự tung` chọn trong các chiêu hợp lệ của engine.
+  - Xóa 2 khối chọn bản đồ bị lặp trong `arena_screen.dart`, thêm lựa chọn `Ngẫu nhiên` (`arena-map-random`) chốt cố định `resolvedMapId` trước khi vào trận.
+  - Bổ sung bộ câu duyệt GDPT 2018 `Lớp 12` (`math`, `physics`, `english`, `biology`), đồng bộ `gradeLevel` từ hồ sơ và nối `POST /v1/questions/personalized` (`0 XP`, kèm `acceptedAnswers`, giữ `difficulty: 1` công bằng) cho `SoloArenaViewModel`.
+  - Xác minh và lập báo cáo **Quyết định Unity** bằng đường dẫn thực tế trong `spec.md` (repo có `0` file Unity project/scene/AAR; giữ kiến trúc Flutter 2D hiện tại trong `T091`).
+- **File/code/docs thay đổi:**
+  - `services/api/app/routes/v1.py`
+  - `app/lib/domain/models/study_ai_models.dart`
+  - `app/lib/domain/game/solo_training_question_bank.dart`
+  - `app/lib/ui/features/arena/view_models/solo_arena_view_model.dart`
+  - `app/lib/ui/features/arena/views/arena_stage_widget.dart`
+  - `app/lib/ui/features/arena/views/arena_skill_hand.dart`
+  - `app/lib/ui/features/arena/views/arena_screen.dart`
+  - `app/lib/ui/features/guest_shell/views/mindclock_shell_screen.dart`
+  - `app/test/t091_arena_spatial_dodge_and_ai_test.dart`
+  - `tasks/T091-arena-spatial-stage-dodge-skills-and-ai/*`
+- **Test đã chạy:**
+  - `cd app; flutter analyze --no-pub` -> `No issues found! (ran in 7.9s)` (`2026-11-27`, Windows 11).
+  - `cd app; flutter test --no-pub -j 1 test/t091_arena_spatial_dodge_and_ai_test.dart test/solo_arena_widget_test.dart` -> `10/10 All tests passed!`.
+  - Các bài widget/unit Đấu trường liên quan (`t065`, `t086`, `t087`, `t079`, `t062`, `arena_pvp_and_sprites_test`) -> PASS.
+  - `pytest` (`test_api_v1.py -k personalized`, `test_combat_engine.py`, `test_gemini_regen_and_grading.py`, PostgreSQL 16 `POSTGRES_TEST_URL`) -> PASS.
+  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py` -> PASS.
+- **Test chưa chạy/giới hạn:** Chưa kiểm thử trực tiếp trên máy Android vật lý do `adb devices` hiện chưa có thiết bị kết nối.
+- **Rủi ro còn lại:** Cần kiểm tra độ mượt animation trên thiết bị Android tầm trung và hoàn tất duyệt quyền thương mại nếu đóng gói thêm art từ `assets/game/` ngoài bộ gốc đội tạo.
+- **Điểm tiếp tục chính xác:** Mở task mới độc lập `T092` để sửa trạng thái occurrence của báo thức buổi sáng và dọn dẹp dashboard/tab Luyện tập (`alarm_config_screen.dart`, `alarm_ring_screen.dart`, `today_screen.dart`, `practice_session_screen.dart`).
+- **Git:** Nhánh `main`, chuẩn bị commit và push riêng các file thuộc `T091` (không stage `.idea/`, `.vscode/`, `app/devtools_options.yaml`).

@@ -171,6 +171,7 @@ def _question_to_personalized_wire(
         'prompt': q.prompt,
         'reasoningPromptVi': q.reasoning_prompt_vi,
         'steps': (q.rubric_json or {}).get('steps', []),
+        'acceptedAnswers': (q.answer_spec_json or {}).get('accepted', []),
         'hintVi': (q.rubric_json or {}).get('hint_vi'),
         'status': q.status,
         'sourceType': q.source_type,
