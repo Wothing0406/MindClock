@@ -23,6 +23,7 @@ enum MindClockIconKind {
   volumeOff,
   volumeOn,
   microphone,
+  flame,
 }
 
 /// Icon vector nét mảnh thống nhất (24×24 dp, nét 2 px bo tròn theo `docs/55 §5`).
@@ -281,6 +282,25 @@ class _MindClockIconPainter extends CustomPainter {
           false,
           paint,
         );
+      case MindClockIconKind.flame:
+        final Path outerFlame = Path()
+          ..moveTo(12.2 * s, 2.5 * s)
+          ..quadraticBezierTo(16.8 * s, 7.2 * s, 17.5 * s, 11.4 * s)
+          ..quadraticBezierTo(18.5 * s, 14.5 * s, 16.8 * s, 17.6 * s)
+          ..quadraticBezierTo(15 * s, 20.5 * s, 12 * s, 20.5 * s)
+          ..quadraticBezierTo(8.5 * s, 20.5 * s, 6.8 * s, 17.2 * s)
+          ..quadraticBezierTo(5.6 * s, 14.4 * s, 7.6 * s, 10.6 * s)
+          ..quadraticBezierTo(8.6 * s, 12.2 * s, 9.6 * s, 12.2 * s)
+          ..quadraticBezierTo(9.4 * s, 7.6 * s, 12.2 * s, 2.5 * s)
+          ..close();
+        canvas.drawPath(outerFlame, paint);
+        final Path innerFlame = Path()
+          ..moveTo(12 * s, 13 * s)
+          ..quadraticBezierTo(14.2 * s, 15.2 * s, 13.6 * s, 17.4 * s)
+          ..quadraticBezierTo(12.8 * s, 18.6 * s, 11.4 * s, 18.2 * s)
+          ..quadraticBezierTo(10.2 * s, 17.4 * s, 10.7 * s, 15.3 * s)
+          ..close();
+        canvas.drawPath(innerFlame, paint);
     }
   }
 

@@ -18,10 +18,12 @@ from app.db.models import (
     Attempt,
     ConsentEvent,
     CommitmentGroup,
+    CommitmentGroupBusyDay,
     CommitmentGroupInvite,
     CommitmentGroupJoinRequest,
     CommitmentGroupMember,
     CommitmentPetCare,
+    DailyReport,
     FriendRequest,
     Friendship,
     IdempotencyRecord,
@@ -34,6 +36,7 @@ from app.db.models import (
     StudyRoom,
     StudyRoomMember,
     StudySession,
+    SubjectMemory,
     TimetableSlot,
     TopicProgress,
     User,
@@ -42,11 +45,17 @@ from app.db.models import (
     XpLedger,
 )
 from app.repositories.idempotency import lookup_idempotency, save_idempotency
-from app.services.progression import progress_level, review_streak
+from app.services.progression import (
+    DAILY_REPORT_XP,
+    STREAK_XP_REASONS,
+    build_streak_snapshot,
+    progress_level,
+)
 from app.services.speech_service import reserve_speech, synthesize_reply
 from app.schemas import (
     AlarmUpsertRequest,
     ConsentUpdateRequest,
+    DailyReportSubmitRequest,
     FriendRequestCreate,
     FriendRespondRequest,
     LiveTokenRequest,
@@ -58,6 +67,7 @@ from app.schemas import (
     SessionFeedbackRequest,
     StudyAiMatchRequest,
     CommitmentGroupCreateRequest,
+    CommitmentBusyDayRequest,
     CommitmentGroupInviteRequest,
     CommitmentGroupDecisionRequest,
     CommitmentGroupJoinRequestCreate,
@@ -69,6 +79,7 @@ from app.schemas import (
     StudyRoomSettingsPatchRequest,
     StudySessionCreateRequest,
     StudySessionFinishRequest,
+    SubjectMemoryPatchRequest,
     TimetablePutRequest,
     TimetableParseImageRequest,
     UserBlockRequest,
@@ -89,6 +100,10 @@ from app.services.pvp_match_service import (
     PvpMatchService,
     PvpServiceError,
 )
+from app.services.profile_showcase_service import (
+    build_profile_showcase,
+    build_weekly_subject_leaderboard,
+)
 from app.services.eduskills_adapter import (
     extract_post_attempt_reveal_vi,
     extract_public_morning_card,
@@ -100,6 +115,14 @@ from app.services.gemini_service import (
     GeminiService,
     GeminiServiceError,
     normalize_subject_code,
+)
+from app.services.subject_memory_service import (
+    build_quick_morning_challenge,
+    compute_school_week,
+    ensure_memories_for_user,
+    pick_today_subject_from_timetable,
+    record_attempt_outcome,
+    resolve_curriculum_for_week,
 )
 
 
@@ -486,6 +509,7 @@ def create_v1_router(
         if owned_group_ids:
             db.execute(delete(CommitmentGroup).where(CommitmentGroup.id.in_(owned_group_ids)))
         db.execute(delete(CommitmentPetCare).where(CommitmentPetCare.user_id == uid))
+        db.execute(delete(CommitmentGroupBusyDay).where(CommitmentGroupBusyDay.user_id == uid))
         db.execute(delete(CommitmentGroupInvite).where(
             (CommitmentGroupInvite.inviter_id == uid) | (CommitmentGroupInvite.recipient_id == uid)
         ))
@@ -506,8 +530,10 @@ def create_v1_router(
         db.execute(delete(MatchPlayer).where(MatchPlayer.user_id == uid))
         db.execute(delete(Question).where(Question.target_user_id == uid))
         db.execute(delete(IdempotencyRecord).where(IdempotencyRecord.user_id == uid))
+        db.execute(delete(DailyReport).where(DailyReport.user_id == uid))
         db.execute(delete(XpLedger).where(XpLedger.user_id == uid))
         db.execute(delete(TopicProgress).where(TopicProgress.user_id == uid))
+        db.execute(delete(SubjectMemory).where(SubjectMemory.user_id == uid))
         db.execute(delete(ConsentEvent).where(ConsentEvent.user_id == uid))
         db.execute(delete(TimetableSlot).where(TimetableSlot.user_id == uid))
         db.execute(delete(Alarm).where(Alarm.user_id == uid))
@@ -728,19 +754,183 @@ def create_v1_router(
         db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+    @router.get('/curriculum/memory')
+    def list_subject_memories(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        memories = ensure_memories_for_user(db, principal.user)
+        db.commit()
+        return {
+            'gradeLevel': (principal.user.grade_band or 'Lớp 11').strip(),
+            'schoolWeek': compute_school_week(),
+            'items': [
+                {
+                    'subjectCode': m.subject_code,
+                    'gradeLevel': m.grade_level,
+                    'currentWeek': m.current_week,
+                    'currentChapter': m.current_chapter,
+                    'currentTopic': m.current_topic,
+                    'masteryScore': m.mastery_score,
+                    'attemptsCount': m.attempts_count,
+                    'correctCount': m.correct_count,
+                }
+                for m in memories
+            ],
+        }
+
+    @router.patch('/curriculum/memory/{subject_code}')
+    def patch_subject_memory(
+        subject_code: str,
+        payload: SubjectMemoryPatchRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        norm = normalize_subject_code(subject_code)
+        ensure_memories_for_user(db, principal.user, subject_codes=[norm])
+        mem = db.scalar(
+            select(SubjectMemory).where(
+                SubjectMemory.user_id == principal.user.id,
+                SubjectMemory.subject_code == norm,
+            )
+        )
+        assert mem is not None
+        if payload.current_week is not None:
+            mem.current_week = payload.current_week
+            auto_ch, auto_tp = resolve_curriculum_for_week(
+                norm, mem.grade_level, mem.current_week
+            )
+            if payload.current_chapter is None:
+                mem.current_chapter = auto_ch
+            if payload.current_topic is None:
+                mem.current_topic = auto_tp
+        if payload.current_chapter is not None:
+            mem.current_chapter = payload.current_chapter.strip()
+        if payload.current_topic is not None:
+            mem.current_topic = payload.current_topic.strip()
+        db.commit()
+        db.refresh(mem)
+        return {
+            'subjectCode': mem.subject_code,
+            'gradeLevel': mem.grade_level,
+            'currentWeek': mem.current_week,
+            'currentChapter': mem.current_chapter,
+            'currentTopic': mem.current_topic,
+            'masteryScore': mem.mastery_score,
+        }
+
     @router.get('/challenges/next')
     async def get_next_challenge(
         subject: str = Query(default='TOAN'),
         date: str = Query(default='2026-11-14'),
         mode: str = Query(default='bank'),
+        difficulty: str = Query(default=''),
         principal: AuthenticatedPrincipal = Depends(get_current_user),
         db: Session = Depends(get_db),
         settings: Settings = Depends(get_settings),
     ) -> dict[str, Any]:
+        clean_subj = subject.strip()
+        clean_mode = mode.strip().lower()
+        clean_diff = difficulty.strip().lower()
+
+        try:
+            target_dt = datetime.strptime(date.strip(), '%Y-%m-%d').date()
+        except ValueError:
+            target_dt = datetime.now(timezone.utc).date()
+
+        schedule_reason_vi: str | None = None
+        if clean_subj.lower() in {'auto', ''}:
+            chosen_subj, schedule_reason_vi, _ = pick_today_subject_from_timetable(
+                db, principal.user, target_date=target_dt, seed_salt=clean_diff or 'morning'
+            )
+        else:
+            chosen_subj = normalize_subject_code(clean_subj)
+
+        ensure_memories_for_user(
+            db, principal.user, subject_codes=[chosen_subj], target_date=target_dt
+        )
+        mem = db.scalar(
+            select(SubjectMemory).where(
+                SubjectMemory.user_id == principal.user.id,
+                SubjectMemory.subject_code == chosen_subj,
+            )
+        )
+
+        # Luồng câu hỏi buổi sáng nhanh (ABCD 1 chạm hoặc Đề ngắn >= 70% theo TKB & Bộ nhớ tuần)
+        if clean_subj.lower() == 'auto' or clean_mode == 'quick_morning' or clean_diff in {'basic', 'advanced'}:
+            eff_diff = clean_diff if clean_diff in {'basic', 'advanced'} else 'basic'
+            grade_level = (principal.user.grade_band or 'Lớp 11').strip()
+            quick = build_quick_morning_challenge(
+                subject_code=chosen_subj,
+                grade_level=grade_level,
+                memory=mem,
+                difficulty=eff_diff,
+                seed_hint=f'{principal.user.id}:{target_dt.isoformat()}',
+            )
+            generated = Question(
+                id=f'morning_q_{uuid.uuid4().hex[:12]}',
+                subject_code=chosen_subj,
+                grade_band=grade_level,
+                topic_id=quick['topicId'],
+                difficulty=1 if eff_diff == 'basic' else 2,
+                prompt=quick['prompt'],
+                answer_spec_json={
+                    'accepted': quick['accepted'],
+                    'questionFormat': quick['questionFormat'],
+                    'options': quick['options'],
+                    'correctOptionIndex': quick['correctOptionIndex'],
+                    'subQuestions': quick['subQuestions'],
+                    'passThreshold': quick['passThreshold'],
+                },
+                reasoning_prompt_vi=quick['reasoningPromptVi'],
+                rubric_json={'steps': quick['steps'], 'hint_vi': quick['hintVi']},
+                rubric_revision=1,
+                status='draft',
+                source_type='timetable_morning_challenge',
+                target_user_id=principal.user.id,
+                model_version='subject-memory-v1',
+                revision=1,
+            )
+            db.add(generated)
+            db.commit()
+            db.refresh(generated)
+            return {
+                'questionId': generated.id,
+                'questionRevision': generated.revision,
+                'validForDate': date,
+                'subject': generated.subject_code,
+                'gradeBand': generated.grade_band,
+                'topicId': generated.topic_id,
+                'difficulty': generated.difficulty,
+                'difficultyMode': eff_diff,
+                'questionFormat': quick['questionFormat'],
+                'options': quick['options'],
+                'subQuestions': [
+                    {
+                        'index': sq['index'],
+                        'prompt': sq['prompt'],
+                        'options': sq['options'],
+                    }
+                    for sq in quick['subQuestions']
+                ],
+                'passThreshold': quick['passThreshold'],
+                'sourceScheduleReasonVi': schedule_reason_vi or 'Đồng bộ tiến độ tuần hiện tại',
+                'schoolWeek': mem.current_week if mem else compute_school_week(target_dt),
+                'currentChapter': mem.current_chapter if mem else quick['topicId'],
+                'prompt': generated.prompt,
+                'reasoningPromptVi': generated.reasoning_prompt_vi,
+                'offlinePolicy': 'ungraded_only',
+                'estimatedSeconds': 25 if eff_diff == 'basic' else 90,
+                'fallback': False,
+                'aiGenerated': True,
+                'seedQuestionId': None,
+                'morningCard': extract_public_morning_card(generated),
+            }
+
         selected = _select_published_question(
             db,
             user_id=principal.user.id,
-            subject_code=subject,
+            subject_code=chosen_subj,
             grade_band=principal.user.grade_band,
         )
         if selected is None:
@@ -1047,11 +1237,12 @@ def create_v1_router(
         return resp
 
     @router.post('/sessions/{session_id}/answers')
-    def submit_alarm_answer(
+    async def submit_alarm_answer(
         session_id: str,
         payload: SessionAnswerRequest,
         principal: AuthenticatedPrincipal = Depends(get_current_user),
         db: Session = Depends(get_db),
+        settings: Settings = Depends(get_settings),
         idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
     ) -> dict[str, Any]:
         session = db.get(AlarmSession, session_id)
@@ -1076,22 +1267,18 @@ def create_v1_router(
             return cached
 
         question = db.get(Question, session.question_id)
+        spec = question.answer_spec_json if question else {}
         accepted = [
             str(x)
-            for x in ((question.answer_spec_json or {}).get('accepted', ['8']) if question else ['8'])
+            for x in ((spec or {}).get('accepted', ['8']) if question else ['8'])
         ]
+        q_format = str((spec or {}).get('questionFormat', 'short_text'))
         answer_raw = payload.answer_value.strip()
         reasoning_norm = payload.reasoning_text.strip().lower()
+        score_percent: int | None = None
+        used_model = 'deterministic-validator'
 
-        if 'uncertain' in reasoning_norm or not answer_raw:
-            result = 'uncertain'
-            xp_delta = 0
-            observed_steps: list[str] = []
-            first_issue = None
-            hint = None
-            feedback = 'Chưa đủ rõ bước lập luận để chấm dứt khoát.'
-            next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
-        elif is_answer_accepted(payload.answer_value, accepted):
+        def _mark_correct(custom_feedback: str | None = None) -> tuple[str, int, list[str], str | None, str | None, str, list[str]]:
             already_rewarded = (
                 session.state == 'completed'
                 or db.scalar(
@@ -1103,40 +1290,127 @@ def create_v1_router(
                 )
                 is not None
             )
-            result = 'correct'
-            xp_delta = 0 if already_rewarded else 10
-            observed_steps = [payload.reasoning_text.strip()] if payload.reasoning_text.strip() else []
-            first_issue = None
-            hint = None
-            feedback = (
+            xp_val = 0 if already_rewarded else 10
+            steps_val = [payload.reasoning_text.strip()] if payload.reasoning_text.strip() else []
+            fb_val = custom_feedback or (
                 'Chính xác! Server ghi nhận +10 XP.'
-                if xp_delta > 0
+                if xp_val > 0
                 else 'Chính xác! Phiên này đã được ghi nhận XP trước đó.'
             )
-            next_actions = ['finish']
             session.state = 'completed'
-        else:
-            result = 'incorrect'
-            xp_delta = 0
-            session.wrong_attempts += 1
-            show_hint = session.wrong_attempts >= 3
-            observed_steps = [payload.reasoning_text.strip()] if (show_hint and payload.reasoning_text.strip()) else []
-            first_issue = 'Kiểm tra lại bước biến đổi chính.' if show_hint else None
-            raw_hint = (
-                (question.rubric_json or {}).get('hint_vi')
-                if (show_hint and question)
-                else None
-            )
-            hint = (
-                sanitize_pre_reveal_hint(raw_hint, accepted)
-                if show_hint
-                else None
-            )
-            feedback = 'Bài này chưa đúng. Bạn có thể thử lại.'
-            if session.wrong_attempts >= 5:
-                next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+            return 'correct', xp_val, steps_val, None, None, fb_val, ['finish']
+
+        if q_format == 'mini_quiz' and isinstance((spec or {}).get('subQuestions'), list) and payload.quiz_answers:
+            sub_qs = (spec or {}).get('subQuestions', [])
+            threshold = float((spec or {}).get('passThreshold', 0.7))
+            total_sub = max(1, len(sub_qs))
+            correct_sub = 0
+            for idx, sq in enumerate(sub_qs):
+                chosen_idx = payload.quiz_answers[idx] if idx < len(payload.quiz_answers) else -1
+                if chosen_idx == int(sq.get('correctOptionIndex', -99)):
+                    correct_sub += 1
+            ratio = correct_sub / total_sub
+            score_percent = round(ratio * 100)
+            used_model = 'mini-quiz-grader'
+            if ratio >= threshold:
+                result, xp_delta, observed_steps, first_issue, hint, feedback, next_actions = _mark_correct(
+                    f'Đạt {correct_sub}/{total_sub} câu ({score_percent}% >= 70%)! Ghi nhận hoàn thành.'
+                )
             else:
-                next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
+                result = 'incorrect'
+                xp_delta = 0
+                session.wrong_attempts += 1
+                observed_steps = [f'Đúng {correct_sub}/{total_sub} câu ({score_percent}%)']
+                first_issue = f'Cần đạt từ 70% trở lên (hiện đạt {score_percent}%).'
+                hint = (question.rubric_json or {}).get('hint_vi') if (question and session.wrong_attempts >= 3) else None
+                feedback = f'Chưa đạt ngưỡng 70% (bạn đúng {correct_sub}/{total_sub} câu = {score_percent}%). Thử lại hoặc bấm Bỏ cuộc.'
+                next_actions = ['retry', 'abandon']
+        elif q_format == 'mcq' and payload.selected_index is not None:
+            used_model = 'mcq-grader'
+            expected_idx = (spec or {}).get('correctOptionIndex')
+            if expected_idx is not None and int(payload.selected_index) == int(expected_idx):
+                score_percent = 100
+                result, xp_delta, observed_steps, first_issue, hint, feedback, next_actions = _mark_correct()
+            else:
+                score_percent = 0
+                result = 'incorrect'
+                xp_delta = 0
+                session.wrong_attempts += 1
+                show_hint = session.wrong_attempts >= 3
+                observed_steps = []
+                first_issue = 'Đáp án trắc nghiệm chưa chính xác.' if show_hint else None
+                raw_hint = (question.rubric_json or {}).get('hint_vi') if (show_hint and question) else None
+                hint = sanitize_pre_reveal_hint(raw_hint, accepted) if show_hint else None
+                feedback = 'Chưa chính xác. Bạn có thể chọn lại đáp án khác.'
+                next_actions = ['retry', 'abandon']
+        elif 'uncertain' in reasoning_norm or (not answer_raw and payload.selected_index is None):
+            result = 'uncertain'
+            xp_delta = 0
+            observed_steps = []
+            first_issue = None
+            hint = None
+            feedback = 'Chưa đủ rõ bước lập luận để chấm dứt khoát.'
+            next_actions = ['retry', 'abandon']
+        elif is_answer_accepted(payload.answer_value, accepted):
+            score_percent = 100
+            result, xp_delta, observed_steps, first_issue, hint, feedback, next_actions = _mark_correct()
+        else:
+            # Chỉ gọi Gemini chấm tự luận ngắn khi học sinh nhập câu chữ thực sự (không phải số ngắn deterministic)
+            has_words = any(ch.isalpha() for ch in answer_raw) and len(answer_raw.split()) >= 2
+            if question is not None and has_words and settings.gemini_api_key and not settings.gemini_mock_mode:
+                gemini = _get_gemini(settings)
+                ai_res, ai_fb, ai_hint = await gemini.grade_short_text_answer(
+                    question_prompt=question.prompt,
+                    accepted_answers=accepted,
+                    rubric_steps=[str(s) for s in ((question.rubric_json or {}).get('steps', []))],
+                    answer_value=answer_raw,
+                    reasoning_text=payload.reasoning_text,
+                    subject_code=question.subject_code,
+                    grade_level=question.grade_band,
+                )
+                used_model = settings.gemini_primary_model
+                if ai_res == 'correct':
+                    score_percent = 100
+                    result, xp_delta, observed_steps, first_issue, hint, feedback, next_actions = _mark_correct(ai_fb)
+                elif ai_res == 'uncertain':
+                    result = 'uncertain'
+                    xp_delta = 0
+                    observed_steps = []
+                    first_issue = None
+                    hint = ai_hint
+                    feedback = ai_fb
+                    next_actions = ['retry', 'abandon']
+                else:
+                    result = 'incorrect'
+                    xp_delta = 0
+                    session.wrong_attempts += 1
+                    observed_steps = []
+                    first_issue = ai_fb
+                    hint = ai_hint if session.wrong_attempts >= 3 else None
+                    feedback = ai_fb
+                    next_actions = ['retry', 'abandon']
+            else:
+                result = 'incorrect'
+                xp_delta = 0
+                session.wrong_attempts += 1
+                show_hint = session.wrong_attempts >= 3
+                observed_steps = [payload.reasoning_text.strip()] if (show_hint and payload.reasoning_text.strip()) else []
+                first_issue = 'Kiểm tra lại bước biến đổi chính.' if show_hint else None
+                raw_hint = (
+                    (question.rubric_json or {}).get('hint_vi')
+                    if (show_hint and question)
+                    else None
+                )
+                hint = (
+                    sanitize_pre_reveal_hint(raw_hint, accepted)
+                    if show_hint
+                    else None
+                )
+                feedback = 'Bài này chưa đúng. Bạn có thể thử lại.'
+                if session.wrong_attempts >= 5:
+                    next_actions = ['retry', 'abandon', 'finish_ungraded', 'emergency_stop']
+                else:
+                    next_actions = ['retry', 'finish_ungraded', 'emergency_stop']
 
         can_abandon = result != 'correct' and session.wrong_attempts >= 5
         if can_abandon and 'abandon' not in next_actions:
@@ -1171,7 +1445,11 @@ def create_v1_router(
                     delta=xp_delta,
                 )
             )
+        updated_memory = None
         if question and result in {'correct', 'incorrect'}:
+            updated_memory = record_attempt_outcome(
+                db, principal.user, question.subject_code, result == 'correct'
+            )
             tp = db.get(TopicProgress, (principal.user.id, question.topic_id))
             if tp is None:
                 tp = TopicProgress(
@@ -1207,7 +1485,9 @@ def create_v1_router(
             'revealVi': reveal_vi,
             'xpAwarded': xp_delta,
             'groupCare': group_care,
-            'modelVersion': 'deterministic-validator',
+            'scorePercent': score_percent,
+            'masteryScore': updated_memory.mastery_score if updated_memory else None,
+            'modelVersion': used_model,
             'rubricRevision': question.rubric_revision if question else 1,
         }
         save_idempotency(
@@ -1428,6 +1708,7 @@ def create_v1_router(
     @router.post('/sessions/{session_id}/abandon')
     def abandon_alarm_session(
         session_id: str,
+        immediate: bool = Query(default=False),
         principal: AuthenticatedPrincipal = Depends(get_current_user),
         db: Session = Depends(get_db),
         idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
@@ -1442,7 +1723,7 @@ def create_v1_router(
                 'Không có quyền bỏ lượt phiên của tài khoản khác.',
             )
 
-        raw_body = {'sessionId': session_id, 'action': 'abandon'}
+        raw_body = {'sessionId': session_id, 'action': 'abandon', 'immediate': immediate}
         cached = lookup_idempotency(
             db,
             user_id=principal.user.id,
@@ -1457,13 +1738,13 @@ def create_v1_router(
             raise _api_error(
                 409,
                 'SESSION_ALREADY_COMPLETED',
-                'Phiên này đã hoàn thành nên không thể bỏ lượt.',
+                'Phiên này đã hoàn thành nên không thể bỏ cuộc.',
             )
-        if session.state != 'abandoned' and session.wrong_attempts < 5:
+        if not immediate and session.state != 'abandoned' and session.wrong_attempts < 5:
             raise _api_error(
                 409,
                 'ABANDON_THRESHOLD_NOT_MET',
-                'Chỉ mở Bỏ lượt sau khi đã thử và sai rõ từ 5 lần. Dừng khẩn cấp luôn có sẵn.',
+                'Chỉ mở Bỏ lượt sau khi đã thử và sai rõ từ 5 lần.',
             )
 
         question = db.get(Question, session.question_id)
@@ -1513,46 +1794,249 @@ def create_v1_router(
             'recorded': True,
         }
 
-    @router.get('/progress/summary')
-    def progress_summary(
-        principal: AuthenticatedPrincipal = Depends(get_current_user),
-        db: Session = Depends(get_db),
-    ) -> dict[str, Any]:
+    def _build_progress_summary_payload(db: Session, user: User) -> dict[str, Any]:
         total_xp = db.scalar(
             select(func.coalesce(func.sum(XpLedger.delta), 0)).where(
-                XpLedger.user_id == principal.user.id
+                XpLedger.user_id == user.id
             )
         )
         completed_count = db.scalar(
             select(func.count(AlarmSession.id)).where(
-                AlarmSession.user_id == principal.user.id,
+                AlarmSession.user_id == user.id,
                 AlarmSession.state == 'completed',
             )
         )
         weak_topics = list(
             db.scalars(
                 select(TopicProgress.topic_id).where(
-                    TopicProgress.user_id == principal.user.id,
+                    TopicProgress.user_id == user.id,
                     TopicProgress.attempts > TopicProgress.correct,
                 )
             )
         )
+        xp_rows = db.execute(
+            select(XpLedger.created_at, XpLedger.reason, XpLedger.delta).where(
+                XpLedger.user_id == user.id,
+                XpLedger.reason.in_(tuple(STREAK_XP_REASONS)),
+                XpLedger.delta > 0,
+            )
+        ).all()
+        report_dates = list(
+            db.scalars(
+                select(DailyReport.local_date).where(DailyReport.user_id == user.id)
+            )
+        )
+        streak_data = build_streak_snapshot(
+            xp_events=[(row[0], row[1], int(row[2] or 0)) for row in xp_rows],
+            report_dates=report_dates,
+            time_zone=user.time_zone,
+            now=datetime.now(timezone.utc),
+        )
         return {
             'xp': int(total_xp or 0),
-            'streak': review_streak(
-                list(db.scalars(select(XpLedger.created_at).where(
-                    XpLedger.user_id == principal.user.id,
-                    XpLedger.reason == 'challenge_correct',
-                    XpLedger.delta > 0,
-                ))),
-                principal.user.time_zone,
-                datetime.now(timezone.utc),
-            ),
+            'streak': streak_data['streak'],
             'streakKind': 'review_days',
+            'streakPolicyVersion': streak_data['streakPolicyVersion'],
+            'bestStreak': streak_data['bestStreak'],
+            'totalActiveDays': streak_data['totalActiveDays'],
+            'todayCompleted': streak_data['todayCompleted'],
+            'todayReportSubmitted': streak_data['todayReportSubmitted'],
+            'todaySources': streak_data['todaySources'],
+            'recentDays': streak_data['recentDays'],
             **progress_level(int(total_xp or 0)),
             'completedSessions': int(completed_count or 0),
             'topicsToReview': weak_topics,
         }
+
+    def _serialize_daily_report(row: DailyReport) -> dict[str, Any]:
+        return {
+            'reportId': row.id,
+            'localDate': row.local_date,
+            'studyMinutes': row.study_minutes,
+            'tasksCompleted': row.tasks_completed,
+            'challengeCompleted': row.challenge_completed,
+            'feeling': row.feeling,
+            'reflectionNote': row.reflection_note,
+            'xpAwarded': row.xp_awarded,
+            'createdAt': _as_utc(row.created_at).isoformat(),
+            'updatedAt': _as_utc(row.updated_at).isoformat(),
+        }
+
+    @router.get('/progress/summary')
+    def progress_summary(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        return _build_progress_summary_payload(db, principal.user)
+
+    @router.get('/progress/daily-reports')
+    def list_daily_reports(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        limit: int = Query(default=14, ge=1, le=60),
+    ) -> dict[str, Any]:
+        rows = list(
+            db.scalars(
+                select(DailyReport)
+                .where(DailyReport.user_id == principal.user.id)
+                .order_by(DailyReport.local_date.desc(), DailyReport.created_at.desc())
+                .limit(limit)
+            )
+        )
+        return {
+            'items': [_serialize_daily_report(row) for row in rows],
+        }
+
+    @router.post('/progress/daily-report')
+    def submit_daily_report(
+        payload: DailyReportSubmitRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+        idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
+    ) -> dict[str, Any]:
+        raw_body = payload.model_dump(by_alias=True)
+        cached = lookup_idempotency(
+            db,
+            user_id=principal.user.id,
+            route='POST:/v1/progress/daily-report',
+            key=idempotency_key,
+            payload=raw_body,
+        )
+        if cached is not None:
+            return cached
+
+        now_utc = datetime.now(timezone.utc)
+        user_tz = _resolve_user_tz(principal.user.time_zone)
+        local_date = now_utc.astimezone(user_tz).date().isoformat()
+
+        # Tổng hợp số phút học & thử thách sáng thật trong ngày từ dữ liệu DB của owner.
+        study_rows = list(
+            db.scalars(
+                select(StudySession).where(
+                    StudySession.user_id == principal.user.id,
+                    StudySession.state.in_(('completed', 'finished')),
+                )
+            )
+        )
+        total_study_seconds = 0
+        for s_row in study_rows:
+            ref_time = s_row.ended_at or s_row.created_at
+            if ref_time is not None and _as_utc(ref_time).astimezone(user_tz).date().isoformat() == local_date:
+                total_study_seconds += max(
+                    0,
+                    int(s_row.in_app_focus_seconds or s_row.elapsed_wall_seconds or 0),
+                )
+        study_minutes = total_study_seconds // 60
+
+        challenge_done = (
+            db.scalar(
+                select(AlarmSession.id).where(
+                    AlarmSession.user_id == principal.user.id,
+                    AlarmSession.local_date == local_date,
+                    AlarmSession.state == 'completed',
+                )
+            )
+            is not None
+        )
+        if not challenge_done:
+            challenge_xp_rows = list(
+                db.scalars(
+                    select(XpLedger.created_at).where(
+                        XpLedger.user_id == principal.user.id,
+                        XpLedger.reason.in_(('challenge_correct', 'photo_challenge_correct')),
+                        XpLedger.delta > 0,
+                    )
+                )
+            )
+            challenge_done = any(
+                _as_utc(dt).astimezone(user_tz).date().isoformat() == local_date
+                for dt in challenge_xp_rows
+            )
+
+        clean_note = ' '.join(payload.reflection_note.split())
+        existing = db.scalar(
+            select(DailyReport).where(
+                DailyReport.user_id == principal.user.id,
+                DailyReport.local_date == local_date,
+            )
+        )
+
+        # Kiểm tra trước khi lưu báo cáo xem hôm nay user đã từng có điểm streak chưa.
+        prior_summary = _build_progress_summary_payload(db, principal.user)
+        had_streak_today = bool(prior_summary.get('todayCompleted'))
+
+        xp_awarded_now = 0
+        already_reported = existing is not None
+        if existing is None:
+            report = DailyReport(
+                user_id=principal.user.id,
+                local_date=local_date,
+                study_minutes=study_minutes,
+                tasks_completed=payload.tasks_completed,
+                challenge_completed=challenge_done,
+                feeling=payload.feeling,
+                reflection_note=clean_note,
+                xp_awarded=DAILY_REPORT_XP,
+            )
+            db.add(report)
+            db.flush()
+            existing_xp = db.scalar(
+                select(XpLedger.id).where(
+                    XpLedger.user_id == principal.user.id,
+                    XpLedger.source_type == 'daily_report',
+                    XpLedger.source_id == local_date,
+                    XpLedger.reason == 'daily_report',
+                )
+            )
+            if existing_xp is None:
+                db.add(
+                    XpLedger(
+                        user_id=principal.user.id,
+                        source_type='daily_report',
+                        source_id=local_date,
+                        reason='daily_report',
+                        delta=DAILY_REPORT_XP,
+                    )
+                )
+                xp_awarded_now = DAILY_REPORT_XP
+            group_care = CommitmentGroupService(db).record_daily_report(
+                principal.user.id,
+                report.id,
+                at=now_utc,
+            )
+        else:
+            report = existing
+            report.study_minutes = max(report.study_minutes, study_minutes)
+            report.tasks_completed = max(report.tasks_completed, payload.tasks_completed)
+            report.challenge_completed = report.challenge_completed or challenge_done
+            report.feeling = payload.feeling
+            report.reflection_note = clean_note
+            group_care = CommitmentGroupService(db).record_daily_report(
+                principal.user.id,
+                report.id,
+                at=now_utc,
+            )
+
+        db.flush()
+        summary = _build_progress_summary_payload(db, principal.user)
+        resp = {
+            'report': _serialize_daily_report(report),
+            'alreadyReportedToday': already_reported,
+            'xpAwarded': xp_awarded_now,
+            'streakAwardedToday': (not had_streak_today) and bool(summary.get('todayCompleted')),
+            'groupCare': group_care,
+            'summary': summary,
+        }
+        save_idempotency(
+            db,
+            user_id=principal.user.id,
+            route='POST:/v1/progress/daily-report',
+            key=idempotency_key,
+            payload=raw_body,
+            response_json=resp,
+        )
+        db.commit()
+        return resp
 
     @router.get('/progress/xp-history')
     def xp_history(
@@ -2338,5 +2822,45 @@ def create_v1_router(
             return CommitmentGroupService(db).set_primary(principal.user.id, group_id)
         except CommitmentGroupError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/commitment-groups/{group_id}/busy-today')
+    def report_commitment_busy_today(
+        group_id: str,
+        payload: CommitmentBusyDayRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        try:
+            res = CommitmentGroupService(db).report_busy_today(
+                principal.user.id,
+                group_id,
+                reason=payload.reason,
+                local_date=payload.local_date,
+            )
+            db.commit()
+            return res
+        except CommitmentGroupError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.get('/profile/showcase')
+    def get_profile_showcase(
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        return build_profile_showcase(db, principal.user)
+
+    @router.get('/leaderboard/weekly')
+    def get_weekly_subject_leaderboard(
+        subject: str = Query(default='TOAN'),
+        limit: int = Query(default=20, ge=1, le=50),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        return build_weekly_subject_leaderboard(
+            db,
+            viewer=principal.user,
+            subject_code=subject,
+            limit=limit,
+        )
 
     return router

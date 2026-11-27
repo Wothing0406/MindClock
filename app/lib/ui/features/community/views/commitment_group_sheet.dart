@@ -349,19 +349,22 @@ class _CommitmentGroupSheetState extends State<CommitmentGroupSheet> {
                 runSpacing: mc.space8,
                 children: <Widget>[
                   MindClockStatusPill(
-                      label: 'Chuỗi nhóm ${pet.currentStreakDays} ngày'),
+                      label: pet.currentStreakDays > 0
+                          ? '${pet.milestoneLabelVi} (${pet.currentStreakDays} ngày)'
+                          : 'Chuỗi nhóm ${pet.currentStreakDays} ngày',
+                      accentWarm: pet.currentStreakDays > 0),
                   MindClockStatusPill(
                       label:
                           'Hôm nay ${pet.todayCareCount}/${group.members.length} người',
-                      accentWarm: true),
-                  MindClockStatusPill(label: '${pet.totalCareDays} ngày chăm'),
+                      accentWarm: !pet.allMembersDoneToday),
+                  MindClockStatusPill(label: '${pet.totalCareDays} ngày đủ nhóm'),
                   MindClockStatusPill(
                       label: '${pet.totalXp}/${pet.nextStageXp} EXP nhóm'),
                 ],
               ),
               SizedBox(height: mc.space8),
               Text(
-                  'Care được ghi khi hoàn thành phiên học tập trung từ 5 phút.',
+                  'Cả nhóm cùng hoàn thành trong ngày (giải câu sáng, học >= 5 phút hoặc báo cáo ngày) để cộng +1 Chuỗi nhóm (Chuỗi 1 -> Chuỗi 100).',
                   textAlign: TextAlign.center,
                   style: mc.captionStyle),
             ],

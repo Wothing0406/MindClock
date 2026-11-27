@@ -239,7 +239,8 @@ void main() {
       await tester.ensureVisible(
         find.byKey(const ValueKey<String>('today-dir-practice')),
       );
-      await tester.tap(find.byKey(const ValueKey<String>('today-dir-practice')));
+      await tester
+          .tap(find.byKey(const ValueKey<String>('today-dir-practice')));
       await tester.pumpAndSettle();
       expect(find.text('Tiến độ học tập riêng tư'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -333,7 +334,7 @@ void main() {
       expect(profile, isNotNull);
       expect(profile!.alias, 'Minh Cuong 12A');
       expect(profile.avatarId, 'ha_nhan');
-      expect(profile.selectedSubjectCodes, <String>['TOAN', 'VAT_LY']);
+      expect(profile.selectedSubjectCodes, <String>['math', 'physics']);
     },
   );
 }

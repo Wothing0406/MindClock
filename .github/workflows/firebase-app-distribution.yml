@@ -1,0 +1,86 @@
+name: Firebase App Distribution (Android APK)
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'URL API backend HTTPS thật (vd: https://mindclock-api.onrender.com)'
+        required: true
+        type: string
+      build_mode:
+        description: 'Loại build APK'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+      groups:
+        description: 'Tên nhóm tester trên Firebase App Distribution'
+        required: false
+        default: 'thpt-testers'
+        type: string
+      testers:
+        description: 'Email tester cụ thể (phân cách bằng dấu phẩy, tùy chọn)'
+        required: false
+        default: ''
+        type: string
+      release_notes:
+        description: 'Ghi chú phiên bản cho tester'
+        required: false
+        default: 'MindClock pilot build'
+        type: string
+
+jobs:
+  distribute-android-apk:
+    name: Build APK & Upload to Firebase App Distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Flutter dependencies & run tests
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze --no-pub
+          flutter test --no-pub -j 1
+
+      - name: Build Android APK
+        working-directory: app
+        run: |
+          flutter build apk --${{ inputs.build_mode }} --dart-define=MINDCLOCK_API_BASE_URL=${{ inputs.api_base_url }}
+
+      - name: Upload to Firebase App Distribution
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "Thiếu secret FIREBASE_TOKEN trên GitHub Repository Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          APK_PATH="app/build/app/outputs/flutter-apk/app-${{ inputs.build_mode }}.apk"
+          EXTRA_ARGS=""
+          if [ -n "${{ inputs.testers }}" ]; then
+            EXTRA_ARGS="--testers ${{ inputs.testers }}"
+          elif [ -n "${{ inputs.groups }}" ]; then
+            EXTRA_ARGS="--groups ${{ inputs.groups }}"
+          fi
+          npx -y firebase-tools@latest appdistribution:distribute "$APK_PATH" \
+            --app "1:357973416738:android:5e09df39793b206a05a37b" \
+            --project "mindclock" \
+            --release-notes "${{ inputs.release_notes }}" \
+            $EXTRA_ARGS

@@ -23,7 +23,8 @@ class WelcomeScreen extends StatelessWidget {
       decoration: BoxDecoration(color: mc.paper),
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: mc.space16, vertical: mc.space8),
+          padding:
+              EdgeInsets.symmetric(horizontal: mc.space16, vertical: mc.space8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -33,31 +34,32 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: EdgeInsets.all(mc.space16),
                 decoration: BoxDecoration(
-                  color: mc.night,
+                  color: mc.surface,
                   borderRadius: BorderRadius.circular(mc.radiusPaper),
+                  border: Border.all(color: mc.outline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     MindClockIcon(
                       MindClockIconKind.sunrise,
-                      color: mc.sunrise,
+                      color: mc.primary,
                       size: 28,
                     ),
                     SizedBox(height: mc.space8),
                     Text(
                       AppStrings.appName,
-                      style: mc.sectionTitleStyle.copyWith(color: mc.sunrise),
+                      style: mc.sectionTitleStyle.copyWith(color: mc.primary),
                     ),
                     SizedBox(height: mc.space4),
                     Text(
                       'Dậy đúng giờ. Nghĩ bằng chính mình.',
-                      style: mc.screenTitleStyle.copyWith(color: mc.nightText),
+                      style: mc.screenTitleStyle.copyWith(color: mc.ink),
                     ),
                     SizedBox(height: mc.space4),
                     Text(
                       'Báo thức kỷ luật, câu hỏi ôn tập theo môn mỗi sáng và không gian học tập trung cùng AI.',
-                      style: mc.bodyStyle.copyWith(color: mc.nightText),
+                      style: mc.bodyStyle.copyWith(color: mc.inkMuted),
                     ),
                   ],
                 ),

@@ -92,11 +92,9 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                 runSpacing: mc.space8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
-                  Text('Đấu đơn 1v1 (Giao hữu)', style: mc.screenTitleStyle),
+                  Text('Đấu đơn 1v1', style: mc.screenTitleStyle),
                   MindClockStatusPill(
-                    label: vm.isDebugFixture
-                        ? 'Đấu tập offline · 0 RP'
-                        : '0 RP · Công bằng',
+                    label: 'Đấu trường PvP',
                     accentWarm: vm.isDebugFixture,
                   ),
                 ],
@@ -151,7 +149,7 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Cùng câu hỏi, cùng rubric, server chốt HP/Qi & 0 điểm rank.',
+            'Cùng câu hỏi, cùng thang chấm và máy chủ xử lý toàn bộ sát thương, HP/Qi công bằng.',
             style: mc.bodyStyle,
           ),
           SizedBox(height: mc.space12),
@@ -509,7 +507,7 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
                     ),
                     SizedBox(height: mc.space4),
                     Text(
-                      'Lý do: ${snap.finishReason ?? "Đã kết thúc"} · 0 RP (Giao hữu học tập)',
+                      'Kết quả: ${snap.finishReason ?? "Đã kết thúc"} · Trận giao hữu',
                       style: mc.bodyStyle,
                     ),
                   ],

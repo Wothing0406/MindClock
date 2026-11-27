@@ -45,6 +45,19 @@ class SessionEventRequest(ApiModel):
 class SessionAnswerRequest(ApiModel):
     answer_value: str = Field(default='', alias='answerValue')
     reasoning_text: str = Field(default='', alias='reasoningText')
+    selected_index: int | None = Field(default=None, alias='selectedIndex')
+    quiz_answers: list[int] = Field(default_factory=list, alias='quizAnswers')
+
+
+class SubjectMemoryPatchRequest(ApiModel):
+    current_week: int | None = Field(default=None, alias='currentWeek', ge=1, le=35)
+    current_chapter: str | None = Field(default=None, alias='currentChapter', max_length=160)
+    current_topic: str | None = Field(default=None, alias='currentTopic', max_length=160)
+
+
+class CommitmentBusyDayRequest(ApiModel):
+    reason: str = Field(default='exam', min_length=2, max_length=64)
+    local_date: str | None = Field(default=None, alias='localDate', max_length=10)
 
 
 class SessionFeedbackRequest(ApiModel):
@@ -285,4 +298,11 @@ class AuthLoginRequest(ApiModel):
 class AuthRefreshRequest(ApiModel):
     model_config = ConfigDict(populate_by_name=True, extra='forbid')
     refresh_token: str = Field(alias='refreshToken', min_length=10, max_length=2048)
+
+
+class DailyReportSubmitRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+    tasks_completed: int = Field(default=0, alias='tasksCompleted', ge=0, le=50)
+    feeling: str = Field(default='steady', pattern=r'^(focused|steady|tired)$')
+    reflection_note: str = Field(default='', alias='reflectionNote', max_length=400)
 

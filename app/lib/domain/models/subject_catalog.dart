@@ -48,8 +48,48 @@ class SubjectCatalog {
     ),
   ];
 
-  static SubjectInfo? findByCode(String code) {
+  static const Map<String, String> _backendAliases = <String, String>{
+    'toan': 'math',
+    'math': 'math',
+    'ngu_van': 'literature',
+    'nguvan': 'literature',
+    'van': 'literature',
+    'literature': 'literature',
+    'tieng_anh': 'english',
+    'tienganh': 'english',
+    'anh': 'english',
+    'english': 'english',
+    'vat_ly': 'physics',
+    'vat_li': 'physics',
+    'physics': 'physics',
+    'hoa_hoc': 'chemistry',
+    'chemistry': 'chemistry',
+    'sinh_hoc': 'biology',
+    'biology': 'biology',
+    'lich_su': 'history',
+    'history': 'history',
+    'dia_ly': 'geography',
+    'dia_li': 'geography',
+    'geography': 'geography',
+    'tin_hoc': 'informatics',
+    'informatics': 'informatics',
+    'cong_nghe': 'technology',
+    'technology': 'technology',
+    'gdcd': 'civic_econ',
+    'ktpl': 'civic_econ',
+    'gdktpl': 'civic_econ',
+    'civics': 'civic_econ',
+    'civic_econ': 'civic_econ',
+  };
+
+  /// Chuẩn hóa mã môn học hai chiều giữa server (`TOAN`, `NGU_VAN`...) và catalog Flutter (`math`, `literature`...).
+  static String normalizeCode(String code) {
     final String clean = code.trim().toLowerCase();
+    return _backendAliases[clean] ?? clean;
+  }
+
+  static SubjectInfo? findByCode(String code) {
+    final String clean = normalizeCode(code);
     for (final SubjectInfo subject in allSubjects) {
       if (subject.code == clean) return subject;
     }
@@ -57,13 +97,6 @@ class SubjectCatalog {
       return const SubjectInfo(
         code: 'activity',
         nameVi: 'Sinh hoạt / HĐTN',
-        hasApprovedQuestions: false,
-      );
-    }
-    if (clean == 'civics') {
-      return const SubjectInfo(
-        code: 'civic_econ',
-        nameVi: 'Giáo dục kinh tế và pháp luật',
         hasApprovedQuestions: false,
       );
     }

@@ -285,8 +285,9 @@ class MeetStudyRoomGrid extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(mc.space16),
       decoration: BoxDecoration(
-        color: mc.night,
+        color: mc.surface,
         borderRadius: BorderRadius.circular(mc.radiusCard),
+        border: Border.all(color: mc.primary),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,8 +299,8 @@ class MeetStudyRoomGrid extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text(
-                'Phòng Meet: ${room.summary.title}',
-                style: mc.sectionTitleStyle.copyWith(color: mc.nightText),
+                'Bàn học nhóm: ${room.summary.title}',
+                style: mc.sectionTitleStyle.copyWith(color: mc.ink),
               ),
               MindClockStatusPill(
                 label:
@@ -310,7 +311,10 @@ class MeetStudyRoomGrid extends StatelessWidget {
           SizedBox(height: mc.space4),
           Text(
             '${room.summary.subjectNameVi} · ${room.summary.gradeLevel} · ${room.members.length}/${room.summary.maxMembers} thành viên',
-            style: mc.captionStyle.copyWith(color: mc.sunrise),
+            style: mc.captionStyle.copyWith(
+              color: mc.primary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           SizedBox(height: mc.space12),
           LayoutBuilder(
@@ -534,14 +538,14 @@ class _MeetBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: mc.space8, vertical: 2),
       decoration: BoxDecoration(
-        color: active ? mc.primary : mc.night,
+        color: active ? mc.primary : mc.paper,
         borderRadius: BorderRadius.circular(mc.radiusChip),
-        border: Border.all(color: active ? mc.sunrise : mc.outline),
+        border: Border.all(color: active ? mc.primary : mc.outline),
       ),
       child: Text(
         label,
         style: mc.captionStyle.copyWith(
-          color: mc.nightText,
+          color: active ? mc.onPrimary : mc.ink,
           fontWeight: FontWeight.w600,
         ),
       ),

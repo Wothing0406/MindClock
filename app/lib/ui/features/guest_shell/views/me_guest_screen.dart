@@ -2,8 +2,11 @@ import 'package:flutter/widgets.dart';
 
 import '../../../../data/debug/debug_fixture_community_repository.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
+import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/community_models.dart';
+import '../../../../domain/models/personal_flow_models.dart';
 import '../../../../domain/models/study_profile.dart';
+import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
@@ -18,6 +21,7 @@ import '../../personal_flow/views/profile_progress_card.dart';
 import '../../community/views/commitment_group_sheet.dart';
 import '../../study_focus/views/study_community_sheet.dart';
 import '../view_models/guest_workspace_view_model.dart';
+import '../widgets/weekly_leaderboard_sheet.dart';
 
 /// Tab Tôi: Hồ sơ học sinh, cộng đồng bạn học, đồng bộ tài khoản & quyền báo thức OS.
 class MeGuestScreen extends StatefulWidget {
@@ -50,7 +54,64 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
   bool _confirmingDeleteAccount = false;
   bool _deletingAccount = false;
   bool _pickingAvatar = false;
+  bool _syncingProfile = false;
   String? _avatarFeedbackVi;
+
+  Future<void> _syncRealProfileNow() async {
+    final PersonalFlowViewModel? pvm = personalViewModel;
+    if (pvm == null || !pvm.authSession.isAuthenticated || _syncingProfile) {
+      return;
+    }
+    setState(() {
+      _syncingProfile = true;
+      _avatarFeedbackVi = null;
+    });
+    try {
+      await pvm.refreshProgressAndHistory();
+      final StudyProfile? remoteProfile =
+          await pvm.fetchRemoteProfileIfSignedIn();
+      if (remoteProfile != null &&
+          (remoteProfile.selectedSubjectCodes.isNotEmpty ||
+              remoteProfile.alias.isNotEmpty)) {
+        final StudyProfile merged = viewModel.profile.copyWith(
+          alias: remoteProfile.alias.isNotEmpty
+              ? remoteProfile.alias
+              : viewModel.profile.alias,
+          avatarId: remoteProfile.avatarId.isNotEmpty
+              ? remoteProfile.avatarId
+              : viewModel.profile.avatarId,
+          gradeLevel: remoteProfile.gradeLevel ?? viewModel.profile.gradeLevel,
+          selectedSubjectCodes: remoteProfile.selectedSubjectCodes.isNotEmpty
+              ? remoteProfile.selectedSubjectCodes
+              : viewModel.profile.selectedSubjectCodes,
+          goalLabel: remoteProfile.goalLabel.isNotEmpty
+              ? remoteProfile.goalLabel
+              : viewModel.profile.goalLabel,
+        );
+        await viewModel.saveStudyProfile(merged);
+      } else if (viewModel.profile.selectedSubjectCodes.isNotEmpty ||
+          viewModel.profile.alias.isNotEmpty) {
+        await pvm.syncProfileToServer(viewModel.profile);
+      }
+      final remoteTimetable = await pvm.fetchRemoteTimetableIfSignedIn();
+      if (remoteTimetable != null &&
+          viewModel.timetable.days.every((d) => d.entries.isEmpty)) {
+        await viewModel.replaceEntireTimetable(remoteTimetable);
+      }
+      if (!mounted) return;
+      setState(() {
+        _avatarFeedbackVi = 'Đã đồng bộ hồ sơ & tiến độ từ máy chủ.';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _avatarFeedbackVi =
+            'Chưa đồng bộ được máy chủ lúc này. Dữ liệu trên thiết bị vẫn an toàn.';
+      });
+    } finally {
+      if (mounted) setState(() => _syncingProfile = false);
+    }
+  }
 
   Future<void> _pickAvatarFromDevice() async {
     if (_pickingAvatar) return;
@@ -110,10 +171,79 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
     }
   }
 
+  Color _parseHexColor(String hex, Color fallback) {
+    final String clean = hex.replaceFirst('#', '').trim();
+    if (clean.length == 6) {
+      final int? v = int.tryParse('FF$clean', radix: 16);
+      if (v != null) return Color(v);
+    }
+    return fallback;
+  }
+
+  MindClockIconKind _stampIcon(String kind) {
+    switch (kind) {
+      case 'sunrise':
+        return MindClockIconKind.sunrise;
+      case 'book':
+        return MindClockIconKind.book;
+      default:
+        return MindClockIconKind.flame;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final MindClockTheme mc = context.mc;
     final AlarmPermissionSnapshot perms = viewModel.permissionSnapshot;
+    final StudyProfile profile = viewModel.profile;
+    final bool isAuthed = personalViewModel?.authSession.isAuthenticated ?? false;
+    final String? email = personalViewModel?.authSession.email;
+    final int enabledAlarms =
+        viewModel.alarms.where((AlarmConfig a) => a.enabled).length;
+    final int weeklyPeriods = viewModel.timetable.days
+        .fold<int>(0, (int sum, d) => sum + d.entries.length);
+    final ProfileShowcase? showcase = personalViewModel?.profileShowcase;
+    final ProgressSummary? progress = personalViewModel?.progressSummary;
+    final int level = showcase?.level ?? progress?.level ?? 1;
+    final int xp = showcase?.xp ?? progress?.xp ?? 0;
+    final int streak = showcase?.streak ?? progress?.streak ?? 0;
+    final int bestStreak = showcase?.bestStreak ?? progress?.bestStreak ?? 0;
+    final String rankLabel =
+        showcase?.seasonRank.labelVi ?? 'Đồng · Khởi hành';
+    final Color rankColor = showcase != null
+        ? _parseHexColor(showcase.seasonRank.frameColorHex, mc.sunrise)
+        : mc.sunrise;
+    final String titleVi =
+        showcase?.equippedTitleVi ?? 'Bạn đồng hành MindClock';
+    final int earlyDays = showcase?.earlyBirdDaysThisWeek ?? 0;
+    final String topSubjName = showcase?.topSubject.subjectNameVi ??
+        (profile.selectedSubjectCodes.isNotEmpty
+            ? SubjectCatalog.nameFor(profile.selectedSubjectCodes.first)
+            : 'Toán');
+    final List<ProfileStamp> stamps = showcase?.stamps ??
+        <ProfileStamp>[
+          ProfileStamp(
+            id: 'streak',
+            titleVi: 'Chuỗi bền bỉ',
+            valueVi: '$streak ngày',
+            subtitleVi: 'Kỷ lục $bestStreak ngày',
+            kind: 'flame',
+          ),
+          ProfileStamp(
+            id: 'early_bird',
+            titleVi: 'Dậy sớm tuần',
+            valueVi: '$earlyDays/7 ngày',
+            subtitleVi: 'Hoàn thành thử thách sáng',
+            kind: 'sunrise',
+          ),
+          ProfileStamp(
+            id: 'top_subject',
+            titleVi: 'Sở trường',
+            valueVi: 'Môn $topSubjName',
+            subtitleVi: profile.gradeLevel ?? 'Lớp 11',
+            kind: 'book',
+          ),
+        ];
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(mc.space20),
@@ -123,27 +253,284 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
           Text(AppStrings.navMe, style: mc.screenTitleStyle),
           SizedBox(height: mc.space12),
           MindClockCard(
+            key: const ValueKey<String>('me-profile-summary-card'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Row(
+                // Cover banner phong cách sổ tay bình minh + khung rank avatar (T085)
+                Stack(
+                  clipBehavior: Clip.none,
                   children: <Widget>[
-                    MindClockAvatarView(
-                      avatarId: viewModel.profile.avatarId,
-                      customAvatarPath: viewModel.profile.customAvatarPath,
-                      size: 56,
-                      selected: true,
+                    Container(
+                      width: double.infinity,
+                      height: 82,
+                      padding: EdgeInsets.all(mc.space12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: <Color>[mc.primarySoft, mc.sunriseSoft],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(mc.radiusControl),
+                        border: Border.all(color: mc.outline),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              'Hồ sơ học sinh',
+                              style: mc.captionStyle.copyWith(
+                                color: mc.ink,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: mc.space8),
+                          Flexible(
+                            child: Wrap(
+                              spacing: mc.space8,
+                              runSpacing: mc.space4,
+                              alignment: WrapAlignment.end,
+                              children: <Widget>[
+                                MindClockStatusPill(
+                                  key: const ValueKey<String>(
+                                      'me-season-rank-pill'),
+                                  label: rankLabel,
+                                  accentWarm: true,
+                                ),
+                                MindClockStatusPill(
+                                  label: isAuthed
+                                      ? 'Đã đồng bộ tài khoản'
+                                      : 'Chưa đăng nhập',
+                                  accentWarm: !isAuthed,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(width: mc.space12),
-                    Expanded(
-                      child: MindClockStatusPill(
-                        label: viewModel.profile.alias.isNotEmpty
-                            ? '${viewModel.profile.alias} · ${viewModel.profile.gradeLevel ?? "Lớp 11"}'
-                            : 'Học sinh THPT',
-                        accentWarm: true,
+                    Positioned(
+                      left: mc.space12,
+                      bottom: -24,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: mc.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: rankColor, width: 3.5),
+                        ),
+                        child: MindClockAvatarView(
+                          avatarId: profile.avatarId,
+                          customAvatarPath: profile.customAvatarPath,
+                          size: 64,
+                          selected: true,
+                        ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 30),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      profile.alias.isNotEmpty
+                          ? profile.alias
+                          : 'Học sinh MindClock',
+                      key: const ValueKey<String>('me-profile-alias'),
+                      style: mc.sectionTitleStyle,
+                    ),
+                    MindClockStatusPill(
+                      key: const ValueKey<String>('me-level-pill'),
+                      label: 'Lv.$level · $xp EXP',
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space4 / 2),
+                Text(
+                  isAuthed
+                      ? (email ?? personalViewModel!.authSession.uid ?? 'Đã xác thực')
+                      : 'Đăng nhập ở thẻ bên dưới để đồng bộ đa thiết bị',
+                  key: const ValueKey<String>('me-profile-account'),
+                  style: mc.captionStyle,
+                ),
+                SizedBox(height: mc.space8),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: mc.space12,
+                    vertical: mc.space8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: mc.sunriseSoft.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(mc.radiusControl),
+                    border: Border.all(color: mc.sunrise),
+                  ),
+                  child: Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      MindClockIcon(
+                        MindClockIconKind.sunrise,
+                        size: 16,
+                        color: mc.ink,
+                      ),
+                      Text(
+                        'Danh hiệu: $titleVi',
+                        key: const ValueKey<String>('me-equipped-title'),
+                        style: mc.bodyStrongStyle,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: mc.space8),
+                Wrap(
+                  spacing: mc.space8,
+                  runSpacing: mc.space4,
+                  children: <Widget>[
+                    MindClockStatusPill(
+                      label: profile.gradeLevel ?? 'Lớp 11',
+                      accentWarm: true,
+                    ),
+                    MindClockStatusPill(
+                      label: '$weeklyPeriods tiết/tuần · $enabledAlarms chuông bật',
+                    ),
+                  ],
+                ),
+                SizedBox(height: mc.space12),
+                // 3 ô Dấu ấn thành tích (Chuỗi, Dậy sớm tuần X/7, Sở trường môn)
+                Text('Dấu ấn nổi bật', style: mc.bodyStrongStyle),
+                SizedBox(height: mc.space8),
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    final double itemWidth = constraints.maxWidth >= 340
+                        ? (constraints.maxWidth - mc.space8 * 2) / 3
+                        : constraints.maxWidth;
+                    return Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      children: stamps
+                          .map(
+                            (ProfileStamp s) => SizedBox(
+                              width: itemWidth,
+                              child: Container(
+                                key: ValueKey<String>('me-stamp-${s.id}'),
+                                padding: EdgeInsets.all(mc.space8),
+                                decoration: BoxDecoration(
+                                  color: mc.paper,
+                                  borderRadius:
+                                      BorderRadius.circular(mc.radiusControl),
+                                  border: Border.all(color: mc.outline),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Wrap(
+                                      spacing: mc.space4,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: <Widget>[
+                                        MindClockIcon(
+                                          _stampIcon(s.kind),
+                                          size: 14,
+                                          color: mc.primary,
+                                        ),
+                                        Text(
+                                          s.titleVi,
+                                          style: mc.captionStyle,
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: mc.space4),
+                                    Text(s.valueVi, style: mc.bodyStrongStyle),
+                                    Text(s.subtitleVi, style: mc.captionStyle),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(growable: false),
+                    );
+                  },
+                ),
+                if (showcase != null && showcase.groups.isNotEmpty) ...<Widget>[
+                  SizedBox(height: mc.space12),
+                  Text(
+                    'Nhóm giữ chuỗi đang tham gia (${showcase.groups.length}/3)',
+                    style: mc.bodyStrongStyle,
+                  ),
+                  SizedBox(height: mc.space8),
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    children: showcase.groups
+                        .map(
+                          (ProfileShowcaseGroupItem g) => Container(
+                            key: ValueKey<String>('me-group-chip-${g.id}'),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: mc.space12,
+                              vertical: mc.space8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: mc.primarySoft,
+                              borderRadius:
+                                  BorderRadius.circular(mc.radiusControl),
+                              border: Border.all(color: mc.outline),
+                            ),
+                            child: Text(
+                              '${g.name} · Chuỗi ${g.streakDays} ngày (${g.memberCount}/${g.maxMembers})',
+                              style: mc.captionStyle.copyWith(color: mc.ink),
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                ],
+                SizedBox(height: mc.space12),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(mc.space12),
+                  decoration: BoxDecoration(
+                    color: mc.paper,
+                    borderRadius: BorderRadius.circular(mc.radiusControl),
+                    border: Border.all(color: mc.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Mục tiêu: ${profile.goalLabel.isNotEmpty ? profile.goalLabel : "Chưa đặt mục tiêu"}',
+                        key: const ValueKey<String>('me-profile-goal'),
+                        style: mc.bodyStrongStyle,
+                      ),
+                      SizedBox(height: mc.space8),
+                      Text('Môn học đã chọn:', style: mc.captionStyle),
+                      SizedBox(height: mc.space4),
+                      if (profile.selectedSubjectCodes.isEmpty)
+                        Text(
+                          'Chưa chọn môn học. Bấm "Chỉnh sửa hồ sơ" để thiết lập.',
+                          style: mc.captionStyle,
+                        )
+                      else
+                        Wrap(
+                          spacing: mc.space8,
+                          runSpacing: mc.space8,
+                          children: profile.selectedSubjectCodes
+                              .map(
+                                (String code) => MindClockStatusPill(
+                                  label: SubjectCatalog.nameFor(code),
+                                ),
+                              )
+                              .toList(growable: false),
+                        ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: mc.space12),
                 Wrap(
@@ -151,9 +538,45 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                   runSpacing: mc.space8,
                   children: <Widget>[
                     MindClockButton(
+                      key: const ValueKey<String>('me-edit-profile-top'),
+                      label: 'Chỉnh sửa hồ sơ & TKB',
+                      icon: MindClockIconKind.edit,
+                      expand: false,
+                      onPressed: onEditProfileAndTimetable,
+                    ),
+                    if (personalViewModel != null)
+                      MindClockButton(
+                        key: const ValueKey<String>(
+                            'me-open-weekly-leaderboard-btn'),
+                        label: 'BXH Học bá tuần',
+                        icon: MindClockIconKind.sunrise,
+                        variant: MindClockButtonVariant.secondary,
+                        expand: false,
+                        onPressed: () => showWeeklyLeaderboardSheet(
+                          context: context,
+                          viewModel: personalViewModel!,
+                          initialSubjectCode:
+                              profile.selectedSubjectCodes.isNotEmpty
+                                  ? profile.selectedSubjectCodes.first
+                                  : 'TOAN',
+                        ),
+                      ),
+                    if (isAuthed)
+                      MindClockButton(
+                        key: const ValueKey<String>('me-sync-profile-now'),
+                        label: _syncingProfile
+                            ? 'Đang đồng bộ...'
+                            : 'Đồng bộ hồ sơ ngay',
+                        icon: MindClockIconKind.check,
+                        variant: MindClockButtonVariant.secondary,
+                        expand: false,
+                        onPressed: _syncingProfile ? null : _syncRealProfileNow,
+                      ),
+                    MindClockButton(
                       key: const ValueKey<String>('me-open-commitment-group'),
                       label: 'Nhóm cam kết & Pet Mầm',
                       icon: MindClockIconKind.shield,
+                      variant: MindClockButtonVariant.secondary,
                       expand: false,
                       onPressed: () => showCommitmentGroupSheet(
                         context: context,
@@ -166,8 +589,8 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                       label: _pickingAvatar
                           ? 'Đang mở thư viện...'
                           : 'Đổi ảnh đại diện từ máy',
-                      icon: MindClockIconKind.edit,
-                      variant: MindClockButtonVariant.secondary,
+                      icon: MindClockIconKind.user,
+                      variant: MindClockButtonVariant.subtle,
                       expand: false,
                       onPressed: _pickingAvatar ? null : _pickAvatarFromDevice,
                     ),
@@ -252,7 +675,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                         showPublicStudentProfileDialog(
                           context: context,
                           profile: PublicStudentProfile(
-                            userId: 'self',
+                            userId: personalViewModel?.authSession.uid ?? 'self',
                             alias: viewModel.profile.alias.isNotEmpty
                                 ? viewModel.profile.alias
                                 : 'Học sinh MindClock',

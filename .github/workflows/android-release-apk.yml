@@ -1,0 +1,64 @@
+name: Build & Publish Android APK (GitHub Releases)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Version tag cho GitHub Release (vd v1.0.1)'
+        required: true
+        default: 'v1.0.0'
+      api_base_url:
+        description: 'URL backend HTTPS cho app Android'
+        required: true
+        default: 'https://api.ieltsoasis.site'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter packages
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        env:
+          API_URL: ${{ inputs.api_base_url || 'https://api.ieltsoasis.site' }}
+        run: |
+          flutter build apk --release \
+            --dart-define=MINDCLOCK_API_BASE_URL="$API_URL"
+          cp build/app/outputs/flutter-apk/app-release.apk mindclock-android.apk
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag_name || github.ref_name }}
+          name: MindClock Android ${{ inputs.tag_name || github.ref_name }}
+          body: |
+            Bản cài đặt Android chính thức của **MindClock** kết nối máy chủ `${{ inputs.api_base_url || 'https://api.ieltsoasis.site' }}`.
+            - Bấm tải `mindclock-android.apk` và cài đặt trên Android 8.0+.
+          files: |
+            app/mindclock-android.apk

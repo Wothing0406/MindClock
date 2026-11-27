@@ -13,7 +13,7 @@ import '../../../core/widgets/mam_pet_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../services/pet_share_image_exporter.dart';
-import 'commitment_group_sheet.dart';
+import 'commitment_group_screen.dart';
 import 'pet_share_card.dart';
 
 class TodayPetCard extends StatefulWidget {
@@ -21,10 +21,12 @@ class TodayPetCard extends StatefulWidget {
     super.key,
     required this.repository,
     this.shareGateway,
+    this.refreshTick,
   });
 
   final CommunityRepository repository;
   final PetShareGateway? shareGateway;
+  final ValueListenable<int>? refreshTick;
 
   @override
   State<TodayPetCard> createState() => _TodayPetCardState();
@@ -40,13 +42,28 @@ class _TodayPetCardState extends State<TodayPetCard> {
   @override
   void initState() {
     super.initState();
+    widget.refreshTick?.addListener(_onExternalRefresh);
     _load();
   }
 
   @override
   void didUpdateWidget(covariant TodayPetCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshTick != widget.refreshTick) {
+      oldWidget.refreshTick?.removeListener(_onExternalRefresh);
+      widget.refreshTick?.addListener(_onExternalRefresh);
+    }
     if (!identical(oldWidget.repository, widget.repository)) _load();
+  }
+
+  @override
+  void dispose() {
+    widget.refreshTick?.removeListener(_onExternalRefresh);
+    super.dispose();
+  }
+
+  void _onExternalRefresh() {
+    if (mounted) _load();
   }
 
   Future<void> _load() async {
@@ -74,8 +91,11 @@ class _TodayPetCardState extends State<TodayPetCard> {
   }
 
   Future<void> _openHub() async {
-    await showCommitmentGroupSheet(
-        context: context, repository: widget.repository);
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CommitmentGroupScreen(repository: widget.repository),
+      ),
+    );
     if (mounted) await _load();
   }
 
@@ -268,13 +288,29 @@ class _TodayPetCardState extends State<TodayPetCard> {
           Wrap(
             spacing: mc.space8,
             runSpacing: mc.space8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              MindClockStatusPill(label: 'Chuỗi ${pet.currentStreakDays} ngày'),
+              MindClockStatusPill(
+                label: pet.currentStreakDays > 0
+                    ? '${pet.milestoneLabelVi} · ${pet.currentStreakDays} ngày'
+                    : 'Chuỗi ${pet.currentStreakDays} ngày',
+                accentWarm:
+                    pet.allMembersDoneToday || pet.currentStreakDays > 0,
+              ),
               MindClockStatusPill(
                 label: 'Hôm nay ${pet.todayCareCount}/${group.members.length}',
-                accentWarm: true,
+                accentWarm: !pet.allMembersDoneToday,
               ),
             ],
+          ),
+          SizedBox(height: mc.space4),
+          Text(
+            pet.allMembersDoneToday
+                ? 'Cả nhóm đã hoàn thành hôm nay · Đã giữ Chuỗi!'
+                : (pet.streakPreservedToday
+                    ? 'Có ${pet.busyCountToday} bạn xin bận · Đang bảo lưu ${pet.milestoneLabelVi}!'
+                    : 'Cả nhóm ${pet.todayCareCount}/${group.members.length} cùng hoàn thành hôm nay để giữ và tăng Chuỗi.'),
+            style: mc.captionStyle,
           ),
           if (_errorVi != null) ...<Widget>[
             SizedBox(height: mc.space8),

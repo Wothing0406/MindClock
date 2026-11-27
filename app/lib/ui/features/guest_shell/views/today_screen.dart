@@ -17,6 +17,8 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../study_focus/view_models/study_focus_view_model.dart';
 import '../../community/views/today_pet_card.dart';
+import '../../personal_flow/view_models/personal_flow_view_model.dart';
+import '../../personal_flow/views/today_streak_card.dart';
 import '../view_models/guest_workspace_view_model.dart';
 import 'day_schedule_timeline_card.dart';
 
@@ -28,6 +30,7 @@ class TodayScreen extends StatefulWidget {
     required this.onCreateAlarm,
     required this.onEditAlarm,
     required this.onOpenTimetableAndProfile,
+    this.personalViewModel,
     this.studyViewModel,
     this.communityRepository,
     this.onOpenStudySpace,
@@ -39,6 +42,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onCreateAlarm;
   final ValueChanged<AlarmConfig> onEditAlarm;
   final VoidCallback onOpenTimetableAndProfile;
+  final PersonalFlowViewModel? personalViewModel;
   final StudyFocusViewModel? studyViewModel;
   final CommunityRepository? communityRepository;
   final VoidCallback? onOpenStudySpace;
@@ -50,6 +54,7 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
+  final ValueNotifier<int> _petRefreshTick = ValueNotifier<int>(0);
   late int _selectedWeekday;
   late DateTime _currentTime;
   Timer? _clockTicker;
@@ -71,6 +76,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void dispose() {
     _clockTicker?.cancel();
+    _petRefreshTick.dispose();
     super.dispose();
   }
 
@@ -151,14 +157,15 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             ],
           ),
-          // 0. Khung đồng hồ thời gian thực (Realtime Clock Hero)
+          // 0. Khung đồng hồ thời gian thực (Realtime Clock Hero - đồng bộ trang vở sáng)
           Container(
             width: double.infinity,
             margin: EdgeInsets.only(top: mc.space12, bottom: mc.space12),
             padding: EdgeInsets.all(mc.space16),
             decoration: BoxDecoration(
-              color: mc.night,
+              color: mc.surface,
               borderRadius: BorderRadius.circular(mc.radiusCard),
+              border: Border.all(color: mc.outline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,6 +191,7 @@ class _TodayScreenState extends State<TodayScreen> {
                             style: mc.alarmHeroStyle.copyWith(
                               fontSize: 32,
                               letterSpacing: -1,
+                              color: mc.ink,
                             ),
                           ),
                           SizedBox(width: mc.space4),
@@ -193,7 +201,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                 'today-realtime-clock-sec'),
                             style: mc.alarmHeroStyle.copyWith(
                               fontSize: 20,
-                              color: mc.sunrise,
+                              color: mc.primary,
                             ),
                           ),
                         ],
@@ -206,10 +214,10 @@ class _TodayScreenState extends State<TodayScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: mc.nightSurface,
+                          color: mc.primarySoft,
                           borderRadius: BorderRadius.circular(mc.radiusChip),
                           border: Border.all(
-                              color: mc.sunrise.withValues(alpha: 0.6)),
+                              color: mc.primary.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -226,7 +234,7 @@ class _TodayScreenState extends State<TodayScreen> {
                             Text(
                               'Thời gian thực',
                               style:
-                                  mc.captionStyle.copyWith(color: mc.nightText),
+                                  mc.captionStyle.copyWith(color: mc.primary),
                             ),
                           ],
                         ),
@@ -237,8 +245,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 SizedBox(height: mc.space4),
                 Text(
                   '${WeeklyTimetable.weekdayLabel(_currentTime.weekday)}, ngày ${_currentTime.day.toString().padLeft(2, '0')}/${_currentTime.month.toString().padLeft(2, '0')}/${_currentTime.year}',
-                  style: mc.bodyStyle
-                      .copyWith(color: mc.nightText.withValues(alpha: 0.8)),
+                  style: mc.bodyStyle.copyWith(color: mc.inkMuted),
                 ),
                 SizedBox(height: mc.space12),
                 Container(
@@ -246,14 +253,14 @@ class _TodayScreenState extends State<TodayScreen> {
                   padding: EdgeInsets.symmetric(
                       horizontal: mc.space12, vertical: mc.space8),
                   decoration: BoxDecoration(
-                    color: mc.nightSurface,
+                    color: mc.sunriseSoft,
                     borderRadius: BorderRadius.circular(mc.radiusControl),
                   ),
                   child: Row(
                     children: <Widget>[
                       MindClockIcon(
                         MindClockIconKind.bell,
-                        color: mc.sunrise,
+                        color: mc.primary,
                         size: 18,
                       ),
                       SizedBox(width: mc.space8),
@@ -263,7 +270,7 @@ class _TodayScreenState extends State<TodayScreen> {
                               ? '${_formatAlarmCountdown(activeAlarm, _currentTime)} · Chuông ${activeAlarm.formattedTime}'
                               : 'Báo thức đang tắt · Chạm thẻ bên dưới để bật giờ dậy',
                           style: mc.captionStyle.copyWith(
-                            color: mc.nightText,
+                            color: mc.ink,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -289,6 +296,14 @@ class _TodayScreenState extends State<TodayScreen> {
             morningProposal: morningProposal,
             selectedDaySchedule: selectedDaySchedule,
           ),
+          if (widget.personalViewModel != null) ...<Widget>[
+            SizedBox(height: mc.space12),
+            TodayStreakCard(
+              personalViewModel: widget.personalViewModel!,
+              workspaceViewModel: widget.viewModel,
+              onReportSubmitted: () => _petRefreshTick.value++,
+            ),
+          ],
           if (widget.viewModel.needsOsPermissions) ...<Widget>[
             SizedBox(height: mc.space12),
             Container(
@@ -729,8 +744,12 @@ class _TodayScreenState extends State<TodayScreen> {
                       width: double.infinity,
                       padding: EdgeInsets.all(mc.space16),
                       decoration: BoxDecoration(
-                        color: mc.night,
+                        color: mc.surface,
                         borderRadius: BorderRadius.circular(mc.radiusCard),
+                        border: Border.all(
+                          color: alarm.enabled ? mc.primary : mc.outline,
+                          width: alarm.enabled ? 1.5 : 1,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,7 +764,9 @@ class _TodayScreenState extends State<TodayScreen> {
                                 alarm.formattedTime,
                                 key: ValueKey<String>(
                                     'alarm-card-time-${alarm.id}'),
-                                style: mc.alarmHeroStyle,
+                                style: mc.alarmHeroStyle.copyWith(
+                                  color: mc.ink,
+                                ),
                               ),
                               Wrap(
                                 spacing: mc.space8,
@@ -778,12 +799,15 @@ class _TodayScreenState extends State<TodayScreen> {
                             '$repeatText · ${alarm.soundOption.labelVi} · '
                             '${alarm.vibrateEnabled ? "Có rung" : "Không rung"}',
                             style:
-                                mc.captionStyle.copyWith(color: mc.nightText),
+                                mc.captionStyle.copyWith(color: mc.inkMuted),
                           ),
                           SizedBox(height: mc.space4),
                           Text(
                             widget.viewModel.explainAlarmModeAndSubject(alarm),
-                            style: mc.captionStyle.copyWith(color: mc.sunrise),
+                            style: mc.captionStyle.copyWith(
+                              color: mc.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           SizedBox(height: mc.space12),
                           Wrap(
@@ -809,15 +833,21 @@ class _TodayScreenState extends State<TodayScreen> {
                                   decoration: BoxDecoration(
                                     color: alarm.enabled
                                         ? mc.primary
-                                        : mc.nightSurface,
+                                        : mc.paper,
                                     borderRadius:
                                         BorderRadius.circular(mc.radiusChip),
-                                    border: Border.all(color: mc.sunrise),
+                                    border: Border.all(
+                                      color: alarm.enabled
+                                          ? mc.primary
+                                          : mc.outline,
+                                    ),
                                   ),
                                   child: Text(
                                     alarm.enabled ? 'Đang bật' : 'Đang tắt',
                                     style: mc.chipLabelStyle.copyWith(
-                                      color: mc.nightText,
+                                      color: alarm.enabled
+                                          ? mc.onPrimary
+                                          : mc.ink,
                                     ),
                                   ),
                                 ),
@@ -832,7 +862,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                     vertical: mc.space8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: mc.nightSurface,
+                                    color: mc.paper,
                                     borderRadius:
                                         BorderRadius.circular(mc.radiusChip),
                                     border: Border.all(color: mc.outline),
@@ -840,7 +870,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   child: Text(
                                     'Sửa báo thức',
                                     style: mc.chipLabelStyle.copyWith(
-                                      color: mc.nightText,
+                                      color: mc.ink,
                                     ),
                                   ),
                                 ),
@@ -873,7 +903,10 @@ class _TodayScreenState extends State<TodayScreen> {
               style: mc.sectionTitleStyle,
             ),
             SizedBox(height: mc.space8),
-            TodayPetCard(repository: widget.communityRepository!),
+            TodayPetCard(
+              repository: widget.communityRepository!,
+              refreshTick: _petRefreshTick,
+            ),
           ],
         ],
       ),

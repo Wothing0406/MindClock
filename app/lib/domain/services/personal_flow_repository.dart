@@ -26,12 +26,15 @@ abstract interface class PersonalFlowRepository {
     required WeeklyTimetable timetable,
   });
 
+  Future<WeeklyTimetable?> fetchTimetableSnapshot();
+
   Future<void> deleteAccount();
 
   Future<ChallengeQuestion> fetchNextChallenge({
     required String localDate,
     String? subjectCode,
     String mode = 'bank',
+    String? difficulty,
   });
 
   Future<StudySessionRecord> createOrSyncSession({
@@ -55,6 +58,7 @@ abstract interface class PersonalFlowRepository {
   Future<SessionAbandonResult> abandonSession({
     required String sessionId,
     required String idempotencyKey,
+    bool immediate = false,
   });
 
   Future<GradingResult> submitTextAnswer({
@@ -63,6 +67,8 @@ abstract interface class PersonalFlowRepository {
     required String reasoningText,
     required String clientAttemptId,
     required String idempotencyKey,
+    int? selectedIndex,
+    List<int>? quizAnswers,
   });
 
   Future<GradingResult> submitPhotoAttempt({
@@ -84,6 +90,15 @@ abstract interface class PersonalFlowRepository {
 
   Future<ProgressSummary> fetchProgressSummary();
 
+  Future<DailyReportSubmitResult> submitDailyReport({
+    required int tasksCompleted,
+    required String feeling,
+    required String reflectionNote,
+    required String idempotencyKey,
+  });
+
+  Future<List<DailyReportRecord>> fetchDailyReports({int limit = 14});
+
   Future<XpHistoryPage> fetchXpHistory({int limit = 20, int offset = 0});
 
   Future<List<SessionHistoryItem>> fetchSessionHistory({
@@ -94,5 +109,12 @@ abstract interface class PersonalFlowRepository {
   Future<List<Map<String, dynamic>>> parseTimetableImage({
     required String imageBase64,
     String mimeType = 'image/jpeg',
+  });
+
+  Future<ProfileShowcase> fetchProfileShowcase();
+
+  Future<WeeklySubjectLeaderboard> fetchWeeklySubjectLeaderboard({
+    String subjectCode = 'TOAN',
+    int limit = 20,
   });
 }

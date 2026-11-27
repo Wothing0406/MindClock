@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
+import '../../../core/widgets/mindclock_icon.dart';
 import '../view_models/personal_flow_view_model.dart';
+import 'streak_detail_sheet.dart';
 
 /// Tiến độ riêng tư, luôn đọc từ cùng VM/server với màn luyện tập.
 class ProfileProgressCard extends StatefulWidget {
@@ -67,7 +69,9 @@ class _ProfileProgressCardState extends State<ProfileProgressCard> {
 
   String _reason(String reason) => switch (reason) {
         'challenge_correct' => 'Hoàn thành câu ôn',
+        'photo_challenge_correct' => 'Hoàn thành câu ôn qua ảnh',
         'study_time_v0_1' => 'Hoàn thành phiên học',
+        'daily_report' => 'Hoàn thành báo cáo ngày',
         _ => 'Điều chỉnh EXP từ máy chủ',
       };
 
@@ -117,8 +121,19 @@ class _ProfileProgressCardState extends State<ProfileProgressCard> {
                         style: mc.captionStyle),
                   SizedBox(height: mc.space8),
                   Text(
-                      'Chuỗi ôn: ${progress.streak} ngày · ${progress.completedSessions} lượt hoàn thành',
+                      'Chuỗi giữ nhịp: ${progress.streak} ngày (Kỷ lục ${progress.bestStreak} ngày) · ${progress.todayCompleted ? "Hôm nay đã giữ" : "Hôm nay chưa giữ"} · ${progress.completedSessions} lượt hoàn thành',
                       style: mc.bodyStyle),
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey('profile-view-streak-detail'),
+                    label: 'Xem chuỗi & Báo cáo ngày',
+                    icon: MindClockIconKind.flame,
+                    variant: MindClockButtonVariant.secondary,
+                    onPressed: () => showStreakDetailSheet(
+                      context: context,
+                      viewModel: vm,
+                    ),
+                  ),
                   Text(
                       'Cấp ghi nhận hoạt động học; năng lực theo môn và rank thi đấu được tính riêng.',
                       style: mc.captionStyle),

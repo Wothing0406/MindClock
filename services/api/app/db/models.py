@@ -645,3 +645,71 @@ class LocalAuthAccount(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
+
+
+class DailyReport(Base):
+    __tablename__ = 'daily_reports'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'local_date', name='uq_daily_report_user_date'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    local_date: Mapped[str] = mapped_column(String(10), index=True)
+    study_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
+    challenge_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    feeling: Mapped[str] = mapped_column(String(24), default='steady')
+    reflection_note: Mapped[str] = mapped_column(Text, default='')
+    xp_awarded: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class SubjectMemory(Base):
+    __tablename__ = 'subject_memories'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'subject_code', name='uq_subject_memory_user_subject'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    subject_code: Mapped[str] = mapped_column(String(32), index=True)
+    grade_level: Mapped[str] = mapped_column(String(24), default='Lớp 11')
+    current_week: Mapped[int] = mapped_column(Integer, default=12)
+    current_chapter: Mapped[str] = mapped_column(String(160), default='')
+    current_topic: Mapped[str] = mapped_column(String(160), default='')
+    mastery_score: Mapped[int] = mapped_column(Integer, default=50)
+    attempts_count: Mapped[int] = mapped_column(Integer, default=0)
+    correct_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_practiced_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class CommitmentGroupBusyDay(Base):
+    __tablename__ = 'commitment_group_busy_days'
+    __table_args__ = (
+        UniqueConstraint('group_id', 'user_id', 'local_date', name='uq_group_busy_user_date'),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    group_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('commitment_groups.id', ondelete='CASCADE'), index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    local_date: Mapped[str] = mapped_column(String(10), index=True)
+    month_key: Mapped[str] = mapped_column(String(7), index=True)
+    reason: Mapped[str] = mapped_column(String(64), default='busy')
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

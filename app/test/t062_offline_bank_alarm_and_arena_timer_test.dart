@@ -57,8 +57,10 @@ void main() {
             weekday: 1,
             isRestDay: false,
             entries: <TimetableEntry>[
-              TimetableEntry(id: 's1', subjectCode: 'activity', startMinutes: 420),
-              TimetableEntry(id: 's2', subjectCode: 'chemistry', startMinutes: 470),
+              TimetableEntry(
+                  id: 's1', subjectCode: 'activity', startMinutes: 420),
+              TimetableEntry(
+                  id: 's2', subjectCode: 'chemistry', startMinutes: 470),
               TimetableEntry(id: 's3', subjectCode: 'math', startMinutes: 520),
             ],
           ),
@@ -179,7 +181,8 @@ void main() {
           home: Scaffold(
             body: ArenaScreen(
               guestViewModel: GuestWorkspaceViewModel(
-                repository: GuestWorkspaceRepository(store: InMemoryKeyValueStore()),
+                repository:
+                    GuestWorkspaceRepository(store: InMemoryKeyValueStore()),
                 alarmScheduler: const UnboundAlarmSchedulerService(),
               ),
               arenaViewModel: soloVm,
@@ -251,13 +254,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Demo'), findsNothing);
       expect(find.textContaining('Mẫu PvP'), findsNothing);
-      expect(find.text('Đấu tập offline · 0 RP'), findsOneWidget);
+      expect(find.text('Đấu trường PvP'), findsOneWidget);
 
       // Ghép trận (lần 1 queue -> pollOnce ra trận) -> thấy countdown Còn ...s
       await tester.ensureVisible(
         find.byKey(const ValueKey<String>('pvp-find-match-btn')),
       );
-      await tester.tap(find.byKey(const ValueKey<String>('pvp-find-match-btn')));
+      await tester
+          .tap(find.byKey(const ValueKey<String>('pvp-find-match-btn')));
       await tester.pumpAndSettle();
       await pvpVm.pollOnce();
       await tester.pumpAndSettle();
@@ -273,7 +277,8 @@ void main() {
     'T062 TC-06/07: Báo thức tới giờ reo không có subjectCode tự phân giải môn TKB + không còn nhãn Demo/Thử phiên',
     (WidgetTester tester) async {
       final InMemoryKeyValueStore store = InMemoryKeyValueStore();
-      final GuestWorkspaceRepository repo = GuestWorkspaceRepository(store: store);
+      final GuestWorkspaceRepository repo =
+          GuestWorkspaceRepository(store: store);
       final int todayWeekday = DateTime.now().weekday;
       await repo.save(
         GuestWorkspace(
@@ -349,8 +354,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Đang ở màn chuông báo thức reo đúng giờ -> bấm Mở câu hỏi
-      expect(find.byKey(const ValueKey<String>('ring-open-question')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey<String>('ring-open-question')));
+      expect(find.byKey(const ValueKey<String>('ring-open-question')),
+          findsOneWidget);
+      await tester
+          .tap(find.byKey(const ValueKey<String>('ring-open-question')));
       await tester.pumpAndSettle();
 
       // Mở tab Luyện tập với câu hỏi Vật lí đúng TKB (sau khi bỏ qua Chào cờ)

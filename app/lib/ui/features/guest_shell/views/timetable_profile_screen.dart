@@ -10,6 +10,7 @@ import '../../../../domain/models/wake_suggestion.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
+import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -46,6 +47,8 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
   late String? _gradeLevel;
   late Set<String> _selectedSubjects;
   late Map<String, PriorityLevel> _priorities;
+  late String _avatarId;
+  late TextEditingController _aliasController;
   late TextEditingController _goalController;
   String? _feedbackMessage;
   bool _isScanningAi = false;
@@ -162,16 +165,19 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
   void _syncProfileDraft() {
     final StudyProfile p = widget.viewModel.profile;
     _gradeLevel = p.gradeLevel;
+    _avatarId = p.avatarId.isNotEmpty ? p.avatarId : 'sunrise';
     _selectedSubjects = Set<String>.from(p.selectedSubjectCodes);
     _priorities = <String, PriorityLevel>{
       for (final PrioritySubject item in p.prioritySubjects)
         item.subjectCode: item.level,
     };
+    _aliasController = TextEditingController(text: p.alias);
     _goalController = TextEditingController(text: p.goalLabel);
   }
 
   @override
   void dispose() {
+    _aliasController.dispose();
     _goalController.dispose();
     super.dispose();
   }
@@ -233,6 +239,10 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
         )
         .toList(growable: false);
     final StudyProfile nextProfile = widget.viewModel.profile.copyWith(
+      alias: _aliasController.text.trim().isNotEmpty
+          ? _aliasController.text.trim()
+          : widget.viewModel.profile.alias,
+      avatarId: _avatarId,
       gradeLevel: _gradeLevel,
       selectedSubjectCodes: _selectedSubjects.toList(growable: false),
       prioritySubjects: priorityList,
@@ -247,7 +257,7 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
     }
     if (!mounted) return;
     setState(() {
-      _feedbackMessage = 'Đã lưu thay đổi lớp, môn học và mục tiêu.';
+      _feedbackMessage = 'Đã lưu hồ sơ (biệt danh, avatar, lớp, môn học, mục tiêu) và đồng bộ.';
     });
   }
 
@@ -356,13 +366,15 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                           }),
                         ),
                         SizedBox(height: mc.space16),
-                        Row(
+                        Wrap(
+                          spacing: mc.space8,
+                          runSpacing: mc.space8,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: <Widget>[
-                            Expanded(
-                              child: Text(
-                                WeeklyTimetable.weekdayLabel(_selectedWeekday),
-                                style: mc.sectionTitleStyle,
-                              ),
+                            Text(
+                              WeeklyTimetable.weekdayLabel(_selectedWeekday),
+                              style: mc.sectionTitleStyle,
                             ),
                             MindClockPressable(
                               key: const ValueKey<String>('toggle-rest-day'),
@@ -864,6 +876,73 @@ class _TimetableProfileScreenState extends State<TimetableProfileScreen> {
                         Text(
                           AppStrings.editProfileSection,
                           style: mc.sectionTitleStyle,
+                        ),
+                        SizedBox(height: mc.space12),
+                        TextField(
+                          key: const ValueKey<String>('profile-alias-input'),
+                          controller: _aliasController,
+                          style: mc.bodyStyle,
+                          maxLength: 80,
+                          decoration: InputDecoration(
+                            labelText: 'Biệt danh học sinh',
+                            hintText: 'Ví dụ: Minh Anh 12A',
+                            filled: true,
+                            fillColor: mc.paper,
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(mc.radiusControl),
+                              borderSide: BorderSide(color: mc.outline),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: mc.space8),
+                        Text('Chọn avatar đại diện:', style: mc.captionStyle),
+                        SizedBox(height: mc.space8),
+                        Wrap(
+                          spacing: mc.space8,
+                          runSpacing: mc.space8,
+                          children: MindClockAvatarCatalog.presets.map(
+                            (Map<String, dynamic> preset) {
+                              final String id = preset['id'] as String;
+                              final String label = preset['label'] as String;
+                              final bool selected = _avatarId == id;
+                              return MindClockPressable(
+                                key: ValueKey<String>('profile-avatar-$id'),
+                                selected: selected,
+                                semanticLabel: 'Avatar $label',
+                                onPressed: () => setState(() => _avatarId = id),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: mc.space8,
+                                    vertical: mc.space8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? mc.primarySoft
+                                        : mc.paper,
+                                    borderRadius:
+                                        BorderRadius.circular(mc.radiusChip),
+                                    border: Border.all(
+                                      color:
+                                          selected ? mc.primary : mc.outline,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      MindClockAvatarView(
+                                        avatarId: id,
+                                        size: 28,
+                                        selected: selected,
+                                      ),
+                                      SizedBox(width: mc.space8),
+                                      Text(label, style: mc.chipLabelStyle),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ).toList(growable: false),
                         ),
                         SizedBox(height: mc.space12),
                         Wrap(

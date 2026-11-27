@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tải MindClock Android — Đồng hồ học tập &amp; Báo thức THPT</title>
+  <style>
+    :root {
+      --paper: #F7F7F2;
+      --surface: #FFFFFF;
+      --ink: #1B2741;
+      --ink-muted: #526078;
+      --primary: #126F73;
+      --primary-soft: #E7F2EF;
+      --night: #101A30;
+      --sunrise: #F4B95F;
+      --outline: #D7DFE5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    .hero {
+      background: var(--night);
+      color: #F7FAFF;
+      border-radius: 24px;
+      padding: 28px 24px;
+      margin-bottom: 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(244, 185, 95, 0.18);
+      color: var(--sunrise);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.25;
+    }
+    .hero p {
+      margin: 0 0 20px;
+      color: rgba(247, 250, 255, 0.84);
+    }
+    .btn {
+      display: inline-block;
+      background: var(--sunrise);
+      color: var(--night);
+      text-decoration: none;
+      font-weight: 700;
+      padding: 14px 22px;
+      border-radius: 14px;
+      font-size: 16px;
+    }
+    .btn-secondary {
+      display: inline-block;
+      margin-left: 10px;
+      margin-top: 8px;
+      color: #F7FAFF;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    ol {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--ink-muted);
+    }
+    li + li { margin-top: 6px; }
+    code {
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <span class="badge">Android APK · THPT GDPT 2018</span>
+      <h1>MindClock</h1>
+      <p>Báo thức thử thách buổi sáng, lịch ngủ 24h, không gian học tập trung, chuỗi nhóm bạn bè và Đấu trường kiến thức.</p>
+      <a class="btn" href="https://github.com/Wothing0406/MindClock/releases/latest/download/mindclock-android.apk">
+        Tải MindClock APK (Mới nhất)
+      </a>
+      <a class="btn-secondary" href="https://github.com/Wothing0406/MindClock/releases">
+        Xem tất cả phiên bản trên GitHub
+      </a>
+    </section>
+
+    <section class="card">
+      <h2>Hướng dẫn cài đặt trên Android</h2>
+      <ol>
+        <li>Bấm <strong>Tải MindClock APK</strong> để tải file <code>mindclock-android.apk</code> về máy.</li>
+        <li>Mở file vừa tải và cho phép cài đặt từ nguồn trình duyệt nếu Android hỏi.</li>
+        <li>Mở MindClock, cấp quyền Báo thức chính xác &amp; Thông báo để chuông reo đúng giờ ngay cả khi tắt màn hình.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Máy chủ kết nối</h2>
+      <p style="margin:0;color:var(--ink-muted)">
+        Bản cài đặt kết nối trực tiếp máy chủ HTTPS: <code>https://api.ieltsoasis.site</code>
+      </p>
+    </section>
+  </main>
+</body>
+</html>

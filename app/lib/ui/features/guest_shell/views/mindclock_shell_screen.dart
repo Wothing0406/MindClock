@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_profile.dart';
+import '../../../../domain/models/timetable.dart';
 import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../../domain/services/community_repository.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
@@ -17,6 +20,7 @@ import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../../arena/view_models/solo_arena_view_model.dart';
 import '../../arena/views/arena_screen.dart';
+import '../../community/views/floating_mini_pet_overlay.dart';
 import '../../personal_flow/view_models/personal_flow_view_model.dart';
 import '../../personal_flow/views/practice_session_screen.dart';
 import '../../study_focus/view_models/study_focus_view_model.dart';
@@ -75,6 +79,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   AlarmConfig? _editingAlarm;
   String? _todayBanner;
   bool _syncedInitialRoute = false;
+  String? _hydratedRemoteScope;
   bool _activeAlarmPlayingInQuestion = false;
   String? _activeAlarmIdInQuestion;
   late final SoloArenaViewModel _ownedArenaViewModel;
@@ -145,6 +150,15 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
       );
     }
 
+    if (!isAuth) {
+      _hydratedRemoteScope = null;
+    } else if (widget.viewModel.isLoaded &&
+        _hydratedRemoteScope != scope &&
+        !widget.personalViewModel.isDebugFixture) {
+      _hydratedRemoteScope = scope;
+      unawaited(_hydrateRemoteProfileAndTimetable(scope));
+    }
+
     final StudyFocusViewModel? studyVm = widget.studyViewModel;
     if (studyVm != null && studyVm.isLoaded) {
       if (studyVm.ownerScopeKey != scope) {
@@ -157,6 +171,48 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           gradeLevel: widget.viewModel.profile.gradeLevel,
         );
       }
+    }
+  }
+
+  Future<void> _hydrateRemoteProfileAndTimetable(String expectedScope) async {
+    final StudyProfile? remoteProfile =
+        await widget.personalViewModel.fetchRemoteProfileIfSignedIn();
+    if (!mounted ||
+        widget.personalViewModel.authSession.ownerScopeKey != expectedScope) {
+      return;
+    }
+    if (remoteProfile != null &&
+        (remoteProfile.selectedSubjectCodes.isNotEmpty ||
+            remoteProfile.alias.isNotEmpty)) {
+      final StudyProfile current = widget.viewModel.profile;
+      final StudyProfile merged = current.copyWith(
+        alias: remoteProfile.alias.isNotEmpty
+            ? remoteProfile.alias
+            : current.alias,
+        avatarId: remoteProfile.avatarId.isNotEmpty
+            ? remoteProfile.avatarId
+            : current.avatarId,
+        gradeLevel: remoteProfile.gradeLevel ?? current.gradeLevel,
+        selectedSubjectCodes: remoteProfile.selectedSubjectCodes.isNotEmpty
+            ? remoteProfile.selectedSubjectCodes
+            : current.selectedSubjectCodes,
+        goalLabel: remoteProfile.goalLabel.isNotEmpty
+            ? remoteProfile.goalLabel
+            : current.goalLabel,
+      );
+      await widget.viewModel.saveStudyProfile(merged);
+    }
+
+    final WeeklyTimetable? remoteTimetable =
+        await widget.personalViewModel.fetchRemoteTimetableIfSignedIn();
+    if (!mounted ||
+        widget.personalViewModel.authSession.ownerScopeKey != expectedScope) {
+      return;
+    }
+    if (remoteTimetable != null &&
+        widget.viewModel.timetable.days
+            .every((DaySchedule d) => d.entries.isEmpty)) {
+      await widget.viewModel.replaceEntireTimetable(remoteTimetable);
     }
   }
 
@@ -329,29 +385,10 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 return;
               }
 
-              // Đăng nhập tài khoản cũ: khôi phục hồ sơ từ server/cục bộ và vào thẳng Hôm nay nếu đã có môn học.
-              final StudyProfile? remoteProfile =
-                  await widget.personalViewModel.fetchRemoteProfileIfSignedIn();
-              if (remoteProfile != null &&
-                  (remoteProfile.selectedSubjectCodes.isNotEmpty ||
-                      remoteProfile.alias.isNotEmpty)) {
-                final StudyProfile merged = widget.viewModel.profile.copyWith(
-                  alias: remoteProfile.alias.isNotEmpty
-                      ? remoteProfile.alias
-                      : widget.viewModel.profile.alias,
-                  avatarId: remoteProfile.avatarId,
-                  gradeLevel: remoteProfile.gradeLevel ??
-                      widget.viewModel.profile.gradeLevel,
-                  selectedSubjectCodes:
-                      remoteProfile.selectedSubjectCodes.isNotEmpty
-                          ? remoteProfile.selectedSubjectCodes
-                          : widget.viewModel.profile.selectedSubjectCodes,
-                  goalLabel: remoteProfile.goalLabel.isNotEmpty
-                      ? remoteProfile.goalLabel
-                      : widget.viewModel.profile.goalLabel,
-                );
-                await widget.viewModel.saveStudyProfile(merged);
-              }
+              // Đăng nhập tài khoản cũ: khôi phục hồ sơ & TKB từ server và vào thẳng Hôm nay nếu đã có môn học.
+              await _hydrateRemoteProfileAndTimetable(
+                widget.personalViewModel.authSession.ownerScopeKey,
+              );
 
               final StudyProfile effectiveProfile = widget.viewModel.profile;
               final bool hasCompletedSetup =
@@ -560,6 +597,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           default:
             body = TodayScreen(
               viewModel: widget.viewModel,
+              personalViewModel: widget.personalViewModel,
               studyViewModel: widget.studyViewModel,
               communityRepository: widget.communityRepository,
               lastActionBanner: _todayBanner,
@@ -635,7 +673,17 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                       ],
                     ),
                   ),
-                Expanded(child: body),
+                Expanded(
+                  child: Stack(
+                    children: <Widget>[
+                      body,
+                      if (widget.communityRepository != null)
+                        FloatingMiniPetOverlay(
+                          repository: widget.communityRepository!,
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

@@ -211,3 +211,87 @@ def test_short_or_abandoned_session_does_not_feed_pet(tmp_path: Path) -> None:
         assert finish['groupCare'] is None
         pet = client.get('/v1/commitment-groups/me', headers=_h('short')).json()['group']['pet']
         assert pet['totalCareDays'] == 0
+
+
+def test_group_streak_requires_all_active_members_and_accumulates_days(tmp_path: Path) -> None:
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from app.db.models import CommitmentPetCare
+    from app.services.commitment_group_service import CommitmentGroupService
+
+    cfg = _settings(tmp_path)
+    with TestClient(create_app(cfg)) as client:
+        owner_id, member_id = _friend(client, 'streak_a', 'streak_b')
+        group = client.post(
+            '/v1/commitment-groups',
+            headers=_h('streak_a'),
+            json={'name': 'Nhóm 100 Ngày', 'petName': 'Mầm Xanh'},
+        ).json()
+        group_id = group['groupId']
+
+        invite = client.post(
+            f'/v1/commitment-groups/{group_id}/invites',
+            headers=_h('streak_a'),
+            json={'recipientUserId': member_id},
+        ).json()
+        assert client.post(
+            f"/v1/commitment-group-invites/{invite['inviteId']}/respond",
+            headers=_h('streak_b'),
+            json={'decision': 'accept'},
+        ).status_code == 200
+
+        # Chỉ thành viên A nộp báo cáo ngày -> mới 1/2 người, CHƯA thành 1 chuỗi nhóm
+        client.post(
+            '/v1/progress/daily-report',
+            headers=_h('streak_a'),
+            json={'tasksCompleted': 2, 'feeling': 'focused', 'reflectionNote': 'A xong'},
+        )
+        pet_partial = client.get('/v1/commitment-groups/me', headers=_h('streak_a')).json()['group']['pet']
+        assert pet_partial['todayCareCount'] == 1
+        assert pet_partial['memberCount'] == 2
+        assert pet_partial['allMembersDoneToday'] is False
+        assert pet_partial['currentStreakDays'] == 0
+
+        # Thành viên B cũng hoàn thành cùng ngày -> cả nhóm 2/2 xong -> lên Chuỗi 1
+        client.post(
+            '/v1/progress/daily-report',
+            headers=_h('streak_b'),
+            json={'tasksCompleted': 3, 'feeling': 'steady', 'reflectionNote': 'B xong'},
+        )
+        pet_day1 = client.get('/v1/commitment-groups/me', headers=_h('streak_a')).json()['group']['pet']
+        assert pet_day1['todayCareCount'] == 2
+        assert pet_day1['allMembersDoneToday'] is True
+        assert pet_day1['currentStreakDays'] == 1
+        assert pet_day1['streakMilestoneLabelVi'] == 'Chuỗi 1'
+
+        # Mô phỏng thêm 2 ngày liền kề trước đó đều có cả A và B hoàn thành -> cộng dồn Chuỗi 3
+        today_vn = datetime.now(timezone.utc).astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date()
+        engine = create_engine(cfg.database_url)
+        try:
+            with Session(engine) as db:
+                for back in (1, 2):
+                    d_str = (today_vn - timedelta(days=back)).isoformat()
+                    for uid in (owner_id, member_id):
+                        db.add(CommitmentPetCare(
+                            group_id=group_id,
+                            user_id=uid,
+                            local_date=d_str,
+                            care_kind='daily_report',
+                            source_type='daily_report',
+                            source_id=f'rep_{d_str}_{uid}',
+                            xp_delta=10,
+                        ))
+                db.commit()
+        finally:
+            engine.dispose()
+
+        pet_day3 = client.get('/v1/commitment-groups/me', headers=_h('streak_b')).json()['group']['pet']
+        assert pet_day3['currentStreakDays'] == 3
+        assert pet_day3['bestStreakDays'] == 3
+        assert pet_day3['totalCareDays'] == 3
+        assert pet_day3['streakMilestoneLabelVi'] == 'Chuỗi 3'
+        assert CommitmentGroupService._best_streak([
+            (today_vn - timedelta(days=i)).isoformat() for i in range(100)
+        ]) == 100

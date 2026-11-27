@@ -47,8 +47,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
   bool _xpHistoryLoaded = false;
   bool _xpHistoryBusy = false;
   String? _xpHistoryError;
+  List<DailyReportRecord> _dailyReports = const <DailyReportRecord>[];
+  bool _dailyReportsLoaded = false;
+  bool _dailyReportBusy = false;
+  String? _dailyReportError;
   DateTime? _progressSyncedAt;
   String? _progressError;
+  ProfileShowcase? _profileShowcase;
+  WeeklySubjectLeaderboard? _weeklyLeaderboard;
+  bool _showcaseBusy = false;
+  bool _leaderboardBusy = false;
   int _progressEpoch = 0;
   int _historyEpoch = 0;
 
@@ -57,8 +65,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
   bool get xpHistoryLoaded => _xpHistoryLoaded;
   bool get xpHistoryBusy => _xpHistoryBusy;
   String? get xpHistoryError => _xpHistoryError;
+  List<DailyReportRecord> get dailyReports => List.unmodifiable(_dailyReports);
+  bool get dailyReportsLoaded => _dailyReportsLoaded;
+  bool get dailyReportBusy => _dailyReportBusy;
+  String? get dailyReportError => _dailyReportError;
   DateTime? get progressSyncedAt => _progressSyncedAt;
   String? get progressError => _progressError;
+  ProfileShowcase? get profileShowcase => _profileShowcase;
+  WeeklySubjectLeaderboard? get weeklyLeaderboard => _weeklyLeaderboard;
+  bool get showcaseBusy => _showcaseBusy;
+  bool get leaderboardBusy => _leaderboardBusy;
   OfflineTextDraft? _savedDraft;
   PhotoAttemptUpload? _pendingPhotoPreview;
   FeedbackReportResult? _lastFeedbackReport;
@@ -219,8 +235,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _xpHistoryLoaded = false;
     _xpHistoryBusy = false;
     _xpHistoryError = null;
+    _dailyReports = const <DailyReportRecord>[];
+    _dailyReportsLoaded = false;
+    _dailyReportBusy = false;
+    _dailyReportError = null;
     _progressSyncedAt = null;
     _progressError = null;
+    _profileShowcase = null;
+    _weeklyLeaderboard = null;
+    _showcaseBusy = false;
+    _leaderboardBusy = false;
     _currentQuestion = null;
     _activeSession = null;
     _lastResult = null;
@@ -254,10 +278,28 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _progressError = null;
       final history = await _repository.fetchSessionHistory(limit: 10);
       if (current()) _sessionHistory = history;
+      try {
+        final reports = await _repository.fetchDailyReports(limit: 14);
+        if (current()) {
+          _dailyReports = reports;
+          _dailyReportsLoaded = true;
+          _dailyReportError = null;
+        }
+      } on PersonalApiException catch (e) {
+        if (current()) _dailyReportError = e.messageVi;
+      }
     } on PersonalApiException catch (e) {
       if (!current()) return;
       _progressError = e.messageVi;
       await _handleApiError(e, preservePendingSubmission: true);
+    }
+    if (current()) {
+      try {
+        final showcase = await _repository.fetchProfileShowcase();
+        if (current()) _profileShowcase = showcase;
+      } on Exception {
+        // Giữ nguyên giao diện cơ bản nếu backend cũ hoặc offline.
+      }
     }
   }
 
@@ -281,6 +323,61 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _isBusy = false;
       notifyListeners();
     }
+  }
+
+  /// Tải dữ liệu Profile Showcase (`GET /v1/profile/showcase`) cho tab Tôi (`T085`).
+  Future<void> loadProfileShowcase() async {
+    if (!_authSession.isAuthenticated) return;
+    _showcaseBusy = true;
+    notifyListeners();
+    try {
+      _profileShowcase = await _repository.fetchProfileShowcase();
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+    } catch (_) {
+      // Giữ lại dữ liệu cục bộ trên máy khi ngoại tuyến.
+    } finally {
+      _showcaseBusy = false;
+      notifyListeners();
+    }
+  }
+
+  /// Tải bảng xếp hạng Học bá tuần theo môn (`GET /v1/leaderboard/weekly`).
+  Future<void> loadWeeklyLeaderboard({String subjectCode = 'TOAN'}) async {
+    if (!_authSession.isAuthenticated) return;
+    _leaderboardBusy = true;
+    notifyListeners();
+    try {
+      _weeklyLeaderboard = await _repository.fetchWeeklySubjectLeaderboard(
+        subjectCode: subjectCode,
+      );
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+    } catch (_) {
+      // Giữ trạng thái cũ nếu mất mạng.
+    } finally {
+      _leaderboardBusy = false;
+      notifyListeners();
+    }
+  }
+
+  /// Bật/tắt quyền hiển thị công khai trên BXH Học bá tuần rồi tải lại BXH.
+  Future<bool> setWeeklyLeaderboardOptIn(
+    bool granted, {
+    String subjectCode = 'TOAN',
+  }) async {
+    final bool ok = await recordConsent(
+      scope: 'weekly_leaderboard_opt_in',
+      version: '2026-11',
+      granted: granted,
+    );
+    if (ok) {
+      await Future.wait(<Future<void>>[
+        loadProfileShowcase(),
+        loadWeeklyLeaderboard(subjectCode: subjectCode),
+      ]);
+    }
+    return ok;
   }
 
   Future<void> loadXpHistory({bool refresh = false}) async {
@@ -320,6 +417,64 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> loadDailyReports({int limit = 14}) async {
+    if (!_authSession.isAuthenticated) return;
+    _dailyReportBusy = true;
+    _dailyReportError = null;
+    notifyListeners();
+    try {
+      _dailyReports = await _repository.fetchDailyReports(limit: limit);
+      _dailyReportsLoaded = true;
+    } on PersonalApiException catch (e) {
+      _dailyReportError = e.messageVi;
+      await _handleApiError(e, preservePendingSubmission: true);
+    } catch (_) {
+      _dailyReportError = 'Không thể tải báo cáo ngày lúc này.';
+    } finally {
+      _dailyReportBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<DailyReportSubmitResult?> submitDailyReport({
+    required int tasksCompleted,
+    required String feeling,
+    required String reflectionNote,
+  }) async {
+    if (!_authSession.isAuthenticated) {
+      _dailyReportError = 'Đăng nhập để gửi báo cáo ngày và nhận XP.';
+      notifyListeners();
+      return null;
+    }
+    _dailyReportBusy = true;
+    _dailyReportError = null;
+    notifyListeners();
+    try {
+      final DailyReportSubmitResult result =
+          await _repository.submitDailyReport(
+        tasksCompleted: tasksCompleted,
+        feeling: feeling,
+        reflectionNote: reflectionNote,
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+      );
+      _progressSummary = result.summary;
+      _dailyReports = await _repository.fetchDailyReports(limit: 14);
+      _dailyReportsLoaded = true;
+      await _loadOnlineProgressQuietly();
+      return result;
+    } on PersonalApiException catch (e) {
+      _dailyReportError = e.messageVi;
+      await _handleApiError(e, preservePendingSubmission: true);
+      return null;
+    } catch (_) {
+      _dailyReportError = 'Chưa gửi được báo cáo ngày. Vui lòng thử lại.';
+      return null;
+    } finally {
+      _dailyReportBusy = false;
+      notifyListeners();
+    }
+  }
+
   /// Tải câu hỏi từ `/v1/challenges/next` (hoặc lấy câu hỏi + đáp án có sẵn trong kho cục bộ khi offline/mất mạng).
   Future<void> startSession({
     String alarmId = 'practice_manual',
@@ -327,6 +482,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
     String? gradeLevel,
     bool challengeMode = false,
     bool preferAiRegen = false,
+    String? difficulty,
   }) async {
     _isBusy = true;
     _errorMessageVi = null;
@@ -370,6 +526,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
         localDate: localDate,
         subjectCode: subjectCode,
         mode: preferAiRegen ? 'ai_regen' : 'bank',
+        difficulty: difficulty,
       );
       final StudySessionRecord session = await _repository.createOrSyncSession(
         alarmId: alarmId,
@@ -586,6 +743,80 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
+  /// Nộp 1 chạm đáp án trắc nghiệm ABCD cho câu hỏi buổi sáng (`T083`).
+  Future<GradingResult?> submitMcqAnswer(int selectedIndex) async {
+    final ChallengeQuestion? question = _currentQuestion;
+    final StudySessionRecord? session = _activeSession;
+    if (question == null || session == null) {
+      _errorMessageVi = 'Hãy bắt đầu câu hỏi trước khi chọn đáp án.';
+      notifyListeners();
+      return null;
+    }
+    final String label = (selectedIndex >= 0 &&
+            selectedIndex < question.options.length)
+        ? question.options[selectedIndex]
+        : 'Đáp án ${selectedIndex + 1}';
+    _isBusy = true;
+    _errorMessageVi = null;
+    _bannerMessageVi = null;
+    notifyListeners();
+    try {
+      final GradingResult result = await _repository.submitTextAnswer(
+        sessionId: session.sessionId,
+        answerValue: label,
+        reasoningText: 'Chọn trắc nghiệm nhanh',
+        clientAttemptId: LocalIdGenerator.nextUuidV4(),
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        selectedIndex: selectedIndex,
+      );
+      _applyGradingResult(result);
+      _clearSubmissionKeys();
+      await _loadOnlineProgressQuietly();
+      return result;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      return null;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  /// Nộp đề ngắn nhiều câu trắc nghiệm đạt >= 70% (`T083`).
+  Future<GradingResult?> submitMiniQuizAnswers(List<int> quizAnswers) async {
+    final ChallengeQuestion? question = _currentQuestion;
+    final StudySessionRecord? session = _activeSession;
+    if (question == null || session == null) {
+      _errorMessageVi = 'Hãy bắt đầu đề ngắn trước khi nộp.';
+      notifyListeners();
+      return null;
+    }
+    _isBusy = true;
+    _errorMessageVi = null;
+    _bannerMessageVi = null;
+    notifyListeners();
+    try {
+      final GradingResult result = await _repository.submitTextAnswer(
+        sessionId: session.sessionId,
+        answerValue: quizAnswers.join(','),
+        reasoningText: 'Hoàn thành đề ngắn ${quizAnswers.length} câu',
+        clientAttemptId: LocalIdGenerator.nextUuidV4(),
+        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        quizAnswers: quizAnswers,
+      );
+      _applyGradingResult(result);
+      _clearSubmissionKeys();
+      await _loadOnlineProgressQuietly();
+      return result;
+    } on PersonalApiException catch (e) {
+      await _handleApiError(e, preservePendingSubmission: true);
+      return null;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
   /// Xin quyền camera đúng lúc người dùng bấm chụp và đưa sang màn xem lại trước upload.
   Future<void> capturePhotoForReview() async {
     _errorMessageVi = null;
@@ -713,10 +944,12 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   /// Bỏ lượt sau khi đã thử và sai rõ từ 5 lần (`MORNING-02`, `MORNING-03`):
   /// kết thúc phiên với `0 EXP`, không cộng ngày chuỗi, không trừ điểm đã có và hiển thị lời giải chuẩn.
-  Future<SessionAbandonResult?> abandonActiveSession() async {
+  Future<SessionAbandonResult?> abandonActiveSession({
+    bool immediate = false,
+  }) async {
     final StudySessionRecord? session = _activeSession;
     if (session == null) return null;
-    if (!canAbandonCurrentSession) {
+    if (!immediate && !canAbandonCurrentSession) {
       _errorMessageVi =
           'Chỉ mở Bỏ lượt sau khi đã thử và sai rõ từ 5 lần. Dừng khẩn cấp luôn có sẵn.';
       notifyListeners();
@@ -725,7 +958,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
     if (!_authSession.isAuthenticated || session.isOfflineLocal) {
       _activeSession = session.copyWith(state: 'abandoned');
       _bannerMessageVi =
-          'Đã bỏ lượt câu này trên máy (0 EXP, không trừ điểm đã có).';
+          'Đã bỏ cuộc câu này trên máy (0 EXP, không trừ điểm đã có).';
       notifyListeners();
       return SessionAbandonResult(
         sessionId: session.sessionId,
@@ -745,6 +978,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       final SessionAbandonResult res = await _repository.abandonSession(
         sessionId: session.sessionId,
         idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        immediate: immediate,
       );
       _activeSession = session.copyWith(
         state: res.state,
@@ -1009,6 +1243,16 @@ class PersonalFlowViewModel extends ChangeNotifier {
       return false;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Khôi phục thời khóa biểu 7 ngày (`GET /v1/timetable`) khi đăng nhập trên thiết bị mới.
+  Future<WeeklyTimetable?> fetchRemoteTimetableIfSignedIn() async {
+    if (!_authSession.isAuthenticated) return null;
+    try {
+      return await _repository.fetchTimetableSnapshot();
+    } on Exception {
+      return null;
     }
   }
 

@@ -151,7 +151,7 @@ class ArenaLobbyProfileBanner extends StatelessWidget {
           ),
           SizedBox(height: mc.space4),
           Text(
-            'Mùa Giao hữu Thử nghiệm (0 RP Ranked) · Điểm kiến thức: ${wallet.localFriendlyScore} · Trận hợp lệ: ${wallet.localMatchesCount}',
+            'Mùa Giao hữu · Điểm: ${wallet.localFriendlyScore} · Trận đã đấu: ${wallet.localMatchesCount}',
             style: mc.captionStyle,
           ),
         ],
@@ -233,7 +233,7 @@ class ArenaLobbyChampionShowcase extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Text(
-                      '3 Tướng Gốc Võ Đường',
+                      'Võ Đài Danh Tướng',
                       style: mc.sectionTitleStyle.copyWith(color: mc.nightText),
                     ),
                     MindClockStatusPill(
@@ -330,7 +330,7 @@ class ArenaLobbyChampionShowcase extends StatelessWidget {
                 SizedBox(height: mc.space8),
                 MindClockButton(
                   key: const ValueKey<String>('arena-lobby-inspect-champ'),
-                  label: 'Xem chiêu thức & bộ pose của ${spec.nameVi}',
+                  label: 'Chiêu thức & Tuyệt kỹ · ${spec.nameVi}',
                   icon: MindClockIconKind.info,
                   variant: MindClockButtonVariant.subtle,
                   onPressed: () => onInspectChampion(spec),
@@ -388,7 +388,7 @@ class _ArenaLeaderboardPanelState extends State<ArenaLeaderboardPanel> {
       children: <Widget>[
         const MindClockNoticeBanner(
           message:
-              'Bảng xếp hạng Giao hữu · 0 RP Ranked. Chỉ xếp theo độ chính xác kiến thức và số trận hợp lệ — tuyệt đối không dùng giờ dậy, email hay thời khóa biểu.',
+              'Bảng xếp hạng Đấu trường · Xếp hạng công bằng theo độ chính xác và số trận thắng.',
           isWarm: false,
         ),
         SizedBox(height: mc.space12),
@@ -514,7 +514,7 @@ class _ArenaLeaderboardPanelState extends State<ArenaLeaderboardPanel> {
         if (entries.isEmpty)
           MindClockCard(
             child: Text(
-              'Chưa có đấu thủ trong bộ lọc này ở bảng thử nghiệm.',
+              'Chưa có đấu thủ nào trong mục này.',
               style: mc.bodyStyle,
             ),
           )
@@ -631,7 +631,7 @@ class _ArenaDailyShopPanelState extends State<ArenaDailyShopPanel> {
       children: <Widget>[
         MindClockNoticeBanner(
           message:
-              'Daily Shop ngày ${widget.cosmeticStore.todayDateKey} · Chỉ bán vật phẩm mỹ thuật (Khung, Avatar, Hào quang). 0 tăng sát thương · 0 HP · 0 pay-to-win. MindCoin kiếm từ giải câu & thi đấu, không trừ khi bỏ ngày.',
+              'Daily Shop ngày ${widget.cosmeticStore.todayDateKey} · Sưu tầm Khung viền, Avatar và Hào quang thuần ngoại hình bằng MindCoin từ các trận đấu.',
           isWarm: false,
         ),
         if (_feedbackVi != null) ...<Widget>[
@@ -717,7 +717,7 @@ class _ArenaDailyShopPanelState extends State<ArenaDailyShopPanel> {
                   Text(item.descriptionVi, style: mc.captionStyle),
                   SizedBox(height: mc.space4),
                   Text(
-                    'Chỉ mỹ thuật · +${item.bonusDamage} ST · +${item.bonusHp} HP',
+                    'Trang bị ngoại hình · ${item.category.labelVi}',
                     style: mc.captionStyle.copyWith(color: mc.primary),
                   ),
                   SizedBox(height: mc.space8),

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: mindclock-api
+    runtime: docker
+    dockerfilePath: ./services/api/Dockerfile
+    dockerContext: ./services/api
+    plan: starter
+    region: singapore
+    healthCheckPath: /v1/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOCAL_AUTH_ENABLED
+        value: "true"
+      - key: LOCAL_DEV_BEARER_UID_FALLBACK
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: DATABASE_URL
+        sync: false
+      - key: LOCAL_AUTH_JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MOCK_MODE
+        value: "false"
+      - key: FIREBASE_PROJECT_ID
+        value: mindclock

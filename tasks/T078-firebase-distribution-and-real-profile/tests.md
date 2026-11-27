@@ -1,0 +1,8 @@
+# Kế hoạch và kết quả kiểm thử T078
+
+| ID | Liên kết AC | Kịch bản/đầu vào | Kết quả mong đợi | Cách chạy/môi trường | Kết quả thực/ngày |
+| --- | --- | --- | --- | --- | --- |
+| TC-01 | AC-01 | Kiểm tra `.firebaserc`, `firebase.json` và lệnh `npx -y firebase-tools@latest login:list` | Cấu hình project `mindclock` hợp lệ; ghi nhận rõ trạng thái chưa login trên máy | `npx -y firebase-tools@latest login:list` (Windows) | `firebase-tools 15.37.0` OK; trả `! No authorized accounts, run "firebase login"` (bị chặn upload live cho tới khi người dùng đăng nhập) — 27/11/2026 |
+| TC-02 | AC-02 | Ánh xạ `TOAN`, `NGU_VAN`, `TIENG_ANH` sang `math`, `literature`, `english`; `RemotePersonalFlowRepository.fetchProfileSnapshot` & `fetchTimetableSnapshot` qua HTTP | `SubjectCatalog.nameFor('TOAN') == 'Toán'`, `isApproved('TOAN') == true`, TKB khôi phục đúng weekday/subject | `flutter test --no-pub -j 1` (Windows) | Đạt (3/3 test trong `t078_real_profile_and_sync_test.dart` pass ở lần chạy xác nhận) — 27/11/2026 |
+| TC-03 | AC-03 | Render `MeGuestScreen` & `TimetableProfileScreen` ở 320dp 200%, sửa Biệt danh/Avatar/Môn/Mục tiêu, xác nhận gọi sync và hiển thị rõ ràng | Hiển thị đầy đủ Email, Biệt danh, Khối lớp, Mục tiêu, Môn học, TKB, Báo thức, nút `Đồng bộ hồ sơ ngay`, 0 overflow | `flutter test --no-pub -j 1` (Windows) | Đạt (đã sửa overflow 14px trên `TimetableProfileScreen` dòng 369) — 27/11/2026 |
+| TC-04 | AC-03, AC-04 | `DELETE /v1/me` xóa cả `DailyReport`; toàn bộ `pytest` và `flutter test` regression + `check_docs_links.py` + `check_task_records.py` | 0 lỗi static analysis, tất cả test không phụ thuộc Docker xanh | CLI local Windows | Đang chạy lượt cuối tổng hợp — 27/11/2026 |

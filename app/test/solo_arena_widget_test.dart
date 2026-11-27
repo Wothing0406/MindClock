@@ -341,7 +341,7 @@ void main() {
           find.byKey(const ValueKey<String>('arena-summary-outcome')),
           findsOneWidget,
         );
-        expect(find.textContaining('0 RP'), findsOneWidget);
+        expect(find.textContaining('Giao hữu'), findsWidgets);
         expect(find.text('Đấu hạng'), findsNothing);
 
         // Mở xem cách chấm Round 1 trong Tổng kết

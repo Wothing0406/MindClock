@@ -10,22 +10,44 @@ class CommitmentPetSummary {
     required this.totalXp,
     required this.nextStageXp,
     required this.progressionVersion,
+    this.bestStreakDays = 0,
+    this.memberCount = 1,
+    this.allMembersDoneToday = false,
+    this.streakMilestoneLabelVi,
+    this.busyCountToday = 0,
+    this.streakPreservedToday = false,
+    this.shieldsAvailable = 0,
+    this.myBusyQuotaUsed = 0,
+    this.myBusyQuotaLimit = 2,
+    this.busyTodayByMe = false,
   });
 
-  factory CommitmentPetSummary.fromJson(Map<String, dynamic> json) =>
-      CommitmentPetSummary(
-        keyName: json['key'] as String? ?? 'mam',
-        name: json['name'] as String? ?? 'Mầm',
-        stage: json['stage'] as int? ?? 1,
-        stageLabelVi: json['stageLabelVi'] as String? ?? 'Mầm non',
-        totalCareDays: json['totalCareDays'] as int? ?? 0,
-        currentStreakDays: json['currentStreakDays'] as int? ?? 0,
-        todayCareCount: json['todayCareCount'] as int? ?? 0,
-        totalXp: json['totalXp'] as int? ?? 0,
-        nextStageXp: json['nextStageXp'] as int? ?? 60,
-        progressionVersion:
-            json['progressionVersion'] as String? ?? 'pet-progression-v0.1',
-      );
+  factory CommitmentPetSummary.fromJson(Map<String, dynamic> json) {
+    final int streak = (json['currentStreakDays'] as int?) ?? 0;
+    return CommitmentPetSummary(
+      keyName: json['key'] as String? ?? 'mam',
+      name: json['name'] as String? ?? 'Mầm',
+      stage: json['stage'] as int? ?? 1,
+      stageLabelVi: json['stageLabelVi'] as String? ?? 'Mầm non',
+      totalCareDays: json['totalCareDays'] as int? ?? 0,
+      currentStreakDays: streak,
+      bestStreakDays: (json['bestStreakDays'] as int?) ?? streak,
+      todayCareCount: json['todayCareCount'] as int? ?? 0,
+      memberCount: (json['memberCount'] as int?) ?? 1,
+      allMembersDoneToday: json['allMembersDoneToday'] as bool? ?? false,
+      streakMilestoneLabelVi: json['streakMilestoneLabelVi'] as String?,
+      busyCountToday: json['busyCountToday'] as int? ?? 0,
+      streakPreservedToday: json['streakPreservedToday'] as bool? ?? false,
+      shieldsAvailable: json['shieldsAvailable'] as int? ?? 0,
+      myBusyQuotaUsed: json['myBusyQuotaUsed'] as int? ?? 0,
+      myBusyQuotaLimit: json['myBusyQuotaLimit'] as int? ?? 2,
+      busyTodayByMe: json['busyTodayByMe'] as bool? ?? false,
+      totalXp: json['totalXp'] as int? ?? 0,
+      nextStageXp: json['nextStageXp'] as int? ?? 60,
+      progressionVersion:
+          json['progressionVersion'] as String? ?? 'pet-progression-v0.1',
+    );
+  }
 
   final String keyName;
   final String name;
@@ -33,10 +55,28 @@ class CommitmentPetSummary {
   final String stageLabelVi;
   final int totalCareDays;
   final int currentStreakDays;
+  final int bestStreakDays;
   final int todayCareCount;
+  final int memberCount;
+  final bool allMembersDoneToday;
+  final String? streakMilestoneLabelVi;
+  final int busyCountToday;
+  final bool streakPreservedToday;
+  final int shieldsAvailable;
+  final int myBusyQuotaUsed;
+  final int myBusyQuotaLimit;
+  final bool busyTodayByMe;
   final int totalXp;
   final int nextStageXp;
   final String progressionVersion;
+
+  String get milestoneLabelVi =>
+      streakMilestoneLabelVi ??
+      (currentStreakDays >= 100
+          ? 'Chuỗi 100+'
+          : (currentStreakDays > 0
+              ? 'Chuỗi $currentStreakDays'
+              : 'Chưa mở chuỗi'));
 }
 
 class CommitmentGroupMemberItem {

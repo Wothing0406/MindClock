@@ -1,0 +1,5 @@
+# Nhật ký xử lý lỗi T077
+
+- **27/11/2026 (Vòng 1):** Khởi tạo task từ yêu cầu người dùng. Phát hiện `CommitmentGroupService._pet_summary` lọc cứng `care_kind == 'study_care'` làm bỏ sót `morning_challenge` khi tính `currentStreakDays`; đồng thời `GET /v1/progress/summary` chỉ đếm `challenge_correct` và thiếu API/UI Báo cáo ngày + lịch xem streak.
+- **27/11/2026 (Vòng 2):** Khi chỉnh `models.py`, lệnh `edit_file` khớp nhiều vị trí `created_at` nên đã `git checkout -- services/api/app/db/models.py` và sửa lại với Target duy nhất ở `LocalAuthAccount`.
+- **27/11/2026 (Vòng 3):** Lần chạy đầu `t077_daily_report_streak_test.dart` fail ở 2 điểm: (1) nút `daily-report-submit` nằm dưới vùng cuộn `ListView` của `DailyReportSheet` -> đưa nút `Hoàn thành báo cáo · Giữ 1 Streak` thành thanh cố định dưới đáy sheet để user luôn bấm được ngay; (2) test `320dp 200%` gộp cả `TodayStreakCard` và `StreakDetailSheet` trong một `Column` không cuộn -> tách đúng container thật (`SingleChildScrollView` cho `TodayStreakCard` và khung modal `720 * 0.92` cho `StreakDetailSheet`). Đã chạy lại `t077_daily_report_streak_test.dart` đạt 3/3.

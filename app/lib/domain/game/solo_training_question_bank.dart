@@ -57,11 +57,88 @@ class SoloGradingFeedback {
   final bool canRevealRubric;
 }
 
+/// Phương án thẻ bài nhanh 1 chạm cho Đấu trường (`T087`).
+class SoloQuickChoice {
+  const SoloQuickChoice({
+    required this.label,
+    required this.answerValue,
+    required this.reasoningStep,
+  });
+
+  final String label;
+  final String answerValue;
+  final String reasoningStep;
+}
+
 /// Bộ câu hỏi đã duyệt cache sẵn trên máy cho G1 Luyện đơn (offline-safe).
 ///
 /// Các môn chưa có bộ câu duyệt sẽ trả về danh sách rỗng để UI thông báo trung thực.
 class SoloTrainingQuestionBank {
   const SoloTrainingQuestionBank._();
+
+  /// Sinh 4 thẻ đáp án nhanh từ câu hỏi hiện tại (gồm 1 thẻ đúng + bước chuẩn và 3 thẻ nhiễu hợp lý).
+  static List<SoloQuickChoice> quickChoicesFor(SoloApprovedQuestion q) {
+    final String correctAns = q.acceptedAnswers.first;
+    final String correctReason = q.gradingRubricStepsVi.isNotEmpty
+        ? q.gradingRubricStepsVi.first
+        : q.oneStepHintVi;
+
+    final List<String> distractors = <String>[];
+    final RegExpMatch? numMatch =
+        RegExp(r'^(-?\d+(?:[.,]\d+)?)(.*)$').firstMatch(correctAns.trim());
+    if (numMatch != null) {
+      final double? parsed =
+          double.tryParse((numMatch.group(1) ?? '').replaceAll(',', '.'));
+      final String unit = (numMatch.group(2) ?? '').trim();
+      final String suffix = unit.isEmpty ? '' : ' $unit';
+      if (parsed != null) {
+        final bool isInt = parsed == parsed.roundToDouble();
+        for (final num d in const <num>[2, -1, 4, -3, 6]) {
+          final double v = parsed + d;
+          final String formatted =
+              isInt ? '${v.round()}$suffix' : '${v.toStringAsFixed(1)}$suffix';
+          if (!q.acceptedAnswers.any(
+                (String a) => a.toLowerCase() == formatted.toLowerCase(),
+              ) &&
+              !distractors.contains(formatted)) {
+            distractors.add(formatted);
+          }
+          if (distractors.length == 3) break;
+        }
+      }
+    }
+    const List<String> fallbackPool = <String>[
+      'Giá trị đối dấu',
+      'Thiếu điều kiện',
+      'Sai đơn vị chuẩn',
+      'Chưa rút gọn',
+    ];
+    for (final String f in fallbackPool) {
+      if (distractors.length >= 3) break;
+      if (!distractors.contains(f) && f != correctAns) {
+        distractors.add(f);
+      }
+    }
+
+    final List<SoloQuickChoice> items = <SoloQuickChoice>[
+      SoloQuickChoice(
+        label: correctAns,
+        answerValue: correctAns,
+        reasoningStep: correctReason,
+      ),
+      for (final String d in distractors.take(3))
+        SoloQuickChoice(
+          label: d,
+          answerValue: d,
+          reasoningStep: 'Bước 1: Thử chọn phương án $d = 0.',
+        ),
+    ];
+
+    final int shift = q.id.hashCode.abs() % items.length;
+    return <SoloQuickChoice>[
+      for (int i = 0; i < items.length; i++) items[(i + shift) % items.length],
+    ];
+  }
 
   static const List<SoloApprovedQuestion> allCachedApprovedQuestions =
       <SoloApprovedQuestion>[

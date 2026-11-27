@@ -818,3 +818,65 @@ class GeminiService:
                 status_code=502,
                 retryable=True,
             )
+
+    async def grade_short_text_answer(
+        self,
+        *,
+        question_prompt: str,
+        accepted_answers: list[str],
+        rubric_steps: list[str],
+        answer_value: str,
+        reasoning_text: str,
+        subject_code: str,
+        grade_level: str | None = None,
+    ) -> tuple[str, str, str | None]:
+        """Chấm thật câu tự luận ngắn bằng Gemini theo rubric (fallback an toàn nếu offline/mock)."""
+        combined = f'{answer_value.strip()} {reasoning_text.strip()}'.strip()
+        if not combined:
+            return 'uncertain', 'Bạn chưa nhập câu trả lời.', None
+
+        if self._settings.gemini_mock_mode or not self._settings.gemini_api_key:
+            # Kiểm tra đồng nghĩa / từ khóa cốt lõi từ accepted + rubric khi offline/mock
+            norm_comb = combined.lower()
+            for acc in accepted_answers:
+                clean_acc = str(acc).strip().lower()
+                if clean_acc and clean_acc in norm_comb:
+                    return 'correct', 'Đáp án đúng với nội dung trọng tâm của bài.', None
+            return (
+                'incorrect',
+                'Câu trả lời chưa khớp ý trọng tâm theo hướng dẫn chấm.',
+                rubric_steps[0] if rubric_steps else None,
+            )
+
+        grade_str = (grade_level or 'Lớp 11').strip()
+        subj_vi = _subject_name_vi(subject_code)
+        prompt_text = (
+            f'Bạn là giáo viên {subj_vi} ({grade_str}) chấm bài ngắn gọn cho học sinh.\n'
+            f'Đề bài: {question_prompt}\n'
+            f'Đáp án chuẩn tham khảo: {accepted_answers}\n'
+            f'Rubric từng bước: {rubric_steps}\n'
+            f'Bài làm của học sinh: "{combined}"\n\n'
+            'Hãy chấm công tâm, chấp nhận cách diễn đạt tương đương đúng bản chất kiến thức. '
+            'Trả đúng JSON: {"result": "correct"|"incorrect"|"uncertain", '
+            '"feedbackVi": "<nhận xét ngắn 1-2 câu>", "hintVi": "<gợi ý 1 bước nếu incorrect, null nếu correct>"}.'
+        )
+        try:
+            raw, _ = await self._generate_with_fallback(
+                {'contents': [{'parts': [{'text': prompt_text}]}]}
+            )
+            parsed = _parse_json_object(_extract_candidate_text(raw))
+            res = str(parsed.get('result', 'incorrect')).strip().lower()
+            if res not in {'correct', 'incorrect', 'uncertain'}:
+                res = 'incorrect'
+            fb = str(parsed.get('feedbackVi', '')).strip() or (
+                'Chính xác!' if res == 'correct' else 'Chưa chính xác theo yêu cầu câu hỏi.'
+            )
+            hint = parsed.get('hintVi')
+            clean_hint = str(hint).strip() if isinstance(hint, str) and hint.strip() else None
+            return res, fb, clean_hint
+        except Exception:
+            return (
+                'uncertain',
+                'Hệ thống AI đang bận, chưa thể chấm câu tự luận lúc này.',
+                None,
+            )

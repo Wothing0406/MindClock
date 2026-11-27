@@ -309,8 +309,8 @@ class _ArenaScreenState extends State<ArenaScreen>
             MindClockButton(
               key: const ValueKey<String>('arena-toggle-rules'),
               label: _showRulesCard
-                  ? 'Ẩn luật chơi v0.1'
-                  : 'Xem Luật chơi (solo-three-v0.1)',
+                  ? 'Ẩn luật đấu'
+                  : 'Xem Luật đấu',
               icon: MindClockIconKind.info,
               variant: MindClockButtonVariant.subtle,
               onPressed: () => setState(() => _showRulesCard = !_showRulesCard),
@@ -321,14 +321,14 @@ class _ArenaScreenState extends State<ArenaScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text('Luật chơi ($combatRuleVersion)',
+                    Text('Luật đấu chuẩn',
                         style: mc.sectionTitleStyle),
                     SizedBox(height: mc.space8),
                     Text(
                       '• Mỗi bên bắt đầu với $maxHp HP, $maxArmor Giáp, 0 Chắn, 0 Qi; tối đa $maxCombatRounds round.\n'
                       '• Chỉ câu trả lời đúng rõ (kèm bước trình bày) mới kích hoạt hành động và cộng +1 Qi sau round (tối đa $maxQi Qi; round 3 bí mật +1 Qi thêm).\n'
                       '• Sát thương trừ đồng thời: Chắn → Giáp → HP. Hồi phục sau khi chịu đòn; về 0 HP không hồi cứu.\n'
-                      '• Luyện đơn chạy cục bộ với Máy tập theo seed, không cộng RP/MMR hay xếp hạng.',
+                      '• Luyện đơn chạy cục bộ với Máy tập theo mã trận, không tính điểm hạng.',
                       style: mc.captionStyle.copyWith(color: mc.ink),
                     ),
                   ],
@@ -337,7 +337,7 @@ class _ArenaScreenState extends State<ArenaScreen>
             ],
             SizedBox(height: mc.space16),
 
-            // Cửa 1: Luyện đơn (G1 — mở)
+            // Cửa 1: Luyện đơn
             MindClockCard(
               highlighted: true,
               child: Column(
@@ -354,7 +354,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                   ),
                   SizedBox(height: mc.space8),
                   Text(
-                    'Đấu tập cùng Máy tập mô phỏng theo luật công khai (có seed & phát lại). Không tính RP hay bảng xếp hạng.',
+                    'Đấu tập cùng Máy tập theo luật chuẩn và hỗ trợ xem lại trận.',
                     style: mc.bodyStyle,
                   ),
                   SizedBox(height: mc.space12),
@@ -383,20 +383,20 @@ class _ArenaScreenState extends State<ArenaScreen>
                     children: <Widget>[
                       Text('Đấu đơn 1v1', style: mc.sectionTitleStyle),
                       const MindClockStatusPill(
-                        label: 'Giao hữu thật · G2',
+                        label: 'Giao hữu · Đã mở',
                         accentWarm: false,
                       ),
                     ],
                   ),
                   SizedBox(height: mc.space8),
                   Text(
-                    'Giao hữu 1v1 cùng người thật, cùng câu hỏi GDPT 2018 & rubric, máy chủ chốt HP/Qi (0 điểm xếp hạng).',
+                    'So tài 1v1 cùng người chơi khác với bộ câu hỏi và trọng tài đồng bộ trên máy chủ.',
                     style: mc.captionStyle.copyWith(color: mc.ink),
                   ),
                   SizedBox(height: mc.space8),
                   MindClockButton(
                     key: const ValueKey<String>('arena-enter-1v1'),
-                    label: 'Vào Đấu đơn 1v1 (Giao hữu)',
+                    label: 'Vào Đấu đơn 1v1',
                     icon: MindClockIconKind.arena,
                     variant: MindClockButtonVariant.secondary,
                     onPressed: () => setState(() => _showPvp1v1 = true),
@@ -418,18 +418,18 @@ class _ArenaScreenState extends State<ArenaScreen>
                     children: <Widget>[
                       Text('Đấu đội 2v2', style: mc.sectionTitleStyle),
                       const MindClockStatusPill(
-                          label: 'Chưa mở · G3', accentWarm: true),
+                          label: 'Sắp mở', accentWarm: true),
                     ],
                   ),
                   SizedBox(height: mc.space8),
                   Text(
-                    'Hai bạn lập đội đấu giao hữu 2v2. Chỉ mở sau khi hoàn tất playtest 1v1 ở G2.',
+                    'Ghép đôi hai người cùng đội đấu 2v2 theo mùa giải sắp tới.',
                     style: mc.captionStyle.copyWith(color: mc.ink),
                   ),
                   SizedBox(height: mc.space8),
                   const MindClockButton(
                     key: ValueKey<String>('arena-enter-2v2-locked'),
-                    label: 'Mở sau cổng giao hữu 1v1',
+                    label: 'Đang khóa · Sắp mở',
                     icon: MindClockIconKind.lock,
                     variant: MindClockButtonVariant.subtle,
                     onPressed: null,
@@ -472,7 +472,7 @@ class _ArenaScreenState extends State<ArenaScreen>
           SizedBox(height: mc.space8),
           const MindClockNoticeBanner(
             message:
-                'Chế độ Luyện đơn dùng bộ câu đã duyệt lưu trên máy (chạy được khi offline). Đối thủ là Máy tập theo luật — không tính RP hay xếp hạng.',
+                'Chế độ Luyện đơn dùng bộ câu đã tải sẵn trên máy (chạy được khi mất mạng) cùng Máy tập rèn phản xạ.',
             isWarm: false,
           ),
           if (vm.setupErrorVi != null) ...<Widget>[
@@ -542,7 +542,7 @@ class _ArenaScreenState extends State<ArenaScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('2. Chọn tướng của bạn (3 tướng gốc)',
+                Text('2. Chọn võ sĩ ra trận',
                     style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space12),
                 ...ChampionId.values.map((ChampionId id) {
@@ -850,7 +850,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 const MindClockBrandMark(size: 56),
                 SizedBox(height: mc.space12),
                 const MindClockStatusPill(
-                  label: 'G1 · Luyện đơn · 0 RP',
+                  label: 'Luyện đơn · Đấu tập',
                 ),
                 SizedBox(height: mc.space12),
                 Text(
@@ -1015,7 +1015,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 active: vm.soundEnabled,
                 onTap: vm.toggleSound,
               ),
-              MindClockStatusPill(label: 'Seed #${vm.seed} · 0 RP'),
+              MindClockStatusPill(label: 'Mã trận #${vm.seed}'),
             ],
           ),
           SizedBox(height: mc.space12),
@@ -1090,7 +1090,75 @@ class _ArenaScreenState extends State<ArenaScreen>
                     style: mc.bodyStyle.copyWith(color: mc.inkMuted),
                   ),
                   if (vm.phase == SoloBattlePhase.answering) ...<Widget>[
-                    SizedBox(height: mc.space16),
+                    SizedBox(height: mc.space12),
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space4,
+                      children: <Widget>[
+                        MindClockButton(
+                          key: const ValueKey<String>(
+                              'arena-quick-step-hint-chip'),
+                          label: 'Điền khung bước biến đổi',
+                          icon: MindClockIconKind.edit,
+                          variant: MindClockButtonVariant.subtle,
+                          expand: false,
+                          onPressed: () {
+                            if (_reasoningController.text.trim().isEmpty) {
+                              _reasoningController.text =
+                                  'Bước 1: Chuyển vế / áp dụng công thức.';
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: mc.space8),
+                    // 4 thẻ chọn nhanh 1 chạm giúp giải trận mượt trên điện thoại (T087)
+                    Builder(
+                      builder: (BuildContext context) {
+                        final List<SoloQuickChoice> quickChoices =
+                            SoloTrainingQuestionBank.quickChoicesFor(q);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Chọn nhanh 1 chạm (lật thẻ đáp án để ra đòn)',
+                              style: mc.captionStyle,
+                            ),
+                            SizedBox(height: mc.space4),
+                            Wrap(
+                              spacing: mc.space8,
+                              runSpacing: mc.space8,
+                              children: <Widget>[
+                                for (int idx = 0;
+                                    idx < quickChoices.length;
+                                    idx++)
+                                  MindClockButton(
+                                    key: ValueKey<String>(
+                                        'arena-quick-card-$idx'),
+                                    label:
+                                        '${<String>['A', 'B', 'C', 'D'][idx]}. ${quickChoices[idx].label}',
+                                    variant: MindClockButtonVariant.secondary,
+                                    expand: false,
+                                    onPressed: () {
+                                      _answerController.text =
+                                          quickChoices[idx].answerValue;
+                                      _reasoningController.text =
+                                          quickChoices[idx].reasoningStep;
+                                      vm.submitAnswer(
+                                        answerText:
+                                            quickChoices[idx].answerValue,
+                                        reasoningText:
+                                            quickChoices[idx].reasoningStep,
+                                      );
+                                    },
+                                  ),
+                              ],
+                            ),
+                            SizedBox(height: mc.space12),
+                          ],
+                        );
+                      },
+                    ),
                     Text('Đáp án của bạn', style: mc.bodyStrongStyle),
                     SizedBox(height: mc.space4),
                     TextField(
@@ -1434,7 +1502,7 @@ class _ArenaScreenState extends State<ArenaScreen>
         children: <Widget>[
           const MindClockStatusPill(
             key: ValueKey<String>('arena-summary-local-pill'),
-            label: 'Lượt luyện cục bộ · 0 RP / Không xếp hạng',
+            label: 'Tổng kết trận đấu · Giao hữu',
           ),
           SizedBox(height: mc.space8),
           Row(
@@ -1480,7 +1548,7 @@ class _ArenaScreenState extends State<ArenaScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Thông số kết thúc ($combatRuleVersion)',
+                Text('Thông số kết thúc trận',
                     style: mc.sectionTitleStyle),
                 SizedBox(height: mc.space8),
                 Text(
@@ -1495,7 +1563,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                 SizedBox(height: mc.space8),
                 Text(
                   'Môn: ${SubjectCatalog.nameFor(vm.selectedSubjectCode)} · '
-                  'Độ khó: ${vm.botDifficulty.labelVi} · Seed phát lại: #${vm.seed}',
+                  'Độ khó: ${vm.botDifficulty.labelVi} · Mã trận: #${vm.seed}',
                   style: mc.captionStyle,
                 ),
               ],
@@ -1562,7 +1630,7 @@ class _ArenaScreenState extends State<ArenaScreen>
           SizedBox(height: mc.space12),
           MindClockButton(
             key: const ValueKey<String>('arena-replay-same-seed'),
-            label: 'Luyện lại cùng seed (#${vm.seed})',
+            label: 'Đấu lại cùng mã trận (#${vm.seed})',
             icon: MindClockIconKind.play,
             onPressed: () {
               _clearInputs();

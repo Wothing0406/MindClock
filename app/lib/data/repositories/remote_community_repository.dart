@@ -352,4 +352,15 @@ class RemoteCommunityRepository implements CommunityRepository {
         body: const <String, dynamic>{},
         idempotencyKey: 'commitment_primary_${LocalIdGenerator.nextUuidV4()}',
       ));
+
+  @override
+  Future<CommitmentGroupDetail> reportCommitmentBusyToday(
+    String groupId, {
+    String reason = 'exam',
+  }) async =>
+      CommitmentGroupDetail.fromJson(await _apiClient.postJson(
+        '/commitment-groups/$groupId/busy-today',
+        body: <String, dynamic>{'reason': reason},
+        idempotencyKey: 'commitment_busy_${LocalIdGenerator.nextUuidV4()}',
+      ));
 }

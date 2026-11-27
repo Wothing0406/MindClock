@@ -48,11 +48,15 @@ class ArenaStageWidget extends StatelessWidget {
     return Container(
       key: ValueKey<String>(compact ? 'arena-stage-compact' : 'arena-stage-expanded'),
       width: double.infinity,
+      constraints: BoxConstraints(minHeight: compact ? 0 : 264),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: mc.night,
         borderRadius: BorderRadius.circular(mc.radiusCard),
-        border: Border.all(color: mc.nightSurface, width: 1.5),
+        border: Border.all(
+          color: botState.qi >= 2 ? mc.sunrise : mc.nightSurface,
+          width: botState.qi >= 2 ? 2.0 : 1.5,
+        ),
       ),
       child: Stack(
         children: <Widget>[
@@ -120,6 +124,60 @@ class ArenaStageWidget extends StatelessWidget {
                       ],
                     ),
                   ],
+                ),
+                SizedBox(height: mc.space8),
+                // Thanh cảnh báo tụ chiêu của đối thủ (T086 Card-Battle HUD)
+                Container(
+                  key: const ValueKey<String>('arena-enemy-charge-bar'),
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: mc.space12,
+                    vertical: mc.space8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: mc.nightSurface.withValues(alpha: 0.88),
+                    borderRadius: BorderRadius.circular(mc.radiusControl),
+                    border: Border.all(
+                      color: botState.qi >= 2 ? mc.error : mc.outline,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Wrap(
+                        spacing: mc.space8,
+                        runSpacing: mc.space4,
+                        alignment: WrapAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            botState.qi >= 2
+                                ? 'Cảnh báo tụ chiêu: ${botSpec.nameVi} sẵn sàng tung ${botSpec.skill2.nameVi}!'
+                                : 'Tụ chiêu đối thủ (${botSpec.nameVi}): ${botState.qi}/$maxQi khí lực',
+                            style: mc.captionStyle.copyWith(
+                              color: botState.qi >= 2 ? mc.sunrise : mc.nightText,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: mc.space4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(mc.radiusChip),
+                        child: Container(
+                          height: 6,
+                          width: double.infinity,
+                          color: mc.night,
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: (botState.qi / maxQi).clamp(0.12, 1.0),
+                            child: ColoredBox(
+                              color: botState.qi >= 2 ? mc.error : mc.sunrise,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: compact ? mc.space8 : mc.space12),
                 LayoutBuilder(
@@ -314,6 +372,7 @@ class _CombatantSlotCard extends StatelessWidget {
                   damageTaken: deltaDamageTaken,
                   healAmount: deltaHealAmount,
                   isWinner: isWinner,
+                  size: compact ? 68.0 : 104.0,
                 ),
               ),
             ],

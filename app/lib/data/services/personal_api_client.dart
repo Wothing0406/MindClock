@@ -428,10 +428,9 @@ class PersonalApiClient {
     final Object? rawErr = parsed['error'] ?? parsed['detail'];
     final Map<String, dynamic>? err =
         rawErr is Map<String, dynamic> ? rawErr : null;
-    final String code =
-        err?['code']?.toString().trim().isNotEmpty == true
-            ? err!['code'].toString().trim()
-            : 'HTTP_$statusCode';
+    final String code = err?['code']?.toString().trim().isNotEmpty == true
+        ? err!['code'].toString().trim()
+        : 'HTTP_$statusCode';
     final bool retryable =
         err?['retryable'] == true || (statusCode >= 500 || statusCode == 429);
     final String serverMessage =

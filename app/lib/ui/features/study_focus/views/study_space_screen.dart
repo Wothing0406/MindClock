@@ -65,9 +65,15 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   final TextEditingController _doneController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
   final TextEditingController _aiInputController = TextEditingController();
+  final TextEditingController _aiTriedStepController = TextEditingController();
   final TextEditingController _personalizedTopicController =
       TextEditingController();
   String? _selectedPersonalizedSubject;
+  bool _socraticStepLockEnabled = false;
+  String? _socraticLockWarningVi;
+  bool _microCheckExpanded = false;
+  int _microCheckIndex = 0;
+  int? _microCheckPickedIndex;
   String? _ambientAudioPath;
   String? _ambientAudioLabel;
   bool _ambientAudioPlaying = false;
@@ -274,6 +280,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     _doneController.dispose();
     _stuckController.dispose();
     _aiInputController.dispose();
+    _aiTriedStepController.dispose();
     _personalizedTopicController.dispose();
     super.dispose();
   }
@@ -405,9 +412,49 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     return 'Học cùng MindClock AI · Đăng nhập để hỏi AI';
   }
 
+  static const List<Map<String, dynamic>> _microChecks = <Map<String, dynamic>>[
+    <String, dynamic>{
+      'subject': 'TOAN',
+      'prompt': 'Micro-Check Toán: Hàm số đồng biến trên (a; b) khi đạo hàm:',
+      'options': <String>['y\' >= 0 trên (a; b)', 'y\' < 0 trên (a; b)', 'y = 0 mọi điểm'],
+      'correctIndex': 0,
+    },
+    <String, dynamic>{
+      'subject': 'TIENG_ANH',
+      'prompt': 'Micro-Check Tiếng Anh: Nghĩa sát nhất của "consistent":',
+      'options': <String>['Bất ổn định', 'Nhất quán, bền bỉ', 'Ngẫu nhiên'],
+      'correctIndex': 1,
+    },
+    <String, dynamic>{
+      'subject': 'NGU_VAN',
+      'prompt': 'Micro-Check Ngữ văn: Biện pháp tu từ gắn trực tiếp hai sự vật tương đồng bằng "như", "là":',
+      'options': <String>['Hoán dụ', 'Nói giảm', 'So sánh'],
+      'correctIndex': 2,
+    },
+    <String, dynamic>{
+      'subject': 'VAT_LY',
+      'prompt': 'Micro-Check Vật lý: Đơn vị đo tần số dao động điều hòa:',
+      'options': <String>['Hertz (Hz)', 'Joule (J)', 'Newton (N)'],
+      'correctIndex': 0,
+    },
+  ];
+
   Future<void> _submitAiHelp(StudyFocusViewModel vm) async {
+    final String tried = _aiTriedStepController.text.trim();
+    if (_socraticStepLockEnabled && tried.isEmpty) {
+      setState(() {
+        _socraticLockWarningVi =
+            'Khóa giải hộ đang bật: hãy ghi ngắn gọn 1 bước bạn đã tự thử trước khi hỏi AI.';
+      });
+      return;
+    }
+    setState(() => _socraticLockWarningVi = null);
+    final String rawQ = _aiInputController.text.trim();
+    final String composed = (tried.isNotEmpty && rawQ.isNotEmpty)
+        ? '[Bước đã tự thử: $tried] $rawQ'
+        : _aiInputController.text;
     final bool ok = await vm.requestAiHelp(
-      questionText: _aiInputController.text,
+      questionText: composed,
       gradeLevel: widget.guestViewModel.profile.gradeLevel,
     );
     if (ok && mounted) {
@@ -998,8 +1045,9 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           width: double.infinity,
           padding: EdgeInsets.all(mc.space20),
           decoration: BoxDecoration(
-            color: mc.night,
+            color: mc.surface,
             borderRadius: BorderRadius.circular(mc.radiusCard),
+            border: Border.all(color: mc.outline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1042,7 +1090,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
               Text(
                 'Bạn đang học: ${snapshot.taskTitle}',
                 key: const ValueKey<String>('study-active-task-title'),
-                style: mc.sectionTitleStyle.copyWith(color: mc.nightText),
+                style: mc.sectionTitleStyle.copyWith(color: mc.ink),
               ),
               SizedBox(height: mc.space16),
               Center(
@@ -1068,8 +1116,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                           size: const Size.square(112),
                           painter: _ThinProgressRingPainter(
                             progress: vm.progressFraction,
-                            trackColor: mc.nightSurface,
-                            fillColor: mc.sunrise,
+                            trackColor: mc.primarySoft,
+                            fillColor: mc.primary,
                           ),
                         ),
                       ),
@@ -1080,7 +1128,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                       child: Text(
                         formatDurationClock(displaySec),
                         key: const ValueKey<String>('study-timer-clock'),
-                        style: mc.alarmHeroStyle,
+                        style: mc.alarmHeroStyle.copyWith(color: mc.ink),
                       ),
                     ),
                     SizedBox(height: mc.space8),
@@ -1090,7 +1138,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                           : isCandle
                               ? 'Đếm giờ tự do theo mốc thiết bị (không giới hạn 120p).'
                               : 'Đếm ngược theo mốc thời gian thiết bị.',
-                      style: mc.captionStyle.copyWith(color: mc.nightText),
+                      style: mc.captionStyle.copyWith(color: mc.inkMuted),
                     ),
                   ],
                 ),
@@ -1103,12 +1151,15 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                   Text(
                     'Thời gian thực tế: ${formatDurationClock(wallSec)}',
                     key: const ValueKey<String>('study-wall-seconds'),
-                    style: mc.captionStyle.copyWith(color: mc.sunrise),
+                    style: mc.captionStyle.copyWith(
+                      color: mc.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     'Trong app: ${formatDurationClock(inAppSec)}',
                     key: const ValueKey<String>('study-inapp-seconds'),
-                    style: mc.captionStyle.copyWith(color: mc.nightText),
+                    style: mc.captionStyle.copyWith(color: mc.inkMuted),
                   ),
                 ],
               ),
@@ -1156,6 +1207,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
         ),
         if (snapshot.roomMode == StudyRoomMode.withAi) ...<Widget>[
           SizedBox(height: mc.space16),
+          _buildMicroCheckCard(context, mc, vm),
+          SizedBox(height: mc.space16),
           _buildAiHelpCard(context, mc, vm, snapshot),
           SizedBox(height: mc.space16),
           _buildPersonalizedPracticeCard(context, mc, vm),
@@ -1172,6 +1225,96 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
         SizedBox(height: mc.space16),
         _buildDigitalWellbeingCard(context, mc, vm),
       ],
+    );
+  }
+
+  Widget _buildMicroCheckCard(
+    BuildContext context,
+    MindClockTheme mc,
+    StudyFocusViewModel vm,
+  ) {
+    final Map<String, dynamic> check =
+        _microChecks[_microCheckIndex % _microChecks.length];
+    final List<String> opts =
+        (check['options'] as List<dynamic>).cast<String>();
+    final int correctIdx = check['correctIndex'] as int;
+
+    return MindClockCard(
+      key: const ValueKey<String>('study-microcheck-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                'Micro-Check 60 giây · Tỉnh táo khi học',
+                style: mc.sectionTitleStyle,
+              ),
+              MindClockButton(
+                key: const ValueKey<String>('study-microcheck-toggle'),
+                label: _microCheckExpanded ? 'Thu gọn' : 'Kiểm tra nhanh',
+                icon: MindClockIconKind.sunrise,
+                variant: MindClockButtonVariant.secondary,
+                expand: false,
+                onPressed: () =>
+                    setState(() => _microCheckExpanded = !_microCheckExpanded),
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space4),
+          Text(
+            '1 câu 1 chạm giữ đầu óc tỉnh táo (không phạt EXP hay mất chuỗi khi chọn nhầm).',
+            style: mc.captionStyle,
+          ),
+          if (_microCheckExpanded) ...<Widget>[
+            SizedBox(height: mc.space12),
+            Text(
+              check['prompt'] as String,
+              key: const ValueKey<String>('study-microcheck-prompt'),
+              style: mc.bodyStrongStyle,
+            ),
+            SizedBox(height: mc.space8),
+            for (int i = 0; i < opts.length; i++)
+              Padding(
+                padding: EdgeInsets.only(bottom: mc.space4),
+                child: MindClockButton(
+                  key: ValueKey<String>('study-microcheck-opt-$i'),
+                  label: '${<String>['A', 'B', 'C'][i]}. ${opts[i]}',
+                  variant: _microCheckPickedIndex == i
+                      ? MindClockButtonVariant.primary
+                      : MindClockButtonVariant.subtle,
+                  onPressed: () => setState(() => _microCheckPickedIndex = i),
+                ),
+              ),
+            if (_microCheckPickedIndex != null) ...<Widget>[
+              SizedBox(height: mc.space8),
+              MindClockNoticeBanner(
+                key: const ValueKey<String>('study-microcheck-feedback'),
+                message: _microCheckPickedIndex == correctIdx
+                    ? 'Chuẩn xác — giữ nhịp tập trung rất tốt!'
+                    : 'Chưa đúng rồi — đáp án chuẩn là "${opts[correctIdx]}". Hít sâu 5 giây rồi tiếp tục nhé!',
+                isWarm: _microCheckPickedIndex != correctIdx,
+              ),
+            ],
+            SizedBox(height: mc.space8),
+            MindClockButton(
+              key: const ValueKey<String>('study-microcheck-next'),
+              label: 'Đổi câu Micro-Check khác',
+              icon: MindClockIconKind.book,
+              variant: MindClockButtonVariant.subtle,
+              expand: false,
+              onPressed: () => setState(() {
+                _microCheckIndex = (_microCheckIndex + 1) % _microChecks.length;
+                _microCheckPickedIndex = null;
+              }),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1250,7 +1393,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 ),
                 SizedBox(height: mc.space8),
                 Text(
-                  'Bạn học AI sẽ gợi ý phương pháp giải từng bước cho bài học hôm nay.',
+                  'Gia sư Socratic (không giải hộ): chỉ gợi mở 1 bước để bạn tự nghĩ tiếp.',
                   textAlign: TextAlign.center,
                   style: mc.captionStyle.copyWith(color: mc.ink),
                 ),
@@ -1341,6 +1484,57 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             ),
           ],
           SizedBox(height: mc.space12),
+          Wrap(
+            spacing: mc.space8,
+            runSpacing: mc.space4,
+            children: <Widget>[
+              FilterChip(
+                key: const ValueKey<String>('study-ai-socratic-lock-toggle'),
+                label: Text(
+                  _socraticStepLockEnabled
+                      ? 'Khóa giải hộ Socratic: Đang bật'
+                      : 'Khóa giải hộ Socratic: Tắt',
+                ),
+                selected: _socraticStepLockEnabled,
+                selectedColor: mc.primarySoft,
+                onSelected: (bool next) => setState(() {
+                  _socraticStepLockEnabled = next;
+                  _socraticLockWarningVi = null;
+                }),
+              ),
+              ActionChip(
+                key: const ValueKey<String>('study-ai-tried-chip'),
+                label: const Text('Điền nhanh: Đã thử viết công thức'),
+                onPressed: () => setState(() {
+                  _aiTriedStepController.text =
+                      'Mình đã tóm tắt giả thiết và viết công thức gốc.';
+                  _socraticLockWarningVi = null;
+                }),
+              ),
+            ],
+          ),
+          SizedBox(height: mc.space8),
+          TextField(
+            key: const ValueKey<String>('study-ai-tried-step-input'),
+            controller: _aiTriedStepController,
+            enabled: !isLoading,
+            decoration: InputDecoration(
+              labelText: 'Bước bạn đã tự thử (khóa giải hộ)',
+              hintText: 'Ví dụ: Mình đã đặt x = ... hoặc tách được nhân tử...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(mc.radiusControl),
+              ),
+            ),
+          ),
+          if (_socraticLockWarningVi != null) ...<Widget>[
+            SizedBox(height: mc.space8),
+            MindClockNoticeBanner(
+              key: const ValueKey<String>('study-ai-socratic-warning'),
+              message: _socraticLockWarningVi!,
+              isWarm: true,
+            ),
+          ],
+          SizedBox(height: mc.space8),
           TextField(
             key: const ValueKey<String>('study-ai-question-input'),
             controller: _aiInputController,

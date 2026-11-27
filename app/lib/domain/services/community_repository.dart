@@ -98,4 +98,8 @@ abstract interface class CommunityRepository {
   Future<void> leaveCommitmentGroup(String groupId);
   Future<void> deleteCommitmentGroup(String groupId);
   Future<CommitmentGroupHub> setPrimaryCommitmentGroup(String groupId);
+  Future<CommitmentGroupDetail> reportCommitmentBusyToday(
+    String groupId, {
+    String reason = 'exam',
+  });
 }

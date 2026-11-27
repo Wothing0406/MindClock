@@ -20,6 +20,7 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
 import '../view_models/guest_workspace_view_model.dart';
+import '../widgets/circular_sleep_clock_picker.dart';
 
 /// Màn hình `S06` Cấu hình báo thức local & Gợi ý giờ dậy có xác nhận.
 class AlarmConfigScreen extends StatefulWidget {
@@ -47,6 +48,7 @@ class AlarmConfigScreen extends StatefulWidget {
 class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   late int _hour;
   late int _minute;
+  late int _bedtimeMinutes;
   late Set<int> _repeatWeekdays;
   late bool _enabled;
   late bool _soundEnabled;
@@ -92,6 +94,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _soundOption = AlarmSoundOption.gentleDawn;
       _vibrateEnabled = true;
     }
+    _bedtimeMinutes = 22 * 60 + 30;
     _autoSubjectCode = _resolveAutoSubjectCode();
 
     final WakeSuggestionInput prefs = widget.viewModel.wakePreferences;
@@ -446,23 +449,71 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.all(mc.space20),
                 decoration: BoxDecoration(
-                  color: mc.night,
+                  color: mc.surface,
                   borderRadius: BorderRadius.circular(mc.radiusPaper),
+                  border: Border.all(color: mc.outline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       AppStrings.alarmTimeTitle,
-                      style: mc.captionStyle.copyWith(color: mc.sunrise),
+                      style: mc.captionStyle.copyWith(
+                        color: mc.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    SizedBox(height: mc.space8),
+                    SizedBox(height: mc.space4),
                     Text(
                       formattedSelected,
                       key: const ValueKey<String>('alarm-selected-time-text'),
-                      style: mc.alarmHeroStyle,
+                      style: mc.alarmHeroStyle.copyWith(color: mc.ink),
+                    ),
+                    SizedBox(height: mc.space4),
+                    Wrap(
+                      spacing: mc.space12,
+                      runSpacing: mc.space4,
+                      children: <Widget>[
+                        Text(
+                          'Đi ngủ ${CircularSleepClockPicker.formatHm(_bedtimeMinutes)}',
+                          key: const ValueKey<String>(
+                              'alarm-bedtime-summary-text'),
+                          style: mc.captionStyle.copyWith(
+                            color: mc.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Dậy $formattedSelected',
+                          style: mc.captionStyle.copyWith(
+                            color: mc.inkMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: mc.space16),
+                    CircularSleepClockPicker(
+                      bedtimeMinutes: _bedtimeMinutes,
+                      wakeMinutes: _hour * 60 + _minute,
+                      onBedtimeChanged: (int nextBedtime) {
+                        setState(() => _bedtimeMinutes = nextBedtime);
+                      },
+                      onWakeChanged: (int nextWake) {
+                        setState(() {
+                          _hour = nextWake ~/ 60;
+                          _minute = nextWake % 60;
+                        });
+                      },
                     ),
                     SizedBox(height: mc.space12),
+                    Text(
+                      'Kéo biểu tượng giờ ngủ hoặc chuông trên vòng tròn, hoặc tinh chỉnh nhanh:',
+                      style: mc.captionStyle.copyWith(
+                        color: mc.inkMuted,
+                      ),
+                    ),
+                    SizedBox(height: mc.space8),
                     Wrap(
                       spacing: mc.space8,
                       runSpacing: mc.space8,
@@ -908,13 +959,13 @@ class _TimeStepChip extends StatelessWidget {
           vertical: mc.space8,
         ),
         decoration: BoxDecoration(
-          color: mc.nightSurface,
+          color: mc.primarySoft,
           borderRadius: BorderRadius.circular(mc.radiusChip),
-          border: Border.all(color: mc.sunrise),
+          border: Border.all(color: mc.outline),
         ),
         child: Text(
           label,
-          style: mc.chipLabelStyle.copyWith(color: mc.nightText),
+          style: mc.chipLabelStyle.copyWith(color: mc.ink),
         ),
       ),
     );

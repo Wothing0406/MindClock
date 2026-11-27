@@ -45,7 +45,9 @@ class PetShareCard extends StatelessWidget {
           ),
           SizedBox(height: mc.space8),
           Text(
-            'Chuỗi chăm nhóm ${pet.currentStreakDays} ngày',
+            pet.currentStreakDays > 0
+                ? '${pet.milestoneLabelVi} · ${pet.currentStreakDays} ngày đồng hành'
+                : 'Chuỗi chăm nhóm ${pet.currentStreakDays} ngày',
             style: mc.bodyStyle,
             textAlign: TextAlign.center,
           ),

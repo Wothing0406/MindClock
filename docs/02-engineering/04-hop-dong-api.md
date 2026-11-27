@@ -6,9 +6,14 @@
 
 GET detail hiện được client refresh/poll 5 giây trong foreground. Đây là cập nhật membership REST, không là media call/heartbeat presence. UI mic/cam disabled khi chưa có media transport; timer/text tiếp tục khi mất mạng.
 
-## Bổ sung tiến độ T066
 
-`GET /v1/progress/summary` giữ các trường cũ, thêm `level`, `levelStartXp`, `nextLevelXp`, `xpIntoLevel`, `xpToNextLevel`, `progressVersion=progress-v1`, `streakKind=review_days`. EXP là tổng ledger owner. Streak đếm ngày ledger challenge_correct dương theo timezone tài khoản; hôm nay chưa làm giữ chuỗi hôm qua đến hết ngày. Không thể hiện thức dậy đúng giờ. Xem [policy](../01-product/13-tien-do-va-cong-dong-trien-khai.md).
+## Bổ sung tiến độ T066 & Báo cáo ngày T077
+
+`GET /v1/progress/summary` giữ các trường cũ (`streakKind=review_days`, `progressVersion=progress-v1`), bổ sung `streakPolicyVersion=streak-v2`, `bestStreak`, `totalActiveDays`, `todayCompleted`, `todayReportSubmitted`, `todaySources`, `recentDays` (14 ngày gần nhất theo timezone tài khoản). EXP là tổng ledger owner. Streak đếm theo từng ngày có Báo cáo ngày (`daily_reports`) hoặc ledger dương từ `challenge_correct`, `photo_challenge_correct`, `study_time_v0_1`, `daily_report`; nhiều hoạt động trong một ngày vẫn tính đúng 1 ngày streak, hôm nay chưa làm giữ chuỗi hôm qua đến hết ngày. Xem [policy](../01-product/13-tien-do-va-cong-dong-trien-khai.md).
+
+`POST /v1/progress/daily-report` (auth bắt buộc, `extra='forbid'`, hỗ trợ `Idempotency-Key`): nhận `{tasksCompleted, feeling: focused|steady|tired, reflectionNote}`, server tự tổng hợp `studyMinutes` và `challengeCompleted` từ dữ liệu thật trong ngày (`local_date` theo timezone tài khoản), lưu bảng `daily_reports`, cộng `+5 XP` đúng 1 lần/ngày (`reason=daily_report`), chiếu sang `CommitmentGroupService.record_daily_report` và trả `{report, alreadyReportedToday, xpAwarded, streakAwardedToday, groupCare, summary}`. Gửi lại cùng ngày chỉ cập nhật ghi chú/cảm nhận (0 XP thêm).
+
+`GET /v1/progress/daily-reports?limit=14`: auth bắt buộc, owner-only, trả `{items:[...]}` sắp theo `local_date DESC`.
 
 `GET /v1/progress/xp-history?limit=20&offset=0`: auth bắt buộc, owner từ token; limit 1–100, offset >=0, sai query trả 422. Trả `{items:[{id,sourceType,sourceId,reason,delta,createdAt}],nextOffset}`; nextOffset null khi hết. Sắp created_at DESC rồi id DESC. Phân trang offset cho lịch sử cá nhân có thể dịch khi nhận EXP mới, client refresh từ trang đầu; chưa cam kết snapshot pagination. API chỉ đọc không cấp thưởng.
 
@@ -68,6 +73,7 @@ Alarm/timer local không chờ API. Metadata dismiss có thể queue tối đa 7
 404 không có phiên của owner; 409 ended hoặc SPEECH_REQUEST_USED; 403 chưa consent; 422 input/nonce; 429 quota; 502 WAV hỏng; 503/504 provider/config/timeout. Khóa row user trên PostgreSQL, ghi reservation `idempotency_records.route=speech:v1` trước gọi provider, cap5/phút và30/ngày UTC. Reservation chỉ nonce/policy/status, không text/audio/hash nội dung. Retry cùng nonce không sinh lại âm; lỗi provider vẫn tiêu thụ slot để chống retry tốn tài nguyên. Bấm thử lại dùng nonce mới trong quota. Không là replay cache idempotency trả lại audio vì audio không lưu. Xóa account xóa reservation theo luồng hiện có.
 
 WAV PCM16 mono/stereo8–48kHz, tối đa4MiB/90giây; provider interactions store=false; không log/save text/audio. Client kiểm định dạng và bỏ response quá hạn/scope cũ. Quota không là XP/streak. Cadence chưa lưu server nên Học sâu/solo chặn ở client, không tuyên bố server xác minh nhịp. API chỉ chuyển text user chủ động chọn thành giọng, không tạo/chấm câu hỏi hoặc tự kết luận đúng/sai.
+
 # Bổ sung contract T073 — quản trị vòng đời phòng
 
 - `DELETE /v1/study-rooms/{roomId}/members/{userId}`: chỉ host; không cho xóa host; đánh dấu member rời, tắt cờ mic/cam và giữ dấu `role=removed` để chặn tự join lại. Trả room detail mới. `403 HOST_REQUIRED`, `409 HOST_CANNOT_BE_REMOVED`, `404 ROOM_MEMBER_NOT_FOUND`.

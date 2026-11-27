@@ -569,4 +569,11 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
   @override
   Future<CommitmentGroupHub> setPrimaryCommitmentGroup(String groupId) async =>
       fetchCommitmentGroupHub();
+
+  @override
+  Future<CommitmentGroupDetail> reportCommitmentBusyToday(
+    String groupId, {
+    String reason = 'exam',
+  }) async =>
+      _commitmentGroup!;
 }

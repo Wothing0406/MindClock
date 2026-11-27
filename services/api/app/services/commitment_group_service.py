@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import (
     CommitmentGroup,
+    CommitmentGroupBusyDay,
     CommitmentGroupInvite,
     CommitmentGroupJoinRequest,
     CommitmentGroupMember,
@@ -33,6 +34,7 @@ class CommitmentGroupService:
     MAX_MEMBERS = 4
     MAX_ACTIVE_GROUPS = 3
     INVITE_HOURS = 72
+    MONTHLY_BUSY_QUOTA = 2
 
     def __init__(self, db: Session):
         self.db = db
@@ -132,7 +134,7 @@ class CommitmentGroupService:
             'maxMembers': group.max_members,
             'members': members,
             'pendingRequests': pending_requests,
-            'pet': self._pet_summary(group),
+            'pet': self._pet_summary(group, viewer_user_id=viewer.user_id),
         }
 
     def invite(self, owner_id: str, group_id: str, recipient_id: str) -> dict[str, Any]:
@@ -322,26 +324,154 @@ class CommitmentGroupService:
             care_kind='morning_challenge', xp_delta=20, at=at,
         )
 
-    def _pet_summary(self, group: CommitmentGroup) -> dict[str, Any]:
-        days = sorted(set(self.db.scalars(select(CommitmentPetCare.local_date).where(
-            CommitmentPetCare.group_id == group.id,
-            CommitmentPetCare.care_kind == 'study_care',
-        ))))
+    def record_daily_report(self, user_id: str, source_id: str, *, at: datetime | None = None) -> list[dict[str, Any]]:
+        return self.record_activity_care(
+            user_id, source_id, source_type='daily_report',
+            care_kind='daily_report', xp_delta=10, at=at,
+        )
+
+    def report_busy_today(
+        self,
+        user_id: str,
+        group_id: str,
+        *,
+        reason: str = 'exam',
+        local_date: str | None = None,
+    ) -> dict[str, Any]:
+        group = self._group(group_id)
+        viewer = self._active_member(group_id, user_id)
+        if viewer is None:
+            raise CommitmentGroupError(403, 'FORBIDDEN_MEMBER', 'Bạn không phải thành viên nhóm này.')
+        try:
+            today = datetime.now(timezone.utc).astimezone(ZoneInfo(group.time_zone)).date()
+        except ZoneInfoNotFoundError:
+            today = datetime.now(timezone.utc).date()
+
+        target_date = today.isoformat()
+        if local_date and local_date.strip():
+            try:
+                target_date = date.fromisoformat(local_date.strip()).isoformat()
+            except ValueError:
+                pass
+        month_key = target_date[:7]
+
+        existing = self.db.scalar(
+            select(CommitmentGroupBusyDay).where(
+                CommitmentGroupBusyDay.group_id == group_id,
+                CommitmentGroupBusyDay.user_id == user_id,
+                CommitmentGroupBusyDay.local_date == target_date,
+            )
+        )
+        if existing is None:
+            used_this_month = self.db.scalar(
+                select(func.count()).select_from(CommitmentGroupBusyDay).where(
+                    CommitmentGroupBusyDay.group_id == group_id,
+                    CommitmentGroupBusyDay.user_id == user_id,
+                    CommitmentGroupBusyDay.month_key == month_key,
+                )
+            ) or 0
+            if used_this_month >= self.MONTHLY_BUSY_QUOTA:
+                raise CommitmentGroupError(
+                    409,
+                    'BUSY_QUOTA_EXCEEDED',
+                    f'Bạn đã dùng hết {self.MONTHLY_BUSY_QUOTA}/{self.MONTHLY_BUSY_QUOTA} lượt xin bận trong tháng {month_key}.',
+                )
+            self.db.add(
+                CommitmentGroupBusyDay(
+                    group_id=group_id,
+                    user_id=user_id,
+                    local_date=target_date,
+                    month_key=month_key,
+                    reason=(reason.strip() or 'exam')[:64],
+                )
+            )
+            self.db.flush()
+        return self.detail(user_id, group_id)
+
+    def _pet_summary(
+        self,
+        group: CommitmentGroup,
+        *,
+        viewer_user_id: str | None = None,
+    ) -> dict[str, Any]:
+        active_member_ids = {m.user_id for m in self._active_group_members(group.id)}
+        rows = self.db.execute(
+            select(CommitmentPetCare.local_date, CommitmentPetCare.user_id).where(
+                CommitmentPetCare.group_id == group.id,
+                CommitmentPetCare.care_kind.in_(('study_care', 'morning_challenge', 'daily_report')),
+            )
+        ).all()
+        users_by_date: dict[str, set[str]] = {}
+        for local_date, care_user_id in rows:
+            users_by_date.setdefault(local_date, set()).add(care_user_id)
+
+        busy_rows = self.db.execute(
+            select(CommitmentGroupBusyDay.local_date, CommitmentGroupBusyDay.user_id).where(
+                CommitmentGroupBusyDay.group_id == group.id,
+            )
+        ).all()
+        busy_by_date: dict[str, set[str]] = {}
+        for b_date, b_uid in busy_rows:
+            busy_by_date.setdefault(b_date, set()).add(b_uid)
+
+        # Ngày đủ 100% thành viên hoàn thành -> cộng +1 Chuỗi.
+        completed_days_set = {
+            local_date
+            for local_date, uids in users_by_date.items()
+            if active_member_ids and active_member_ids.issubset(uids)
+        }
+        # Ngày có bạn xin bận hợp lệ & mọi thành viên không bận còn lại đều hoàn thành -> bảo lưu nguyên Chuỗi N.
+        preserved_days_set: set[str] = set()
+        for b_date, b_uids in busy_by_date.items():
+            if b_date in completed_days_set or not active_member_ids:
+                continue
+            active_busy = active_member_ids & b_uids
+            non_busy = active_member_ids - active_busy
+            if active_busy and non_busy and non_busy.issubset(users_by_date.get(b_date, set())):
+                preserved_days_set.add(b_date)
+
+        days = sorted(completed_days_set)
         try:
             today = datetime.now(timezone.utc).astimezone(ZoneInfo(group.time_zone)).date()
         except ZoneInfoNotFoundError:
             today = datetime.now(timezone.utc).date()
         today_iso = today.isoformat()
-        today_count = self.db.scalar(select(func.count(func.distinct(CommitmentPetCare.user_id))).where(
-            CommitmentPetCare.group_id == group.id,
-            CommitmentPetCare.local_date == today_iso,
-        )) or 0
-        streak = self._streak(days, today)
+        month_key = today_iso[:7]
+        member_count = len(active_member_ids)
+        today_count = len(active_member_ids & users_by_date.get(today_iso, set()))
+        busy_today_uids = active_member_ids & busy_by_date.get(today_iso, set())
+        busy_count_today = len(busy_today_uids)
+        all_done_today = member_count > 0 and today_count >= member_count
+        streak_preserved_today = (
+            today_iso in preserved_days_set
+            or (busy_count_today > 0 and today_count + busy_count_today >= member_count)
+        )
+        streak = self._streak(days, today, preserved_days=preserved_days_set)
+        best_streak = max(streak, self._best_streak(days))
         total = len(days)
         total_xp = self.db.scalar(select(func.coalesce(func.sum(CommitmentPetCare.xp_delta), 0)).where(
             CommitmentPetCare.group_id == group.id,
         )) or 0
         stage = 4 if total_xp >= 320 else 3 if total_xp >= 160 else 2 if total_xp >= 60 else 1
+        milestone_label = (
+            'Chuỗi 100+'
+            if streak >= 100
+            else (f'Chuỗi {streak}' if streak > 0 else 'Chưa mở chuỗi')
+        )
+        my_busy_used = 0
+        busy_today_by_me = False
+        if viewer_user_id:
+            busy_today_by_me = viewer_user_id in busy_today_uids
+            my_busy_used = int(
+                self.db.scalar(
+                    select(func.count()).select_from(CommitmentGroupBusyDay).where(
+                        CommitmentGroupBusyDay.group_id == group.id,
+                        CommitmentGroupBusyDay.user_id == viewer_user_id,
+                        CommitmentGroupBusyDay.month_key == month_key,
+                    )
+                )
+                or 0
+            )
         return {
             'key': group.pet_key,
             'name': group.pet_name,
@@ -349,19 +479,51 @@ class CommitmentGroupService:
             'stageLabelVi': ('Mầm non', 'Mầm khỏe', 'Mầm vươn', 'Mầm bền bỉ')[stage - 1],
             'totalCareDays': total,
             'currentStreakDays': streak,
+            'bestStreakDays': best_streak,
             'todayCareCount': int(today_count),
+            'memberCount': member_count,
+            'allMembersDoneToday': all_done_today,
+            'streakMilestoneLabelVi': milestone_label,
+            'busyCountToday': busy_count_today,
+            'streakPreservedToday': streak_preserved_today,
+            'shieldsAvailable': min(2, best_streak // 7),
+            'myBusyQuotaUsed': my_busy_used,
+            'myBusyQuotaLimit': self.MONTHLY_BUSY_QUOTA,
+            'busyTodayByMe': busy_today_by_me,
             'totalXp': int(total_xp),
             'nextStageXp': (60, 160, 320, 320)[stage - 1],
             'progressionVersion': group.progression_version,
         }
 
     @staticmethod
-    def _streak(days: list[str], today: date) -> int:
+    def _best_streak(days: list[str]) -> int:
         parsed = {date.fromisoformat(value) for value in days}
-        cursor = today if today in parsed else today - timedelta(days=1)
+        best = 0
+        for day in parsed:
+            if (day - timedelta(days=1)) not in parsed:
+                run = 1
+                cursor = day + timedelta(days=1)
+                while cursor in parsed:
+                    run += 1
+                    cursor += timedelta(days=1)
+                if run > best:
+                    best = run
+        return best
+
+    @staticmethod
+    def _streak(
+        days: list[str],
+        today: date,
+        *,
+        preserved_days: set[str] | None = None,
+    ) -> int:
+        parsed = {date.fromisoformat(value) for value in days}
+        preserved = {date.fromisoformat(value) for value in (preserved_days or set())}
+        cursor = today if (today in parsed or today in preserved) else today - timedelta(days=1)
         count = 0
-        while cursor in parsed:
-            count += 1
+        while cursor in parsed or cursor in preserved:
+            if cursor in parsed:
+                count += 1
             cursor -= timedelta(days=1)
         return count
 

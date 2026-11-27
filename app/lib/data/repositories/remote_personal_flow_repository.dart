@@ -1,6 +1,7 @@
 import '../../domain/models/personal_flow_models.dart';
 import '../../domain/models/xp_history.dart';
 import '../../domain/models/study_profile.dart';
+import '../../domain/models/subject_catalog.dart';
 import '../../domain/models/timetable.dart';
 import '../../domain/services/personal_flow_repository.dart';
 import '../services/personal_api_client.dart';
@@ -34,7 +35,12 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
     final Map<String, dynamic> json = await _apiClient.getJson('/me');
     final Object? rawSubjects = json['selectedSubjects'];
     final List<String> subjects = rawSubjects is List<dynamic>
-        ? rawSubjects.whereType<String>().toList(growable: false)
+        ? rawSubjects
+            .whereType<String>()
+            .map(SubjectCatalog.normalizeCode)
+            .where((String s) => s.isNotEmpty)
+            .toSet()
+            .toList(growable: false)
         : const <String>[];
     final String rawAvatar = (json['avatarId'] as String? ?? 'sunrise').trim();
     final String normalizedAvatar =
@@ -87,6 +93,47 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   }
 
   @override
+  Future<WeeklyTimetable?> fetchTimetableSnapshot() async {
+    final Map<String, dynamic> json = await _apiClient.getJson('/timetable');
+    final Object? rawSlots = json['slots'];
+    if (rawSlots is! List<dynamic>) return null;
+    final Map<int, List<TimetableEntry>> byDay = <int, List<TimetableEntry>>{
+      for (int w = 1; w <= 7; w++) w: <TimetableEntry>[],
+    };
+    for (final Map<String, dynamic> item
+        in rawSlots.whereType<Map<String, dynamic>>()) {
+      final int weekday = (item['weekday'] as num?)?.toInt() ?? 1;
+      if (weekday < 1 || weekday > 7) continue;
+      final int pos = (item['position'] as num?)?.toInt() ?? byDay[weekday]!.length;
+      final String subjectCode = SubjectCatalog.normalizeCode(
+        item['subjectCode'] as String? ?? 'math',
+      );
+      final String note = (item['topicId'] as String? ?? '').trim();
+      byDay[weekday]!.add(
+        TimetableEntry(
+          id: 'srv_${weekday}_$pos',
+          subjectCode: subjectCode,
+          startMinutes: 420 + pos * 50,
+          note: note,
+        ),
+      );
+    }
+    final bool hasAny = byDay.values.any((List<TimetableEntry> e) => e.isNotEmpty);
+    if (!hasAny) return null;
+    return WeeklyTimetable(
+      days: List<DaySchedule>.generate(7, (int idx) {
+        final int w = idx + 1;
+        final List<TimetableEntry> entries = byDay[w]!;
+        return DaySchedule(
+          weekday: w,
+          isRestDay: entries.isEmpty && w == 7,
+          entries: entries,
+        );
+      }),
+    );
+  }
+
+  @override
   Future<void> deleteAccount() async {
     await _apiClient.deleteNoContent('/me');
   }
@@ -96,10 +143,13 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
     required String localDate,
     String? subjectCode,
     String mode = 'bank',
+    String? difficulty,
   }) async {
     final Map<String, String> query = <String, String>{
       'date': localDate,
       if (mode.trim().isNotEmpty) 'mode': mode.trim(),
+      if (difficulty != null && difficulty.trim().isNotEmpty)
+        'difficulty': difficulty.trim(),
     };
     if (subjectCode != null && subjectCode.trim().isNotEmpty) {
       query['subject'] = subjectCode.trim();
@@ -160,9 +210,13 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   Future<SessionAbandonResult> abandonSession({
     required String sessionId,
     required String idempotencyKey,
+    bool immediate = false,
   }) async {
+    final String path = immediate
+        ? '/sessions/$sessionId/abandon?immediate=true'
+        : '/sessions/$sessionId/abandon';
     final Map<String, dynamic> json = await _apiClient.postJson(
-      '/sessions/$sessionId/abandon',
+      path,
       idempotencyKey: idempotencyKey,
       body: <String, dynamic>{'sessionId': sessionId, 'action': 'abandon'},
     );
@@ -176,6 +230,8 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
     required String reasoningText,
     required String clientAttemptId,
     required String idempotencyKey,
+    int? selectedIndex,
+    List<int>? quizAnswers,
   }) async {
     final Map<String, dynamic> json = await _apiClient.postJson(
       '/sessions/$sessionId/answers',
@@ -184,6 +240,9 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
         'answerValue': answerValue,
         'reasoningText': reasoningText,
         'clientAttemptId': clientAttemptId,
+        if (selectedIndex != null) 'selectedIndex': selectedIndex,
+        if (quizAnswers != null && quizAnswers.isNotEmpty)
+          'quizAnswers': quizAnswers,
       },
     );
     return GradingResult.fromJson(
@@ -254,6 +313,45 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
   }
 
   @override
+  Future<DailyReportSubmitResult> submitDailyReport({
+    required int tasksCompleted,
+    required String feeling,
+    required String reflectionNote,
+    required String idempotencyKey,
+  }) async {
+    final Map<String, dynamic> json = await _apiClient.postJson(
+      '/progress/daily-report',
+      idempotencyKey: idempotencyKey,
+      body: <String, dynamic>{
+        'tasksCompleted': tasksCompleted.clamp(0, 50),
+        'feeling': feeling,
+        'reflectionNote': reflectionNote.trim(),
+      },
+    );
+    return DailyReportSubmitResult.fromJson(
+      json,
+      isServerAuthoritative: true,
+      isDebugFixture: false,
+    );
+  }
+
+  @override
+  Future<List<DailyReportRecord>> fetchDailyReports({int limit = 14}) async {
+    final Map<String, dynamic> json = await _apiClient.getJson(
+      '/progress/daily-reports',
+      queryParameters: <String, String>{
+        'limit': limit.clamp(1, 60).toString(),
+      },
+    );
+    final List<dynamic> items =
+        json['items'] as List<dynamic>? ?? const <dynamic>[];
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(DailyReportRecord.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
   Future<XpHistoryPage> fetchXpHistory({int limit = 20, int offset = 0}) async {
     return XpHistoryPage.fromJson(await _apiClient.getJson(
       '/progress/xp-history',
@@ -297,5 +395,27 @@ class RemotePersonalFlowRepository implements PersonalFlowRepository {
     final List<dynamic> rawSlots =
         res['slots'] as List<dynamic>? ?? <dynamic>[];
     return rawSlots.whereType<Map<String, dynamic>>().toList(growable: false);
+  }
+
+  @override
+  Future<ProfileShowcase> fetchProfileShowcase() async {
+    final Map<String, dynamic> json =
+        await _apiClient.getJson('/profile/showcase');
+    return ProfileShowcase.fromJson(json);
+  }
+
+  @override
+  Future<WeeklySubjectLeaderboard> fetchWeeklySubjectLeaderboard({
+    String subjectCode = 'TOAN',
+    int limit = 20,
+  }) async {
+    final Map<String, dynamic> json = await _apiClient.getJson(
+      '/leaderboard/weekly',
+      queryParameters: <String, String>{
+        'subject': subjectCode,
+        'limit': limit.clamp(1, 50).toString(),
+      },
+    );
+    return WeeklySubjectLeaderboard.fromJson(json);
   }
 }

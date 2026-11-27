@@ -1,0 +1,13 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "mindclock",
+          "appId": "1:357973416738:android:5e09df39793b206a05a37b",
+          "fileOutput": "app/android/app/google-services.json"
+        }
+      }
+    }
+  }
+}

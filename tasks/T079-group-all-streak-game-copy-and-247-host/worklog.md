@@ -1,0 +1,5 @@
+# Nhật ký xử lý lỗi T079
+
+- **27/11/2026:** Khởi tạo T079 theo phản hồi trực tiếp của người dùng về 3 điểm: (1) streak nhóm trước đó cộng khi chỉ 1 thành viên làm thay vì cả nhóm cùng hoàn thành theo ngày; (2) Đấu trường còn lộ nhiều cụm từ nội bộ/demo như `3 Tướng Gốc`, `G1/G2/G3`, `bộ pose`, `0 RP Ranked`, `solo-three-v0.1`; (3) cần tài liệu & blueprint triển khai host 24/7 + tải APK ổn định cho Android thật.
+- **27/11/2026:** Đồng thời sửa test `app/test/t076_mvp_hub_and_backend_auth_test.dart` dòng 336 vì `RemotePersonalFlowRepository.fetchProfileSnapshot()` từ T078 chuẩn hóa `['TOAN', 'VAT_LY']` -> `['math', 'physics']`, và cập nhật assertion trong `solo_arena_widget_test.dart` / `t062_offline_bank_alarm_and_arena_timer_test.dart` khớp copy game sạch mới.
+- **27/11/2026:** Sửa 2 lỗi biên dịch & text mismatch trong `app/test/t079_group_streak_and_clean_arena_test.dart` (`pendingRequests`, `MindClockTheme.buildThemeData()`, `guestVm.initialize()`, kiểm tra `Hôm nay 2/2 người`), chạy lại toàn bộ `flutter test --no-pub -j 1` -> `171 passed`.
