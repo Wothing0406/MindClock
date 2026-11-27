@@ -28,4 +28,4 @@
 - **Test chưa chạy/giới hạn:** Chưa kiểm thử trực tiếp trên máy Android vật lý do `adb devices` hiện chưa có thiết bị kết nối.
 - **Rủi ro còn lại:** Cần kiểm tra độ mượt animation trên thiết bị Android tầm trung và hoàn tất duyệt quyền thương mại nếu đóng gói thêm art từ `assets/game/` ngoài bộ gốc đội tạo.
 - **Điểm tiếp tục chính xác:** Mở task mới độc lập `T092` để sửa trạng thái occurrence của báo thức buổi sáng và dọn dẹp dashboard/tab Luyện tập (`alarm_config_screen.dart`, `alarm_ring_screen.dart`, `today_screen.dart`, `practice_session_screen.dart`).
-- **Git:** Nhánh `main`, chuẩn bị commit và push riêng các file thuộc `T091` (không stage `.idea/`, `.vscode/`, `app/devtools_options.yaml`).
+- **Git:** Nhánh `main`, commit `e615b84` đã push và xác minh trên `origin/main` (`https://github.com/Wothing0406/MindClock.git`).
