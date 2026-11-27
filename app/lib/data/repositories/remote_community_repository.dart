@@ -206,12 +206,81 @@ class RemoteCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<void> leaveRoom(String roomId) async {
+  Future<void> leaveRoom(String roomId, {bool transferHost = false}) async {
     await _apiClient.postJson(
       '/study-rooms/$roomId/leave',
-      body: const <String, dynamic>{},
+      body: transferHost
+          ? const <String, dynamic>{'transferHost': true}
+          : const <String, dynamic>{},
       idempotencyKey: 'room_leave_${LocalIdGenerator.nextUuidV4()}',
     );
+  }
+
+  @override
+  Future<StudyRoomDetail> heartbeatRoom(
+    String roomId, {
+    String? statusNote,
+  }) async {
+    final Map<String, dynamic> data = await _apiClient.postJson(
+      '/study-rooms/$roomId/heartbeat',
+      body: <String, dynamic>{
+        if (statusNote != null && statusNote.trim().isNotEmpty)
+          'statusNote': statusNote.trim(),
+      },
+      idempotencyKey: 'room_hb_${LocalIdGenerator.nextUuidV4()}',
+    );
+    return StudyRoomDetail.fromJson(data);
+  }
+
+  @override
+  Future<void> closeRoom(String roomId) async {
+    await _apiClient.postJson(
+      '/study-rooms/$roomId/close',
+      body: const <String, dynamic>{},
+      idempotencyKey: 'room_close_${LocalIdGenerator.nextUuidV4()}',
+    );
+  }
+
+  @override
+  Future<StudyRoomInviteLink> createRoomInvite(
+    String roomId, {
+    int ttlMinutes = 30,
+    int maxUses = 8,
+  }) async {
+    final Map<String, dynamic> data = await _apiClient.postJson(
+      '/study-rooms/$roomId/invites',
+      body: <String, dynamic>{
+        'ttlMinutes': ttlMinutes,
+        'maxUses': maxUses,
+      },
+      idempotencyKey: 'room_inv_${LocalIdGenerator.nextUuidV4()}',
+    );
+    return StudyRoomInviteLink.fromJson(data);
+  }
+
+  @override
+  Future<void> revokeRoomInvite(String roomId, String inviteId) async {
+    await _apiClient.postJson(
+      '/study-rooms/$roomId/invites/$inviteId/revoke',
+      body: const <String, dynamic>{},
+      idempotencyKey: 'room_inv_rev_${LocalIdGenerator.nextUuidV4()}',
+    );
+  }
+
+  @override
+  Future<StudyRoomDetail> redeemRoomInvite(
+    String inviteToken, {
+    String statusNote = 'Đang tập trung',
+  }) async {
+    final Map<String, dynamic> data = await _apiClient.postJson(
+      '/study-rooms/invites/redeem',
+      body: <String, dynamic>{
+        'inviteToken': inviteToken.trim(),
+        'statusNote': statusNote,
+      },
+      idempotencyKey: 'room_redeem_${LocalIdGenerator.nextUuidV4()}',
+    );
+    return StudyRoomDetail.fromJson(data);
   }
 
   @override

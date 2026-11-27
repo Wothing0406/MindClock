@@ -215,14 +215,42 @@ class StudyRoomCreateRequest(ApiModel):
     visibility: str = Field(default='public', pattern='^(public|invite_only)$')
     max_members: int = Field(default=4, alias='maxMembers', ge=2, le=8)
     ai_companion_enabled: bool = Field(default=True, alias='aiCompanionEnabled')
+    ttl_minutes: int = Field(default=240, alias='ttlMinutes', ge=5, le=720)
 
 
 class StudyRoomJoinRequest(ApiModel):
     model_config = ConfigDict(populate_by_name=True, extra='forbid')
 
     room_code: str | None = Field(default=None, alias='roomCode', max_length=12)
+    invite_token: str | None = Field(default=None, alias='inviteToken', max_length=256)
     mic_enabled: bool = Field(default=False, alias='micEnabled')
     cam_enabled: bool = Field(default=False, alias='camEnabled')
+    status_note: str = Field(default='Đang tập trung', alias='statusNote', max_length=80)
+
+
+class StudyRoomLeaveRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    transfer_host: bool = Field(default=False, alias='transferHost')
+
+
+class StudyRoomHeartbeatRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    status_note: str | None = Field(default=None, alias='statusNote', max_length=80)
+
+
+class StudyRoomInviteCreateRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    ttl_minutes: int = Field(default=30, alias='ttlMinutes', ge=1, le=240)
+    max_uses: int = Field(default=8, alias='maxUses', ge=1, le=32)
+
+
+class StudyRoomInviteRedeemRequest(ApiModel):
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
+
+    invite_token: str = Field(alias='inviteToken', min_length=8, max_length=256)
     status_note: str = Field(default='Đang tập trung', alias='statusNote', max_length=80)
 
 

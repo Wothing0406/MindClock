@@ -5,7 +5,7 @@ from typing import Any, Callable
 import uuid
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, UploadFile, File, Form, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Response, UploadFile, File, Form, status
 from sqlalchemy import delete, desc, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -74,7 +74,11 @@ from app.schemas import (
     StudyHelpRequest,
     StudySpeechRequest,
     StudyRoomCreateRequest,
+    StudyRoomHeartbeatRequest,
+    StudyRoomInviteCreateRequest,
+    StudyRoomInviteRedeemRequest,
     StudyRoomJoinRequest,
+    StudyRoomLeaveRequest,
     StudyRoomMediaPatchRequest,
     StudyRoomSettingsPatchRequest,
     StudySessionCreateRequest,
@@ -2565,7 +2569,24 @@ def create_v1_router(
             visibility=payload.visibility,
             max_members=payload.max_members,
             ai_companion_enabled=payload.ai_companion_enabled,
+            ttl_minutes=payload.ttl_minutes,
         )
+
+    @router.post('/study-rooms/invites/redeem')
+    def redeem_study_room_invite(
+        payload: StudyRoomInviteRedeemRequest,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.redeem_room_invite(
+                principal.user.id,
+                payload.invite_token,
+                status_note=payload.status_note,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
     @router.get('/study-rooms/{room_id}')
     def get_study_room(
@@ -2592,10 +2613,73 @@ def create_v1_router(
                 principal.user.id,
                 room_id,
                 room_code=payload.room_code,
+                invite_token=payload.invite_token,
                 mic_enabled=payload.mic_enabled,
                 cam_enabled=payload.cam_enabled,
                 status_note=payload.status_note,
             )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/{room_id}/heartbeat')
+    def heartbeat_study_room(
+        room_id: str,
+        payload: StudyRoomHeartbeatRequest | None = Body(default=None),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.heartbeat_room(
+                principal.user.id,
+                room_id,
+                status_note=payload.status_note if payload else None,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/{room_id}/close')
+    def close_study_room(
+        room_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.close_room(principal.user.id, room_id)
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post(
+        '/study-rooms/{room_id}/invites', status_code=status.HTTP_201_CREATED
+    )
+    def create_study_room_invite(
+        room_id: str,
+        payload: StudyRoomInviteCreateRequest | None = Body(default=None),
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.create_room_invite(
+                principal.user.id,
+                room_id,
+                ttl_minutes=payload.ttl_minutes if payload else 30,
+                max_uses=payload.max_uses if payload else 8,
+            )
+        except CommunityServiceError as exc:
+            raise _api_error(exc.status_code, exc.code, exc.message_vi)
+
+    @router.post('/study-rooms/{room_id}/invites/{invite_id}/revoke')
+    def revoke_study_room_invite(
+        room_id: str,
+        invite_id: str,
+        principal: AuthenticatedPrincipal = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> dict[str, Any]:
+        svc = CommunityService(db)
+        try:
+            return svc.revoke_room_invite(principal.user.id, room_id, invite_id)
         except CommunityServiceError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
 
@@ -2635,12 +2719,17 @@ def create_v1_router(
     @router.post('/study-rooms/{room_id}/leave')
     def leave_study_room(
         room_id: str,
+        payload: StudyRoomLeaveRequest | None = Body(default=None),
         principal: AuthenticatedPrincipal = Depends(get_current_user),
         db: Session = Depends(get_db),
     ) -> dict[str, Any]:
         svc = CommunityService(db)
         try:
-            return svc.leave_room(principal.user.id, room_id)
+            return svc.leave_room(
+                principal.user.id,
+                room_id,
+                transfer_host=payload.transfer_host if payload else False,
+            )
         except CommunityServiceError as exc:
             raise _api_error(exc.status_code, exc.code, exc.message_vi)
 

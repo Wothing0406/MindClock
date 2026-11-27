@@ -408,7 +408,7 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<void> leaveRoom(String roomId) async {
+  Future<void> leaveRoom(String roomId, {bool transferHost = false}) async {
     final int idx =
         _rooms.indexWhere((StudyRoomDetail r) => r.summary.roomId == roomId);
     if (idx < 0) return;
@@ -419,6 +419,49 @@ class DebugFixtureCommunityRepository implements CommunityRepository {
     _rooms = List<StudyRoomDetail>.from(_rooms)
       ..[idx] = target.copyWith(members: nextMembers);
   }
+
+  @override
+  Future<StudyRoomDetail> heartbeatRoom(
+    String roomId, {
+    String? statusNote,
+  }) =>
+      fetchRoom(roomId);
+
+  @override
+  Future<void> closeRoom(String roomId) async {
+    _rooms = _rooms
+        .where((StudyRoomDetail room) => room.summary.roomId != roomId)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<StudyRoomInviteLink> createRoomInvite(
+    String roomId, {
+    int ttlMinutes = 30,
+    int maxUses = 8,
+  }) async {
+    const String token = 'dbg_opaque_token_001';
+    const String link =
+        'https://mindclock.app/study-rooms/join?invite=$token';
+    return StudyRoomInviteLink(
+      inviteId: 'inv_$roomId',
+      roomId: roomId,
+      inviteToken: token,
+      inviteLink: link,
+      qrPayload: link,
+      maxUses: maxUses,
+    );
+  }
+
+  @override
+  Future<void> revokeRoomInvite(String roomId, String inviteId) async {}
+
+  @override
+  Future<StudyRoomDetail> redeemRoomInvite(
+    String inviteToken, {
+    String statusNote = 'Đang tập trung',
+  }) =>
+      joinRoom(_rooms.first.summary.roomId, statusNote: statusNote);
 
   @override
   Future<StudyRoomDetail> removeRoomMember(

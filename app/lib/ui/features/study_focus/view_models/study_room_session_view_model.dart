@@ -14,7 +14,9 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
       this.enablePolling = true,
       DateTime Function()? nowProvider})
       : _repository = repository,
-        _room = initialRoom,
+        _room = (initialRoom != null && initialRoom.summary.isOpen)
+            ? initialRoom
+            : null,
         _now = nowProvider ?? DateTime.now {
     _schedule();
   }
@@ -56,7 +58,7 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
 
   void attach(StudyRoomDetail? room) {
     _epoch++;
-    _room = room;
+    _room = (room != null && room.summary.isOpen) ? room : null;
     _message = null;
     _syncedAt = null;
     _schedule();
@@ -74,7 +76,7 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
   void _failure(Object error) {
     if (error is PersonalApiException) {
       _message = error.messageVi;
-      if ([401, 403, 404].contains(error.httpStatus)) {
+      if ([401, 403, 404, 410].contains(error.httpStatus)) {
         _room = null;
         _syncedAt = null;
         _schedule();
@@ -94,9 +96,9 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
     try {
       final next = await _repository.fetchRoom(current.summary.roomId);
       if (_disposed || epoch != _epoch) return;
-      if (next.summary.status != 'active' ||
-          !next.members.any((m) => m.isSelf)) {
+      if (!next.summary.isOpen || !next.members.any((m) => m.isSelf)) {
         _room = null;
+        _syncedAt = null;
         _message = 'Phòng đã kết thúc hoặc bạn không còn là thành viên.';
         _schedule();
       } else {
@@ -111,6 +113,15 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
       if (!_disposed) notifyListeners();
     }
   }
+
+  Future<bool> sendHeartbeat({String? statusNote}) => _change((id) async {
+        final next =
+            await _repository.heartbeatRoom(id, statusNote: statusNote);
+        if (!next.summary.isOpen || !next.members.any((m) => m.isSelf)) {
+          return null;
+        }
+        return next;
+      });
 
   Future<bool> _change(Future<StudyRoomDetail?> Function(String) action) async {
     final current = _room;
@@ -155,10 +166,18 @@ class StudyRoomSessionViewModel extends ChangeNotifier {
           camEnabled: camEnabled,
           aiCompanionEnabled: aiCompanionEnabled));
 
-  Future<bool> leave() => _change((id) async {
-        await _repository.leaveRoom(id);
+  Future<bool> leave({bool transferHost = false}) => _change((id) async {
+        await _repository.leaveRoom(id, transferHost: transferHost);
         return null;
       });
+
+  Future<bool> closeRoom() async {
+    if (!isHost) return false;
+    return _change((id) async {
+      await _repository.closeRoom(id);
+      return null;
+    });
+  }
 
   Future<bool> removeMember(String memberUserId) async {
     if (!isHost || memberUserId.trim().isEmpty) return false;

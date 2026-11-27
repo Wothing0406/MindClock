@@ -65,7 +65,7 @@ class _Repo extends DebugFixtureCommunityRepository {
   }
 
   @override
-  Future<void> leaveRoom(String roomId) async {
+  Future<void> leaveRoom(String roomId, {bool transferHost = false}) async {
     await onLeave?.call();
   }
 }

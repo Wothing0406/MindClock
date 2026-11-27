@@ -121,13 +121,22 @@ class PublicStudyRoomSummary {
     required this.aiCompanionEnabled,
     required this.ownerAlias,
     required this.ownerAvatarId,
+    this.ownerUserId,
     this.status = 'active',
+    this.createdAt,
+    this.expiresAt,
+    this.lastHeartbeatAt,
+    this.closedAt,
     this.matchScore,
     this.matchReasonVi,
   });
 
+  static bool isOpenRoomStatus(String? status) =>
+      status == 'waiting' || status == 'active';
+
   final String roomId;
   final String roomCode;
+  final String? ownerUserId;
   final String title;
   final String subjectCode;
   final String gradeLevel;
@@ -139,20 +148,30 @@ class PublicStudyRoomSummary {
   final bool aiCompanionEnabled;
   final String ownerAlias;
   final String ownerAvatarId;
-  final String status;
+  final String status; // waiting | active | closing | closed | expired
+  final String? createdAt;
+  final String? expiresAt;
+  final String? lastHeartbeatAt;
+  final String? closedAt;
   final int? matchScore;
   final String? matchReasonVi;
 
+  bool get isOpen => isOpenRoomStatus(status);
+
   String get subjectNameVi => SubjectCatalog.nameFor(subjectCode);
 
-  PublicStudyRoomSummary copyWith(
-          {String? title,
-          int? maxMembers,
-          String? visibility,
-          bool? aiCompanionEnabled}) =>
+  PublicStudyRoomSummary copyWith({
+    String? title,
+    int? maxMembers,
+    String? visibility,
+    bool? aiCompanionEnabled,
+    String? status,
+    String? ownerUserId,
+  }) =>
       PublicStudyRoomSummary(
         roomId: roomId,
         roomCode: roomCode,
+        ownerUserId: ownerUserId ?? this.ownerUserId,
         title: title ?? this.title,
         subjectCode: subjectCode,
         gradeLevel: gradeLevel,
@@ -164,7 +183,11 @@ class PublicStudyRoomSummary {
         aiCompanionEnabled: aiCompanionEnabled ?? this.aiCompanionEnabled,
         ownerAlias: ownerAlias,
         ownerAvatarId: ownerAvatarId,
-        status: status,
+        status: status ?? this.status,
+        createdAt: createdAt,
+        expiresAt: expiresAt,
+        lastHeartbeatAt: lastHeartbeatAt,
+        closedAt: closedAt,
         matchScore: matchScore,
         matchReasonVi: matchReasonVi,
       );
@@ -173,6 +196,7 @@ class PublicStudyRoomSummary {
     return PublicStudyRoomSummary(
       roomId: json['roomId'] as String? ?? '',
       roomCode: json['roomCode'] as String? ?? '',
+      ownerUserId: json['ownerUserId'] as String?,
       title: json['title'] as String? ?? 'Phòng học chung',
       subjectCode: json['subjectCode'] as String? ?? 'TOAN',
       gradeLevel: json['gradeLevel'] as String? ?? 'Lớp 11',
@@ -185,8 +209,51 @@ class PublicStudyRoomSummary {
       ownerAlias: json['ownerAlias'] as String? ?? 'Trưởng phòng',
       ownerAvatarId: json['ownerAvatarId'] as String? ?? 'avatar_sunrise',
       status: json['status'] as String? ?? 'active',
+      createdAt: json['createdAt'] as String?,
+      expiresAt: json['expiresAt'] as String?,
+      lastHeartbeatAt: json['lastHeartbeatAt'] as String?,
+      closedAt: json['closedAt'] as String?,
       matchScore: (json['matchScore'] as num?)?.toInt(),
       matchReasonVi: json['matchReasonVi'] as String?,
+    );
+  }
+}
+
+class StudyRoomInviteLink {
+  const StudyRoomInviteLink({
+    required this.inviteId,
+    required this.roomId,
+    required this.inviteToken,
+    required this.inviteLink,
+    required this.qrPayload,
+    this.expiresAt,
+    this.maxUses = 8,
+    this.useCount = 0,
+    this.revoked = false,
+  });
+
+  final String inviteId;
+  final String roomId;
+  final String inviteToken;
+  final String inviteLink;
+  final String qrPayload;
+  final String? expiresAt;
+  final int maxUses;
+  final int useCount;
+  final bool revoked;
+
+  factory StudyRoomInviteLink.fromJson(Map<String, dynamic> json) {
+    final String link = json['inviteLink'] as String? ?? '';
+    return StudyRoomInviteLink(
+      inviteId: json['inviteId'] as String? ?? '',
+      roomId: json['roomId'] as String? ?? '',
+      inviteToken: json['inviteToken'] as String? ?? '',
+      inviteLink: link,
+      qrPayload: json['qrPayload'] as String? ?? link,
+      expiresAt: json['expiresAt'] as String?,
+      maxUses: (json['maxUses'] as num?)?.toInt() ?? 8,
+      useCount: (json['useCount'] as num?)?.toInt() ?? 0,
+      revoked: json['revoked'] as bool? ?? false,
     );
   }
 }

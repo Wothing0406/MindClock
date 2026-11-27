@@ -487,7 +487,16 @@ class StudyRoom(Base):
     visibility: Mapped[str] = mapped_column(String(16), default='public', index=True)
     max_members: Mapped[int] = mapped_column(Integer, default=4)
     ai_companion_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    status: Mapped[str] = mapped_column(String(16), default='active', index=True)
+    status: Mapped[str] = mapped_column(String(16), default='waiting', index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    last_heartbeat_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True, default=utc_now
+    )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -512,7 +521,30 @@ class StudyRoomMember(Base):
     cam_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     status_note: Mapped[str] = mapped_column(String(80), default='Đang tập trung')
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_heartbeat_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=utc_now
+    )
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class StudyRoomInvite(Base):
+    __tablename__ = 'study_room_invites'
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_uuid)
+    room_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey('study_rooms.id', ondelete='CASCADE'), index=True
+    )
+    created_by_user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey('users.id', ondelete='CASCADE'), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    max_uses: Mapped[int] = mapped_column(Integer, default=8)
+    use_count: Mapped[int] = mapped_column(Integer, default=0)
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class CommitmentGroup(Base):

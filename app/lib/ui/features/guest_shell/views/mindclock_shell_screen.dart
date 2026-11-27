@@ -8,6 +8,7 @@ import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/alarm_config.dart';
 import '../../../../domain/models/alarm_occurrence.dart';
 import '../../../../domain/models/community_models.dart';
+import '../../../../domain/models/personal_flow_models.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/timetable.dart';
@@ -230,6 +231,36 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
       if (widget.viewModel.isLoaded) {
         widget.viewModel.refreshOsStatus();
       }
+      unawaited(_revalidateJoinedRoomOnResume());
+    }
+  }
+
+  Future<void> _revalidateJoinedRoomOnResume() async {
+    final StudyRoomDetail? current = _joinedCommunityRoom;
+    final CommunityRepository? repo = widget.communityRepository;
+    if (current == null || repo == null || repo.isDebugFixture) return;
+    final String scopeAtCheck = widget.personalViewModel.authSession.ownerScopeKey;
+    try {
+      final StudyRoomDetail refreshed =
+          await repo.fetchRoom(current.summary.roomId);
+      if (!mounted ||
+          _roomOwnerScope != scopeAtCheck ||
+          _joinedCommunityRoom?.summary.roomId != current.summary.roomId) {
+        return;
+      }
+      if (!refreshed.summary.isOpen ||
+          !refreshed.members.any((StudyRoomMemberTile m) => m.isSelf)) {
+        setState(() => _joinedCommunityRoom = null);
+      } else {
+        setState(() => _joinedCommunityRoom = refreshed);
+      }
+    } on PersonalApiException catch (error) {
+      if (!mounted || _roomOwnerScope != scopeAtCheck) return;
+      if (<int>[401, 403, 404, 410].contains(error.httpStatus)) {
+        setState(() => _joinedCommunityRoom = null);
+      }
+    } catch (_) {
+      // Lỗi mạng tạm thời không xóa mù, StudyRoomSessionViewModel sẽ đồng bộ tiếp.
     }
   }
 

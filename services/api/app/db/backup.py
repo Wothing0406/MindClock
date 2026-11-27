@@ -37,6 +37,7 @@ ORDERED_TABLE_NAMES: tuple[str, ...] = (
     'user_blocks',
     'study_rooms',
     'study_room_members',
+    'study_room_invites',
 )
 
 

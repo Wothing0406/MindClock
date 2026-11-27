@@ -106,12 +106,21 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   @override
   void initState() {
     super.initState();
-    if (widget.initialRoom != null) {
+    final StudyRoomDetail? validInitialRoom =
+        (widget.initialRoom != null && widget.initialRoom!.summary.isOpen)
+            ? widget.initialRoom
+            : null;
+    if (validInitialRoom != null) {
       _entryBranch = _StudyEntryBranch.withFriends;
     } else if (widget.studyViewModel.draftRoomMode == StudyRoomMode.solo) {
       _entryBranch = _StudyEntryBranch.solo;
     } else {
       _entryBranch = _StudyEntryBranch.withAi;
+    }
+    if (widget.initialRoom != null && validInitialRoom == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onRoomChanged?.call(null);
+      });
     }
     _speech = StudySpeechViewModel(
         gateway: widget.speechGateway ??
@@ -129,7 +138,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
         widget.communityRepository ?? DebugFixtureCommunityRepository();
     _roomVm = StudyRoomSessionViewModel(
         repository: _roomRepository,
-        initialRoom: widget.initialRoom,
+        initialRoom: validInitialRoom,
         enablePolling: widget.studyViewModel.enablePeriodicTicker);
     _roomVm.addListener(_onRoomState);
     WidgetsBinding.instance.addObserver(this);

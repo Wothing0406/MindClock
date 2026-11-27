@@ -58,7 +58,27 @@ abstract interface class CommunityRepository {
     String? statusNote,
   });
 
-  Future<void> leaveRoom(String roomId);
+  Future<void> leaveRoom(String roomId, {bool transferHost = false});
+
+  Future<StudyRoomDetail> heartbeatRoom(
+    String roomId, {
+    String? statusNote,
+  });
+
+  Future<void> closeRoom(String roomId);
+
+  Future<StudyRoomInviteLink> createRoomInvite(
+    String roomId, {
+    int ttlMinutes = 30,
+    int maxUses = 8,
+  });
+
+  Future<void> revokeRoomInvite(String roomId, String inviteId);
+
+  Future<StudyRoomDetail> redeemRoomInvite(
+    String inviteToken, {
+    String statusNote = 'Đang tập trung',
+  });
 
   Future<StudyRoomDetail> removeRoomMember(
     String roomId,
