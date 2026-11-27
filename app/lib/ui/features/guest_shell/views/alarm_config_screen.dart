@@ -15,7 +15,6 @@ import '../../../../domain/services/morning_question_selector.dart';
 import '../../../../domain/services/study_ai_gateway.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
-import '../../../core/widgets/math_formula_text.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../../core/widgets/mindclock_pressable.dart';
@@ -840,11 +839,6 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                       builder: (BuildContext context) {
                         final MorningQuestionProposal proposal =
                             _resolveMorningProposal();
-                        final String previewPrompt =
-                            (_aiPreviewQuestion?.prompt.trim().isNotEmpty == true)
-                                ? _aiPreviewQuestion!.prompt
-                                : (proposal.sampleQuestionPrompt ??
-                                    'Câu ôn nhanh ${proposal.subjectNameVi} · ${proposal.topicNameVi}.');
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
@@ -874,19 +868,22 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                                         WrapCrossAlignment.center,
                                     children: <Widget>[
                                       Text(
-                                        'Câu gợi ý sáng · ${proposal.subjectNameVi}',
+                                        'Chuẩn bị thử thách · ${proposal.subjectNameVi}',
                                         style: mc.bodyStrongStyle,
                                       ),
                                       MindClockStatusPill(
                                         label: _aiPreviewQuestion != null
-                                            ? 'AI cá nhân hóa'
-                                            : 'Cục bộ theo TKB',
+                                            ? 'Đã chuẩn bị sẵn đề'
+                                            : 'Ẩn đề tới khi reo',
                                         accentWarm: false,
                                       ),
                                     ],
                                   ),
                                   SizedBox(height: mc.space8),
-                                  MathFormulaText(previewPrompt, style: mc.bodyStyle),
+                                  Text(
+                                    'Câu hỏi sẽ được tạo sẵn ngay trước giờ báo thức vài phút và chỉ hiển thị khi chuông reo để tránh lộ đề trước.',
+                                    style: mc.bodyStyle,
+                                  ),
                                   if (_aiPreviewStatusVi != null) ...<Widget>[
                                     SizedBox(height: mc.space8),
                                     Text(

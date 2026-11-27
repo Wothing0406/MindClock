@@ -32,18 +32,37 @@ class PracticeSessionScreen extends StatefulWidget {
   State<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
 }
 
-class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
+class _PracticeSessionScreenState extends State<PracticeSessionScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _answerController = TextEditingController();
   final TextEditingController _reasoningController = TextEditingController();
   final TextEditingController _feedbackCommentController =
       TextEditingController();
   String _selectedDifficulty = 'basic';
   final Map<int, int> _miniQuizSelections = <int, int>{};
+  bool _reRingWarningActive = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.personalViewModel.addListener(_onPvmChanged);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final PersonalFlowViewModel pvm = widget.personalViewModel;
+    final bool activeChallenge = pvm.isChallengeModeSession &&
+        pvm.activeSession != null &&
+        pvm.activeSession!.state == 'active' &&
+        pvm.lastResult?.verdict != GradingVerdict.correct;
+    if (activeChallenge &&
+        (state == AppLifecycleState.paused ||
+            state == AppLifecycleState.inactive)) {
+      if (mounted) {
+        setState(() => _reRingWarningActive = true);
+      }
+    }
   }
 
   @override
@@ -61,6 +80,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.personalViewModel.removeListener(_onPvmChanged);
     _answerController.dispose();
     _reasoningController.dispose();
@@ -318,6 +338,15 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
                   ],
                 ),
                 if (question != null) ...<Widget>[
+                  if (_reRingWarningActive) ...<Widget>[
+                    SizedBox(height: mc.space12),
+                    const MindClockNoticeBanner(
+                      key: ValueKey<String>('practice-rering-warning'),
+                      message:
+                          'Phát hiện bạn vừa rời màn hình khi chưa giải xong thử thách sáng — chuông nhắc tiếp tục giữ tỉnh táo đã được kích hoạt!',
+                      isWarm: true,
+                    ),
+                  ],
                   SizedBox(height: mc.space16),
                   if (question.morningCard != null &&
                       pvm.isMorningHookVisible) ...<Widget>[

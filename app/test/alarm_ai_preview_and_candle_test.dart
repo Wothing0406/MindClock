@@ -260,7 +260,9 @@ void main() {
       );
       expect(onlineGateway.requestedSubjects.last, 'physics');
       expect(onlineGateway.requestedGrades.last, 'Lớp 12');
-      expect(find.textContaining('Con lắc lò xo dao động'), findsOneWidget);
+      // T089: Không lộ đề bài trước khi chuông reo trên AlarmConfigScreen
+      expect(find.textContaining('Con lắc lò xo dao động'), findsNothing);
+      expect(find.text('Đã chuẩn bị sẵn đề'), findsOneWidget);
 
       // Tạo lại câu AI mẫu bằng nút
       await tester.ensureVisible(
@@ -270,7 +272,8 @@ void main() {
         find.byKey(const ValueKey<String>('alarm-regenerate-challenge')),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('Câu AI #'), findsOneWidget);
+      expect(find.textContaining('Câu AI #'), findsNothing);
+      expect(find.text('Đã chuẩn bị sẵn đề'), findsOneWidget);
 
       // Kiểm tra fallback offline khi AI lỗi mạng
       final _TrackingAiGateway offlineGateway =
@@ -292,7 +295,7 @@ void main() {
         find.byKey(const ValueKey<String>('alarm-ai-challenge-preview')),
         findsOneWidget,
       );
-      expect(find.textContaining('Cục bộ theo TKB'), findsOneWidget);
+      expect(find.textContaining('Ẩn đề tới khi reo'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
