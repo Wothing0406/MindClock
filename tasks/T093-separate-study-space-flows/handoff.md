@@ -1,6 +1,7 @@
 # Bàn giao nhiệm vụ T093
 
 - **Trạng thái cuối:** `verifying` (toàn bộ `flutter analyze` và 12 bộ `flutter test` Không gian học đã PASS trên Windows 11; giữ `verifying` vì chưa cắm điện thoại Android vật lý để kiểm trình chọn ảnh hệ thống thật).
+- **Git commit & nhánh:** `fdb8a33` trên nhánh `main` (đã push và xác nhận trên `origin/main`).
 - **Đã thay đổi:**
   - `app/lib/ui/features/study_focus/views/study_space_screen.dart`: tách 3 lựa chọn ngang hàng (`Học một mình`, `Học cùng MindClock AI`, `Học cùng bạn`); cô lập hoàn toàn màn phòng bạn bè (không còn render thiết lập `Học một mình` bên dưới `StudyRoomSessionPanel`); thêm chọn `Bắt đầu ngay` / `Hẹn giờ` chỉ tạo lịch khi bấm xác nhận; thêm ô ghi chú vướng mắc trong phiên `Học một mình`; thêm gửi ảnh đề bài có hộp thoại consent trong phiên `Học cùng MindClock AI`; bỏ lặp `Tạo câu luyện` và dọn sạch nhãn kỹ thuật.
   - `app/lib/ui/features/study_focus/view_models/study_focus_view_model.dart`: giữ `subjectCode` khi bắt đầu phiên không nhập tiêu đề tùy chỉnh và truyền đủ môn/lớp/mục tiêu (`goalLabel`, `fallbackSubjectCode`) sang `requestHelp`.
