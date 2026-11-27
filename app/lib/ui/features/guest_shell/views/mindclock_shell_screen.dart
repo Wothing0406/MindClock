@@ -271,14 +271,23 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   }
 
   void _syncFromViewModel() {
-    if (!_syncedInitialRoute && widget.viewModel.isLoaded) {
-      _syncedInitialRoute = true;
-      _stage = widget.viewModel.workspace.onboardingCompleted
-          ? _GuestFlowStage.mainTabs
-          : _GuestFlowStage.welcome;
-    }
     final String scope = widget.personalViewModel.authSession.ownerScopeKey;
     final bool isAuth = widget.personalViewModel.authSession.isAuthenticated;
+    final bool requireRealAuth = !widget.personalViewModel.isDebugFixture;
+    if (!_syncedInitialRoute && widget.viewModel.isLoaded) {
+      _syncedInitialRoute = true;
+      final bool canEnterMain =
+          widget.viewModel.workspace.onboardingCompleted &&
+              (!requireRealAuth || isAuth);
+      _stage =
+          canEnterMain ? _GuestFlowStage.mainTabs : _GuestFlowStage.welcome;
+    }
+    if (requireRealAuth &&
+        !isAuth &&
+        _stage != _GuestFlowStage.welcome &&
+        _stage != _GuestFlowStage.auth) {
+      _stage = _GuestFlowStage.welcome;
+    }
     if (_roomOwnerScope != scope || !isAuth) {
       _joinedCommunityRoom = null;
       _roomOwnerScope = scope;
