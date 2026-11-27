@@ -423,6 +423,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         backgroundColor: mc.night,
         body: AlarmRingScreen(
           payload: activeRing,
+          alreadyCompletedToday: widget.viewModel.hasCompletedAlarmToday,
           onOpenQuestion: () {
             final String alarmId = activeRing.alarmId;
             String? resolvedSubject = activeRing.subjectCode;
@@ -507,14 +508,6 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             onStartAuth: () {
               setState(() => _stage = _GuestFlowStage.auth);
             },
-            onAlarmOnly: () async {
-              await widget.viewModel.completeOnboardingAsLater(alarmOnly: true);
-              if (!mounted) return;
-              setState(() {
-                _editingAlarm = null;
-                _stage = _GuestFlowStage.alarmConfig;
-              });
-            },
           ),
         );
 
@@ -574,14 +567,6 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 }
               });
             },
-            onUseAlarmOnly: () async {
-              await widget.viewModel.completeOnboardingAsLater(alarmOnly: true);
-              if (!mounted) return;
-              setState(() {
-                _editingAlarm = null;
-                _stage = _GuestFlowStage.alarmConfig;
-              });
-            },
             onBackToWelcome: () {
               setState(() => _stage = _GuestFlowStage.welcome);
             },
@@ -611,23 +596,8 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 _selectedTabIndex = 0;
               });
             },
-            onSkipLater: () async {
-              await widget.viewModel
-                  .completeOnboardingAsLater(alarmOnly: false);
-              if (!mounted) return;
-              setState(() {
-                _stage = _GuestFlowStage.mainTabs;
-                _selectedTabIndex = 0;
-              });
-            },
-            onAlarmOnly: () async {
-              await widget.viewModel.completeOnboardingAsLater(alarmOnly: true);
-              if (!mounted) return;
-              setState(() {
-                _editingAlarm = null;
-                _stage = _GuestFlowStage.alarmConfig;
-              });
-            },
+            onSkipLater: () async {},
+            onAlarmOnly: () async {},
           ),
         );
 

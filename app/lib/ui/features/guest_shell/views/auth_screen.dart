@@ -59,13 +59,13 @@ class AuthScreen extends StatefulWidget {
     super.key,
     required this.personalViewModel,
     required this.onAuthenticated,
-    required this.onUseAlarmOnly,
+    this.onUseAlarmOnly,
     required this.onBackToWelcome,
   });
 
   final PersonalFlowViewModel personalViewModel;
   final ValueChanged<String?> onAuthenticated;
-  final VoidCallback onUseAlarmOnly;
+  final VoidCallback? onUseAlarmOnly;
   final VoidCallback onBackToWelcome;
 
   @override
@@ -475,16 +475,8 @@ class _AuthScreenState extends State<AuthScreen> {
               SizedBox(height: mc.space20),
               const MindClockNoticeBanner(
                 message:
-                    'Báo thức và câu ôn tập buổi sáng luôn hoạt động độc lập, không phụ thuộc vào tình trạng mạng.',
+                    'Đăng nhập để đồng bộ lịch học, báo thức và tiến độ ôn tập của bạn.',
                 isWarm: false,
-              ),
-              SizedBox(height: mc.space16),
-              MindClockButton(
-                key: const ValueKey<String>('auth-offline-alarm-fallback'),
-                label: 'Chỉ dùng báo thức trên máy',
-                icon: MindClockIconKind.bell,
-                variant: MindClockButtonVariant.subtle,
-                onPressed: widget.onUseAlarmOnly,
               ),
             ],
           ),
@@ -653,7 +645,7 @@ Future<bool?> _showPolicyDialog(BuildContext context) {
                         _PolicySection(
                           title: '1. Dữ liệu tài khoản & Quyền riêng tư',
                           body:
-                              'Email chỉ dùng để xác thực và khôi phục tài khoản; hệ thống không yêu cầu số điện thoại, họ tên pháp lý hay địa chỉ trường/nhà. Mật khẩu được quản lý qua Firebase Auth và không lưu dưới dạng văn bản thuần trên máy chủ.',
+                              'Email chỉ dùng để xác thực và khôi phục tài khoản; hệ thống không yêu cầu số điện thoại, họ tên pháp lý hay địa chỉ trường/nhà. Mật khẩu được bảo mật qua Firebase Auth và không lưu dưới dạng văn bản thuần.',
                         ),
                         _PolicySection(
                           title: '2. Ảnh bài làm, Camera & Micro',
@@ -668,7 +660,7 @@ Future<bool?> _showPolicyDialog(BuildContext context) {
                         _PolicySection(
                           title: '4. Quyền rút đồng ý & Xóa tài khoản',
                           body:
-                              'Trong mục Tôi → Tài khoản & dữ liệu, bạn có thể xuất hoặc xóa vĩnh viễn dữ liệu tài khoản khỏi máy chủ bất kỳ lúc nào; các báo thức đặt sẵn trên máy vẫn giữ an toàn để không gián đoạn lịch sinh hoạt.',
+                              'Trong mục Tôi → Tài khoản & dữ liệu, bạn có thể xuất hoặc xóa vĩnh viễn dữ liệu tài khoản bất kỳ lúc nào.',
                         ),
                       ],
                     ),

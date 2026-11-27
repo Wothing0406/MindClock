@@ -149,7 +149,7 @@ class _ArenaPvpLobbyState extends State<ArenaPvpLobby> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Cùng câu hỏi, cùng thang chấm và máy chủ xử lý toàn bộ sát thương, HP/Qi công bằng.',
+            'Cùng câu hỏi, cùng thang chấm và xử lý sát thương, HP/Qi công bằng.',
             style: mc.bodyStyle,
           ),
           SizedBox(height: mc.space12),

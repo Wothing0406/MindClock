@@ -711,7 +711,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   ? 'Lượt chuông hôm nay đã khép lại ($occLabel).'
                                   : isWaitingAnswer
                                       ? (todayOcc?.hasSyncError == true
-                                          ? 'Bài làm chưa đồng bộ được máy chủ. Mở lại để gửi tiếp mà không mất lượt.'
+                                          ? 'Bài làm chưa đồng bộ được. Mở lại để gửi tiếp mà không mất lượt.'
                                           : 'Câu sáng đang mở. Chạm bên dưới để hoàn thành.')
                                       : 'Hiện câu hỏi ngay khi chuông ${activeAlarm.formattedTime} reo.',
                           style: mc.captionStyle.copyWith(color: mc.ink),
@@ -963,7 +963,7 @@ class _TodayScreenState extends State<TodayScreen> {
         title: 'Luyện tập',
         subtitle: morningProposal != null
             ? 'Môn ${morningProposal.subjectNameVi}'
-            : 'Câu ôn GDPT 2018',
+            : 'Câu ôn buổi sáng',
         icon: MindClockIconKind.book,
         onTap: widget.onSelectTab != null ? () => widget.onSelectTab!(1) : null,
         highlight: false,

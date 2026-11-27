@@ -6,15 +6,15 @@ class AppStrings {
   const AppStrings._();
 
   static const String appName = 'MindClock';
-  static const String guestBadge = 'Chế độ khách · Lưu trên máy';
+  static const String guestBadge = 'Tài khoản MindClock';
 
   // S01 Chào mừng
   static const String welcomeTitle = 'Dậy đúng giờ. Nghĩ bằng chính mình.';
   static const String welcomeSubtitle =
-      'Tạo tài khoản với mật khẩu mạnh để đồng bộ TKB, học cùng AI và phòng học cộng đồng.';
-  static const String tryGuestCta = 'Dùng thử không cần tài khoản';
-  static const String setupLaterCta = 'Để sau';
-  static const String alarmOnlyCta = 'Chỉ báo thức khi mất mạng';
+      'Tạo tài khoản để đồng bộ lịch học, báo thức và không gian học tập trung.';
+  static const String tryGuestCta = 'Bắt đầu ngay';
+  static const String setupLaterCta = 'Tiếp tục';
+  static const String alarmOnlyCta = 'Bắt đầu ngay';
   static const String guestPrivacyNote =
       'Ảnh bài làm xử lý tạm thời không lưu mặc định; giờ dậy và TKB chi tiết luôn được giữ riêng tư.';
 
@@ -59,14 +59,14 @@ class AppStrings {
       'Không có nút Hoãn. Bạn sẽ làm một câu ngắn để hoàn thành. Dừng khẩn cấp luôn có 1 chạm.';
   static const String saveAlarmButton = 'Lưu cấu hình báo thức';
 
-  // Trạng thái dịch vụ báo thức & OS Android
+  // Trạng thái dịch vụ báo thức
   static const String alarmSavedConfigOnly = 'Đã lưu cấu hình';
   static const String alarmReadyOs = 'Đã sẵn sàng';
-  static const String alarmPermissionMissingLabel = 'Thiếu quyền báo thức OS';
+  static const String alarmPermissionMissingLabel = 'Cần cấp quyền báo thức';
   static const String alarmOsUnboundExplain =
-      'Chưa nối báo thức hệ thống Android ở giai đoạn này. Quyền OS ở trạng thái chưa kiểm tra; hệ thống không báo Đã sẵn sàng giả.';
+      'Chuông báo thức hoạt động trực tiếp trên điện thoại ngay cả khi bạn chưa mở ứng dụng.';
   static const String alarmPermissionMissingExplain =
-      'Hệ thống chưa thể báo Đã sẵn sàng vì Android đang thiếu quyền báo thức, thông báo hoặc toàn màn hình khóa.';
+      'Vui lòng cấp quyền báo thức và thông báo để chuông reo đúng giờ trên màn hình khóa.';
   static const String batteryOptimizationNote =
       'Trên một số máy Android (Xiaomi/Samsung/Oppo), chế độ tiết kiệm pin nghiêm ngặt có thể làm trễ chuông nếu tắt nền.';
 
@@ -82,19 +82,19 @@ class AppStrings {
       'Chế độ thường: bạn có thể Hoãn 5 phút hoặc dừng chuông ngay.';
 
   // T017 Luồng cá nhân online/offline & quyền riêng tư ảnh
-  static const String debugFixtureLabel = 'Fixture debug · Không phải dịch vụ thật';
+  static const String debugFixtureLabel = 'Chế độ thử nghiệm';
   static const String photoPrivacyNotice =
-      'Ảnh bài làm sẽ được gửi đến dịch vụ AI để nhận phản hồi. Không chụp tên hoặc thông tin riêng. Bạn có thể nhập đáp án thay thế.';
+      'Ảnh bài làm sẽ được gửi để nhận phản hồi. Không chụp tên hoặc thông tin riêng. Bạn có thể nhập đáp án thay thế.';
   static const String draftUploadConfirmQuestion =
       'Gửi bài này để nhận nhận xét?';
 
-  // T018 Không gian học local (6A · docs/45)
+  // Không gian học
   static const String studySpaceTitle = 'Không gian học';
   static const String studyStartCta = 'Bắt đầu học';
   static const String studyNoAppLockExplain =
-      'MindClock không khóa các app khác trên điện thoại. Khi rời app, hệ thống chỉ ghi nhận thời gian cục bộ trên máy và không suy ra xao nhãng hay chấm phạt.';
+      'MindClock không khóa các ứng dụng khác trên điện thoại. Bạn tự chủ động quản lý thời gian tập trung của mình.';
   static const String studyNoCameraAiScopeNotice =
-      'Chế độ phiên học local hiện tắt camera, micro và AI. Không tự cộng XP chỉ vì thời gian ngồi học.';
+      'Camera và micro đang tắt. Ứng dụng không tự quay video hay ghi âm khi bạn học.';
   static const String studyPausedLabel = 'Đang tạm nghỉ';
   static const String studyInterruptedLabel = 'Phiên đã gián đoạn';
   static const String studyResumeCta = 'Tiếp tục học';

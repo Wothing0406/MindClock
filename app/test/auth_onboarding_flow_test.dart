@@ -143,14 +143,14 @@ void main() {
           find.byKey(const ValueKey<String>('welcome-permission-guide')),
           findsOneWidget,
         );
-        expect(find.textContaining('Giải thích quyền'), findsOneWidget);
+        expect(find.textContaining('Quyền ứng dụng'), findsOneWidget);
         expect(
           find.byKey(const ValueKey<String>('welcome-auth-start')),
           findsOneWidget,
         );
         expect(
           find.byKey(const ValueKey<String>('guest-alarm-only')),
-          findsOneWidget,
+          findsNothing,
         );
         expect(
           find.byKey(const ValueKey<String>('guest-start-setup')),
@@ -409,15 +409,9 @@ void main() {
 
         expect(personalVm.authSession.isAuthenticated, isFalse);
         expect(find.textContaining('Firebase Console'), findsOneWidget);
-
-        // Chuyển sang đường dự phòng Chỉ dùng báo thức trên máy
-        await _scrollAndTap(
-          tester,
-          find.byKey(const ValueKey<String>('auth-offline-alarm-fallback')),
-        );
         expect(
-          find.byKey(const ValueKey<String>('save-alarm-config')),
-          findsOneWidget,
+          find.byKey(const ValueKey<String>('auth-offline-alarm-fallback')),
+          findsNothing,
         );
         expect(tester.takeException(), isNull);
       },

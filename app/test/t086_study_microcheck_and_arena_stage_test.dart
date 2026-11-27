@@ -110,17 +110,22 @@ void main() {
       findsOneWidget,
     );
 
-    // 2. Bật Khóa giải hộ Socratic -> gửi rỗng bước tự thử bị chặn
-    final Finder lockToggle =
-        find.byKey(const ValueKey<String>('study-ai-socratic-lock-toggle'));
-    await tester.ensureVisible(lockToggle);
-    await tester.tap(lockToggle);
+    // 2. Chat AI chỉ còn 1 ô nhập mượt mà, không còn ô thứ 2 gây khựng
+    expect(
+      find.byKey(const ValueKey<String>('study-ai-tried-step-input')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('study-ai-socratic-lock-toggle')),
+      findsNothing,
+    );
+
+    final Finder quickHint =
+        find.byKey(const ValueKey<String>('study-ai-quick-hint'));
+    await tester.ensureVisible(quickHint);
+    await tester.tap(quickHint);
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.byKey(const ValueKey<String>('study-ai-question-input')),
-      'Giải giúp mình bài này',
-    );
     final Finder sendBtn =
         find.byKey(const ValueKey<String>('study-ai-send-button'));
     await tester.ensureVisible(sendBtn);
@@ -129,7 +134,7 @@ void main() {
 
     expect(
       find.byKey(const ValueKey<String>('study-ai-socratic-warning')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(tester.takeException(), isNull);
   });

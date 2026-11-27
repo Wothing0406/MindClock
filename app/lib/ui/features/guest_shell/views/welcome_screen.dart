@@ -5,16 +5,16 @@ import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 
-/// Màn hình `S01` Chào mừng chuẩn MindClock (bắt buộc tài khoản, bỏ chế độ Guest; giữ đường cứu sinh báo thức cục bộ).
+/// Màn hình `S01` Chào mừng MindClock.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     super.key,
     required this.onStartAuth,
-    required this.onAlarmOnly,
+    this.onAlarmOnly,
   });
 
   final VoidCallback onStartAuth;
-  final VoidCallback onAlarmOnly;
+  final VoidCallback? onAlarmOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -71,19 +71,11 @@ class WelcomeScreen extends StatelessWidget {
                 icon: MindClockIconKind.user,
                 onPressed: onStartAuth,
               ),
-              SizedBox(height: mc.space8),
-              MindClockButton(
-                key: const ValueKey<String>('guest-alarm-only'),
-                label: AppStrings.alarmOnlyCta,
-                icon: MindClockIconKind.bell,
-                variant: MindClockButtonVariant.subtle,
-                onPressed: onAlarmOnly,
-              ),
               SizedBox(height: mc.space12),
               const MindClockNoticeBanner(
                 key: ValueKey<String>('welcome-no-guest-notice'),
                 message:
-                    'MindClock yêu cầu tài khoản chính thức (mật khẩu mạnh & đồng ý chính sách bảo mật) cho lộ trình học, AI và phòng học. Chỉ dùng chế độ báo thức cục bộ khi mất mạng.',
+                    'Đăng ký hoặc đăng nhập để lưu lịch học, báo thức và tiến độ ôn tập của bạn.',
                 isWarm: false,
               ),
               SizedBox(height: mc.space12),
@@ -100,12 +92,12 @@ class WelcomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Giải thích quyền (chỉ hỏi đúng lúc dùng)',
+                      'Quyền ứng dụng',
                       style: mc.bodyStrongStyle,
                     ),
                     SizedBox(height: mc.space4),
                     Text(
-                      'Chuông chính xác, thông báo, màn khóa, DND và camera/mic đều tắt mặc định và chỉ xin khi bạn dùng. Báo thức luôn chạy kể cả khi offline.',
+                      'Thông báo, báo thức, camera và micro chỉ được hỏi khi bạn chủ động sử dụng.',
                       style: mc.captionStyle.copyWith(color: mc.ink),
                     ),
                   ],

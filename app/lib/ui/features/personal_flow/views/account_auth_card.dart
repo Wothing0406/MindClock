@@ -57,10 +57,10 @@ class _AccountAuthCardState extends State<AccountAuthCard> {
             runSpacing: mc.space8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text('Tài khoản đồng bộ trực tuyến', style: mc.sectionTitleStyle),
+              Text('Tài khoản MindClock', style: mc.sectionTitleStyle),
               if (widget.viewModel.isDebugFixture)
                 const MindClockStatusPill(
-                  label: 'Fixture debug · Không phải dịch vụ thật',
+                  label: 'Chế độ thử nghiệm',
                   accentWarm: true,
                 ),
             ],
@@ -69,7 +69,7 @@ class _AccountAuthCardState extends State<AccountAuthCard> {
           if (session.status == AuthStatus.reauthRequired) ...<Widget>[
             MindClockNoticeBanner(
               message: session.statusMessageVi ??
-                  'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại (báo thức local vẫn hoạt động).',
+                  'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục đồng bộ.',
             ),
             SizedBox(height: mc.space12),
           ],
@@ -81,13 +81,13 @@ class _AccountAuthCardState extends State<AccountAuthCard> {
             ),
             SizedBox(height: mc.space4),
             Text(
-              'Tiến độ và bản nháp chữ được tách riêng cho tài khoản này; đăng xuất không xóa chuông local.',
+              'Tiến độ học tập và lịch sử được lưu riêng cho tài khoản này.',
               style: mc.captionStyle,
             ),
             SizedBox(height: mc.space12),
             MindClockButton(
               key: const ValueKey<String>('auth-sign-out-button'),
-              label: 'Đăng xuất (giữ báo thức local)',
+              label: 'Đăng xuất',
               icon: MindClockIconKind.user,
               variant: MindClockButtonVariant.secondary,
               onPressed: widget.viewModel.isBusy
@@ -96,7 +96,7 @@ class _AccountAuthCardState extends State<AccountAuthCard> {
             ),
           ] else ...<Widget>[
             Text(
-              'Đăng nhập bằng email để đồng bộ câu hỏi, chấm bài và XP server. Khách local vẫn dùng báo thức không cần đăng nhập.',
+              'Đăng nhập bằng email để đồng bộ câu hỏi, chấm bài và XP của bạn.',
               style: mc.captionStyle,
             ),
             SizedBox(height: mc.space12),

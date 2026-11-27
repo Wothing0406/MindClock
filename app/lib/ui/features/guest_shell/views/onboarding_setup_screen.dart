@@ -6,7 +6,6 @@ import '../../../../domain/models/study_profile.dart';
 import '../../../../domain/models/subject_catalog.dart';
 import '../../../../domain/services/media_picker_gateway.dart';
 import '../../../../domain/services/rule_based_plan_generator.dart';
-import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_avatar_view.dart';
 import '../../../core/widgets/mindclock_cards.dart';
@@ -149,7 +148,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       if (res.picked && res.localPath != null) {
         _customAvatarPath = res.localPath;
         _avatarStatusVi =
-            'Đã chọn ảnh từ máy (lưu cục bộ trên thiết bị${res.displayName != null ? ': ${res.displayName}' : ''}).';
+            'Đã chọn ảnh từ máy${res.displayName != null ? ': ${res.displayName}' : ''}.';
       } else if (!res.cancelled && res.errorMessageVi != null) {
         _avatarStatusVi = res.errorMessageVi;
       }
@@ -198,24 +197,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: mc.space8,
                 runSpacing: mc.space8,
-                children: <Widget>[
-                  const MindClockStatusPill(label: 'Khởi tạo kế hoạch THPT'),
-                  MindClockPressable(
-                    key: const ValueKey<String>('onboarding-later'),
-                    onPressed: widget.onSkipLater,
-                    semanticLabel: AppStrings.setupLaterCta,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: mc.space12),
-                      child: Text(
-                        AppStrings.setupLaterCta,
-                        style: mc.bodyStrongStyle.copyWith(color: mc.primary),
-                      ),
-                    ),
-                  ),
+                children: const <Widget>[
+                  MindClockStatusPill(label: 'Khởi tạo kế hoạch học'),
                 ],
               ),
               SizedBox(height: mc.space12),
@@ -660,14 +645,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 label: 'Bỏ qua kế hoạch · Vào Hôm nay',
                 variant: MindClockButtonVariant.secondary,
                 onPressed: () => _submit(confirmPlan: false),
-              ),
-              SizedBox(height: mc.space8),
-              MindClockButton(
-                key: const ValueKey<String>('onboarding-alarm-only'),
-                label: 'Để sau · Chỉ đặt báo thức',
-                icon: MindClockIconKind.bell,
-                variant: MindClockButtonVariant.subtle,
-                onPressed: widget.onAlarmOnly,
               ),
             ],
           ),

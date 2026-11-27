@@ -58,6 +58,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
   bool _isPreviewPlaying = false;
   String? _soundStatusVi;
   late bool _vibrateEnabled;
+  late AlarmMode _mode;
   String? _autoSubjectCode;
 
   late int _classStartMinutes;
@@ -84,6 +85,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _customSoundPath = existing.customSoundPath;
       _customSoundLabel = existing.customSoundLabel;
       _vibrateEnabled = existing.vibrateEnabled;
+      _mode = existing.mode;
     } else {
       _hour = 6;
       _minute = 0;
@@ -92,6 +94,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       _soundEnabled = true;
       _soundOption = AlarmSoundOption.gentleDawn;
       _vibrateEnabled = true;
+      _mode = AlarmMode.challenge;
     }
     _bedtimeMinutes = 22 * 60 + 30;
     _autoSubjectCode = _resolveAutoSubjectCode();
@@ -148,7 +151,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
         _soundEnabled = true;
         _customSoundPath = res.localPath;
         _customSoundLabel = res.displayName ?? 'Nhạc báo thức đã chọn';
-        _soundStatusVi = 'Đã lưu nhạc cục bộ: $_customSoundLabel.';
+        _soundStatusVi = 'Đã chọn nhạc: $_customSoundLabel.';
       } else if (!res.cancelled && res.errorMessageVi != null) {
         _soundStatusVi = res.errorMessageVi;
       }
@@ -247,9 +250,9 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       enabled: _enabled,
       soundEnabled: _soundEnabled,
       vibrateEnabled: _vibrateEnabled,
-      mode: AlarmMode.challenge,
+      mode: _mode,
       subjectRule: AlarmSubjectRule.todaySchedule,
-      subjectCode: _autoSubjectCode,
+      subjectCode: _mode == AlarmMode.challenge ? _autoSubjectCode : null,
     );
     return MorningQuestionSelector.resolveForAlarm(
       alarm: draftPreview,
@@ -267,7 +270,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
       setState(() {
         _loadingAiPreview = false;
         _aiPreviewQuestion = null;
-        _aiPreviewStatusVi = 'Đang dùng câu gợi ý cục bộ theo lịch học & ngân hàng chuẩn.';
+        _aiPreviewStatusVi = 'Đang dùng câu gợi ý theo lịch học của bạn.';
       });
       return;
     }
@@ -292,7 +295,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
         _loadingAiPreview = false;
         _aiPreviewQuestion = q;
         _aiPreviewStatusVi = q.fallbackUsed
-            ? 'AI bận — đang dùng câu dự phòng chuẩn theo TKB & hồ sơ.'
+            ? 'AI đang bận — dùng câu dự phòng theo lịch học.'
             : 'Đã tạo sẵn theo ${proposal.subjectNameVi} (${proposal.topicNameVi}).';
       });
     } on PersonalApiException catch (error) {
@@ -301,14 +304,14 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
         _loadingAiPreview = false;
         _aiPreviewQuestion = null;
         _aiPreviewStatusVi =
-            'Dùng câu cục bộ theo TKB (${error.messageVi}).';
+            'Dùng câu theo lịch học (${error.messageVi}).';
       });
     } catch (_) {
       if (!mounted || seq != _aiPreviewSeq) return;
       setState(() {
         _loadingAiPreview = false;
         _aiPreviewQuestion = null;
-        _aiPreviewStatusVi = 'Đang dùng câu dự phòng cục bộ theo TKB & hồ sơ.';
+        _aiPreviewStatusVi = 'Đang dùng câu dự phòng theo lịch học.';
       });
     }
   }
@@ -348,9 +351,9 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
           ? _customSoundLabel
           : null,
       vibrateEnabled: _vibrateEnabled,
-      mode: AlarmMode.challenge,
+      mode: _mode,
       subjectRule: AlarmSubjectRule.todaySchedule,
-      subjectCode: _autoSubjectCode,
+      subjectCode: _mode == AlarmMode.challenge ? _autoSubjectCode : null,
     );
 
     final WakeSuggestionInput wakeInput = _currentWakeInput();
@@ -444,6 +447,43 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                 ),
                 SizedBox(height: mc.space8),
               ],
+              MindClockCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Kiểu báo thức', style: mc.sectionTitleStyle),
+                    SizedBox(height: mc.space8),
+                    Wrap(
+                      spacing: mc.space8,
+                      runSpacing: mc.space8,
+                      children: <Widget>[
+                        ChoiceChip(
+                          key: const ValueKey<String>('alarm-mode-normal'),
+                          label: const Text('Hẹn giờ thường'),
+                          selected: _mode == AlarmMode.normal,
+                          onSelected: (_) =>
+                              setState(() => _mode = AlarmMode.normal),
+                        ),
+                        ChoiceChip(
+                          key: const ValueKey<String>('alarm-mode-challenge'),
+                          label: const Text('Báo thức dậy học'),
+                          selected: _mode == AlarmMode.challenge,
+                          onSelected: (_) =>
+                              setState(() => _mode = AlarmMode.challenge),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: mc.space8),
+                    Text(
+                      _mode == AlarmMode.normal
+                          ? 'Chỉ reo chuông đúng giờ, có nút Hoãn 5 phút và Tắt chuông.'
+                          : 'Đặt giờ ngủ – dậy và làm 1 câu ôn buổi sáng (mỗi ngày chỉ tính tối đa 1 lần hoàn thành).',
+                      style: mc.captionStyle,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: mc.space16),
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(mc.space20),
@@ -468,46 +508,50 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                       key: const ValueKey<String>('alarm-selected-time-text'),
                       style: mc.alarmHeroStyle.copyWith(color: mc.ink),
                     ),
-                    SizedBox(height: mc.space4),
-                    Wrap(
-                      spacing: mc.space12,
-                      runSpacing: mc.space4,
-                      children: <Widget>[
-                        Text(
-                          'Đi ngủ ${CircularSleepClockPicker.formatHm(_bedtimeMinutes)}',
-                          key: const ValueKey<String>(
-                              'alarm-bedtime-summary-text'),
-                          style: mc.captionStyle.copyWith(
-                            color: mc.primary,
-                            fontWeight: FontWeight.w600,
+                    if (_mode == AlarmMode.challenge) ...<Widget>[
+                      SizedBox(height: mc.space4),
+                      Wrap(
+                        spacing: mc.space12,
+                        runSpacing: mc.space4,
+                        children: <Widget>[
+                          Text(
+                            'Đi ngủ ${CircularSleepClockPicker.formatHm(_bedtimeMinutes)}',
+                            key: const ValueKey<String>(
+                                'alarm-bedtime-summary-text'),
+                            style: mc.captionStyle.copyWith(
+                              color: mc.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Dậy $formattedSelected',
-                          style: mc.captionStyle.copyWith(
-                            color: mc.inkMuted,
-                            fontWeight: FontWeight.w600,
+                          Text(
+                            'Dậy $formattedSelected',
+                            style: mc.captionStyle.copyWith(
+                              color: mc.inkMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: mc.space16),
-                    CircularSleepClockPicker(
-                      bedtimeMinutes: _bedtimeMinutes,
-                      wakeMinutes: _hour * 60 + _minute,
-                      onBedtimeChanged: (int nextBedtime) {
-                        setState(() => _bedtimeMinutes = nextBedtime);
-                      },
-                      onWakeChanged: (int nextWake) {
-                        setState(() {
-                          _hour = nextWake ~/ 60;
-                          _minute = nextWake % 60;
-                        });
-                      },
-                    ),
+                        ],
+                      ),
+                      SizedBox(height: mc.space16),
+                      CircularSleepClockPicker(
+                        bedtimeMinutes: _bedtimeMinutes,
+                        wakeMinutes: _hour * 60 + _minute,
+                        onBedtimeChanged: (int nextBedtime) {
+                          setState(() => _bedtimeMinutes = nextBedtime);
+                        },
+                        onWakeChanged: (int nextWake) {
+                          setState(() {
+                            _hour = nextWake ~/ 60;
+                            _minute = nextWake % 60;
+                          });
+                        },
+                      ),
+                    ],
                     SizedBox(height: mc.space12),
                     Text(
-                      'Kéo biểu tượng giờ ngủ hoặc chuông trên vòng tròn, hoặc tinh chỉnh nhanh:',
+                      _mode == AlarmMode.challenge
+                          ? 'Kéo biểu tượng giờ ngủ hoặc chuông trên vòng tròn, hoặc tinh chỉnh nhanh:'
+                          : 'Tinh chỉnh giờ hẹn nhanh:',
                       style: mc.captionStyle.copyWith(
                         color: mc.inkMuted,
                       ),
@@ -559,13 +603,14 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   isWarm: false,
                 ),
               ],
-              SizedBox(height: mc.space16),
-              MindClockCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      AppStrings.wakeSuggestionTitle,
+              if (_mode == AlarmMode.challenge) ...<Widget>[
+                SizedBox(height: mc.space16),
+                MindClockCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        AppStrings.wakeSuggestionTitle,
                       style: mc.sectionTitleStyle,
                     ),
                     SizedBox(height: mc.space8),
@@ -662,12 +707,14 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   ],
                 ),
               ),
+              ],
               SizedBox(height: mc.space16),
               MindClockCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(AppStrings.alarmRepeatTitle, style: mc.sectionTitleStyle),
+                    Text(AppStrings.alarmRepeatTitle,
+                        style: mc.sectionTitleStyle),
                     SizedBox(height: mc.space12),
                     Wrap(
                       spacing: mc.space8,
@@ -814,9 +861,10 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: mc.space16),
-              MindClockCard(
-                key: const ValueKey<String>('alarm-auto-challenge-card'),
+              if (_mode == AlarmMode.challenge) ...<Widget>[
+                SizedBox(height: mc.space16),
+                MindClockCard(
+                  key: const ValueKey<String>('alarm-auto-challenge-card'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -919,6 +967,7 @@ class _AlarmConfigScreenState extends State<AlarmConfigScreen> {
                   ],
                 ),
               ),
+              ],
               SizedBox(height: mc.space20),
               MindClockButton(
                 key: const ValueKey<String>('save-alarm-config'),

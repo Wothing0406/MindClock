@@ -1284,8 +1284,17 @@ def create_v1_router(
         used_model = 'deterministic-validator'
 
         def _mark_correct(custom_feedback: str | None = None) -> tuple[str, int, list[str], str | None, str | None, str, list[str]]:
+            already_completed_today = db.scalar(
+                select(AlarmSession.id).where(
+                    AlarmSession.user_id == principal.user.id,
+                    AlarmSession.local_date == session.local_date,
+                    AlarmSession.state == 'completed',
+                    AlarmSession.id != session.id,
+                )
+            ) is not None
             already_rewarded = (
                 session.state == 'completed'
+                or already_completed_today
                 or db.scalar(
                     select(XpLedger.id).where(
                         XpLedger.user_id == principal.user.id,
@@ -1599,8 +1608,17 @@ def create_v1_router(
 
         xp_delta = 0
         if grade.result == 'correct':
+            already_completed_today = db.scalar(
+                select(AlarmSession.id).where(
+                    AlarmSession.user_id == principal.user.id,
+                    AlarmSession.local_date == session.local_date,
+                    AlarmSession.state == 'completed',
+                    AlarmSession.id != session.id,
+                )
+            ) is not None
             already_rewarded = (
                 session.state == 'completed'
+                or already_completed_today
                 or db.scalar(
                     select(XpLedger.id).where(
                         XpLedger.user_id == principal.user.id,
@@ -1806,7 +1824,7 @@ def create_v1_router(
             )
         )
         completed_count = db.scalar(
-            select(func.count(AlarmSession.id)).where(
+            select(func.count(func.distinct(AlarmSession.local_date))).where(
                 AlarmSession.user_id == user.id,
                 AlarmSession.state == 'completed',
             )

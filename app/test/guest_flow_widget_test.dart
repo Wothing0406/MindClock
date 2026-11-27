@@ -100,7 +100,7 @@ void main() {
       expect(find.byKey(const ValueKey<String>('welcome-auth-start')), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('guest-start-setup')), findsNothing);
       expect(find.byKey(const ValueKey<String>('guest-skip-later')), findsNothing);
-      expect(find.text(AppStrings.alarmOnlyCta), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('guest-alarm-only')), findsNothing);
       expect(find.text('Đấu trường'), findsNothing);
 
       // Đăng ký bằng mật khẩu mạnh -> Onboarding THPT
@@ -161,7 +161,11 @@ void main() {
       );
       expect(
         find.byKey(const ValueKey<String>('alarm-mode-normal')),
-        findsNothing,
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('alarm-mode-challenge')),
+        findsOneWidget,
       );
       expect(
         find.byKey(const ValueKey<String>('alarm-auto-challenge-card')),

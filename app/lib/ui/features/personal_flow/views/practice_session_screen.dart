@@ -648,7 +648,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                 else if (!progress.isServerAuthoritative ||
                     progress.isDebugFixture)
                   Text(
-                    '0 XP · Chưa kết nối máy chủ.',
+                    '0 XP · Chưa kết nối mạng.',
                     key: const ValueKey<String>('progress-fixture-xp'),
                     style: mc.bodyStyle,
                   )

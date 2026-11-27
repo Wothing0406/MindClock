@@ -72,7 +72,7 @@ class _ProfileProgressCardState extends State<ProfileProgressCard> {
         'photo_challenge_correct' => 'Hoàn thành câu ôn qua ảnh',
         'study_time_v0_1' => 'Hoàn thành phiên học',
         'daily_report' => 'Hoàn thành báo cáo ngày',
-        _ => 'Điều chỉnh EXP từ máy chủ',
+        _ => 'Điều chỉnh EXP',
       };
 
   @override
@@ -92,7 +92,7 @@ class _ProfileProgressCardState extends State<ProfileProgressCard> {
                 Text('Đăng nhập để xem cấp, EXP và lịch sử học tập.',
                     style: mc.bodyStyle)
               else if (vm.isDebugFixture)
-                Text('Dữ liệu thử nghiệm · Chưa có EXP được máy chủ xác nhận.',
+                Text('Dữ liệu thử nghiệm · Chưa có EXP chính thức.',
                     style: mc.bodyStyle)
               else ...[
                 if (progress.isServerAuthoritative) ...[
@@ -142,7 +142,7 @@ class _ProfileProgressCardState extends State<ProfileProgressCard> {
                         'Đồng bộ ${_date(vm.progressSyncedAt!)} · Giờ trên thiết bị',
                         style: mc.captionStyle),
                 ] else
-                  Text('Chưa tải được tiến độ từ máy chủ.',
+                  Text('Chưa tải được tiến độ học tập.',
                       style: mc.bodyStyle),
                 if (vm.progressError != null)
                   Text(vm.progressError!,

@@ -328,7 +328,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                       '• Mỗi bên bắt đầu với $maxHp HP, $maxArmor Giáp, 0 Chắn, 0 Qi; tối đa $maxCombatRounds round.\n'
                       '• Chỉ câu trả lời đúng rõ (kèm bước trình bày) mới kích hoạt hành động và cộng +1 Qi sau round (tối đa $maxQi Qi; round 3 bí mật +1 Qi thêm).\n'
                       '• Sát thương trừ đồng thời: Chắn → Giáp → HP. Hồi phục sau khi chịu đòn; về 0 HP không hồi cứu.\n'
-                      '• Luyện đơn chạy cục bộ với Máy tập theo mã trận, không tính điểm hạng.',
+                      '• Luyện đơn với Máy tập theo mã trận, không tính điểm hạng.',
                       style: mc.captionStyle.copyWith(color: mc.ink),
                     ),
                   ],
@@ -390,7 +390,7 @@ class _ArenaScreenState extends State<ArenaScreen>
                   ),
                   SizedBox(height: mc.space8),
                   Text(
-                    'So tài 1v1 cùng người chơi khác với bộ câu hỏi và trọng tài đồng bộ trên máy chủ.',
+                    'So tài 1v1 cùng người chơi khác với bộ câu hỏi và trọng tài đồng bộ.',
                     style: mc.captionStyle.copyWith(color: mc.ink),
                   ),
                   SizedBox(height: mc.space8),

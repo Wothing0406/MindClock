@@ -86,10 +86,10 @@ class StudyRoomSessionPanel extends StatelessWidget {
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(
               repository.isDebugFixture
-                  ? 'Phòng thử nghiệm ngoại tuyến'
+                  ? 'Phòng thử nghiệm'
                   : vm.syncedAt == null
                       ? 'Danh sách lúc vào phòng · Đang chờ cập nhật'
-                      : 'Đã cập nhật danh sách thành viên từ máy chủ',
+                      : 'Đã cập nhật danh sách thành viên',
               style: mc.captionStyle),
           Text('Phòng này chưa truyền cuộc gọi âm thanh/video.',
               style: mc.captionStyle),

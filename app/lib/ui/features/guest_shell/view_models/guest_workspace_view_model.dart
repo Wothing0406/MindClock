@@ -91,6 +91,18 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   }
 
   bool get hasOpenAlarmQuestionToday => activeOpenOccurrenceToday != null;
+
+  bool get hasCompletedAlarmToday {
+    final String today = todayDateIso;
+    return _workspace.alarmOccurrences.any(
+      (AlarmOccurrenceRecord occ) =>
+          occ.occurrenceDate == today &&
+          occ.state == AlarmOccurrenceState.completed,
+    );
+  }
+
+  /// Mỗi ngày chỉ tính tối đa 1 báo thức hoàn thành (kể cả khi đặt nhiều chuông).
+  int get completedAlarmCountToday => hasCompletedAlarmToday ? 1 : 0;
   WakeSuggestionInput get wakePreferences => _workspace.wakePreferences;
   AlarmServiceCapabilities? get capabilities => _capabilities;
   AlarmPermissionSnapshot get permissionSnapshot => _permissionSnapshot;
@@ -227,15 +239,13 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   String serverStatusLabelForAlarm(AlarmConfig alarm) {
     switch (alarm.serverSyncStatus) {
       case AlarmServerSyncStatus.synced:
-        return isAlarmSyncDebugFixture
-            ? 'Lưu trên máy (ngoại tuyến)'
-            : 'Đã đồng bộ server';
+        return isAlarmSyncDebugFixture ? 'Đã lưu trên máy' : 'Đã đồng bộ';
       case AlarmServerSyncStatus.syncing:
-        return 'Đang đồng bộ server';
+        return 'Đang đồng bộ';
       case AlarmServerSyncStatus.syncFailed:
-        return 'Chưa đồng bộ server (lỗi/offline)';
+        return 'Chưa đồng bộ';
       case AlarmServerSyncStatus.localOnly:
-        return 'Chưa đồng bộ server';
+        return 'Chưa đồng bộ';
     }
   }
 
@@ -316,7 +326,7 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       case AlarmSyncStatus.osPermissionMissing:
         return AppStrings.alarmPermissionMissingLabel;
       case AlarmSyncStatus.osFailed:
-        return 'Chưa đặt được trên OS';
+        return 'Chưa đặt được lịch chuông';
       case AlarmSyncStatus.savedConfigOnly:
         return AppStrings.alarmSavedConfigOnly;
     }
@@ -568,11 +578,15 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     bool hasSyncError = false,
   }) async {
     final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    final bool alreadyCompletedAnother = hasCompletedAlarmToday &&
+        prev?.state != AlarmOccurrenceState.completed;
     await _upsertOccurrence(
       AlarmOccurrenceRecord(
         alarmId: alarmId,
         occurrenceDate: todayDateIso,
-        state: AlarmOccurrenceState.completed,
+        state: alreadyCompletedAnother
+            ? AlarmOccurrenceState.dismissed
+            : AlarmOccurrenceState.completed,
         updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
         subjectCode: prev?.subjectCode,
         sessionId: sessionId ?? prev?.sessionId,

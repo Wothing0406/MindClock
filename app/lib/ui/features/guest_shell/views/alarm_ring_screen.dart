@@ -21,12 +21,14 @@ class AlarmRingScreen extends StatelessWidget {
     required this.onOpenQuestion,
     required this.onEmergencyStop,
     this.onSnooze5Min,
+    this.alreadyCompletedToday = false,
   });
 
   final AlarmRingPayload payload;
   final VoidCallback onOpenQuestion;
   final VoidCallback onEmergencyStop;
   final VoidCallback? onSnooze5Min;
+  final bool alreadyCompletedToday;
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +77,20 @@ class AlarmRingScreen extends StatelessWidget {
                 style: mc.captionStyle.copyWith(color: mc.sunrise),
               ),
               SizedBox(height: mc.space32),
-              MindClockButton(
-                key: const ValueKey<String>('ring-open-question'),
-                label: AppStrings.ringOpenQuestion,
-                icon: MindClockIconKind.book,
-                onPressed: onOpenQuestion,
-              ),
+              if (isChallenge && !alreadyCompletedToday)
+                MindClockButton(
+                  key: const ValueKey<String>('ring-open-question'),
+                  label: AppStrings.ringOpenQuestion,
+                  icon: MindClockIconKind.book,
+                  onPressed: onOpenQuestion,
+                )
+              else
+                MindClockButton(
+                  key: const ValueKey<String>('ring-dismiss-alarm'),
+                  label: 'Tắt chuông',
+                  icon: MindClockIconKind.check,
+                  onPressed: onEmergencyStop,
+                ),
               if (!isChallenge && onSnooze5Min != null) ...<Widget>[
                 SizedBox(height: mc.space12),
                 MindClockButton(

@@ -100,13 +100,13 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
       }
       if (!mounted) return;
       setState(() {
-        _avatarFeedbackVi = 'Đã đồng bộ hồ sơ & tiến độ từ máy chủ.';
+        _avatarFeedbackVi = 'Đã đồng bộ hồ sơ & tiến độ.';
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _avatarFeedbackVi =
-            'Chưa đồng bộ được máy chủ lúc này. Dữ liệu trên thiết bị vẫn an toàn.';
+            'Chưa đồng bộ được lúc này. Dữ liệu trên thiết bị vẫn an toàn.';
       });
     } finally {
       if (mounted) setState(() => _syncingProfile = false);
@@ -131,7 +131,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
       if (!mounted) return;
       setState(() {
         _pickingAvatar = false;
-        _avatarFeedbackVi = 'Đã cập nhật ảnh đại diện từ máy (lưu cục bộ).';
+        _avatarFeedbackVi = 'Đã cập nhật ảnh đại diện từ máy.';
       });
       return;
     }
@@ -827,7 +827,7 @@ class _MeGuestScreenState extends State<MeGuestScreen> {
                     ),
                     SizedBox(height: mc.space8),
                     Text(
-                      'Hành động này xóa tài khoản, hồ sơ và lịch học đã đồng bộ trên máy chủ. Báo thức đã lưu trên thiết bị vẫn được giữ nguyên.',
+                      'Hành động này xóa tài khoản, hồ sơ và lịch học của bạn. Báo thức đã đặt trên máy vẫn được giữ nguyên.',
                       style: mc.captionStyle,
                     ),
                     SizedBox(height: mc.space12),

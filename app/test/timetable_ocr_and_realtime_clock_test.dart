@@ -61,7 +61,7 @@ void main() {
     );
     await scrollAndTap(
       tester,
-      find.byKey(const ValueKey<String>('onboarding-later')),
+      find.byKey(const ValueKey<String>('onboarding-skip-plan')),
     );
   }
 

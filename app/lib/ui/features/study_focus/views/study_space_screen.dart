@@ -70,7 +70,6 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   final TextEditingController _doneController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
   final TextEditingController _aiInputController = TextEditingController();
-  final TextEditingController _aiTriedStepController = TextEditingController();
   final TextEditingController _personalizedTopicController =
       TextEditingController();
   String? _selectedPersonalizedSubject;
@@ -80,8 +79,6 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   String? _scheduleSavedBannerVi;
   String? _attachedQuestionPhotoName;
   String? _photoInputMessageVi;
-  bool _socraticStepLockEnabled = false;
-  String? _socraticLockWarningVi;
   bool _microCheckExpanded = false;
   int _microCheckIndex = 0;
   int? _microCheckPickedIndex;
@@ -310,7 +307,6 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     _doneController.dispose();
     _stuckController.dispose();
     _aiInputController.dispose();
-    _aiTriedStepController.dispose();
     _personalizedTopicController.dispose();
     super.dispose();
   }
@@ -485,7 +481,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
       builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('Gửi ảnh đề bài cho câu hỏi này'),
         content: const Text(
-          'MindClock chỉ đọc ảnh bạn chủ động chọn cho lượt hỏi hiện tại, không bật camera nền và không lưu ảnh bài làm mặc định trên máy chủ.',
+          'MindClock chỉ đọc ảnh bạn chủ động chọn cho lượt hỏi hiện tại, không bật camera nền và không lưu ảnh bài làm mặc định.',
         ),
         actions: <Widget>[
           MindClockButton(
@@ -553,26 +549,13 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
   ];
 
   Future<void> _submitAiHelp(StudyFocusViewModel vm) async {
-    final String tried = _aiTriedStepController.text.trim();
-    if (_socraticStepLockEnabled && tried.isEmpty) {
-      setState(() {
-        _socraticLockWarningVi =
-            'Khóa giải hộ đang bật: hãy ghi ngắn gọn 1 bước bạn đã tự thử trước khi hỏi AI.';
-      });
-      return;
-    }
-    setState(() => _socraticLockWarningVi = null);
     final String rawQ = _aiInputController.text.trim();
     final String effectiveRawQ = (rawQ.isEmpty && _attachedQuestionPhotoName != null)
         ? 'Nhờ gợi mở cách tiếp cận đề trong ảnh đã chọn.'
         : rawQ;
-    final List<String> prefixes = <String>[
-      if (_attachedQuestionPhotoName != null)
-        '[Ảnh đề bài đã chọn: $_attachedQuestionPhotoName]',
-      if (tried.isNotEmpty) '[Bước đã tự thử: $tried]',
-    ];
-    final String composed = prefixes.isNotEmpty && effectiveRawQ.isNotEmpty
-        ? '${prefixes.join(' ')} $effectiveRawQ'
+    if (effectiveRawQ.isEmpty) return;
+    final String composed = _attachedQuestionPhotoName != null
+        ? '[Ảnh đề bài: $_attachedQuestionPhotoName] $effectiveRawQ'
         : effectiveRawQ;
     final bool ok = await vm.requestAiHelp(
       questionText: composed,
@@ -1851,52 +1834,28 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             spacing: mc.space8,
             runSpacing: mc.space4,
             children: <Widget>[
-              FilterChip(
-                key: const ValueKey<String>('study-ai-socratic-lock-toggle'),
-                label: Text(
-                  _socraticStepLockEnabled
-                      ? 'Khóa giải hộ Socratic: Đang bật'
-                      : 'Khóa giải hộ Socratic: Tắt',
-                ),
-                selected: _socraticStepLockEnabled,
-                selectedColor: mc.primarySoft,
-                onSelected: (bool next) => setState(() {
-                  _socraticStepLockEnabled = next;
-                  _socraticLockWarningVi = null;
-                }),
-              ),
               ActionChip(
-                key: const ValueKey<String>('study-ai-tried-chip'),
-                label: const Text('Điền nhanh: Đã thử viết công thức'),
-                onPressed: () => setState(() {
-                  _aiTriedStepController.text =
-                      'Mình đã tóm tắt giả thiết và viết công thức gốc.';
-                  _socraticLockWarningVi = null;
-                }),
-              ),
+                key: const ValueKey<String>('study-ai-quick-hint'),
+                  label: const Text('Gợi ý bước tiếp theo'),
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          _aiInputController.text =
+                              'Gợi ý giúp mình bước tiếp theo của bài này.';
+                        },
+                ),
+                ActionChip(
+                  key: const ValueKey<String>('study-ai-quick-explain'),
+                  label: const Text('Giải thích dễ hiểu hơn'),
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          _aiInputController.text =
+                              'Giải thích phần này ngắn gọn, dễ hiểu hơn giúp mình.';
+                        },
+                ),
             ],
           ),
-          SizedBox(height: mc.space8),
-          TextField(
-            key: const ValueKey<String>('study-ai-tried-step-input'),
-            controller: _aiTriedStepController,
-            enabled: !isLoading,
-            decoration: InputDecoration(
-              labelText: 'Bước bạn đã tự thử (khóa giải hộ)',
-              hintText: 'Ví dụ: Mình đã đặt x = ... hoặc tách được nhân tử...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(mc.radiusControl),
-              ),
-            ),
-          ),
-          if (_socraticLockWarningVi != null) ...<Widget>[
-            SizedBox(height: mc.space8),
-            MindClockNoticeBanner(
-              key: const ValueKey<String>('study-ai-socratic-warning'),
-              message: _socraticLockWarningVi!,
-              isWarm: true,
-            ),
-          ],
           SizedBox(height: mc.space8),
           TextField(
             key: const ValueKey<String>('study-ai-question-input'),
@@ -1904,9 +1863,13 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             enabled: !isLoading,
             minLines: 1,
             maxLines: 3,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) {
+              if (!isLoading) _submitAiHelp(vm);
+            },
             decoration: InputDecoration(
-              labelText: 'Đang vướng ở bước nào?',
-              hintText: 'Ví dụ: Mình chưa rõ cách đặt ẩn cho bài này...',
+              labelText: 'Nhắn tin với MindClock AI',
+              hintText: 'Nhập câu hỏi hoặc phần bạn đang vướng...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(mc.radiusControl),
               ),
@@ -2040,7 +2003,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           SizedBox(height: mc.space4),
           Text(
             estimatedXp > 0
-                ? 'EXP dự kiến (study-time-v0.1): $estimatedXp XP · sẽ xác nhận từ máy chủ sau khi lưu và đồng bộ (tối đa 12 XP/phiên, 30 XP/ngày).'
+                ? 'EXP dự kiến: $estimatedXp XP · sẽ xác nhận sau khi lưu (tối đa 12 XP/phiên, 30 XP/ngày).'
                 : 'EXP học tập: 0 XP (chỉ tính phiên hoàn thành từ 5 phút tập trung trở lên).',
             key: const ValueKey<String>('study-summary-xp'),
             style: mc.captionStyle,

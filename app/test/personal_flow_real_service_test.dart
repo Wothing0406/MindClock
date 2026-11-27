@@ -412,9 +412,11 @@ void main() {
         await tester.tap(find.byKey(const ValueKey<String>('auth-submit-btn')));
         await tester.pumpAndSettle();
         await tester.ensureVisible(
-          find.byKey(const ValueKey<String>('onboarding-later')),
+          find.byKey(const ValueKey<String>('onboarding-skip-plan')),
         );
-        await tester.tap(find.byKey(const ValueKey<String>('onboarding-later')));
+        await tester.tap(
+          find.byKey(const ValueKey<String>('onboarding-skip-plan')),
+        );
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey<String>('nav-practice')));
         await tester.pumpAndSettle();

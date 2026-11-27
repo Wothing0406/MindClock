@@ -493,7 +493,7 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(find.text(AppStrings.studySpaceTitle), findsOneWidget);
-          expect(find.textContaining('không khóa các app khác'), findsOneWidget);
+          expect(find.textContaining('không khóa các ứng dụng khác'), findsOneWidget);
           expect(tester.takeException(), isNull);
         }
 
@@ -591,7 +591,12 @@ void main() {
         );
         await tester.tap(find.byKey(const ValueKey<String>('auth-submit-btn')));
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey<String>('onboarding-later')));
+        await tester.ensureVisible(
+          find.byKey(const ValueKey<String>('onboarding-skip-plan')),
+        );
+        await tester.tap(
+          find.byKey(const ValueKey<String>('onboarding-skip-plan')),
+        );
         await tester.pumpAndSettle();
 
         await tester.ensureVisible(
