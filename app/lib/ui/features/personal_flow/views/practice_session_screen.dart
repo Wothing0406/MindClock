@@ -11,9 +11,8 @@ import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
 import '../../guest_shell/view_models/guest_workspace_view_model.dart';
 import '../view_models/personal_flow_view_model.dart';
-import 'account_auth_card.dart';
 
-/// Màn hình tab `Luyện tập` nối câu hỏi/phiên/nộp chữ/ảnh xác nhận/nháp 24h/báo chấm sai/tiến độ riêng tư.
+/// Màn hình tab `Luyện tập`: ưu tiên câu hỏi đang mở ngay đầu màn, không lặp thẻ Đăng xuất hay Không gian học.
 class PracticeSessionScreen extends StatefulWidget {
   const PracticeSessionScreen({
     super.key,
@@ -99,6 +98,17 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
     }
   }
 
+  String _inputGuideFor(ChallengeQuestion question) {
+    if (question.questionFormat == 'mcq' && question.options.isNotEmpty) {
+      return 'Cách trả lời: Chọn 1 đáp án đúng bên dưới.';
+    }
+    if (question.questionFormat == 'mini_quiz' &&
+        question.subQuestions.isNotEmpty) {
+      return 'Cách trả lời: Chọn đáp án cho từng câu rồi bấm Nộp đề ngắn.';
+    }
+    return 'Cách trả lời: Nhập đáp án ngắn kèm ít nhất 1 bước tính.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final MindClockTheme mc = context.mc;
@@ -112,6 +122,11 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
     final String? primarySubject = profile.selectedSubjectCodes.isNotEmpty
         ? profile.selectedSubjectCodes.first
         : null;
+    final bool inOpenAlarmSession = pvm.activeAlarmId != null &&
+        question != null &&
+        pvm.activeSession?.state != 'completed' &&
+        pvm.activeSession?.state != 'abandoned' &&
+        result?.verdict != GradingVerdict.correct;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(mc.space20),
@@ -123,10 +138,13 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
             runSpacing: mc.space8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text(AppStrings.navPractice, style: mc.screenTitleStyle),
+              Text(
+                inOpenAlarmSession ? 'Câu hỏi buổi sáng' : AppStrings.navPractice,
+                style: mc.screenTitleStyle,
+              ),
               if (pvm.isDebugFixture)
                 const MindClockStatusPill(
-                  label: 'Chế độ cục bộ · Chưa kết nối máy chủ',
+                  label: AppStrings.debugFixtureLabel,
                   accentWarm: true,
                 ),
             ],
@@ -140,187 +158,67 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
             MindClockNoticeBanner(message: pvm.errorMessageVi!),
           ],
           SizedBox(height: mc.space16),
-          AccountAuthCard(viewModel: pvm),
-          if (widget.onOpenStudySpace != null) ...<Widget>[
-            SizedBox(height: mc.space12),
-            MindClockButton(
-              key: const ValueKey<String>('practice-open-study-space'),
-              label: 'Mở Không gian học tập trung (local)',
-              icon: MindClockIconKind.clock,
-              variant: MindClockButtonVariant.secondary,
-              onPressed: widget.onOpenStudySpace,
-            ),
-          ],
-          SizedBox(height: mc.space16),
-          // Tiến độ riêng tư (XP chỉ lấy từ server hợp lệ)
+
+          // 1. Khung câu hỏi chính đặt ngay đầu màn hình
           MindClockCard(
+            key: const ValueKey<String>('practice-primary-question-card'),
+            highlighted: question != null && result?.verdict != GradingVerdict.correct,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Tiến độ học tập riêng tư', style: mc.sectionTitleStyle),
-                SizedBox(height: mc.space8),
-                if (!pvm.authSession.isAuthenticated)
-                  Text(
-                    'Chưa đồng bộ · Chỉ hiện XP khi đăng nhập và được server xác nhận.',
-                    style: mc.bodyStyle,
-                  )
-                else if (!progress.isServerAuthoritative ||
-                    progress.isDebugFixture)
-                  Text(
-                    '0 XP · Chế độ ngoại tuyến (chưa kết nối máy chủ).',
-                    key: const ValueKey<String>('progress-fixture-xp'),
-                    style: mc.bodyStyle,
-                  )
-                else ...<Widget>[
-                  if (progress.level != null)
-                    Text('Cấp ${progress.level} · Còn ${progress.xpToNextLevel ?? 0} EXP để lên cấp',
-                      key: const ValueKey<String>('progress-server-level'),
-                      style: mc.bodyStrongStyle),
-                  Text(
-                    'XP tích lũy: ${progress.xp} XP · Chuỗi: ${progress.streak} ngày · Số buổi: ${progress.completedSessions}',
-                    key: const ValueKey<String>('progress-server-xp'),
-                    style: mc.bodyStrongStyle,
-                  ),
-                  if (progress.topicsToReview.isNotEmpty) ...<Widget>[
-                    SizedBox(height: mc.space4),
-                    Text(
-                      'Chủ đề cần ôn: ${progress.topicsToReview.join(", ")}',
-                      style: mc.captionStyle,
-                    ),
-                  ],
-                ],
-                SizedBox(height: mc.space8),
-                MindClockButton(
-                  key: const ValueKey<String>('practice-refresh-progress'),
-                  label: 'Tải lại tiến độ từ máy chủ',
-                  icon: MindClockIconKind.check,
-                  variant: MindClockButtonVariant.subtle,
-                  onPressed: pvm.isBusy ? null : pvm.refreshProgressAndHistory,
-                ),
-              ],
-            ),
-          ),
-          if (savedDraft != null) ...<Widget>[
-            SizedBox(height: mc.space16),
-            MindClockCard(
-              highlighted: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Bản nháp bài chữ đã lưu trên máy (tối đa 24 giờ)',
-                    style: mc.sectionTitleStyle,
+                if (!inOpenAlarmSession) ...<Widget>[
+                  Text('Ôn bài theo thời khóa biểu', style: mc.sectionTitleStyle),
+                  SizedBox(height: mc.space8),
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    children: <Widget>[
+                      ChoiceChip(
+                        key: const ValueKey<String>('practice-diff-basic'),
+                        label: const Text('Nhẹ (1 câu)'),
+                        selected: _selectedDifficulty == 'basic',
+                        onSelected: pvm.isBusy
+                            ? null
+                            : (_) =>
+                                setState(() => _selectedDifficulty = 'basic'),
+                      ),
+                      ChoiceChip(
+                        key: const ValueKey<String>('practice-diff-advanced'),
+                        label: const Text('Nâng cao (Đề ngắn)'),
+                        selected: _selectedDifficulty == 'advanced',
+                        onSelected: pvm.isBusy
+                            ? null
+                            : (_) => setState(
+                                () => _selectedDifficulty = 'advanced'),
+                      ),
+                    ],
                   ),
                   SizedBox(height: mc.space8),
-                  Text(
-                    'Câu hỏi: ${savedDraft.promptSnapshot}',
-                    style: mc.captionStyle,
-                  ),
-                  SizedBox(height: mc.space4),
-                  Text(
-                    'Đáp án nháp: ${savedDraft.answerValue} · Cách làm: ${savedDraft.reasoningText}',
-                    style: mc.bodyStyle,
-                  ),
-                  SizedBox(height: mc.space8),
-                  const MindClockNoticeBanner(
-                    message: 'Gửi bài này để nhận nhận xét?',
-                  ),
-                  SizedBox(height: mc.space12),
-                  MindClockButton(
-                    key: const ValueKey<String>('draft-confirm-upload'),
-                    label: 'Xác nhận gửi bản nháp',
-                    icon: MindClockIconKind.check,
-                    onPressed: pvm.isBusy
-                        ? null
-                        : pvm.confirmAndUploadSavedDraft,
-                  ),
-                  SizedBox(height: mc.space8),
-                  MindClockButton(
-                    key: const ValueKey<String>('draft-discard'),
-                    label: 'Xóa bản nháp',
-                    icon: MindClockIconKind.trash,
-                    variant: MindClockButtonVariant.subtle,
-                    onPressed: pvm.isBusy ? null : pvm.discardSavedDraft,
-                  ),
-                ],
-              ),
-            ),
-          ],
-          SizedBox(height: mc.space16),
-          MindClockCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text('Phiên câu hỏi theo TKB & tiến độ tuần',
-                    style: mc.sectionTitleStyle),
-                SizedBox(height: mc.space8),
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  children: <Widget>[
-                    ChoiceChip(
-                      key: const ValueKey<String>('practice-diff-basic'),
-                      label: const Text('Nhẹ (1 câu ABCD)'),
-                      selected: _selectedDifficulty == 'basic',
-                      onSelected: pvm.isBusy
-                          ? null
-                          : (_) => setState(() => _selectedDifficulty = 'basic'),
-                    ),
-                    ChoiceChip(
-                      key: const ValueKey<String>('practice-diff-advanced'),
-                      label: const Text('Nâng cao (Đề >= 70%)'),
-                      selected: _selectedDifficulty == 'advanced',
-                      onSelected: pvm.isBusy
-                          ? null
-                          : (_) =>
-                              setState(() => _selectedDifficulty = 'advanced'),
-                    ),
-                  ],
-                ),
-                SizedBox(height: mc.space8),
-                Wrap(
-                  spacing: mc.space8,
-                  runSpacing: mc.space8,
-                  children: <Widget>[
-                    MindClockButton(
-                      key: const ValueKey<String>('practice-start-challenge'),
-                      label: 'Mở câu thử thách buổi sáng',
-                      icon: MindClockIconKind.bell,
-                      expand: false,
-                      onPressed: pvm.isBusy
-                          ? null
-                          : () {
-                              _miniQuizSelections.clear();
-                              pvm.startSession(
-                                subjectCode: 'auto',
-                                gradeLevel: profile.gradeLevel,
-                                challengeMode: true,
-                                difficulty: _selectedDifficulty,
-                              );
-                            },
-                    ),
-                    MindClockButton(
-                      key: const ValueKey<String>('practice-start-normal'),
-                      label: 'Bắt đầu câu thường',
-                      icon: MindClockIconKind.book,
-                      variant: MindClockButtonVariant.secondary,
-                      expand: false,
-                      onPressed: pvm.isBusy
-                          ? null
-                          : () {
-                              _miniQuizSelections.clear();
-                              pvm.startSession(
-                                subjectCode: primarySubject,
-                                gradeLevel: profile.gradeLevel,
-                                challengeMode: false,
-                              );
-                            },
-                    ),
-                    if (pvm.authSession.isAuthenticated)
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space8,
+                    children: <Widget>[
                       MindClockButton(
-                        key: const ValueKey<String>('practice-start-ai-regen'),
-                        label: 'Tạo câu mới từ đề gốc (AI)',
-                        icon: MindClockIconKind.sunrise,
+                        key: const ValueKey<String>('practice-start-challenge'),
+                        label: 'Mở câu thử thách buổi sáng',
+                        icon: MindClockIconKind.bell,
+                        expand: false,
+                        onPressed: pvm.isBusy
+                            ? null
+                            : () {
+                                _miniQuizSelections.clear();
+                                pvm.startSession(
+                                  subjectCode: 'auto',
+                                  gradeLevel: profile.gradeLevel,
+                                  challengeMode: true,
+                                  difficulty: _selectedDifficulty,
+                                );
+                              },
+                      ),
+                      MindClockButton(
+                        key: const ValueKey<String>('practice-start-normal'),
+                        label: 'Câu tự luyện',
+                        icon: MindClockIconKind.book,
                         variant: MindClockButtonVariant.secondary,
                         expand: false,
                         onPressed: pvm.isBusy
@@ -331,23 +229,42 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                                   subjectCode: primarySubject,
                                   gradeLevel: profile.gradeLevel,
                                   challengeMode: false,
-                                  preferAiRegen: true,
                                 );
                               },
                       ),
-                  ],
-                ),
+                      if (pvm.authSession.isAuthenticated)
+                        MindClockButton(
+                          key: const ValueKey<String>('practice-start-ai-regen'),
+                          label: 'Tạo biến thể câu mới',
+                          icon: MindClockIconKind.sunrise,
+                          variant: MindClockButtonVariant.secondary,
+                          expand: false,
+                          onPressed: pvm.isBusy
+                              ? null
+                              : () {
+                                  _miniQuizSelections.clear();
+                                  pvm.startSession(
+                                    subjectCode: primarySubject,
+                                    gradeLevel: profile.gradeLevel,
+                                    challengeMode: false,
+                                    preferAiRegen: true,
+                                  );
+                                },
+                        ),
+                    ],
+                  ),
+                ],
                 if (question != null) ...<Widget>[
+                  if (!inOpenAlarmSession) SizedBox(height: mc.space16),
                   if (_reRingWarningActive) ...<Widget>[
-                    SizedBox(height: mc.space12),
                     const MindClockNoticeBanner(
                       key: ValueKey<String>('practice-rering-warning'),
                       message:
-                          'Phát hiện bạn vừa rời màn hình khi chưa giải xong thử thách sáng — chuông nhắc tiếp tục giữ tỉnh táo đã được kích hoạt!',
+                          'Bạn vừa rời màn hình khi câu sáng chưa hoàn thành. Hãy trả lời hoặc bấm Dừng khẩn cấp.',
                       isWarm: true,
                     ),
+                    SizedBox(height: mc.space12),
                   ],
-                  SizedBox(height: mc.space16),
                   if (question.morningCard != null &&
                       pvm.isMorningHookVisible) ...<Widget>[
                     MindClockCard(
@@ -357,7 +274,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            'Mở màn buổi sáng (${question.morningCard!.durationTargetSeconds} giây)',
+                            'Tình huống mở đầu (${question.morningCard!.durationTargetSeconds} giây)',
                             style: mc.sectionTitleStyle,
                           ),
                           SizedBox(height: mc.space4),
@@ -381,27 +298,27 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                     ),
                     SizedBox(height: mc.space12),
                   ],
-                  if (question.sourceScheduleReasonVi != null ||
-                      question.schoolWeek != null) ...<Widget>[
-                    Wrap(
-                      spacing: mc.space8,
-                      runSpacing: mc.space4,
-                      children: <Widget>[
-                        if (question.sourceScheduleReasonVi != null)
-                          MindClockStatusPill(
-                            key: const ValueKey<String>(
-                                'practice-schedule-reason'),
-                            label: question.sourceScheduleReasonVi!,
-                            accentWarm: false,
-                          ),
-                        if (question.schoolWeek != null)
-                          MindClockStatusPill(
-                            label: 'Tuần ${question.schoolWeek}',
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: mc.space8),
-                  ],
+                  Wrap(
+                    spacing: mc.space8,
+                    runSpacing: mc.space4,
+                    children: <Widget>[
+                      MindClockStatusPill(
+                        label: SubjectCatalog.nameFor(question.subjectCode),
+                        accentWarm: true,
+                      ),
+                      if (question.sourceScheduleReasonVi != null)
+                        MindClockStatusPill(
+                          key: const ValueKey<String>('practice-schedule-reason'),
+                          label: question.sourceScheduleReasonVi!,
+                          accentWarm: false,
+                        ),
+                      if (question.schoolWeek != null)
+                        MindClockStatusPill(
+                          label: 'Tuần ${question.schoolWeek}',
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: mc.space8),
                   MathFormulaText(
                     question.prompt,
                     key: const ValueKey<String>('practice-question-prompt'),
@@ -409,10 +326,9 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                   ),
                   SizedBox(height: mc.space4),
                   Text(
-                    '${SubjectCatalog.nameFor(question.subjectCode)} · '
-                    '${question.currentChapter ?? question.topicId} · '
-                    '${question.reasoningPromptVi}',
-                    style: mc.captionStyle,
+                    _inputGuideFor(question),
+                    key: const ValueKey<String>('practice-input-guide'),
+                    style: mc.captionStyle.copyWith(color: mc.ink),
                   ),
                   SizedBox(height: mc.space12),
                   if (question.questionFormat == 'mcq' &&
@@ -469,7 +385,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                     MindClockButton(
                       key: const ValueKey<String>('practice-submit-mini-quiz'),
                       label:
-                          'Nộp đề ngắn (${_miniQuizSelections.length}/${question.subQuestions.length} câu · Đạt >= 70%)',
+                          'Nộp đề ngắn (${_miniQuizSelections.length}/${question.subQuestions.length} câu)',
                       icon: MindClockIconKind.check,
                       onPressed: pvm.isBusy ||
                               _miniQuizSelections.length <
@@ -502,16 +418,18 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                       key: const ValueKey<String>('practice-reasoning-field'),
                       controller: _reasoningController,
                       maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Giải thích ngắn (chấm AI theo rubric)',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: question.reasoningPromptVi.isNotEmpty
+                            ? question.reasoningPromptVi
+                            : 'Cách làm ngắn gọn (1–2 bước)',
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     SizedBox(height: mc.space12),
                     MindClockButton(
                       key: const ValueKey<String>('practice-submit-text'),
                       label: pvm.hasRetryableTextFailure
-                          ? 'Thử gửi lại bài làm (giữ Idempotency-Key)'
+                          ? 'Thử gửi lại bài làm'
                           : 'Gửi bài để chấm',
                       icon: MindClockIconKind.check,
                       onPressed: pvm.isBusy
@@ -527,7 +445,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                       MindClockButton(
                         key: const ValueKey<String>(
                             'practice-check-offline-bank'),
-                        label: 'Kiểm tra đáp án có sẵn (ngoại tuyến)',
+                        label: 'Kiểm tra đáp án trên máy',
                         icon: MindClockIconKind.book,
                         variant: MindClockButtonVariant.secondary,
                         onPressed: pvm.isBusy
@@ -541,7 +459,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                     SizedBox(height: mc.space8),
                     MindClockButton(
                       key: const ValueKey<String>('practice-save-draft'),
-                      label: 'Lưu trên máy để gửi sau (nháp chữ <= 24h)',
+                      label: 'Lưu nháp trên máy (tối đa 24 giờ)',
                       icon: MindClockIconKind.edit,
                       variant: MindClockButtonVariant.subtle,
                       onPressed: pvm.isBusy
@@ -591,8 +509,8 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                         SizedBox(height: mc.space4),
                         Text(
                           result.authoritativeXpAwarded > 0
-                              ? 'XP server cấp: +${result.authoritativeXpAwarded} XP'
-                              : 'XP server cấp: 0 XP',
+                              ? 'Điểm thưởng: +${result.authoritativeXpAwarded} XP'
+                              : 'Điểm thưởng: 0 XP',
                           key: const ValueKey<String>('grading-xp-awarded'),
                           style: mc.captionStyle,
                         ),
@@ -661,6 +579,108 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                         ],
                       ],
                     ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          if (savedDraft != null) ...<Widget>[
+            SizedBox(height: mc.space16),
+            MindClockCard(
+              highlighted: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Bản nháp đã lưu trên máy (tối đa 24 giờ)',
+                    style: mc.sectionTitleStyle,
+                  ),
+                  SizedBox(height: mc.space8),
+                  Text(
+                    'Câu hỏi: ${savedDraft.promptSnapshot}',
+                    style: mc.captionStyle,
+                  ),
+                  SizedBox(height: mc.space4),
+                  Text(
+                    'Đáp án nháp: ${savedDraft.answerValue} · Cách làm: ${savedDraft.reasoningText}',
+                    style: mc.bodyStyle,
+                  ),
+                  SizedBox(height: mc.space8),
+                  const MindClockNoticeBanner(
+                    message: 'Gửi bài này để nhận nhận xét?',
+                  ),
+                  SizedBox(height: mc.space12),
+                  MindClockButton(
+                    key: const ValueKey<String>('draft-confirm-upload'),
+                    label: 'Xác nhận gửi bản nháp',
+                    icon: MindClockIconKind.check,
+                    onPressed:
+                        pvm.isBusy ? null : pvm.confirmAndUploadSavedDraft,
+                  ),
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey<String>('draft-discard'),
+                    label: 'Xóa bản nháp',
+                    icon: MindClockIconKind.trash,
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed: pvm.isBusy ? null : pvm.discardSavedDraft,
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          SizedBox(height: mc.space16),
+          // 2. Tiến độ học tập riêng tư đặt dưới câu hỏi
+          MindClockCard(
+            key: const ValueKey<String>('practice-progress-card'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('Tiến độ học tập', style: mc.sectionTitleStyle),
+                SizedBox(height: mc.space8),
+                if (!pvm.authSession.isAuthenticated)
+                  Text(
+                    'Mở mục Tôi để đăng nhập và đồng bộ điểm, chuỗi ngày.',
+                    style: mc.bodyStyle,
+                  )
+                else if (!progress.isServerAuthoritative ||
+                    progress.isDebugFixture)
+                  Text(
+                    '0 XP · Chưa kết nối máy chủ.',
+                    key: const ValueKey<String>('progress-fixture-xp'),
+                    style: mc.bodyStyle,
+                  )
+                else ...<Widget>[
+                  if (progress.level != null)
+                    Text(
+                      'Cấp ${progress.level} · Còn ${progress.xpToNextLevel ?? 0} EXP để lên cấp',
+                      key: const ValueKey<String>('progress-server-level'),
+                      style: mc.bodyStrongStyle,
+                    ),
+                  Text(
+                    'XP tích lũy: ${progress.xp} XP · Chuỗi: ${progress.streak} ngày · Số buổi: ${progress.completedSessions}',
+                    key: const ValueKey<String>('progress-server-xp'),
+                    style: mc.bodyStrongStyle,
+                  ),
+                  if (progress.topicsToReview.isNotEmpty) ...<Widget>[
+                    SizedBox(height: mc.space4),
+                    Text(
+                      'Chủ đề cần ôn: ${progress.topicsToReview.join(", ")}',
+                      style: mc.captionStyle,
+                    ),
+                  ],
+                ],
+                if (pvm.authSession.isAuthenticated) ...<Widget>[
+                  SizedBox(height: mc.space8),
+                  MindClockButton(
+                    key: const ValueKey<String>('practice-refresh-progress'),
+                    label: 'Làm mới tiến độ',
+                    icon: MindClockIconKind.check,
+                    variant: MindClockButtonVariant.subtle,
+                    onPressed:
+                        pvm.isBusy ? null : pvm.refreshProgressAndHistory,
                   ),
                 ],
               ],

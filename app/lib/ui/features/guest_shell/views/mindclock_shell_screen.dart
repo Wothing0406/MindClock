@@ -6,6 +6,7 @@ import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/method_channel_media_picker_gateway.dart';
 import '../../../../domain/game/solo_training_question_bank.dart';
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/alarm_occurrence.dart';
 import '../../../../domain/models/community_models.dart';
 import '../../../../domain/models/study_ai_models.dart';
 import '../../../../domain/models/study_profile.dart';
@@ -84,8 +85,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   String? _todayBanner;
   bool _syncedInitialRoute = false;
   String? _hydratedRemoteScope;
-  bool _activeAlarmPlayingInQuestion = false;
-  String? _activeAlarmIdInQuestion;
+  String? _restoredOccurrenceKey;
   late final SoloArenaViewModel _ownedArenaViewModel;
 
   SoloArenaViewModel get _arenaVm =>
@@ -136,11 +136,68 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     });
   }
 
+  void _handleAlarmOccurrenceEvent({
+    required String alarmId,
+    required String event,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError = false,
+  }) {
+    switch (event) {
+      case 'question_open':
+        unawaited(
+          widget.viewModel.markAlarmQuestionOpened(
+            alarmId: alarmId,
+            sessionId: sessionId,
+            questionId: questionId,
+            hasSyncError: hasSyncError,
+          ),
+        );
+      case 'submitted':
+        unawaited(
+          widget.viewModel.markAlarmOccurrenceSubmitted(
+            alarmId: alarmId,
+            sessionId: sessionId,
+            questionId: questionId,
+            hasSyncError: hasSyncError,
+          ),
+        );
+      case 'sync_error':
+        unawaited(
+          widget.viewModel.markAlarmOccurrenceSyncError(
+            alarmId: alarmId,
+            sessionId: sessionId,
+            questionId: questionId,
+          ),
+        );
+      case 'completed':
+        unawaited(
+          widget.viewModel.markAlarmOccurrenceCompleted(
+            alarmId: alarmId,
+            sessionId: sessionId,
+            questionId: questionId,
+            hasSyncError: hasSyncError,
+          ),
+        );
+      case 'skipped':
+        unawaited(
+          widget.viewModel.markAlarmOccurrenceSkipped(
+            alarmId: alarmId,
+            sessionId: sessionId,
+            questionId: questionId,
+            hasSyncError: hasSyncError,
+          ),
+        );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _ownedArenaViewModel = SoloArenaViewModel();
     WidgetsBinding.instance.addObserver(this);
+    widget.personalViewModel.onAlarmOccurrenceEvent =
+        _handleAlarmOccurrenceEvent;
     widget.viewModel.addListener(_onViewModelChanged);
     widget.personalViewModel.addListener(_onViewModelChanged);
     widget.studyViewModel?.addListener(_onViewModelChanged);
@@ -150,6 +207,12 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (identical(
+      widget.personalViewModel.onAlarmOccurrenceEvent,
+      _handleAlarmOccurrenceEvent,
+    )) {
+      widget.personalViewModel.onAlarmOccurrenceEvent = null;
+    }
     widget.viewModel.removeListener(_onViewModelChanged);
     widget.personalViewModel.removeListener(_onViewModelChanged);
     widget.studyViewModel?.removeListener(_onViewModelChanged);
@@ -210,6 +273,23 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
 
     final StudyFocusViewModel? studyVm = widget.studyViewModel;
     _wireArenaAi(isAuth: isAuth, studyVm: studyVm);
+    if (widget.viewModel.isLoaded) {
+      final AlarmOccurrenceRecord? openOcc =
+          widget.viewModel.activeOpenOccurrenceToday;
+      if (openOcc != null &&
+          _restoredOccurrenceKey != openOcc.occurrenceKey &&
+          widget.personalViewModel.currentQuestion == null) {
+        _restoredOccurrenceKey = openOcc.occurrenceKey;
+        unawaited(
+          widget.personalViewModel.resumeOrOpenAlarmQuestion(
+            alarmId: openOcc.alarmId,
+            subjectCode: openOcc.subjectCode,
+            gradeLevel: widget.viewModel.profile.gradeLevel,
+            challengeMode: true,
+          ),
+        );
+      }
+    }
     if (studyVm != null && studyVm.isLoaded) {
       if (studyVm.ownerScopeKey != scope) {
         studyVm.setOwnerScope(scope);
@@ -341,16 +421,21 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                 resolvedSubject = proposal.subjectCode;
               }
             }
-            widget.viewModel.dismissActiveRingUi();
-            widget.personalViewModel.startSession(
-              alarmId: alarmId,
-              subjectCode: resolvedSubject,
-              gradeLevel: widget.viewModel.profile.gradeLevel,
-              challengeMode: activeRing.mode == AlarmMode.challenge,
+            unawaited(
+              widget.viewModel.markAlarmQuestionOpened(
+                alarmId: alarmId,
+                subjectCode: resolvedSubject,
+              ),
+            );
+            unawaited(
+              widget.personalViewModel.resumeOrOpenAlarmQuestion(
+                alarmId: alarmId,
+                subjectCode: resolvedSubject,
+                gradeLevel: widget.viewModel.profile.gradeLevel,
+                challengeMode: activeRing.mode == AlarmMode.challenge,
+              ),
             );
             setState(() {
-              _activeAlarmPlayingInQuestion = true;
-              _activeAlarmIdInQuestion = alarmId;
               _stage = _GuestFlowStage.mainTabs;
               _selectedTabIndex = 1;
             });
@@ -374,8 +459,6 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             );
             if (!mounted) return;
             setState(() {
-              _activeAlarmPlayingInQuestion = false;
-              _activeAlarmIdInQuestion = null;
               _todayBanner = 'Đã dừng chuông báo thức.';
               _stage = _GuestFlowStage.mainTabs;
               _selectedTabIndex = 0;
@@ -675,12 +758,15 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
             );
         }
 
+        final AlarmOccurrenceRecord? openAlarmOcc =
+            widget.viewModel.activeOpenOccurrenceToday;
+
         return Scaffold(
           backgroundColor: mc.paper,
           body: SafeArea(
             child: Column(
               children: <Widget>[
-                if (_activeAlarmPlayingInQuestion)
+                if (openAlarmOcc != null)
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
@@ -708,14 +794,12 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                           expand: false,
                           onPressed: () async {
                             await widget.viewModel.triggerEmergencyStop(
-                              alarmId: _activeAlarmIdInQuestion,
+                              alarmId: openAlarmOcc.alarmId,
                               activeSessionId: widget
                                   .personalViewModel.activeSession?.sessionId,
                             );
                             if (!mounted) return;
                             setState(() {
-                              _activeAlarmPlayingInQuestion = false;
-                              _activeAlarmIdInQuestion = null;
                               _todayBanner = 'Đã dừng chuông báo thức.';
                             });
                           },
@@ -727,7 +811,9 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
                   child: Stack(
                     children: <Widget>[
                       body,
-                      if (widget.communityRepository != null)
+                      if (widget.communityRepository != null &&
+                          _selectedTabIndex == 0 &&
+                          widget.personalViewModel.authSession.isAuthenticated)
                         FloatingMiniPetOverlay(
                           repository: widget.communityRepository!,
                         ),

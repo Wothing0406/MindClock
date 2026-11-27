@@ -363,10 +363,14 @@ void main() {
       // Mở tab Luyện tập với câu hỏi Vật lí đúng TKB (sau khi bỏ qua Chào cờ)
       expect(personalVm.currentQuestion, isNotNull);
       expect(personalVm.currentQuestion!.subjectCode, 'physics');
-      // Không còn nhãn Thử phiên báo thức thử thách hay Demo trên UI
+      // Không còn nhãn Thử phiên báo thức thử thách hay Demo trên UI; khi đang trong lượt chuông sáng chỉ ưu tiên câu hỏi chính
       expect(find.text('Thử phiên báo thức thử thách'), findsNothing);
       expect(find.textContaining('Demo'), findsNothing);
-      expect(find.text('Mở câu thử thách buổi sáng'), findsOneWidget);
+      expect(find.text('Câu hỏi buổi sáng'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('practice-question-prompt')),
+        findsOneWidget,
+      );
     },
   );
 }

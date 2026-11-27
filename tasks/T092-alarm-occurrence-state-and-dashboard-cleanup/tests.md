@@ -1,0 +1,9 @@
+# Kế hoạch và kết quả kiểm thử T092
+
+| ID | Liên kết AC | Kịch bản/đầu vào | Kết quả mong đợi | Cách chạy/môi trường | Kết quả thực/ngày |
+| --- | --- | --- | --- | --- | --- |
+| TC-01 | AC-01 | Chuông reo -> Mở câu hỏi -> trả lời đúng | Occurrence chuyển `scheduled → ringing → question_open → completed`; thanh dừng khẩn cấp tự đóng ngay khi hoàn thành | `flutter test --no-pub -j 1 test/t092_alarm_occurrence_and_clean_practice_test.dart` (Windows 11) | PASS (`2026-11-27`) |
+| TC-02 | AC-02 | Sau khi `completed` câu sáng, quay lại `TodayScreen` và khởi động lại `GuestWorkspaceViewModel` từ cùng store | `TodayScreen` hiện `"Đã hoàn thành hôm nay"`, không hiện thẻ ép làm lại; payload chuông cũ cùng ngày không tự bật lại | `flutter test --no-pub -j 1 test/t092_alarm_occurrence_and_clean_practice_test.dart` | PASS (`2026-11-27`) |
+| TC-03 | AC-03 | Gọi lại `resumeOrOpenAlarmQuestion` cho cùng `alarmId`; bấm kép song song và timeout mạng rồi retry ở cả câu chữ lẫn câu ABCD | Không tạo session mới thừa; đánh dấu `"Lỗi đồng bộ"` khi mất mạng; server chỉ nhận 1 `Idempotency-Key` và 1 kết quả | `flutter test --no-pub -j 1 test/t092_alarm_occurrence_and_clean_practice_test.dart test/personal_flow_real_service_test.dart` | PASS (`2026-11-27`) |
+| TC-04 | AC-04 | Render `PracticeSessionScreen` và `TodayScreen` khi đã đăng nhập | Câu hỏi hiển thị trước tiến độ; không có thẻ Đăng xuất hay nút Không gian học lặp trong `Luyện tập`; phân biệt rõ trạng thái trên `TodayScreen` | `flutter test --no-pub -j 1 test/t092_alarm_occurrence_and_clean_practice_test.dart test/t083_morning_mcq_and_quit_test.dart test/t062_offline_bank_alarm_and_arena_timer_test.dart` | PASS (`2026-11-27`) |
+| TC-05 | Rủi ro thiết bị | Kiểm thử AD01–AD09 (khóa màn hình, reboot, Doze, Dừng khẩn cấp) trên máy Android vật lý | Hoạt động ổn định trên phần cứng thực | Cần cắm 2 máy Android vật lý qua ADB (`adb devices` hiện trống) | Giới hạn môi trường: chưa cắm máy vật lý (`2026-11-27`) |

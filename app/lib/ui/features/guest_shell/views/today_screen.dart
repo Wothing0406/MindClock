@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/alarm_occurrence.dart';
 import '../../../../domain/models/daily_study_plan.dart';
 import '../../../../domain/models/study_focus_models.dart';
 import '../../../../domain/models/study_profile.dart';
@@ -407,8 +408,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                 Text(item.titleVi, style: mc.bodyStrongStyle),
                                 MindClockStatusPill(
                                   label: item.hasApprovedQuestions
-                                      ? 'Có câu ôn duyệt'
-                                      : 'Chưa có câu duyệt',
+                                      ? 'Sẵn sàng ôn'
+                                      : 'Tự ôn tập',
                                   accentWarm: !item.hasApprovedQuestions,
                                 ),
                               ],
@@ -657,72 +658,80 @@ class _TodayScreenState extends State<TodayScreen> {
             )
           else ...<Widget>[
             if (morningProposal != null && activeAlarm != null) ...<Widget>[
-              MindClockCard(
-                highlighted: activeAlarm.mode == AlarmMode.challenge,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Wrap(
-                      spacing: mc.space8,
-                      runSpacing: mc.space8,
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+              Builder(
+                builder: (BuildContext context) {
+                  final AlarmOccurrenceRecord? todayOcc =
+                      widget.viewModel.occurrenceForToday(activeAlarm.id);
+                  final String occLabel =
+                      todayOcc?.dashboardStatusLabelVi ?? 'Đang chờ';
+                  final bool isDone =
+                      todayOcc?.state == AlarmOccurrenceState.completed;
+                  final bool isWaitingAnswer =
+                      todayOcc?.isWaitingQuestion ?? false;
+                  final bool isEndedWithoutReward =
+                      todayOcc?.state == AlarmOccurrenceState.skipped ||
+                          todayOcc?.state == AlarmOccurrenceState.dismissed;
+                  return MindClockCard(
+                    key: const ValueKey<String>('today-morning-occurrence-card'),
+                    highlighted: isWaitingAnswer,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          'Câu ôn sáng theo quy tắc',
-                          style: mc.sectionTitleStyle,
-                        ),
                         Wrap(
-                          spacing: mc.space4,
+                          spacing: mc.space8,
+                          runSpacing: mc.space8,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: <Widget>[
-                            if (morningProposal.hasApprovedQuestions)
-                              const MindClockStatusPill(
-                                label: 'Đã duyệt',
-                                accentWarm: true,
-                              )
-                            else
-                              const MindClockStatusPill(
-                                label: 'Chưa có câu duyệt',
-                                accentWarm: false,
-                              ),
+                            Text(
+                              'Câu hỏi buổi sáng',
+                              style: mc.sectionTitleStyle,
+                            ),
                             MindClockStatusPill(
-                              label: morningProposal.difficultyLabelVi,
-                              accentWarm: false,
+                              key: const ValueKey<String>(
+                                'today-morning-occurrence-status',
+                              ),
+                              label: occLabel,
+                              accentWarm: isWaitingAnswer ||
+                                  (todayOcc?.hasSyncError ?? false),
                             ),
                           ],
                         ),
+                        SizedBox(height: mc.space8),
+                        Text(
+                          '${morningProposal.subjectNameVi} · ${morningProposal.topicNameVi}',
+                          style:
+                              mc.bodyStyle.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        SizedBox(height: mc.space4),
+                        Text(
+                          isDone
+                              ? 'Bạn đã hoàn thành câu sáng hôm nay. Không cần làm lại.'
+                              : isEndedWithoutReward
+                                  ? 'Lượt chuông hôm nay đã khép lại ($occLabel).'
+                                  : isWaitingAnswer
+                                      ? (todayOcc?.hasSyncError == true
+                                          ? 'Bài làm chưa đồng bộ được máy chủ. Mở lại để gửi tiếp mà không mất lượt.'
+                                          : 'Câu sáng đang mở. Chạm bên dưới để hoàn thành.')
+                                      : 'Hiện câu hỏi ngay khi chuông ${activeAlarm.formattedTime} reo.',
+                          style: mc.captionStyle.copyWith(color: mc.ink),
+                        ),
+                        if (isWaitingAnswer &&
+                            widget.onSelectTab != null) ...<Widget>[
+                          SizedBox(height: mc.space12),
+                          MindClockButton(
+                            key: const ValueKey<String>(
+                              'today-resume-morning-question',
+                            ),
+                            label: 'Tiếp tục câu hỏi buổi sáng',
+                            icon: MindClockIconKind.book,
+                            onPressed: () => widget.onSelectTab!(1),
+                          ),
+                        ],
                       ],
                     ),
-                    SizedBox(height: mc.space8),
-                    Text(
-                      '${morningProposal.subjectNameVi} · ${morningProposal.topicNameVi}',
-                      style: mc.bodyStyle.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    SizedBox(height: mc.space4),
-                    Text(
-                      morningProposal.explanationVi,
-                      style: mc.captionStyle.copyWith(color: mc.ink),
-                    ),
-                    if (morningProposal.sampleQuestionPrompt !=
-                        null) ...<Widget>[
-                      SizedBox(height: mc.space8),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(mc.space12),
-                        decoration: BoxDecoration(
-                          color: mc.primarySoft,
-                          borderRadius: BorderRadius.circular(mc.radiusControl),
-                        ),
-                        child: Text(
-                          'Câu thử thách môn ${morningProposal.subjectNameVi} sẽ tự động tạo sẵn trước giờ báo thức vài phút và hiện thẳng khi chuông reo.',
-                          style: mc.captionStyle.copyWith(
-                            color: mc.ink,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  );
+                },
               ),
               SizedBox(height: mc.space12),
             ],
@@ -907,6 +916,7 @@ class _TodayScreenState extends State<TodayScreen> {
               refreshTick: _petRefreshTick,
             ),
           ],
+          const SizedBox(height: 76),
         ],
       ),
     );

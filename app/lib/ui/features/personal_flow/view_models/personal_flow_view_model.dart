@@ -81,7 +81,31 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   bool _isBusy = false;
   bool _challengeModeSession = false;
+  String? _activeAlarmId;
   bool _morningHookCompletedOrSkipped = false;
+
+  /// Callback đồng bộ trạng thái occurrence báo thức cục bộ (`T092`).
+  void Function({
+    required String alarmId,
+    required String event,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError,
+  })? onAlarmOccurrenceEvent;
+
+  String? get activeAlarmId => _activeAlarmId;
+
+  void _emitAlarmOccurrence(String event, {bool hasSyncError = false}) {
+    final String? alarmId = _activeAlarmId;
+    if (alarmId == null || alarmId.isEmpty) return;
+    onAlarmOccurrenceEvent?.call(
+      alarmId: alarmId,
+      event: event,
+      sessionId: _activeSession?.sessionId,
+      questionId: _currentQuestion?.questionId,
+      hasSyncError: hasSyncError,
+    );
+  }
   int _clearWrongCount = 0;
   int _offlineRotationOffset = 0;
   String? _postAttemptRevealVi;
@@ -247,6 +271,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _leaderboardBusy = false;
     _currentQuestion = null;
     _activeSession = null;
+    _activeAlarmId = null;
     _lastResult = null;
     _progressSummary = const ProgressSummary.unauthenticated();
     _sessionHistory = const <SessionHistoryItem>[];
@@ -475,6 +500,30 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
+  /// Khôi phục phiên câu hỏi sáng đang mở cho cùng `alarmId` mà không tạo attempt mới thừa.
+  Future<void> resumeOrOpenAlarmQuestion({
+    required String alarmId,
+    String? subjectCode,
+    String? gradeLevel,
+    bool challengeMode = true,
+  }) async {
+    if (_activeAlarmId == alarmId &&
+        _currentQuestion != null &&
+        _activeSession != null &&
+        _activeSession!.state != 'completed' &&
+        _activeSession!.state != 'abandoned' &&
+        _lastResult?.verdict != GradingVerdict.correct) {
+      notifyListeners();
+      return;
+    }
+    await startSession(
+      alarmId: alarmId,
+      subjectCode: subjectCode,
+      gradeLevel: gradeLevel,
+      challengeMode: challengeMode,
+    );
+  }
+
   /// Tải câu hỏi từ `/v1/challenges/next` (hoặc lấy câu hỏi + đáp án có sẵn trong kho cục bộ khi offline/mất mạng).
   Future<void> startSession({
     String alarmId = 'practice_manual',
@@ -491,6 +540,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _lastFeedbackReport = null;
     _pendingPhotoPreview = null;
     _challengeModeSession = challengeMode;
+    _activeAlarmId = alarmId == 'practice_manual' ? null : alarmId;
     _morningHookCompletedOrSkipped = false;
     _postAttemptRevealVi = null;
     _clearWrongCount = 0;
@@ -515,7 +565,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
         isOfflineLocal: true,
       );
       _bannerMessageVi =
-          'Đang dùng bộ câu hỏi & đáp án có sẵn trên máy (luyện tập ngoại tuyến, không cộng XP server).';
+          'Đang dùng bộ câu hỏi có sẵn trên máy.';
+      _emitAlarmOccurrence('question_open', hasSyncError: false);
       _isBusy = false;
       notifyListeners();
       return;
@@ -539,6 +590,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       );
       _currentQuestion = question;
       _activeSession = session;
+      _emitAlarmOccurrence('question_open', hasSyncError: false);
       if (isDebugFixture) {
         _bannerMessageVi =
             'Chế độ cục bộ trên máy · Không phải AI/XP từ máy chủ.';
@@ -561,7 +613,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
         isOfflineLocal: true,
       );
       _bannerMessageVi =
-          'Mất kết nối máy chủ: đã chuyển sang bộ câu hỏi & đáp án có sẵn trên máy.';
+          'Mất kết nối máy chủ: đã chuyển sang bộ câu hỏi có sẵn trên máy.';
+      _emitAlarmOccurrence('question_open', hasSyncError: true);
     } finally {
       _isBusy = false;
       notifyListeners();
@@ -683,6 +736,12 @@ class PersonalFlowViewModel extends ChangeNotifier {
     required String answerValue,
     required String reasoningText,
   }) async {
+    if (_isBusy) return null;
+    if (_lastResult?.verdict == GradingVerdict.correct ||
+        _activeSession?.state == 'completed' ||
+        _activeSession?.state == 'abandoned') {
+      return _lastResult;
+    }
     final String cleanAnswer = answerValue.trim();
     final String cleanReasoning = reasoningText.trim();
     if (cleanAnswer.isEmpty || cleanReasoning.isEmpty) {
@@ -707,7 +766,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
     if (!_authSession.isAuthenticated || session.isOfflineLocal) {
       _errorMessageVi =
-          'Chưa thể gửi chấm máy chủ khi ngoại tuyến hoặc chưa đăng nhập. Bạn có thể bấm "Kiểm tra đáp án có sẵn (ngoại tuyến)" hoặc lưu bản nháp chữ (tối đa 24 giờ).';
+          'Chưa thể gửi chấm trực tuyến khi mất mạng hoặc chưa đăng nhập. Bạn có thể bấm "Kiểm tra đáp án trên máy" hoặc lưu bản nháp 24 giờ.';
       _lastResult = null;
       notifyListeners();
       return null;
@@ -716,6 +775,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
     _isBusy = true;
     _errorMessageVi = null;
     _bannerMessageVi = null;
+    _emitAlarmOccurrence('submitted');
     notifyListeners();
 
     try {
@@ -735,6 +795,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       if (e.isConflict) {
         _clearSubmissionKeys();
       }
+      _emitAlarmOccurrence('sync_error', hasSyncError: true);
       await _handleApiError(e, preservePendingSubmission: true);
       return null;
     } finally {
@@ -743,8 +804,14 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
-  /// Nộp 1 chạm đáp án trắc nghiệm ABCD cho câu hỏi buổi sáng (`T083`).
+  /// Nộp 1 chạm đáp án trắc nghiệm ABCD cho câu hỏi buổi sáng (`T083` / `T092` idempotent).
   Future<GradingResult?> submitMcqAnswer(int selectedIndex) async {
+    if (_isBusy) return null;
+    if (_lastResult?.verdict == GradingVerdict.correct ||
+        _activeSession?.state == 'completed' ||
+        _activeSession?.state == 'abandoned') {
+      return _lastResult;
+    }
     final ChallengeQuestion? question = _currentQuestion;
     final StudySessionRecord? session = _activeSession;
     if (question == null || session == null) {
@@ -756,17 +823,22 @@ class PersonalFlowViewModel extends ChangeNotifier {
             selectedIndex < question.options.length)
         ? question.options[selectedIndex]
         : 'Đáp án ${selectedIndex + 1}';
+    ensureSubmissionKeys(
+      answerValue: 'mcq_$selectedIndex',
+      reasoningText: label,
+    );
     _isBusy = true;
     _errorMessageVi = null;
     _bannerMessageVi = null;
+    _emitAlarmOccurrence('submitted');
     notifyListeners();
     try {
       final GradingResult result = await _repository.submitTextAnswer(
         sessionId: session.sessionId,
         answerValue: label,
         reasoningText: 'Chọn trắc nghiệm nhanh',
-        clientAttemptId: LocalIdGenerator.nextUuidV4(),
-        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        clientAttemptId: _pendingClientAttemptId!,
+        idempotencyKey: _pendingIdempotencyKey!,
         selectedIndex: selectedIndex,
       );
       _applyGradingResult(result);
@@ -774,6 +846,11 @@ class PersonalFlowViewModel extends ChangeNotifier {
       await _loadOnlineProgressQuietly();
       return result;
     } on PersonalApiException catch (e) {
+      _hasRetryableTextFailure = e.retryable || e.isTimeout || e.isNetworkError;
+      if (e.isConflict) {
+        _clearSubmissionKeys();
+      }
+      _emitAlarmOccurrence('sync_error', hasSyncError: true);
       await _handleApiError(e, preservePendingSubmission: true);
       return null;
     } finally {
@@ -782,8 +859,14 @@ class PersonalFlowViewModel extends ChangeNotifier {
     }
   }
 
-  /// Nộp đề ngắn nhiều câu trắc nghiệm đạt >= 70% (`T083`).
+  /// Nộp đề ngắn nhiều câu trắc nghiệm đạt >= 70% (`T083` / `T092` idempotent).
   Future<GradingResult?> submitMiniQuizAnswers(List<int> quizAnswers) async {
+    if (_isBusy) return null;
+    if (_lastResult?.verdict == GradingVerdict.correct ||
+        _activeSession?.state == 'completed' ||
+        _activeSession?.state == 'abandoned') {
+      return _lastResult;
+    }
     final ChallengeQuestion? question = _currentQuestion;
     final StudySessionRecord? session = _activeSession;
     if (question == null || session == null) {
@@ -791,17 +874,23 @@ class PersonalFlowViewModel extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+    final String joined = quizAnswers.join(',');
+    ensureSubmissionKeys(
+      answerValue: 'quiz_$joined',
+      reasoningText: 'mini_quiz_${quizAnswers.length}',
+    );
     _isBusy = true;
     _errorMessageVi = null;
     _bannerMessageVi = null;
+    _emitAlarmOccurrence('submitted');
     notifyListeners();
     try {
       final GradingResult result = await _repository.submitTextAnswer(
         sessionId: session.sessionId,
-        answerValue: quizAnswers.join(','),
+        answerValue: joined,
         reasoningText: 'Hoàn thành đề ngắn ${quizAnswers.length} câu',
-        clientAttemptId: LocalIdGenerator.nextUuidV4(),
-        idempotencyKey: LocalIdGenerator.nextUuidV4(),
+        clientAttemptId: _pendingClientAttemptId!,
+        idempotencyKey: _pendingIdempotencyKey!,
         quizAnswers: quizAnswers,
       );
       _applyGradingResult(result);
@@ -809,6 +898,11 @@ class PersonalFlowViewModel extends ChangeNotifier {
       await _loadOnlineProgressQuietly();
       return result;
     } on PersonalApiException catch (e) {
+      _hasRetryableTextFailure = e.retryable || e.isTimeout || e.isNetworkError;
+      if (e.isConflict) {
+        _clearSubmissionKeys();
+      }
+      _emitAlarmOccurrence('sync_error', hasSyncError: true);
       await _handleApiError(e, preservePendingSubmission: true);
       return null;
     } finally {
@@ -932,6 +1026,13 @@ class PersonalFlowViewModel extends ChangeNotifier {
       case GradingVerdict.correct:
         _clearWrongCount = 0;
         _postAttemptRevealVi = result.revealVi;
+        if (_activeSession != null) {
+          _activeSession = _activeSession!.copyWith(state: 'completed');
+        }
+        _emitAlarmOccurrence(
+          'completed',
+          hasSyncError: _activeSession?.isOfflineLocal ?? false,
+        );
       case GradingVerdict.incorrect:
         _clearWrongCount = result.confirmedIncorrectCount > 0
             ? result.confirmedIncorrectCount
@@ -958,7 +1059,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
     if (!_authSession.isAuthenticated || session.isOfflineLocal) {
       _activeSession = session.copyWith(state: 'abandoned');
       _bannerMessageVi =
-          'Đã bỏ cuộc câu này trên máy (0 EXP, không trừ điểm đã có).';
+          'Đã bỏ lượt câu này (0 EXP, không trừ điểm đã có).';
+      _emitAlarmOccurrence('skipped', hasSyncError: false);
       notifyListeners();
       return SessionAbandonResult(
         sessionId: session.sessionId,
@@ -986,9 +1088,11 @@ class PersonalFlowViewModel extends ChangeNotifier {
       );
       _postAttemptRevealVi = res.revealVi;
       _bannerMessageVi = res.messageVi;
+      _emitAlarmOccurrence('skipped', hasSyncError: false);
       await _loadOnlineProgressQuietly();
       return res;
     } on PersonalApiException catch (e) {
+      _emitAlarmOccurrence('sync_error', hasSyncError: true);
       await _handleApiError(e, preservePendingSubmission: true);
       return null;
     } finally {
@@ -999,6 +1103,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
 
   Future<void> completeSessionUngraded() async {
     final StudySessionRecord? session = _activeSession;
+    bool syncErr = false;
     if (session != null &&
         _authSession.isAuthenticated &&
         !session.isOfflineLocal) {
@@ -1012,12 +1117,15 @@ class PersonalFlowViewModel extends ChangeNotifier {
         );
         await _loadOnlineProgressQuietly();
       } on PersonalApiException catch (e) {
+        syncErr = true;
         await _handleApiError(e, preservePendingSubmission: false);
       }
+    } else if (session != null) {
+      _activeSession = session.copyWith(state: 'completed');
     }
     _pendingPhotoPreview = null;
-    _bannerMessageVi =
-        'Đã hoàn thành không chấm. Tiến độ/XP chỉ ghi nhận trên server khi đủ điều kiện.';
+    _emitAlarmOccurrence('skipped', hasSyncError: syncErr);
+    _bannerMessageVi = 'Đã kết thúc lượt ôn không chấm điểm.';
     notifyListeners();
   }
 

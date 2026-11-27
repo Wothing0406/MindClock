@@ -1,0 +1,29 @@
+# Bàn giao nhiệm vụ T092
+
+- **Trạng thái cuối:** `verifying` (pass `flutter analyze` + 17/17 unit/widget/contract tests; chờ kiểm thử AD01–AD09 trên máy Android vật lý).
+- **Đã làm:**
+  - Thiết lập `AlarmOccurrenceRecord` lưu bền vững trong `GuestWorkspace` theo khóa `alarmId + occurrenceDate` (`scheduled → ringing → question_open → submitted → completed | skipped | dismissed`, kèm cờ `hasSyncError`).
+  - Khắc phục thanh `"Đã dừng âm báo · Hoàn thành câu ôn để nhận thưởng"` bị treo: nay bám trực tiếp theo `activeOpenOccurrenceToday` và tự ẩn ngay khi hoàn thành, bỏ lượt hoặc bấm Dừng khẩn cấp.
+  - Ngăn chuông sáng đã `completed | skipped | dismissed` trong ngày tự hiện lại hoặc bắt làm lại khi quay về `TodayScreen` hay đóng/mở lại app; khôi phục đúng câu đang `question_open` mà không sinh session/attempt mới thừa.
+  - Khóa chống bấm nộp nhiều lần khi đang gửi (`isBusy`) và giữ nguyên cặp `clientAttemptId` + `idempotencyKey` cho cả tự luận, trắc nghiệm ABCD (`submitMcqAnswer`) và đề ngắn (`submitMiniQuizAnswers`) khi mất mạng / phản hồi rơi rồi bấm gửi lại.
+  - Tinh gọn `PracticeSessionScreen` và `TodayScreen`: đưa câu hỏi lên đầu màn hình, bỏ thẻ Đăng xuất và nút mở Không gian học lặp khỏi tab `Luyện tập`, xóa nhãn kỹ thuật (`local`, `Idempotency-Key`, `Có câu ôn duyệt`), không để `FloatingMiniPetOverlay` đè lên tab `Luyện tập` / `Đấu trường`.
+- **File/code/docs thay đổi:**
+  - `app/lib/domain/models/alarm_occurrence.dart`
+  - `app/lib/domain/models/guest_workspace.dart`
+  - `app/lib/ui/features/guest_shell/view_models/guest_workspace_view_model.dart`
+  - `app/lib/ui/features/personal_flow/view_models/personal_flow_view_model.dart`
+  - `app/lib/ui/features/guest_shell/views/mindclock_shell_screen.dart`
+  - `app/lib/ui/features/guest_shell/views/today_screen.dart`
+  - `app/lib/ui/features/personal_flow/views/practice_session_screen.dart`
+  - `app/lib/ui/features/community/views/today_pet_card.dart`
+  - `app/test/t062_offline_bank_alarm_and_arena_timer_test.dart`
+  - `app/test/t092_alarm_occurrence_and_clean_practice_test.dart`
+  - `tasks/T092-alarm-occurrence-state-and-dashboard-cleanup/*`
+- **Test đã chạy:**
+  - `cd app; flutter analyze --no-pub` -> `No issues found!` (`2026-11-27`).
+  - `cd app; flutter test --no-pub -j 1 test/t092_alarm_occurrence_and_clean_practice_test.dart test/personal_flow_real_service_test.dart test/t083_morning_mcq_and_quit_test.dart test/alarm_ai_preview_and_candle_test.dart test/t062_offline_bank_alarm_and_arena_timer_test.dart test/t081_pet_motion_and_group_hub_test.dart` -> `17/17 All tests passed!`.
+  - `python scripts/check_docs_links.py` & `python scripts/check_task_records.py` -> PASS.
+- **Test chưa chạy/giới hạn:** Chưa chạy AD01–AD09 trên 2 máy Android vật lý (`adb devices` trống).
+- **Rủi ro còn lại:** Hành vi OEM tiết kiệm pin (Xiaomi/Samsung/Oppo) trên màn khóa thật vẫn cần xác minh phần cứng.
+- **Điểm tiếp tục chính xác:** Tạo task độc lập `T093` để tách rõ 3 luồng Không gian học (`Học một mình`, `Học cùng MindClock AI`, `Học cùng bạn`) và lọc môn học theo đúng `StudyProfile`.
+- **Git:** Nhánh `main`, chuẩn bị commit và push riêng các file thuộc `T092`.

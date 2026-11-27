@@ -1,4 +1,5 @@
 import 'alarm_config.dart';
+import 'alarm_occurrence.dart';
 import 'daily_todo_task.dart';
 import 'study_profile.dart';
 import 'timetable.dart';
@@ -11,6 +12,7 @@ class GuestWorkspace {
     this.profile = const StudyProfile(),
     required this.timetable,
     this.alarms = const <AlarmConfig>[],
+    this.alarmOccurrences = const <AlarmOccurrenceRecord>[],
     this.wakePreferences = const WakeSuggestionInput(
       classStartMinutes: 420,
       commuteMinutes: 25,
@@ -27,6 +29,7 @@ class GuestWorkspace {
         profile: const StudyProfile(),
         timetable: WeeklyTimetable(),
         alarms: const <AlarmConfig>[],
+        alarmOccurrences: const <AlarmOccurrenceRecord>[],
         dailyTasks: const <DailyTodoTask>[],
         doneScheduleKeys: const <String>[],
       );
@@ -35,6 +38,7 @@ class GuestWorkspace {
   final StudyProfile profile;
   final WeeklyTimetable timetable;
   final List<AlarmConfig> alarms;
+  final List<AlarmOccurrenceRecord> alarmOccurrences;
   final WakeSuggestionInput wakePreferences;
   final List<DailyTodoTask> dailyTasks;
   final List<String> doneScheduleKeys;
@@ -47,6 +51,7 @@ class GuestWorkspace {
     StudyProfile? profile,
     WeeklyTimetable? timetable,
     List<AlarmConfig>? alarms,
+    List<AlarmOccurrenceRecord>? alarmOccurrences,
     WakeSuggestionInput? wakePreferences,
     List<DailyTodoTask>? dailyTasks,
     List<String>? doneScheduleKeys,
@@ -57,6 +62,7 @@ class GuestWorkspace {
       profile: profile ?? this.profile,
       timetable: timetable ?? this.timetable,
       alarms: alarms ?? this.alarms,
+      alarmOccurrences: alarmOccurrences ?? this.alarmOccurrences,
       wakePreferences: wakePreferences ?? this.wakePreferences,
       dailyTasks: dailyTasks ?? this.dailyTasks,
       doneScheduleKeys: doneScheduleKeys ?? this.doneScheduleKeys,
@@ -70,6 +76,8 @@ class GuestWorkspace {
         'profile': profile.toJson(),
         'timetable': timetable.toJson(),
         'alarms': alarms.map((AlarmConfig a) => a.toJson()).toList(),
+        'alarmOccurrences':
+            alarmOccurrences.map((AlarmOccurrenceRecord o) => o.toJson()).toList(),
         'wakePreferences': wakePreferences.toJson(),
         'dailyTasks': dailyTasks.map((DailyTodoTask t) => t.toJson()).toList(),
         'doneScheduleKeys': doneScheduleKeys,
@@ -79,6 +87,8 @@ class GuestWorkspace {
   factory GuestWorkspace.fromJson(Map<String, dynamic> json) {
     final List<dynamic> rawAlarms =
         json['alarms'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> rawOccurrences =
+        json['alarmOccurrences'] as List<dynamic>? ?? <dynamic>[];
     final List<dynamic> rawTasks =
         json['dailyTasks'] as List<dynamic>? ?? <dynamic>[];
     final List<dynamic> rawDoneKeys =
@@ -101,6 +111,10 @@ class GuestWorkspace {
       alarms: rawAlarms
           .whereType<Map<String, dynamic>>()
           .map(AlarmConfig.fromJson)
+          .toList(growable: false),
+      alarmOccurrences: rawOccurrences
+          .whereType<Map<String, dynamic>>()
+          .map(AlarmOccurrenceRecord.fromJson)
           .toList(growable: false),
       wakePreferences: rawWakePrefs != null
           ? WakeSuggestionInput.fromJson(rawWakePrefs)

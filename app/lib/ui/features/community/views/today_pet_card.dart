@@ -85,7 +85,7 @@ class _TodayPetCardState extends State<TodayPetCard> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _errorVi = 'Chưa tải được pet nhóm.';
+        _errorVi = 'Đăng nhập và tham gia nhóm bạn để cùng chăm sóc Mầm Xanh.';
       });
     }
   }

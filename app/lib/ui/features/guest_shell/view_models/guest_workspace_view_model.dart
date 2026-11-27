@@ -6,6 +6,7 @@ import '../../../../data/repositories/guest_workspace_repository.dart';
 import '../../../../data/services/local_id_generator.dart';
 import '../../../../data/services/pending_alarm_event_store.dart';
 import '../../../../domain/models/alarm_config.dart';
+import '../../../../domain/models/alarm_occurrence.dart';
 import '../../../../domain/models/daily_todo_task.dart';
 import '../../../../domain/models/guest_workspace.dart';
 import '../../../../domain/models/personal_flow_models.dart';
@@ -61,7 +62,35 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   StudyProfile get profile => _workspace.profile;
   WeeklyTimetable get timetable => _workspace.timetable;
   List<AlarmConfig> get alarms => _workspace.alarms;
+  List<AlarmOccurrenceRecord> get alarmOccurrences =>
+      _workspace.alarmOccurrences;
   AlarmConfig? get primaryAlarm => _workspace.primaryAlarm;
+
+  String get todayDateIso => formatDateIso(_nowProvider());
+
+  AlarmOccurrenceRecord? occurrenceForDate(String alarmId, String dateIso) {
+    for (final AlarmOccurrenceRecord occ in _workspace.alarmOccurrences) {
+      if (occ.alarmId == alarmId && occ.occurrenceDate == dateIso) {
+        return occ;
+      }
+    }
+    return null;
+  }
+
+  AlarmOccurrenceRecord? occurrenceForToday(String alarmId) =>
+      occurrenceForDate(alarmId, todayDateIso);
+
+  AlarmOccurrenceRecord? get activeOpenOccurrenceToday {
+    final String today = todayDateIso;
+    for (final AlarmOccurrenceRecord occ in _workspace.alarmOccurrences) {
+      if (occ.occurrenceDate == today && occ.isWaitingQuestion) {
+        return occ;
+      }
+    }
+    return null;
+  }
+
+  bool get hasOpenAlarmQuestionToday => activeOpenOccurrenceToday != null;
   WakeSuggestionInput get wakePreferences => _workspace.wakePreferences;
   AlarmServiceCapabilities? get capabilities => _capabilities;
   AlarmPermissionSnapshot get permissionSnapshot => _permissionSnapshot;
@@ -217,7 +246,27 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     final AlarmRingPayload? pendingRing =
         await _alarmScheduler.consumePendingRingLaunch();
     if (pendingRing != null) {
-      _activeRingPayload = pendingRing;
+      final String today = todayDateIso;
+      final AlarmOccurrenceRecord? existing =
+          occurrenceForDate(pendingRing.alarmId, today);
+      final int? ringTs = pendingRing.triggeredAtEpochMillis;
+      final bool alreadyResolvedForThisLaunch = existing != null &&
+          existing.isTerminal &&
+          (ringTs == null || ringTs <= existing.updatedAtEpochMs);
+      if (!alreadyResolvedForThisLaunch) {
+        _activeRingPayload = pendingRing;
+        await _upsertOccurrence(
+          AlarmOccurrenceRecord(
+            alarmId: pendingRing.alarmId,
+            occurrenceDate: today,
+            state: AlarmOccurrenceState.ringing,
+            updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+            subjectCode: pendingRing.subjectCode ?? existing?.subjectCode,
+            triggeredAtEpochMs: ringTs ?? existing?.triggeredAtEpochMs,
+          ),
+          notify: false,
+        );
+      }
     }
 
     if (isOsBridgeConnected && !_permissionSnapshot.allGranted) {
@@ -334,6 +383,20 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
     _activeRingPayload = null;
     _permissionSnapshot = result.permissionSnapshot;
     _lastSchedulerMessage = result.messageVi;
+    final AlarmOccurrenceRecord? existing = occurrenceForToday(targetAlarmId);
+    await _upsertOccurrence(
+      AlarmOccurrenceRecord(
+        alarmId: targetAlarmId,
+        occurrenceDate: todayDateIso,
+        state: AlarmOccurrenceState.dismissed,
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        subjectCode: existing?.subjectCode,
+        sessionId: activeSessionId ?? existing?.sessionId,
+        questionId: existing?.questionId,
+        triggeredAtEpochMs: existing?.triggeredAtEpochMs,
+      ),
+      notify: false,
+    );
     notifyListeners();
 
     if (activeSessionId != null && activeSessionId.isNotEmpty) {
@@ -402,6 +465,144 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
   void dismissActiveRingUi() {
     _activeRingPayload = null;
     notifyListeners();
+  }
+
+  Future<AlarmOccurrenceRecord> _upsertOccurrence(
+    AlarmOccurrenceRecord nextRecord, {
+    bool notify = true,
+  }) async {
+    final List<AlarmOccurrenceRecord> list =
+        List<AlarmOccurrenceRecord>.from(_workspace.alarmOccurrences);
+    final int idx = list.indexWhere(
+      (AlarmOccurrenceRecord o) => o.occurrenceKey == nextRecord.occurrenceKey,
+    );
+    if (idx >= 0) {
+      list[idx] = nextRecord;
+    } else {
+      list.add(nextRecord);
+    }
+    // Giữ tối đa 30 bản ghi gần nhất để tránh phình bộ nhớ cục bộ
+    if (list.length > 30) {
+      list.sort(
+        (AlarmOccurrenceRecord a, AlarmOccurrenceRecord b) =>
+            a.updatedAtEpochMs.compareTo(b.updatedAtEpochMs),
+      );
+      list.removeRange(0, list.length - 30);
+    }
+    _workspace = _workspace.copyWith(alarmOccurrences: list);
+    _workspace = await _repository.save(_workspace);
+    if (notify) {
+      notifyListeners();
+    }
+    return nextRecord;
+  }
+
+  Future<AlarmOccurrenceRecord> markAlarmQuestionOpened({
+    required String alarmId,
+    String? subjectCode,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError = false,
+  }) async {
+    _activeRingPayload = null;
+    final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    return _upsertOccurrence(
+      AlarmOccurrenceRecord(
+        alarmId: alarmId,
+        occurrenceDate: todayDateIso,
+        state: AlarmOccurrenceState.questionOpen,
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        subjectCode: subjectCode ?? prev?.subjectCode,
+        sessionId: sessionId ?? prev?.sessionId,
+        questionId: questionId ?? prev?.questionId,
+        hasSyncError: hasSyncError,
+        triggeredAtEpochMs: prev?.triggeredAtEpochMs,
+      ),
+    );
+  }
+
+  Future<void> markAlarmOccurrenceSubmitted({
+    required String alarmId,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError = false,
+  }) async {
+    final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    if (prev != null && prev.isTerminal) return;
+    await _upsertOccurrence(
+      AlarmOccurrenceRecord(
+        alarmId: alarmId,
+        occurrenceDate: todayDateIso,
+        state: AlarmOccurrenceState.submitted,
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        subjectCode: prev?.subjectCode,
+        sessionId: sessionId ?? prev?.sessionId,
+        questionId: questionId ?? prev?.questionId,
+        hasSyncError: hasSyncError,
+        triggeredAtEpochMs: prev?.triggeredAtEpochMs,
+      ),
+    );
+  }
+
+  Future<void> markAlarmOccurrenceSyncError({
+    required String alarmId,
+    String? sessionId,
+    String? questionId,
+  }) async {
+    final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    if (prev == null || prev.isTerminal) return;
+    await _upsertOccurrence(
+      prev.copyWith(
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        sessionId: sessionId ?? prev.sessionId,
+        questionId: questionId ?? prev.questionId,
+        hasSyncError: true,
+      ),
+    );
+  }
+
+  Future<void> markAlarmOccurrenceCompleted({
+    required String alarmId,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError = false,
+  }) async {
+    final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    await _upsertOccurrence(
+      AlarmOccurrenceRecord(
+        alarmId: alarmId,
+        occurrenceDate: todayDateIso,
+        state: AlarmOccurrenceState.completed,
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        subjectCode: prev?.subjectCode,
+        sessionId: sessionId ?? prev?.sessionId,
+        questionId: questionId ?? prev?.questionId,
+        hasSyncError: hasSyncError,
+        triggeredAtEpochMs: prev?.triggeredAtEpochMs,
+      ),
+    );
+  }
+
+  Future<void> markAlarmOccurrenceSkipped({
+    required String alarmId,
+    String? sessionId,
+    String? questionId,
+    bool hasSyncError = false,
+  }) async {
+    final AlarmOccurrenceRecord? prev = occurrenceForToday(alarmId);
+    await _upsertOccurrence(
+      AlarmOccurrenceRecord(
+        alarmId: alarmId,
+        occurrenceDate: todayDateIso,
+        state: AlarmOccurrenceState.skipped,
+        updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+        subjectCode: prev?.subjectCode,
+        sessionId: sessionId ?? prev?.sessionId,
+        questionId: questionId ?? prev?.questionId,
+        hasSyncError: hasSyncError,
+        triggeredAtEpochMs: prev?.triggeredAtEpochMs,
+      ),
+    );
   }
 
   AlarmConfig _findAlarmForRing(AlarmRingPayload? ring) {
@@ -575,6 +776,8 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
 
     final int existingIndex =
         _workspace.alarms.indexWhere((AlarmConfig a) => a.id == draft.id);
+    final AlarmConfig? previousAlarm =
+        existingIndex >= 0 ? _workspace.alarms[existingIndex] : null;
     final List<AlarmConfig> nextAlarms = List<AlarmConfig>.from(_workspace.alarms);
     if (existingIndex >= 0) {
       nextAlarms[existingIndex] = persistedAlarm;
@@ -582,9 +785,38 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
       nextAlarms.add(persistedAlarm);
     }
 
+    List<AlarmOccurrenceRecord> nextOccurrences = _workspace.alarmOccurrences;
+    if (persistedAlarm.enabled) {
+      final String today = todayDateIso;
+      final AlarmOccurrenceRecord? existingOcc =
+          occurrenceForDate(persistedAlarm.id, today);
+      final bool timeChanged = previousAlarm != null &&
+          (previousAlarm.hour != persistedAlarm.hour ||
+              previousAlarm.minute != persistedAlarm.minute);
+      if (existingOcc == null || (timeChanged && !existingOcc.isWaitingQuestion)) {
+        final List<AlarmOccurrenceRecord> mutable =
+            List<AlarmOccurrenceRecord>.from(nextOccurrences);
+        mutable.removeWhere(
+          (AlarmOccurrenceRecord o) =>
+              o.alarmId == persistedAlarm.id && o.occurrenceDate == today,
+        );
+        mutable.add(
+          AlarmOccurrenceRecord(
+            alarmId: persistedAlarm.id,
+            occurrenceDate: today,
+            state: AlarmOccurrenceState.scheduled,
+            updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
+            subjectCode: persistedAlarm.subjectCode,
+          ),
+        );
+        nextOccurrences = mutable;
+      }
+    }
+
     _workspace = _workspace.copyWith(
       onboardingCompleted: true,
       alarms: nextAlarms,
+      alarmOccurrences: nextOccurrences,
       wakePreferences: usedWakePreferences ?? _workspace.wakePreferences,
     );
     _scheduleChangedSinceAlarmSave = false;
