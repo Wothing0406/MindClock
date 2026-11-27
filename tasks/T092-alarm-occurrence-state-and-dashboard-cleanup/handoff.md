@@ -26,4 +26,4 @@
 - **Test chưa chạy/giới hạn:** Chưa chạy AD01–AD09 trên 2 máy Android vật lý (`adb devices` trống).
 - **Rủi ro còn lại:** Hành vi OEM tiết kiệm pin (Xiaomi/Samsung/Oppo) trên màn khóa thật vẫn cần xác minh phần cứng.
 - **Điểm tiếp tục chính xác:** Tạo task độc lập `T093` để tách rõ 3 luồng Không gian học (`Học một mình`, `Học cùng MindClock AI`, `Học cùng bạn`) và lọc môn học theo đúng `StudyProfile`.
-- **Git:** Nhánh `main`, chuẩn bị commit và push riêng các file thuộc `T092`.
+- **Git:** Nhánh `main`, commit `c209eb0` đã push và xác minh trên `origin/main`.
