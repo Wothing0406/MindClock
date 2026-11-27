@@ -32,6 +32,9 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mindclock}:${POSTGRES_PASSWORD:-mindclock_local_dev}@postgres:5432/${POSTGRES_DB:-mindclock}
     ports:
       - "${APP_PORT:-8000}:8000"
+    volumes:
+      - ../../dist/apk:/app/dist/apk:ro
+      - ../../docs/download:/app/docs/download:ro
     depends_on:
       postgres:
         condition: service_healthy

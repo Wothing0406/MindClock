@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Callable
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -84,6 +85,44 @@ def create_app(
         app.include_router(create_demo_router())
         if create_product_router is not None:
             app.include_router(create_product_router())
+
+    def _resolve_repo_file(*parts: str) -> Path | None:
+        here = Path(__file__).resolve()
+        for base in here.parents[:4]:
+            candidate = base.joinpath(*parts)
+            if candidate.is_file():
+                return candidate
+        return None
+
+    @app.get('/download', response_class=HTMLResponse, include_in_schema=False)
+    def download_landing() -> HTMLResponse:
+        html_path = _resolve_repo_file('docs', 'download', 'index.html')
+        if html_path is not None:
+            return HTMLResponse(content=html_path.read_text(encoding='utf-8'))
+        return HTMLResponse(
+            content=(
+                '<!doctype html><html lang="vi"><meta charset="utf-8">'
+                '<title>Tải MindClock Android APK</title>'
+                '<body><h1>MindClock Android</h1>'
+                '<p><a href="/download/mindclock-android.apk">Tải mindclock-android.apk</a></p>'
+                '</body></html>'
+            )
+        )
+
+    @app.get('/download/mindclock-android.apk', include_in_schema=False)
+    def download_android_apk() -> FileResponse:
+        apk_path = _resolve_repo_file('dist', 'apk', 'mindclock-android.apk')
+        if apk_path is None:
+            raise HTTPException(
+                status_code=404,
+                detail={'error': {'code': 'APK_NOT_FOUND', 'message': 'Chưa có file APK phát hành trên máy chủ.'}},
+            )
+        return FileResponse(
+            path=apk_path,
+            media_type='application/vnd.android.package-archive',
+            filename='mindclock-android.apk',
+        )
+
     return app
 
 
