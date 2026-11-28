@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mindclock_app/app.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_auth_gateway.dart';
+import 'package:mindclock_app/data/debug/debug_fixture_personal_flow_repository.dart';
 import 'package:mindclock_app/data/repositories/guest_workspace_repository.dart';
 import 'package:mindclock_app/data/services/local_key_value_store.dart';
 import 'package:mindclock_app/domain/models/alarm_config.dart';
@@ -399,6 +401,8 @@ void main() {
             home: MindClockApp(
               repository: repo,
               alarmScheduler: bridge,
+              authGateway: DebugFixtureAuthGateway(),
+              personalRepository: DebugFixturePersonalFlowRepository(),
             ),
           ),
         );

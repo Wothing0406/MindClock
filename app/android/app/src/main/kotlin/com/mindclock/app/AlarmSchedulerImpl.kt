@@ -220,7 +220,26 @@ class AlarmSchedulerImpl(private val context: Context) : AlarmSchedulerBridgeCon
     }
 
     override fun consumePendingRingLaunch(): Map<String, Any?> {
-        val pending = store.consumePendingRingLaunch() ?: store.getActiveRingPayload()
+        val nowMs = System.currentTimeMillis()
+        val maxRingAgeMs = 2L * 60L * 60L * 1000L
+        val directPending = store.consumePendingRingLaunch()?.takeIf {
+            it.triggeredAtEpochMillis <= 0L || (nowMs - it.triggeredAtEpochMillis) <= maxRingAgeMs
+        }
+        val activeFallback = if (directPending == null) {
+            store.getActiveRingPayload()?.let { active ->
+                val isFresh = active.triggeredAtEpochMillis <= 0L || (nowMs - active.triggeredAtEpochMillis) <= maxRingAgeMs
+                val isStillRinging = active.ringState == RingPayloadRecord.STATE_RINGING
+                if (isFresh && isStillRinging) {
+                    active
+                } else {
+                    store.setActiveRingPayload(null)
+                    null
+                }
+            }
+        } else {
+            null
+        }
+        val pending = directPending ?: activeFallback
         return hashMapOf(
             "bridgeVersion" to AlarmSchedulerBridgeContract.BRIDGE_VERSION,
             "errorCode" to AlarmSchedulerBridgeContract.ERROR_OK,

@@ -257,12 +257,27 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
         await _alarmScheduler.consumePendingRingLaunch();
     if (pendingRing != null) {
       final String today = todayDateIso;
-      final AlarmOccurrenceRecord? existing =
-          occurrenceForDate(pendingRing.alarmId, today);
       final int? ringTs = pendingRing.triggeredAtEpochMillis;
-      final bool alreadyResolvedForThisLaunch = existing != null &&
-          existing.isTerminal &&
-          (ringTs == null || ringTs <= existing.updatedAtEpochMs);
+      final String ringDateIso = (ringTs != null && ringTs > 0)
+          ? formatDateIso(DateTime.fromMillisecondsSinceEpoch(ringTs))
+          : today;
+      final AlarmOccurrenceRecord? existingToday =
+          occurrenceForDate(pendingRing.alarmId, today);
+      final AlarmOccurrenceRecord? existingRingDate =
+          occurrenceForDate(pendingRing.alarmId, ringDateIso);
+      final bool isStalePreviousDayOrExpired = ringTs != null &&
+          ringTs > 0 &&
+          (ringDateIso != today ||
+              (_nowProvider().millisecondsSinceEpoch - ringTs) >
+                  const Duration(hours: 2).inMilliseconds);
+      final bool resolvedOnRingDate = existingRingDate != null &&
+          existingRingDate.isTerminal &&
+          (ringTs == null || ringTs <= existingRingDate.updatedAtEpochMs);
+      final bool resolvedToday = existingToday != null &&
+          existingToday.isTerminal &&
+          (ringTs == null || ringTs <= existingToday.updatedAtEpochMs);
+      final bool alreadyResolvedForThisLaunch =
+          isStalePreviousDayOrExpired || resolvedOnRingDate || resolvedToday;
       if (!alreadyResolvedForThisLaunch) {
         _activeRingPayload = pendingRing;
         await _upsertOccurrence(
@@ -271,11 +286,17 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
             occurrenceDate: today,
             state: AlarmOccurrenceState.ringing,
             updatedAtEpochMs: _nowProvider().millisecondsSinceEpoch,
-            subjectCode: pendingRing.subjectCode ?? existing?.subjectCode,
-            triggeredAtEpochMs: ringTs ?? existing?.triggeredAtEpochMs,
+            subjectCode:
+                pendingRing.subjectCode ?? existingToday?.subjectCode,
+            triggeredAtEpochMs: ringTs ?? existingToday?.triggeredAtEpochMs,
           ),
           notify: false,
         );
+      } else {
+        if (_activeRingPayload?.alarmId == pendingRing.alarmId) {
+          _activeRingPayload = null;
+        }
+        await _alarmScheduler.triggerEmergencyStop(pendingRing.alarmId);
       }
     }
 
@@ -595,6 +616,10 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
         triggeredAtEpochMs: prev?.triggeredAtEpochMs,
       ),
     );
+    if (_activeRingPayload?.alarmId == alarmId) {
+      _activeRingPayload = null;
+    }
+    await _alarmScheduler.triggerEmergencyStop(alarmId);
   }
 
   Future<void> markAlarmOccurrenceSkipped({
@@ -617,6 +642,10 @@ class GuestWorkspaceViewModel extends ChangeNotifier {
         triggeredAtEpochMs: prev?.triggeredAtEpochMs,
       ),
     );
+    if (_activeRingPayload?.alarmId == alarmId) {
+      _activeRingPayload = null;
+    }
+    await _alarmScheduler.triggerEmergencyStop(alarmId);
   }
 
   AlarmConfig _findAlarmForRing(AlarmRingPayload? ring) {
