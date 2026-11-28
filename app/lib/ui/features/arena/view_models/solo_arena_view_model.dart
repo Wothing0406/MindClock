@@ -823,7 +823,7 @@ class SoloArenaViewModel extends ChangeNotifier {
       'armor_tiebreak' =>
         'Hết 6 round · HP bằng nhau, phân định theo Giáp còn lại',
       'draw_tiebreak' => 'Hết 6 round · HP và Giáp bằng nhau → Hòa',
-      _ => 'Kết thúc lượt luyện cục bộ',
+      _ => 'Kết thúc lượt luyện tập',
     };
   }
 }

@@ -1025,6 +1025,11 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                     onTap: () {
                       vm.applyTaskSuggestion(choice);
                       _customTaskController.text = choice.title;
+                      setState(() {
+                        _selectedPersonalizedSubject = choice.subjectCode;
+                        _personalizedTopicController.clear();
+                        _aiInputController.clear();
+                      });
                     },
                   );
                 }).toList(growable: false),
@@ -2123,8 +2128,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 key: ValueKey<String>('study-personalized-subject-$code'),
                 label: SubjectCatalog.nameFor(code),
                 selected: code == effectiveSubject,
-                onTap: () =>
-                    setState(() => _selectedPersonalizedSubject = code),
+                onTap: () {
+                  setState(() => _selectedPersonalizedSubject = code);
+                  vm.setDraftSubjectCode(code);
+                },
               );
             }).toList(growable: false),
           ),
@@ -2165,7 +2172,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    '${SubjectCatalog.nameFor(effectiveSubject)} · ${question.gradeBand}',
+                    '${SubjectCatalog.nameFor(question.subjectCode)} · ${question.gradeBand}',
                     style: mc.chipLabelStyle,
                   ),
                   SizedBox(height: mc.space4),
@@ -2213,8 +2220,10 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
     StudyFocusViewModel vm,
   ) {
     final List<String> subjects = _availablePersonalSubjects(vm);
-    final String activeSubject =
-        vm.draftSubjectCode ?? _selectedPersonalizedSubject ?? subjects.first;
+    final String activeSubject = vm.activeSnapshot?.subjectCode ??
+        vm.draftSubjectCode ??
+        _selectedPersonalizedSubject ??
+        subjects.first;
     final String gradeLabel =
         widget.guestViewModel.profile.gradeLevel ?? 'Lớp 11';
     final bool isLoading = vm.liveTokenStatus == StudyAiRequestStatus.loading;
@@ -2231,7 +2240,7 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text(
-                'Gemini Live thoại (tùy chọn)',
+                'Trợ lý giọng nói AI',
                 style: mc.sectionTitleStyle,
               ),
               MindClockStatusPill(
@@ -2293,8 +2302,8 @@ class _StudySpaceScreenState extends State<StudySpaceScreen>
           MindClockButton(
             key: const ValueKey<String>('study-live-token-button'),
             label: isLoading
-                ? 'Đang cấp token Gemini Live...'
-                : 'Xin phiên Gemini Live',
+                ? 'Đang kết nối giọng nói AI...'
+                : 'Kết nối thoại (${SubjectCatalog.nameFor(activeSubject)})',
             icon: MindClockIconKind.play,
             variant: MindClockButtonVariant.secondary,
             onPressed: (!vm.liveConsentGranted || isLoading)

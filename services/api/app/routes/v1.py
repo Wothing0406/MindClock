@@ -1055,6 +1055,21 @@ def create_v1_router(
             )
 
         gemini = _get_gemini(settings)
+        user_xp = int(getattr(u, 'xp', 0) or 0)
+        if payload.difficulty >= 3 or user_xp >= 150:
+            scaled_diff = 3
+            scaled_stage = 'advanced'
+        elif payload.difficulty >= 2 or user_xp >= 50:
+            scaled_diff = 2
+            scaled_stage = 'applied'
+        else:
+            scaled_diff = 1
+            scaled_stage = payload.stage or 'foundational'
+        same_grade_seed = (
+            seed_q is not None
+            and seed_q.grade_band.strip().lower() == effective_grade.lower()
+            and seed_q.subject_code == clean_subject
+        )
         # Gọi Gemini ngoài DB transaction theo docs/28 §3.
         try:
             draft = await gemini.generate_personalized_question(
@@ -1063,11 +1078,11 @@ def create_v1_router(
                 subject_code=clean_subject,
                 weak_topics=weak_topics,
                 topic_hint=payload.topic_hint,
-                difficulty=payload.difficulty,
-                stage=payload.stage,
-                seed_question_id=seed_q.id if seed_q else payload.seed_question_id,
-                seed_prompt=seed_q.prompt if seed_q else None,
-                seed_steps=(seed_q.rubric_json or {}).get('steps', []) if seed_q else None,
+                difficulty=scaled_diff,
+                stage=scaled_stage,
+                seed_question_id=seed_q.id if same_grade_seed else payload.seed_question_id,
+                seed_prompt=seed_q.prompt if same_grade_seed else None,
+                seed_steps=(seed_q.rubric_json or {}).get('steps', []) if same_grade_seed else None,
             )
         except GeminiServiceError:
             fallback_q = seed_q or _select_published_question(

@@ -302,8 +302,12 @@ class StudyFocusViewModel extends ChangeNotifier {
   }
 
   void applyTaskSuggestion(StudyTaskChoice choice) {
+    final bool subjectChanged = _draftSubjectCode != choice.subjectCode;
     _draftTaskTitle = choice.title;
     _draftSubjectCode = choice.subjectCode;
+    if (subjectChanged) {
+      _clearAiConversationState();
+    }
     notifyListeners();
   }
 
@@ -318,6 +322,7 @@ class StudyFocusViewModel extends ChangeNotifier {
         : subjectCode.trim();
     if (_draftSubjectCode == clean) return;
     _draftSubjectCode = clean;
+    _clearAiConversationState();
     notifyListeners();
   }
 
@@ -524,7 +529,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     } catch (_) {
       if (_ownerScopeKey != scopeAtStart) return false;
       _remoteSessionErrorVi =
-          'Chưa tạo được phiên trên server. Bộ đếm local vẫn chạy bình thường.';
+          'Chưa đồng bộ được phiên học. Đồng hồ tập trung vẫn chạy bình thường.';
       notifyListeners();
       return false;
     }
@@ -557,7 +562,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     if (!_isAuthenticated) {
       _aiStatus = StudyAiRequestStatus.authExpired;
       _aiErrorVi =
-          'Đăng nhập để hỏi AI qua backend. Bạn vẫn giữ câu hỏi vừa nhập và học offline bình thường.';
+          'Đăng nhập để trò chuyện với AI. Bạn vẫn giữ câu hỏi vừa nhập và học bình thường.';
       notifyListeners();
       return false;
     }
@@ -566,7 +571,7 @@ class StudyFocusViewModel extends ChangeNotifier {
     if (gateway == null) {
       _aiStatus = StudyAiRequestStatus.offline;
       _aiErrorVi =
-          'Chưa kết nối backend AI. ${StudyHelpResponse.offlineFallbackMessageVi}';
+          'Chưa kết nối được trợ lý AI lúc này. ${StudyHelpResponse.offlineFallbackMessageVi}';
       notifyListeners();
       return false;
     }
@@ -668,13 +673,13 @@ class StudyFocusViewModel extends ChangeNotifier {
       return 'Bạn đang hỏi hơi nhanh (vượt giới hạn lượt). Chờ một lát rồi bấm Thử lại.';
     }
     if (error.isTimeout) {
-      return 'Máy chủ AI phản hồi quá 15 giây. Câu hỏi của bạn vẫn được giữ nguyên để thử lại.';
+      return 'AI phản hồi hơi chậm. Câu hỏi của bạn vẫn được giữ nguyên để thử lại.';
     }
     if (error.isNetworkError) {
-      return 'Mất mạng nên chưa hỏi được AI. ${StudyHelpResponse.offlineFallbackMessageVi}';
+      return 'Kết nối mạng không ổn định nên chưa hỏi được AI. ${StudyHelpResponse.offlineFallbackMessageVi}';
     }
     if (error.isAuthExpired) {
-      return 'Phiên đăng nhập đã hết hạn. Đăng nhập lại ở tab Cá nhân rồi bấm Thử lại.';
+      return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi bấm Thử lại.';
     }
     return '${error.messageVi} (${StudyHelpResponse.offlineFallbackMessageVi})';
   }
@@ -689,14 +694,14 @@ class StudyFocusViewModel extends ChangeNotifier {
     final StudyAiGateway? gateway = _aiGateway;
     if (gateway == null) {
       _personalizedStatus = StudyAiRequestStatus.offline;
-      _personalizedErrorVi = 'Chưa nối backend AI để tạo câu hỏi cá nhân hóa.';
+      _personalizedErrorVi = 'Chưa kết nối được AI để tạo câu luyện.';
       notifyListeners();
       return null;
     }
     if (!_isAuthenticated && !gateway.isDebugFixture) {
       _personalizedStatus = StudyAiRequestStatus.authExpired;
       _personalizedErrorVi =
-          'Đăng nhập ở tab Cá nhân để tạo câu hỏi cá nhân hóa.';
+          'Vui lòng đăng nhập để tạo câu luyện.';
       notifyListeners();
       return null;
     }
@@ -764,13 +769,13 @@ class StudyFocusViewModel extends ChangeNotifier {
     final StudyAiGateway? gateway = _aiGateway;
     if (gateway == null) {
       _liveTokenStatus = StudyAiRequestStatus.offline;
-      _liveTokenErrorVi = 'Chưa nối backend để cấp phiên Gemini Live.';
+      _liveTokenErrorVi = 'Chưa kết nối được trợ lý giọng nói AI.';
       notifyListeners();
       return null;
     }
     if (!_isAuthenticated && !gateway.isDebugFixture) {
       _liveTokenStatus = StudyAiRequestStatus.authExpired;
-      _liveTokenErrorVi = 'Đăng nhập ở tab Cá nhân trước khi mở Gemini Live.';
+      _liveTokenErrorVi = 'Vui lòng đăng nhập trước khi mở trợ lý giọng nói.';
       notifyListeners();
       return null;
     }
@@ -1122,8 +1127,8 @@ class StudyFocusViewModel extends ChangeNotifier {
     _activeSnapshot = null;
     _clearAiConversationState();
     _statusBannerVi = _isAuthenticated && _aiGateway != null
-        ? 'Đã lưu phiên học cục bộ (EXP dự kiến: ${record.estimatedStudyXp} XP) và đang đồng bộ máy chủ...'
-        : 'Đã lưu phiên học cục bộ trên máy (EXP dự kiến: ${record.estimatedStudyXp} XP — cần đăng nhập để ghi nhận chính thức).';
+        ? 'Đã lưu phiên học (${record.estimatedStudyXp} XP tạm tính)...'
+        : 'Đã lưu phiên học.';
     notifyListeners();
 
     if (_isAuthenticated && _aiGateway != null) {
@@ -1206,8 +1211,8 @@ class StudyFocusViewModel extends ChangeNotifier {
       _history = await _repository.saveRecordIdempotent(synced);
       final int confirmedXp = synced.confirmedXpAwarded ?? 0;
       _statusBannerVi = gateway.isDebugFixture
-          ? 'Đã lưu phiên học kết thúc trên máy ($confirmedXp XP tạm tính).'
-          : 'Đã đồng bộ phiên học lên máy chủ · EXP đã xác nhận: $confirmedXp XP.';
+          ? 'Đã lưu phiên học kết thúc ($confirmedXp XP).'
+          : 'Đã lưu phiên học · EXP đã xác nhận: $confirmedXp XP.';
       if (!gateway.isDebugFixture && confirmedXp > 0) {
         onStudyXpSynced?.call();
       }
@@ -1221,7 +1226,7 @@ class StudyFocusViewModel extends ChangeNotifier {
       );
       _history = await _repository.saveRecordIdempotent(failed);
       _statusBannerVi =
-          'Phiên đã lưu trên máy; đồng bộ server lỗi (${error.messageVi}).';
+          'Đã lưu phiên học; chưa đồng bộ được lúc này (${error.messageVi}).';
       notifyListeners();
       return false;
     } catch (_) {
@@ -1229,11 +1234,11 @@ class StudyFocusViewModel extends ChangeNotifier {
       final StudyFocusRecord failed = working.copyWith(
         remoteFinishSynced: false,
         remoteSyncErrorVi:
-            'Không thể đồng bộ kết thúc phiên lên server lúc này.',
+            'Chưa đồng bộ được kết thúc phiên lúc này.',
       );
       _history = await _repository.saveRecordIdempotent(failed);
       _statusBannerVi =
-          'Phiên đã lưu trên máy; chưa đồng bộ được server. Bạn vẫn thoát màn học bình thường.';
+          'Đã lưu phiên học. Bạn vẫn thoát màn học bình thường.';
       notifyListeners();
       return false;
     }
