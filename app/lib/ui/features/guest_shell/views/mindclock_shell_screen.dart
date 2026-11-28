@@ -687,6 +687,12 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
               onOpenStudySpace: widget.studyViewModel != null
                   ? () => setState(() => _stage = _GuestFlowStage.studySpace)
                   : null,
+              onCompletedReturnToDashboard: (String bannerMsg) {
+                setState(() {
+                  _todayBanner = bannerMsg;
+                  _selectedTabIndex = 0;
+                });
+              },
             );
           case 2:
             body = ArenaScreen(

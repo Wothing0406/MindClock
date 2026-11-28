@@ -164,8 +164,14 @@ void main() {
       findsNothing,
     );
 
-    // 3. Quay về Dashboard Hôm nay -> hiện "Đã hoàn thành hôm nay", không bắt làm lại
-    await tester.tap(find.byKey(const ValueKey<String>('nav-today')));
+    // 3. Hiện popup chúc mừng EXP/chuỗi và bấm Về trang Hôm nay -> không bắt làm lại
+    expect(
+      find.byKey(const ValueKey<String>('practice-completion-dialog')),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('practice-celebration-go-today')),
+    );
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey<String>('today-morning-occurrence-status')),

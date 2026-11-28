@@ -862,7 +862,10 @@ def create_v1_router(
         )
 
         # Luồng câu hỏi buổi sáng nhanh (ABCD 1 chạm hoặc Đề ngắn >= 70% theo TKB & Bộ nhớ tuần)
-        if clean_subj.lower() == 'auto' or clean_mode == 'quick_morning' or clean_diff in {'basic', 'advanced'}:
+        # Khi client yêu cầu mode='ai_regen', ưu tiên gọi Gemini AI sinh câu mới phù hợp lớp/môn/TKB.
+        if clean_mode != 'ai_regen' and (
+            clean_subj.lower() == 'auto' or clean_mode == 'quick_morning' or clean_diff in {'basic', 'advanced'}
+        ):
             eff_diff = clean_diff if clean_diff in {'basic', 'advanced'} else 'basic'
             grade_level = (principal.user.grade_band or 'Lớp 11').strip()
             quick = build_quick_morning_challenge(
@@ -870,7 +873,7 @@ def create_v1_router(
                 grade_level=grade_level,
                 memory=mem,
                 difficulty=eff_diff,
-                seed_hint=f'{principal.user.id}:{target_dt.isoformat()}',
+                seed_hint=f'{principal.user.id}:{target_dt.isoformat()}:{uuid.uuid4().hex[:6]}',
             )
             generated = Question(
                 id=f'morning_q_{uuid.uuid4().hex[:12]}',

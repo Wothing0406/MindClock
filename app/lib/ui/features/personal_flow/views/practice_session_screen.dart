@@ -20,12 +20,14 @@ class PracticeSessionScreen extends StatefulWidget {
     required this.personalViewModel,
     required this.onOpenProfileSetup,
     this.onOpenStudySpace,
+    this.onCompletedReturnToDashboard,
   });
 
   final GuestWorkspaceViewModel guestViewModel;
   final PersonalFlowViewModel personalViewModel;
   final VoidCallback onOpenProfileSetup;
   final VoidCallback? onOpenStudySpace;
+  final ValueChanged<String>? onCompletedReturnToDashboard;
 
   @override
   State<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
@@ -42,6 +44,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
   bool _reRingWarningActive = false;
   bool _showMathKeypad = false;
   bool _showReasoningField = false;
+  String? _celebratedSessionId;
 
   @override
   void initState() {
@@ -76,7 +79,63 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
   }
 
   void _onPvmChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _maybeCelebrateCompletion();
+  }
+
+  void _maybeCelebrateCompletion() {
+    final PersonalFlowViewModel pvm = widget.personalViewModel;
+    final GradingResult? result = pvm.lastResult;
+    final String? sid = pvm.activeSession?.sessionId;
+    if (result?.verdict != GradingVerdict.correct ||
+        sid == null ||
+        _celebratedSessionId == sid) {
+      return;
+    }
+    _celebratedSessionId = sid;
+    final int xp = result!.authoritativeXpAwarded;
+    final int streak = pvm.progressSummary.streak;
+    final String celebrationMsg = <String>[
+      xp > 0
+          ? 'Chúc mừng! Bạn nhận được +$xp EXP.'
+          : 'Chúc mừng! Bạn đã trả lời chính xác.',
+      if (streak > 0)
+        'Chúc mừng bạn đã đốt ngọn lửa chuỗi ($streak ngày) cho bản thân và nhóm cam kết!'
+      else
+        'Bạn đã đốt ngọn lửa khởi đầu chuỗi học tập hôm nay!',
+    ].join('\n\n');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          key: const ValueKey<String>('practice-completion-dialog'),
+          title: const Text('Hoàn thành xuất sắc!'),
+          content: Text(celebrationMsg),
+          actions: <Widget>[
+            MindClockButton(
+              key: const ValueKey<String>('practice-celebration-go-today'),
+              label: 'Về trang Hôm nay',
+              icon: MindClockIconKind.check,
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _answerController.clear();
+                _reasoningController.clear();
+                pvm.clearFinishedSession();
+                widget.onCompletedReturnToDashboard?.call(
+                  xp > 0
+                      ? 'Chúc mừng +$xp EXP! Ngọn lửa chuỗi đã được thắp sáng.'
+                      : 'Hoàn thành câu hỏi! Ngọn lửa chuỗi đã được giữ vững.',
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   @override
@@ -108,7 +167,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
         question.subQuestions.isNotEmpty) {
       return 'Cách trả lời: Chọn đáp án cho từng câu rồi bấm Nộp đề ngắn.';
     }
-    return 'Cách trả lời: Nhập đáp án ngắn kèm ít nhất 1 bước tính.';
+    return 'Cách trả lời: Nhập đáp án của bạn bên dưới.';
   }
 
   @override

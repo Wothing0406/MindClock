@@ -539,7 +539,19 @@ class PersonalFlowViewModel extends ChangeNotifier {
       subjectCode: subjectCode,
       gradeLevel: gradeLevel,
       challengeMode: challengeMode,
+      preferAiRegen: true,
     );
+  }
+
+  void clearFinishedSession() {
+    _currentQuestion = null;
+    _activeSession = null;
+    _lastResult = null;
+    _activeAlarmId = null;
+    _bannerMessageVi = null;
+    _errorMessageVi = null;
+    _postAttemptRevealVi = null;
+    notifyListeners();
   }
 
   /// Tải câu hỏi từ `/v1/challenges/next` (hoặc lấy câu hỏi + đáp án có sẵn trong kho cục bộ khi offline/mất mạng).
