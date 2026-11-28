@@ -274,16 +274,29 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
     final String scope = widget.personalViewModel.authSession.ownerScopeKey;
     final bool isAuth = widget.personalViewModel.authSession.isAuthenticated;
     final bool requireRealAuth = !widget.personalViewModel.isDebugFixture;
-    if (!_syncedInitialRoute && widget.viewModel.isLoaded) {
+    final bool authReady = widget.personalViewModel.isInitialized ||
+        isAuth ||
+        widget.personalViewModel.isDebugFixture;
+    if (!_syncedInitialRoute && widget.viewModel.isLoaded && authReady) {
       _syncedInitialRoute = true;
       final bool canEnterMain =
           widget.viewModel.workspace.onboardingCompleted &&
               (!requireRealAuth || isAuth);
-      _stage =
-          canEnterMain ? _GuestFlowStage.mainTabs : _GuestFlowStage.welcome;
+      _stage = canEnterMain
+          ? _GuestFlowStage.mainTabs
+          : (isAuth
+              ? _GuestFlowStage.onboardingSetup
+              : _GuestFlowStage.welcome);
+    } else if (_stage == _GuestFlowStage.welcome &&
+        isAuth &&
+        widget.viewModel.isLoaded) {
+      _stage = widget.viewModel.workspace.onboardingCompleted
+          ? _GuestFlowStage.mainTabs
+          : _GuestFlowStage.onboardingSetup;
     }
     if (requireRealAuth &&
         !isAuth &&
+        authReady &&
         _stage != _GuestFlowStage.welcome &&
         _stage != _GuestFlowStage.auth) {
       _stage = _GuestFlowStage.welcome;
@@ -514,6 +527,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
         return Scaffold(
           backgroundColor: mc.paper,
           body: WelcomeScreen(
+            workspaceViewModel: widget.viewModel,
             onStartAuth: () {
               setState(() => _stage = _GuestFlowStage.auth);
             },
@@ -525,6 +539,7 @@ class _MindClockShellScreenState extends State<MindClockShellScreen>
           backgroundColor: mc.paper,
           body: AuthScreen(
             personalViewModel: widget.personalViewModel,
+            preferLoginTab: widget.viewModel.workspace.onboardingCompleted,
             onAuthenticated: (String? alias) async {
               final bool isSignedIn =
                   widget.personalViewModel.authSession.isAuthenticated;

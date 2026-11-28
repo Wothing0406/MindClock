@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../domain/services/alarm_scheduler_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/theme/mindclock_theme.dart';
 import '../../../core/widgets/mindclock_cards.dart';
 import '../../../core/widgets/mindclock_icon.dart';
+import '../view_models/guest_workspace_view_model.dart';
 
 /// Màn hình `S01` Chào mừng MindClock.
 class WelcomeScreen extends StatelessWidget {
@@ -11,10 +13,12 @@ class WelcomeScreen extends StatelessWidget {
     super.key,
     required this.onStartAuth,
     this.onAlarmOnly,
+    this.workspaceViewModel,
   });
 
   final VoidCallback onStartAuth;
   final VoidCallback? onAlarmOnly;
+  final GuestWorkspaceViewModel? workspaceViewModel;
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +76,6 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: onStartAuth,
               ),
               SizedBox(height: mc.space12),
-              const MindClockNoticeBanner(
-                key: ValueKey<String>('welcome-no-guest-notice'),
-                message:
-                    'Đăng ký hoặc đăng nhập để lưu lịch học, báo thức và tiến độ ôn tập của bạn.',
-                isWarm: false,
-              ),
-              SizedBox(height: mc.space12),
               Container(
                 key: const ValueKey<String>('welcome-permission-guide'),
                 width: double.infinity,
@@ -97,9 +94,41 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     SizedBox(height: mc.space4),
                     Text(
-                      'Thông báo, báo thức, camera và micro chỉ được hỏi khi bạn chủ động sử dụng.',
+                      (workspaceViewModel != null &&
+                              workspaceViewModel!.needsOsPermissions)
+                          ? 'Cần cấp quyền thông báo & báo thức ngay để chuông reo đúng giờ.'
+                          : (workspaceViewModel != null &&
+                                  workspaceViewModel!.isOsBridgeConnected)
+                              ? 'Đã cấp đủ quyền báo thức và thông báo.'
+                              : 'Cấp quyền thông báo & báo thức để chuông hoạt động ổn định.',
                       style: mc.captionStyle.copyWith(color: mc.ink),
                     ),
+                    if (workspaceViewModel != null &&
+                        workspaceViewModel!.needsOsPermissions &&
+                        workspaceViewModel!
+                            .missingPermissionActions.isNotEmpty) ...<Widget>[
+                      SizedBox(height: mc.space8),
+                      Wrap(
+                        spacing: mc.space8,
+                        runSpacing: mc.space8,
+                        children: workspaceViewModel!.missingPermissionActions
+                            .map(
+                              (AlarmPermissionAction action) => MindClockButton(
+                                key: ValueKey<String>(
+                                  'welcome-perm-${action.wireAction}',
+                                ),
+                                label: workspaceViewModel!
+                                    .labelForPermissionAction(action),
+                                icon: MindClockIconKind.bell,
+                                variant: MindClockButtonVariant.secondary,
+                                expand: false,
+                                onPressed: () => workspaceViewModel!
+                                    .openPermissionSettings(action),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+                    ],
                   ],
                 ),
               ),

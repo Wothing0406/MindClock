@@ -949,18 +949,33 @@ def create_v1_router(
         active_question = selected
         if mode.strip().lower() == 'ai_regen':
             gemini = _get_gemini(settings)
+            user_grade = (principal.user.grade_band or selected.grade_band or 'Lớp 11').strip()
+            user_xp = int(getattr(principal.user, 'xp', 0) or 0)
+            if clean_diff == 'advanced' or user_xp >= 150:
+                scaled_diff = 3
+                scaled_stage = 'advanced'
+            elif user_xp >= 50:
+                scaled_diff = 2
+                scaled_stage = 'applied'
+            else:
+                scaled_diff = 1
+                scaled_stage = 'foundational'
+            same_grade_seed = (
+                selected.grade_band.strip().lower() == user_grade.lower()
+                and selected.subject_code == chosen_subj
+            )
             try:
                 draft = await gemini.generate_personalized_question(
                     alias=principal.user.alias,
-                    grade_level=(principal.user.grade_band or 'Lớp 11').strip(),
-                    subject_code=selected.subject_code,
-                    weak_topics=[selected.topic_id] if selected.topic_id else [],
-                    topic_hint=selected.topic_id or None,
-                    difficulty=selected.difficulty,
-                    stage='applied',
-                    seed_question_id=selected.id,
-                    seed_prompt=selected.prompt,
-                    seed_steps=(selected.rubric_json or {}).get('steps', []),
+                    grade_level=user_grade,
+                    subject_code=chosen_subj,
+                    weak_topics=[mem.current_chapter] if mem and mem.current_chapter else ([selected.topic_id] if same_grade_seed and selected.topic_id else []),
+                    topic_hint=(mem.current_chapter if mem and mem.current_chapter else (selected.topic_id if same_grade_seed else None)),
+                    difficulty=scaled_diff,
+                    stage=scaled_stage,
+                    seed_question_id=selected.id if same_grade_seed else None,
+                    seed_prompt=selected.prompt if same_grade_seed else None,
+                    seed_steps=(selected.rubric_json or {}).get('steps', []) if same_grade_seed else None,
                 )
                 generated = Question(
                     id=f'ai_q_{uuid.uuid4().hex[:12]}',

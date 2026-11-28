@@ -294,6 +294,8 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen>
                                   subjectCode: primarySubject,
                                   gradeLevel: profile.gradeLevel,
                                   challengeMode: false,
+                                  preferAiRegen: true,
+                                  difficulty: _selectedDifficulty,
                                 );
                               },
                       ),

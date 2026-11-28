@@ -159,8 +159,8 @@ class _MindClockAppState extends State<MindClockApp> {
   }
 
   Future<void> _initializeAll() async {
-    await _viewModel.initialize();
     await _personalViewModel.initialize();
+    await _viewModel.initialize();
     await _viewModel.setAccountContext(
       ownerScopeKey: _personalViewModel.authSession.ownerScopeKey,
       isAuthenticated: _personalViewModel.authSession.isAuthenticated,

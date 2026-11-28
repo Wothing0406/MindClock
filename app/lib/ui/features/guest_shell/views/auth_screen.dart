@@ -61,12 +61,14 @@ class AuthScreen extends StatefulWidget {
     required this.onAuthenticated,
     this.onUseAlarmOnly,
     required this.onBackToWelcome,
+    this.preferLoginTab = false,
   });
 
   final PersonalFlowViewModel personalViewModel;
   final ValueChanged<String?> onAuthenticated;
   final VoidCallback? onUseAlarmOnly;
   final VoidCallback onBackToWelcome;
+  final bool preferLoginTab;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -79,11 +81,17 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  bool _isSignUp = true;
+  late bool _isSignUp;
   bool _obscurePassword = true;
   bool _acceptedTerms = false;
   bool _confirmedAgeGroup = false;
   String? _localValidationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSignUp = !widget.preferLoginTab;
+  }
 
   @override
   void dispose() {

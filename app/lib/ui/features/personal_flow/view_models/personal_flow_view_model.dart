@@ -133,6 +133,8 @@ class PersonalFlowViewModel extends ChangeNotifier {
   FeedbackReportResult? get lastFeedbackReport => _lastFeedbackReport;
 
   bool get isBusy => _isBusy;
+  bool _initialized = false;
+  bool get isInitialized => _initialized;
   bool get isChallengeModeSession => _challengeModeSession;
   bool get isMorningHookVisible =>
       _currentQuestion?.morningCard != null && !_morningHookCompletedOrSkipped;
@@ -174,6 +176,7 @@ class PersonalFlowViewModel extends ChangeNotifier {
       _progressSummary = const ProgressSummary.unauthenticated();
       _sessionHistory = const <SessionHistoryItem>[];
     }
+    _initialized = true;
     notifyListeners();
   }
 
